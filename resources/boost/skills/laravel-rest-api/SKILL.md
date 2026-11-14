@@ -1483,8 +1483,9 @@ The config has the last word: `'acl' => false` disables the extension a package 
 
 ```php
 use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\SomeKind;
 
-final class ArchiveExtension extends Extension
+final class ArchiveExtension extends Extension implements SomeKind
 {
     public function __construct(private readonly ArchivePolicy $policy) {}
 
@@ -1497,7 +1498,7 @@ final class ArchiveExtension extends Extension
 ```
 
 - Register the class, never an instance: the container builds each extension once per context (request, queued job, search), at first use, so its constructor can inject services. Keep settings in properties; for other settings, register a subclass.
-- Implement at least one kind; a class with no kind, an abstract class, or a binding that builds another class is refused when the extensions are built.
+- `SomeKind` stands for the kinds the extension implements, the interfaces of `Lomkit\Rest\Extensions\Kinds`; the constructor injects what their methods use. Implement at least one kind; a class with no kind, an abstract class, or a binding that builds another class is refused when the extensions are built.
 - `appliesTo()` returns `true` by default. Its answer is kept for each extension class and resource class for the whole process (an Octane or queue worker): answer it from the resource class only, never from config, the user or the request.
 - An exception thrown by an extension reaches the caller.
 - With no extension registered, nothing is built and nothing is read beyond the config.
