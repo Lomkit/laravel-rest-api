@@ -10,8 +10,10 @@ final readonly class ExtensionReport
 {
     private const string DISABLED = 'disabled';
 
+    private const string REPLACES = 'replaces';
+
     /**
-     * @param  list<array{name: string, class: string|null, origin: string, disabled: bool}>  $registered
+     * @param  list<array{name: string, class: string|null, origin: string, disabled: bool, replaces: string|null}>  $registered
      * @param  list<string>  $problems
      */
     public function __construct(
@@ -26,6 +28,7 @@ final readonly class ExtensionReport
             'class' => $entry->class,
             'origin' => $entry->origin->value,
             'disabled' => $entry->disabled,
+            'replaces' => $entry->replaces,
         ]], $this->problems);
     }
 
@@ -39,7 +42,7 @@ final readonly class ExtensionReport
         return $this->problems === [];
     }
 
-    /** @return array{extensions: array{registered: list<array{name: string, class: string|null, origin: string, disabled: bool}>, problems: list<string>}} */
+    /** @return array{extensions: array{registered: list<array{name: string, class: string|null, origin: string, disabled: bool, replaces: string|null}>, problems: list<string>}} */
     public function toArray(): array
     {
         return ['extensions' => ['registered' => $this->registered, 'problems' => $this->problems]];
@@ -55,7 +58,8 @@ final readonly class ExtensionReport
         }
 
         foreach ($this->registered as $entry) {
-            $details = array_filter([$entry['class'], $entry['origin'], $entry['disabled'] ? self::DISABLED : null]);
+            $replaces = $entry['replaces'] === null ? null : self::REPLACES.' '.$entry['replaces'];
+            $details = array_filter([$entry['class'], $entry['origin'], $entry['disabled'] ? self::DISABLED : null, $replaces]);
             $components->twoColumnDetail($entry['name'], implode(', ', $details));
         }
     }

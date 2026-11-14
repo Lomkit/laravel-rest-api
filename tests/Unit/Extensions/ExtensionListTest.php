@@ -25,7 +25,7 @@ final class ExtensionListTest extends TestCase
         );
 
         $this->assertEquals([
-            new ExtensionEntry('noting', BothKindsExtension::class, ExtensionOrigin::Config, false),
+            new ExtensionEntry('noting', BothKindsExtension::class, ExtensionOrigin::Config, false, NotingExtension::class),
             new ExtensionEntry('counting', CountingExtension::class, ExtensionOrigin::Runtime, false),
             new ExtensionEntry('archive', InjectedExtension::class, ExtensionOrigin::Config, false),
         ], $list->entries);

@@ -81,6 +81,6 @@ final readonly class ExtensionList
             throw InvalidExtensionException::notAClass($name, get_debug_type($value));
         }
 
-        return new ExtensionEntry($name, $value, ExtensionOrigin::Config, false);
+        return new ExtensionEntry($name, $value, ExtensionOrigin::Config, false, $registered?->class);
     }
 }

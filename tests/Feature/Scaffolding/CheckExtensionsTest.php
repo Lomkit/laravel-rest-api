@@ -83,10 +83,33 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
         $this->assertSame([
             'registered' => [
-                ['name' => 'noting', 'class' => NotingExtension::class, 'origin' => 'runtime', 'disabled' => true],
-                ['name' => 'both', 'class' => BothKindsExtension::class, 'origin' => 'runtime', 'disabled' => false],
-                ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false],
-                ['name' => 'tenant', 'class' => null, 'origin' => 'config', 'disabled' => true],
+                ['name' => 'noting', 'class' => NotingExtension::class, 'origin' => 'runtime', 'disabled' => true, 'replaces' => null],
+                ['name' => 'both', 'class' => BothKindsExtension::class, 'origin' => 'runtime', 'disabled' => false, 'replaces' => null],
+                ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false, 'replaces' => null],
+                ['name' => 'tenant', 'class' => null, 'origin' => 'config', 'disabled' => true, 'replaces' => null],
+            ],
+            'problems' => [],
+        ], $report['extensions']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['noting' => BothKindsExtension::class])]
+    public function it_names_the_runtime_class_that_a_config_entry_replaces(): void
+    {
+        Rest::registerExtension('noting', NotingExtension::class);
+        $this->expose('trips', TripController::class);
+
+        $output = $this->check(0, TripController::class);
+        $report = $this->report(0, TripController::class);
+
+        $this->assertStringContainsString("  extensions ... 1 extension built\n  noting ", $output);
+        $this->assertStringEndsWith(
+            " Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension, config, replaces Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension\n",
+            $output,
+        );
+        $this->assertSame([
+            'registered' => [
+                ['name' => 'noting', 'class' => BothKindsExtension::class, 'origin' => 'config', 'disabled' => false, 'replaces' => NotingExtension::class],
             ],
             'problems' => [],
         ], $report['extensions']);
@@ -106,11 +129,11 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
         $this->assertIsArray($report['extensions']);
         $this->assertSame([
-            ['name' => 'kindless', 'class' => KindlessExtension::class, 'origin' => 'config', 'disabled' => false],
-            ['name' => 'abstract', 'class' => AbstractNotingExtension::class, 'origin' => 'config', 'disabled' => false],
-            ['name' => 'missing', 'class' => self::MISSING, 'origin' => 'config', 'disabled' => false],
-            ['name' => 'unresolvable', 'class' => UnresolvableExtension::class, 'origin' => 'config', 'disabled' => false],
-            ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false],
+            ['name' => 'kindless', 'class' => KindlessExtension::class, 'origin' => 'config', 'disabled' => false, 'replaces' => null],
+            ['name' => 'abstract', 'class' => AbstractNotingExtension::class, 'origin' => 'config', 'disabled' => false, 'replaces' => null],
+            ['name' => 'missing', 'class' => self::MISSING, 'origin' => 'config', 'disabled' => false, 'replaces' => null],
+            ['name' => 'unresolvable', 'class' => UnresolvableExtension::class, 'origin' => 'config', 'disabled' => false, 'replaces' => null],
+            ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false, 'replaces' => null],
         ], $report['extensions']['registered']);
         $problems = $report['extensions']['problems'];
         $this->assertIsArray($problems);
@@ -148,8 +171,8 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
         $this->assertSame([
             'registered' => [
-                ['name' => 'noting', 'class' => NotingExtension::class, 'origin' => 'runtime', 'disabled' => false],
-                ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false],
+                ['name' => 'noting', 'class' => NotingExtension::class, 'origin' => 'runtime', 'disabled' => false, 'replaces' => null],
+                ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false, 'replaces' => null],
             ],
             'problems' => [
                 InvalidExtensionException::invalidName('Bad')->getMessage(),
@@ -178,8 +201,8 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
         $this->assertStringContainsString('  routes ', $output);
         $this->assertSame([
             'registered' => [
-                ['name' => 'failing', 'class' => FailingExtension::class, 'origin' => 'config', 'disabled' => false],
-                ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false],
+                ['name' => 'failing', 'class' => FailingExtension::class, 'origin' => 'config', 'disabled' => false, 'replaces' => null],
+                ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false, 'replaces' => null],
             ],
             'problems' => [$problem],
         ], $report['extensions']);

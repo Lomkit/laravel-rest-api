@@ -9,5 +9,6 @@ final readonly class ExtensionEntry
         public ?string $class,
         public ExtensionOrigin $origin,
         public bool $disabled,
+        public ?string $replaces = null,
     ) {}
 }
