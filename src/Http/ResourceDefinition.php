@@ -8,7 +8,6 @@ use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Authorization\CachedAbilities;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
-use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
@@ -19,15 +18,10 @@ use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Search\GateVocabulary;
 use Lomkit\Rest\Text\ResolvedText;
-use ReflectionClass;
 use WeakMap;
 
 final class ResourceDefinition
 {
-    private ?FieldSet $fields = null;
-
-    private ?RowVersion $version = null;
-
     /** @var list<Scope>|null */
     private ?array $scopes = null;
 
@@ -47,6 +41,8 @@ final class ResourceDefinition
 
     private readonly ResourceDeclarations $declarations;
 
+    private readonly ResourceFields $declaredFields;
+
     public function __construct(
         private readonly Resource $resource,
         private readonly RestRequest $request,
@@ -54,18 +50,17 @@ final class ResourceDefinition
     ) {
         $this->inputs = new WeakMap;
         $this->declarations = new ResourceDeclarations($resource, $container);
+        $this->declaredFields = new ResourceFields($resource);
     }
 
     public function fields(): FieldSet
     {
-        return $this->fields ??= $this->declaredFields();
+        return $this->declaredFields->fields();
     }
 
     public function version(): ?RowVersion
     {
-        $this->fields();
-
-        return $this->version;
+        return $this->declaredFields->version();
     }
 
     /** @return list<Scope> */
@@ -131,7 +126,7 @@ final class ResourceDefinition
 
     public function instruction(string $key): ?Instruction
     {
-        return array_find($this->instructions(), fn (Instruction $instruction): bool => $instruction->uriKey() === $key);
+        return $this->declarations->instructions()->find($key);
     }
 
     public function actionExists(string $key): bool
@@ -172,32 +167,5 @@ final class ResourceDefinition
     public function cachedAbilities(): CachedAbilities
     {
         return $this->cachedAbilities ??= CachedAbilities::of($this->resource->authorizationCache(), $this->resource::class, $this->resource->authorizationCacheContext(...));
-    }
-
-    private function declaredFields(): FieldSet
-    {
-        $fields = FieldSet::of($this->resource->fields(), $this->resource::class.'::fields()');
-        $config = $this->resource->context()->config();
-
-        if ($fields->has($config->gatesKey)) {
-            throw InvalidResourceException::gatesKeyField($this->resource::class, $config->gatesKey);
-        }
-
-        if ($fields->has($config->moreKey)) {
-            throw InvalidResourceException::moreKeyField($this->resource::class, $config->moreKey);
-        }
-
-        if (! (new ReflectionClass($this->resource::modelClass()))->isInstantiable()) {
-            return $fields;
-        }
-
-        $model = $this->resource::newModel();
-        $bound = $fields->bindTo($model);
-
-        if ($this->resource->versioned()) {
-            $this->version = RowVersion::of($this->resource, $model, $bound);
-        }
-
-        return $bound;
     }
 }

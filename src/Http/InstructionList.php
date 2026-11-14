@@ -38,6 +38,11 @@ final class InstructionList
         return $instructions;
     }
 
+    public function find(string $key): ?Instruction
+    {
+        return array_find($this->all(), fn (Instruction $instruction): bool => $instruction->uriKey() === $key);
+    }
+
     public function at(int|string $index): Instruction
     {
         return $this->built[$index] ??= $this->build($this->entries[$index])->resource($this->resource);
