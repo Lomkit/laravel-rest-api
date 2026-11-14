@@ -1,5 +1,11 @@
 # Upgrade Guide
 
+## 3.6 additions
+
+Version 3.6 adds features.
+
+- Extensions add behavior to every resource from one class that extends `Lomkit\Rest\Extensions\Extension` and implements at least one kind, an interface that extends `Lomkit\Rest\Extensions\Kinds\ExtensionKind`. List them in the new `extensions` key of `config/rest.php`, keyed by their name (`'acl' => AccessControlExtension::class`), or register them from the `register()` or `boot()` method of any service provider, in any provider order, with `Rest::registerExtension('acl', AccessControlExtension::class)` or `Rest::registerExtensions(['acl' => AccessControlExtension::class])`. The name has 1 to 32 lowercase letters, digits or underscores and starts with a letter; it prefixes the keys that the extension adds. The config has the last word: `'acl' => false` disables the extension registered under that name, and another class replaces it. The list is fixed once the package builds its first context (a request, a queued action, `Rest::search()`, a `Rest::resource()` route, the OpenAPI document, `rest:check`): a later registration, a second class under one name, an entry without a name or with an invalid one, and a class that does not exist, does not extend `Extension`, implements no kind, is abstract, or that the container builds as another class throw `Lomkit\Rest\Exceptions\InvalidExtensionException`. The container builds the extensions once per context, at first use, so their constructor can inject services; with no extension, nothing is built. `appliesTo(string $resource)` is kept for the life of the process for each extension class and resource class: answer it from code only. `rest:check` lists each extension with its name, class, origin (`config` or `runtime`) and whether it is disabled, builds it and reports the classes that cannot be built (the `extensions` key of `--json`). The constructor of `Lomkit\Rest\Rest` no longer takes the cache factory: the container builds `Rest`, so only code that creates it by hand changes.
+
 ## 3.5 additions
 
 Version 3.5 adds features.
