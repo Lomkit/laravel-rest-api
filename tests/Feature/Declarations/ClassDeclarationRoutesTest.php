@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 use Lomkit\Rest\Exceptions\InvalidActionException;
 use Lomkit\Rest\Exceptions\InvalidMetricException;
 use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
+use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
@@ -137,7 +138,14 @@ class ClassDeclarationRoutesTest extends DeclarationTestCase
         Rest::resource('teams', TeamController::class)->only('operate', 'metric')->register();
 
         $this->assertSame([], DeclarationLog::$built);
-        $this->assertSame(['request', DeskTicketResource::class, 'request', 'Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource'], $resolved);
+        $this->assertSame([
+            'request',
+            RuntimeExtensions::class,
+            DeskTicketResource::class,
+            'request',
+            RuntimeExtensions::class,
+            'Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource',
+        ], $resolved);
     }
 
     #[Test]

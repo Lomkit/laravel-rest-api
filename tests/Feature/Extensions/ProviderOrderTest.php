@@ -3,6 +3,8 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions;
 
 use Lomkit\Rest\Extensions\RuntimeExtensions;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Rest;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BootingExtensionProvider;
@@ -43,6 +45,15 @@ final class ProviderOrderTest extends PackageTestCase
     public function it_resolves_the_facade_from_a_provider_registered_before_the_package(): void
     {
         $this->assertSame($this->app->make(Rest::class), EarlyExtensionProvider::$root);
+    }
+
+    #[Test]
+    public function it_accepts_registrations_whatever_the_provider_order(): void
+    {
+        $context = new RestContext(RestRequest::create('/api/products/search', 'POST'), $this->app);
+
+        $this->assertSame(['early', 'later', 'booted'], array_keys($context->extensions()->all()));
+        $this->assertSame([NotingExtension::class, BothKindsExtension::class, CountingExtension::class], ExtensionLog::$built);
     }
 
     #[Test]

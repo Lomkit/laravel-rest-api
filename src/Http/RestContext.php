@@ -15,6 +15,8 @@ use Lomkit\Rest\Authorization\CacheDecisionStore;
 use Lomkit\Rest\Authorization\DecisionStore;
 use Lomkit\Rest\Authorization\NullDecisionStore;
 use Lomkit\Rest\Config\RestConfig;
+use Lomkit\Rest\Extensions\ExtensionRegistry;
+use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Metrics\CacheMetricStore;
 use Lomkit\Rest\Metrics\MetricStore;
@@ -31,7 +33,11 @@ final class RestContext
     /** @var WeakMap<Resource, ResourceDefinition> */
     private readonly WeakMap $definitions;
 
+    private readonly RuntimeExtensions $registrations;
+
     private ?RestConfig $config = null;
+
+    private ?ExtensionRegistry $extensions = null;
 
     private ?Limits $limits = null;
 
@@ -50,6 +56,8 @@ final class RestContext
     ) {
         $this->resources = new ResourceRegistry($container);
         $this->definitions = new WeakMap;
+        $this->registrations = $container->make(RuntimeExtensions::class);
+        $this->registrations->freeze();
     }
 
     /** @param class-string<Resource> $class */
@@ -71,6 +79,11 @@ final class RestContext
     public function config(): RestConfig
     {
         return $this->config ??= RestConfig::from($this->container->make(ConfigRepository::class));
+    }
+
+    public function extensions(): ExtensionRegistry
+    {
+        return $this->extensions ??= ExtensionRegistry::of($this->config()->extensions, $this->registrations->all(), $this->container);
     }
 
     public function limits(): Limits

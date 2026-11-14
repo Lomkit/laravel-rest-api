@@ -1,0 +1,189 @@
+<?php
+
+namespace Lomkit\Rest\Tests\Feature\Extensions;
+
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Exceptions\InvalidExtensionException;
+use Lomkit\Rest\Extensions\RuntimeExtensions;
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Tests\Fixtures\Catalog\ProductController;
+use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
+use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\CountsResources;
+use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
+use Lomkit\Rest\Tests\Fixtures\Extensions\InjectedExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\NotesResources;
+use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
+use Lomkit\Rest\Tests\PackageTestCase;
+use Orchestra\Testbench\Attributes\WithConfig;
+use PHPUnit\Framework\Attributes\After;
+use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\Test;
+
+final class ExtensionRegistrationTest extends PackageTestCase
+{
+    #[Before]
+    #[After]
+    public function resetTheLog(): void
+    {
+        ExtensionLog::reset();
+    }
+
+    #[Test]
+    public function it_resolves_the_registration_store_when_the_package_registers(): void
+    {
+        $this->assertTrue($this->app->resolved(RuntimeExtensions::class));
+    }
+
+    #[Test]
+    public function it_registers_an_extension_through_the_facade(): void
+    {
+        Rest::registerExtension('noting', NotingExtension::class);
+
+        $this->assertSame(['noting'], array_keys($this->context()->extensions()->applicable(ProductResource::class, NotesResources::class)));
+    }
+
+    #[Test]
+    public function it_registers_several_extensions_through_the_facade(): void
+    {
+        Rest::registerExtensions(['noting' => NotingExtension::class, 'counting' => CountingExtension::class, 'both' => BothKindsExtension::class]);
+
+        $this->assertSame(['counting', 'both'], array_keys($this->context()->extensions()->applicable(ProductResource::class, CountsResources::class)));
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['counting' => CountingExtension::class])]
+    public function it_reads_the_extensions_of_the_config(): void
+    {
+        $this->assertSame(['counting'], array_keys($this->context()->extensions()->all()));
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['noting' => false])]
+    public function it_lets_the_config_disable_a_runtime_extension(): void
+    {
+        Rest::registerExtension('noting', NotingExtension::class);
+
+        $this->assertSame([], $this->context()->extensions()->all());
+        $this->assertSame([], ExtensionLog::$built);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['noting' => BothKindsExtension::class])]
+    public function it_lets_the_config_replace_a_runtime_extension(): void
+    {
+        Rest::registerExtension('noting', NotingExtension::class);
+
+        $extensions = $this->context()->extensions()->all();
+
+        $this->assertSame(['noting'], array_keys($extensions));
+        $this->assertInstanceOf(BothKindsExtension::class, $extensions['noting']);
+        $this->assertSame([BothKindsExtension::class], ExtensionLog::$built);
+    }
+
+    #[Test]
+    public function it_builds_the_extensions_once_per_context(): void
+    {
+        Rest::registerExtension('noting', NotingExtension::class);
+        $context = $this->context();
+
+        $first = $context->extensions()->all();
+        $second = $context->extensions()->all();
+        $other = $this->context()->extensions()->all();
+
+        $this->assertSame($context->extensions(), $context->extensions());
+        $this->assertSame($first['noting'], $second['noting']);
+        $this->assertNotSame($first['noting'], $other['noting']);
+        $this->assertSame([NotingExtension::class, NotingExtension::class], ExtensionLog::$built);
+    }
+
+    #[Test]
+    public function it_resolves_nothing_to_read_an_empty_extension_list(): void
+    {
+        $context = $this->context();
+        $context->config();
+        $resolved = [];
+        $this->app->beforeResolving(function (string $abstract) use (&$resolved): void {
+            $resolved[] = $abstract;
+        });
+
+        $registry = $context->extensions();
+
+        $this->assertTrue($registry->isEmpty());
+        $this->assertSame([], $registry->all());
+        $this->assertSame([], $registry->applicable(ProductResource::class, NotesResources::class));
+        $this->assertSame([], $resolved);
+        $this->assertSame([], ExtensionLog::$built);
+        $this->assertSame([], ExtensionLog::$asked);
+    }
+
+    #[Test]
+    public function it_injects_services_into_an_extension(): void
+    {
+        Rest::registerExtension('injected', InjectedExtension::class);
+
+        $extension = $this->context()->extensions()->all()['injected'];
+
+        $this->assertInstanceOf(InjectedExtension::class, $extension);
+        $this->assertSame($this->app->make(Repository::class), $extension->config);
+    }
+
+    #[Test]
+    public function it_refuses_a_registration_after_a_context_is_built(): void
+    {
+        $this->context();
+
+        $this->expectExceptionObject(InvalidExtensionException::lateRegistration('noting', NotingExtension::class));
+
+        Rest::registerExtension('noting', NotingExtension::class);
+    }
+
+    #[Test]
+    public function it_refuses_a_map_registration_after_a_context_is_built(): void
+    {
+        $this->context();
+
+        $this->expectExceptionObject(InvalidExtensionException::lateRegistration('noting', NotingExtension::class));
+
+        Rest::registerExtensions(['noting' => NotingExtension::class]);
+    }
+
+    #[Test]
+    public function it_refuses_a_registration_after_a_resource_route_is_registered(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('products', ProductController::class)->register());
+
+        $this->expectExceptionObject(InvalidExtensionException::lateRegistration('noting', NotingExtension::class));
+
+        Rest::registerExtension('noting', NotingExtension::class);
+    }
+
+    #[Test]
+    public function it_refuses_a_registration_after_a_resource_reads_its_own_context(): void
+    {
+        (new ProductResource)->context();
+
+        $this->expectExceptionObject(InvalidExtensionException::lateRegistration('noting', NotingExtension::class));
+
+        Rest::registerExtension('noting', NotingExtension::class);
+    }
+
+    #[Test]
+    public function it_throws_a_config_entry_without_a_name_when_the_registry_is_built(): void
+    {
+        config(['rest.extensions' => [NotingExtension::class]]);
+
+        $this->expectExceptionObject(InvalidExtensionException::missingName(NotingExtension::class));
+
+        $this->context()->extensions();
+    }
+
+    private function context(): RestContext
+    {
+        return new RestContext(RestRequest::create('/api/products/search', 'POST'), $this->app);
+    }
+}
