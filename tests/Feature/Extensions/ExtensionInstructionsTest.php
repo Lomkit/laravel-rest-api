@@ -150,6 +150,18 @@ class ExtensionInstructionsTest extends PackageTestCase
         $this->assertSame(['arc.marked', 'arc.marked'], array_map(static fn (Instruction $instruction): string => $instruction->publicUriKey(), $marked));
     }
 
+    #[Test]
+    public function it_gives_each_extension_its_own_copy_of_a_shared_instance(): void
+    {
+        $this->app?->singleton(MarkedInstruction::class);
+        config(['rest.extensions' => ['one' => MarkedInstructionsExtension::class, 'two' => MarkedInstructionsExtension::class]]);
+
+        $response = $this->getJson('/api/posts?with=instructions');
+
+        $response->assertOk()->assertJsonPath('data.instructions.*.uriKey', ['highlight-posts', 'in-status', 'one.marked', 'two.marked']);
+        $this->assertSame('marked', $this->app?->make(MarkedInstruction::class)->publicUriKey());
+    }
+
     /** @param array<string, class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]

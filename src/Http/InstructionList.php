@@ -104,10 +104,14 @@ final class InstructionList
     /** @param Instruction|class-string<Instruction> $entry */
     private function build(Instruction|string $entry, ?string $owner): Instruction
     {
-        if (! is_string($entry)) {
-            return $owner === null ? $entry : (clone $entry)->declaredBy($owner);
-        }
+        $instruction = is_string($entry) ? $this->make($entry, $owner) : $entry;
 
+        return $owner === null ? $instruction : (clone $instruction)->declaredBy($owner);
+    }
+
+    /** @param class-string<Instruction> $entry */
+    private function make(string $entry, ?string $owner): Instruction
+    {
         $this->ensureInstantiable($entry, $owner);
         $instruction = $this->container->make($entry);
 
@@ -117,7 +121,7 @@ final class InstructionList
                 : InvalidQueryExtensionException::instructionForeignBinding($owner, $this->resource::class, $entry, get_debug_type($instruction));
         }
 
-        return $owner === null ? $instruction : $instruction->declaredBy($owner);
+        return $instruction;
     }
 
     private function ensureInstantiable(string $entry, ?string $owner): void
