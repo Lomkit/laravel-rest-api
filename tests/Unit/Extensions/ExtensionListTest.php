@@ -83,6 +83,14 @@ final class ExtensionListTest extends TestCase
     }
 
     #[Test]
+    public function it_refuses_a_config_name_with_a_trailing_newline(): void
+    {
+        $this->expectExceptionObject(InvalidExtensionException::invalidName("acl\n"));
+
+        ExtensionList::merge(["acl\n" => NotingExtension::class], []);
+    }
+
+    #[Test]
     #[DataProvider('neitherClassNamesNorFalse')]
     public function it_refuses_a_config_value_that_is_neither_a_class_name_nor_false(mixed $value, string $type): void
     {

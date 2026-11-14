@@ -169,6 +169,7 @@ final class RuntimeExtensionsTest extends TestCase
             'a dash' => ['acl-x'],
             'a space' => ['acl x'],
             'a dot' => ['acl.x'],
+            'a trailing newline' => ["acl\n"],
             '33 characters' => [str_repeat('a', 33)],
         ];
     }
