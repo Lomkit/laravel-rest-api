@@ -1582,6 +1582,12 @@ use Lomkit\Rest\Extensions\Kinds\AugmentsQueries;
 final class LockColumnsExtension extends Extension implements AugmentsQueries
 {
     #[\Override]
+    public function appliesTo(string $resource): bool
+    {
+        return is_a($resource, PostResource::class, true);
+    }
+
+    #[\Override]
     public function augment(AugmentationContext $context): void
     {
         if (! in_array('update', $context->gates, true)) {
@@ -1595,7 +1601,7 @@ final class LockColumnsExtension extends Extension implements AugmentsQueries
 }
 ```
 
-`select()` returns the final alias, here `locks__locked`: the attribute that the policy then reads on each row.
+`select()` returns the final alias, here `locks__locked`: the attribute that the policy then reads on each row. The columns, the subquery and the relation belong to the posts table, so `appliesTo()` keeps the extension to the post resource.
 
 - Guarantees: runs only on the rows that a response renders (a search page, the rows of `Rest::search()`, the records read after a write, the rows of a search engine page), at every include level, after the planned columns. Never on a count, an action, a metric, an aggregate or a key lookup. The policies and gates receive the very models that carry the added columns. Added columns, subqueries and eager loads never render: `fields()` alone decides the output. `$context->gates` lists the row gates rendered on these rows (`[]` on an include level that the client did not search). `$context->resource` and `$context->user` are the resource of the level and the user of the request.
 - Forbids: where clauses and any other change to the query: the context offers `column()`, `select()` and `with()` only. An alias that is not 1 to 32 lowercase letters, digits or underscores starting with a letter, longer than 63 characters with its prefix (PostgreSQL), selected twice or equal to a field name; a column that is not a plain column name; a relation that the model does not declare or that two extensions load. Each throws `InvalidQueryExtensionException`.
