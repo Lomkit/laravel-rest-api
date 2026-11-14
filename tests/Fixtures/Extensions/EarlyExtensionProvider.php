@@ -13,5 +13,7 @@ final class EarlyExtensionProvider extends ServiceProvider
     public function register(): void
     {
         self::$root = Rest::getFacadeRoot();
+
+        Rest::registerExtension('early', NotingExtension::class);
     }
 }

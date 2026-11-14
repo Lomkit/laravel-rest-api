@@ -19,6 +19,7 @@ use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceMakeCommand;
 use Lomkit\Rest\Console\Commands\ResponseMakeCommand;
 use Lomkit\Rest\Console\Generation\Stub;
+use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Scramble\RestDocument;
 use Lomkit\Rest\Scramble\RestOperations;
@@ -29,6 +30,7 @@ class RestServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->replaceConfigRecursivelyFrom(__DIR__.'/../config/rest.php', 'rest');
+        $this->app->make(RuntimeExtensions::class);
     }
 
     public function boot(): void

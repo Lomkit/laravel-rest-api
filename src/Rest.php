@@ -12,6 +12,8 @@ use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Lomkit\Rest\Authorization\DecisionStamps;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Config\ConfigValue;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Resource;
@@ -60,6 +62,18 @@ class Rest
     public function forgetAuthorizations(): void
     {
         DecisionStamps::renew($this->decisions(), null);
+    }
+
+    /** @param class-string<Extension> $class */
+    public function registerExtension(string $name, string $class): void
+    {
+        $this->container->make(RuntimeExtensions::class)->register($name, $class);
+    }
+
+    /** @param array<string, class-string<Extension>> $classes */
+    public function registerExtensions(array $classes): void
+    {
+        $this->container->make(RuntimeExtensions::class)->registerAll($classes);
     }
 
     /** @return list<string> */

@@ -238,4 +238,22 @@ return [
         'enabled' => false,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Extensions
+    |--------------------------------------------------------------------------
+    |
+    | Extensions add behavior to every resource. Key each extension class
+    | by its name: 1 to 32 lowercase letters, digits or underscores,
+    | starting with a letter. The name prefixes the keys it adds.
+    |
+    | A package can register its extensions with Rest::registerExtension().
+    | This list has the last word: false disables an extension of that
+    | name, and another class replaces it. Run php artisan rest:check to
+    | list the extensions with their origin.
+    |
+    */
+
+    'extensions' => [],
+
 ];

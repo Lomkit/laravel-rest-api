@@ -15,7 +15,10 @@ final readonly class RestConfig
         'authorized_to_force_delete',
     ];
 
-    /** @param array<string, string> $gateNames */
+    /**
+     * @param  array<string, string>  $gateNames
+     * @param  array<array-key, mixed>  $extensions
+     */
     public function __construct(
         public bool $strict,
         public bool $cacheEnabled,
@@ -26,6 +29,7 @@ final readonly class RestConfig
         public bool $selectColumns,
         public int $transactionAttempts,
         public string $moreKey,
+        public array $extensions,
     ) {}
 
     public static function from(Repository $config): self
@@ -40,6 +44,7 @@ final readonly class RestConfig
             selectColumns: ConfigValue::of($config, 'rest.search.select_columns')->boolean(),
             transactionAttempts: ConfigValue::of($config, 'rest.transactions.attempts')->integer(1),
             moreKey: ConfigValue::of($config, 'rest.search.more_key')->string(),
+            extensions: ConfigValue::of($config, 'rest.extensions')->map('extension names to class names or false'),
         );
     }
 }

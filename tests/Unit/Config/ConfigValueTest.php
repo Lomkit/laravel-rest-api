@@ -155,6 +155,23 @@ class ConfigValueTest extends TestCase
         ConfigValue::at('rest.gates.names', ['authorized_to_view' => 'can_view'])->strings(self::NAMES);
     }
 
+    #[Test]
+    public function it_reads_a_map_as_is(): void
+    {
+        $extensions = ['acl' => 'Vendor\Acl\AccessControlExtension', 0 => false];
+
+        $this->assertSame($extensions, ConfigValue::at('rest.extensions', $extensions)->map('extension names to class names or false'));
+    }
+
+    #[Test]
+    #[DataProvider('notArrays')]
+    public function it_names_the_key_of_a_value_that_is_not_an_array(mixed $value): void
+    {
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.extensions] option must be a map of extension names to class names or false.'));
+
+        ConfigValue::at('rest.extensions', $value)->map('extension names to class names or false');
+    }
+
     /** @return array<string, array{mixed, bool}> */
     public static function booleans(): array
     {
@@ -237,6 +254,16 @@ class ConfigValueTest extends TestCase
             'a string' => ['authorized_to_view'],
             'null' => [null],
             'a list' => [['can_view', 'can_create']],
+        ];
+    }
+
+    /** @return array<string, array{mixed}> */
+    public static function notArrays(): array
+    {
+        return [
+            'null' => [null],
+            'a string' => ['acl'],
+            'an integer' => [1],
         ];
     }
 }
