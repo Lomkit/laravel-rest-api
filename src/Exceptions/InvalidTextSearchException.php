@@ -148,4 +148,12 @@ final class InvalidTextSearchException extends LogicException
     {
         return new self("The text search of the resource [{$resource}] does not run on a search engine.");
     }
+
+    /** @param list<string> $names */
+    public static function restrictedByExtensions(string $resource, array $names): self
+    {
+        $extensions = implode(', ', $names);
+
+        return new self("The extensions [{$extensions}] restrict the rows of {$resource}, which searches text through a search engine that these restrictions do not reach yet. Remove the text search of {$resource}, or leave it out of these extensions with appliesTo().");
+    }
 }

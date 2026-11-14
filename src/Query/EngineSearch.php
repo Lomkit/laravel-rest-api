@@ -56,6 +56,12 @@ final readonly class EngineSearch implements SearchSource
             ->authorizer()
             ->ensurePlanned(Check::onClass($this->resource, 'viewAny'));
 
+        $restrictions = ExtensionRestrictions::of($this->resource);
+
+        if ($restrictions !== null) {
+            throw InvalidTextSearchException::restrictedByExtensions($this->resource::class, $restrictions->names());
+        }
+
         $query = $this->text->engineQuery($this->search->trashed)
             ?? throw InvalidTextSearchException::notOnEngine($this->resource::class);
 
