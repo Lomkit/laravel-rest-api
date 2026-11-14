@@ -124,6 +124,18 @@ class RestConfigTest extends TestCase
     }
 
     #[Test]
+    public function it_reads_a_missing_extensions_key_as_no_extension(): void
+    {
+        $config = $this->packageConfig();
+        $rest = $config->get('rest');
+        $this->assertIsArray($rest);
+        unset($rest['extensions']);
+        $config->set('rest', $rest);
+
+        $this->assertSame([], RestConfig::from($config)->extensions);
+    }
+
+    #[Test]
     #[DataProvider('requiredGateNames')]
     public function it_names_a_gate_name_missing_from_the_map(string $name, string $message): void
     {
@@ -155,6 +167,7 @@ class RestConfigTest extends TestCase
             'null transaction attempts' => ['rest.transactions.attempts', null, 'The [rest.transactions.attempts] option must be an integer of 1 or more.'],
             'the more key' => ['rest.search.more_key', '', 'The [rest.search.more_key] option must be a non-empty string.'],
             'the extensions' => ['rest.extensions', 'acl', 'The [rest.extensions] option must be a map of extension names to class names or false.'],
+            'null extensions' => ['rest.extensions', null, 'The [rest.extensions] option must be a map of extension names to class names or false.'],
         ];
     }
 

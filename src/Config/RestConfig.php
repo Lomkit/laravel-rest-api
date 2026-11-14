@@ -44,7 +44,7 @@ final readonly class RestConfig
             selectColumns: ConfigValue::of($config, 'rest.search.select_columns')->boolean(),
             transactionAttempts: ConfigValue::of($config, 'rest.transactions.attempts')->integer(1),
             moreKey: ConfigValue::of($config, 'rest.search.more_key')->string(),
-            extensions: ConfigValue::of($config, 'rest.extensions')->map('extension names to class names or false'),
+            extensions: ConfigValue::of($config, 'rest.extensions', [])->map('extension names to class names or false'),
         );
     }
 }
