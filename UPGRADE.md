@@ -4,16 +4,22 @@
 
 Version 3.6 adds a feature.
 
-- A resource can prepare the row checks of its policies in bulk: override `prepareAuthorization(string $ability, Collection $rows): void` (an `Illuminate\Database\Eloquent\Collection`, empty by default). The package calls it once per ability with the rows it is about to check, before the policy runs for them: the gates of a page and of each include level, each included resource with its own rows; the rows of `destroy`, `restore` and `forceDestroy`; each chunk of the rows of an action with `authorizeEach()`; the `delete` and `view` checks of `mutate`; and `inspectEach()` and `authorizeEach()` of the authorizer. Load there in one query what the policy reads for each row, so that the checks of a page run no query per row:
+- A resource can prepare the row checks of its policies: override `prepareAuthorization(PendingChecks $checks): void` (`Lomkit\Rest\Authorization\PendingChecks`). `$checks->ability` is the ability the Gate checks, `$checks->rows` an `Illuminate\Database\Eloquent\Collection` of rows about to be checked for it, and `$checks->user` the user the policies run for (`null` for a guest), also in a search run with `Rest::search()->as($user)`. The hook may be called zero or more times per request, each time with a subset of the rows about to be checked for one ability: rows of the same resource class at several levels of a page can share a call, and a single check on an undecided row is a call with that one row. It must be idempotent and decides nothing; the default implementation does nothing. Use it for data that is not a relation of the row, such as a permission table, an external ACL or a lookup read once for all rows, and store it where the policy reads it:
 
   ```php
-  public function prepareAuthorization(string $ability, Collection $rows): void
+  public function prepareAuthorization(PendingChecks $checks): void
   {
-      $rows->loadMissing('team');
+      $granted = DB::table('ticket_grants')
+          ->where('user_id', $checks->user?->getAuthIdentifier())
+          ->whereIn('ticket_id', $checks->rows->modelKeys())
+          ->pluck('ticket_id')
+          ->all();
+
+      app(TicketGrants::class)->put($checks->user, $granted);
   }
   ```
 
-  The policy still runs for each row, with `Gate::before()`, an overridden `authorizedTo()` and the `Response` of the policy: the hook decides nothing. The user is `$this->request()->user()`, the user the policies check for, also in a search run with `Rest::search()->as($user)`. The rows are the rows whose decision is not known yet: a decision already made in the request or read from `authorizationCache()` leaves its row out, and when no row is left the hook is not called. Only stored, unchanged rows checked alone are handed: class-level checks (`viewAny`, `create`), the drafts of `create`, the `update` checks of `mutate`, which carry their `Changes`, and the link abilities, which also receive the related row, never reach it. An exception thrown by the hook stops the request before the policy runs. A resource that does not override it behaves as before.
+  For a relation that a policy reads, turn on Laravel's `Model::automaticallyEagerLoadRelationships()` instead. Never `load()` or `setRelation()` a relation that the client can include: the rows are the rendered models, and an include can carry the filters and limits of the client. Key what the hook stores by user, and by row key: `Rest::search()->as($user)` can check for another user in the same request. The policy still runs for each row, with `Gate::before()`, an overridden `authorizedTo()` and the `Response` of the policy. Only stored, unchanged rows checked alone reach the hook: rows already decided in the request or read from `authorizationCache()`, class-level checks (`viewAny`, `create`), drafts, the `update` checks of a mutation, which carry their changes, and the link abilities, which also receive the related row, never do. An exception thrown by the hook stops the request before the policy runs.
 
 ## 3.5 additions
 
