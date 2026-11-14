@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Query;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\UnplannedCheckException;
@@ -56,7 +57,7 @@ class RelationPerimeterTest extends PackageTestCase
         $relation?->applyPerimeter($query);
 
         $this->assertSame(['Nested'], array_column($query->getQuery()->wheres, 'type'));
-        $this->assertSame('select * from "authors" where ("last_name" != ?) and "authors"."deleted_at" is null', $query->toSql());
+        $this->assertSame('select * from authors where (last_name != ?) and authors.deleted_at is null', $this->sql($query));
     }
 
     #[Test]
@@ -94,5 +95,10 @@ class RelationPerimeterTest extends PackageTestCase
             'select authors.id, authors.first_name, authors.last_name, authors.settings from authors where (last_name != ?) and (exists (select * from posts where authors.id = posts.author_id and posts.title = ? and (title != ?)) and exists (select * from posts where authors.id = posts.author_id and (title != ?))) and authors.deleted_at is null order by authors.id desc limit 50 offset 0',
             ['Hidden', 'Notes', 'Hidden', 'Hidden'],
         ]], $this->readsOf('authors'));
+    }
+
+    private function sql(Builder $query): string
+    {
+        return str_replace(['"', '`'], '', $query->toSql());
     }
 }

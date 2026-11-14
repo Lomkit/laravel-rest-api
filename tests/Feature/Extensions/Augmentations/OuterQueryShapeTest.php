@@ -72,7 +72,7 @@ class OuterQueryShapeTest extends PackageTestCase
         }]);
 
         $this->assertNull(OuterQueryShape::of($query)->changedFrom($before));
-        $this->assertSame('select "authors"."id", "authors"."api_token", (select ?) as "extra" from "authors" where "authors"."deleted_at" is null', $query->toSql());
+        $this->assertSame('select authors.id, authors.api_token, (select ?) as extra from authors where authors.deleted_at is null', $this->sql($query));
     }
 
     #[Test]
@@ -85,5 +85,10 @@ class OuterQueryShapeTest extends PackageTestCase
         AddedColumns::merge($starred, ['api_token']);
 
         $this->assertSame([null, ['authors.*']], [$every->getQuery()->columns, $starred->getQuery()->columns]);
+    }
+
+    private function sql(Builder $query): string
+    {
+        return str_replace(['"', '`'], '', $query->toSql());
     }
 }

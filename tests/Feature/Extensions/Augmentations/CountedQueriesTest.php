@@ -28,7 +28,7 @@ class CountedQueriesTest extends PackageTestCase
         $clone = (clone $query)->selectRaw('? as later', ['later'])->where('books.id', '>', 0);
         $counted = CountedQueries::withoutAdditions($clone);
 
-        $this->assertSame('select "books"."id", ? as planned, ? as later from "books" where "books"."id" > ?', $counted->toSql());
+        $this->assertSame('select books.id, ? as planned, ? as later from books where books.id > ?', $this->sql($counted));
         $this->assertSame(['kept', 'later', 0], $counted->getBindings());
         $this->assertSame(['kept', 'Reader 1', 'later', 0], $clone->getBindings());
     }
@@ -54,7 +54,7 @@ class CountedQueriesTest extends PackageTestCase
         $replaced = (clone $query)->select('books.title');
 
         $this->assertSame($replaced, CountedQueries::withoutAdditions($replaced));
-        $this->assertSame('select "books"."title" from "books"', $replaced->toSql());
+        $this->assertSame('select books.title from books', $this->sql($replaced));
     }
 
     /** @param Builder<Model> $query */
@@ -63,5 +63,10 @@ class CountedQueriesTest extends PackageTestCase
         CountedQueries::augment($query, static function () use ($query): void {
             $query->addSelect(['loans__copies' => Loan::query()->selectRaw('count(*)')->whereColumn('loans.book_id', 'books.id')->where('borrower', '!=', 'Reader 1')]);
         });
+    }
+
+    private function sql(Builder $query): string
+    {
+        return str_replace(['"', '`'], '', $query->toSql());
     }
 }

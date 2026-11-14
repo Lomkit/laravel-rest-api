@@ -65,8 +65,8 @@ class RestrictedMetricsTest extends SalesTestCase
 
         $response->assertOk()->assertExactJson(['data' => ['type' => 'value', 'value' => 7, 'previous' => null]]);
         $this->assertSame(
-            ['select count(*) as "total_0" from "orders" where (("orders"."team_id" = ?) and ("orders"."team_id" != ?))'],
-            array_values(array_filter(array_column(DB::getQueryLog(), 'query'), fn (string $query): bool => str_contains($query, 'orders'))),
+            ['select count(*) as total_0 from orders where ((orders.team_id = ?) and (orders.team_id != ?))'],
+            array_values(array_filter(str_replace(['"', '`'], '', array_column(DB::getQueryLog(), 'query')), fn (string $query): bool => str_contains($query, 'orders'))),
         );
     }
 
