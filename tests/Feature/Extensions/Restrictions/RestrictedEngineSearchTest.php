@@ -71,6 +71,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
         $response = $this->search('vouchers', ['filters' => [['field' => 'title', 'value' => 'Budget']]]);
 
         $response->assertOk()->assertJsonPath('data.*.title', ['Budget']);
+        $this->assertSame(['VoucherResource guest'], RestrictionLog::$seen);
     }
 
     #[Test]
