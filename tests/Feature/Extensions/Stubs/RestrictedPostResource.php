@@ -1,0 +1,23 @@
+<?php
+
+namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
+
+use Lomkit\Rest\Relations\BelongsTo;
+use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
+
+class RestrictedPostResource extends PostResource
+{
+    public int $includeLimit = 1;
+
+    #[\Override]
+    public function limits(): array
+    {
+        return [1, 10, 50];
+    }
+
+    #[\Override]
+    public function relations(): array
+    {
+        return [BelongsTo::make('author', RestrictedAuthorResource::class)];
+    }
+}
