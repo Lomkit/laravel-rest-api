@@ -27,7 +27,7 @@ final readonly class InstructionParser
         $resource = $context->resource;
         $declared = $context->grammar->instructions($resource->definition()->instructions());
         $names = $context->vocabulary->of($resource, $context->grammar, 'instructions', fn (): array => array_values(array_map(
-            fn (Instruction $instruction): string => $instruction->uriKey(),
+            fn (Instruction $instruction): string => $instruction->publicUriKey(),
             $declared,
         )));
         $keys = InstructionAlias::of($entries);
@@ -71,10 +71,10 @@ final readonly class InstructionParser
         }
 
         $inputs = new InputSet($context->resource->definition()->inputFields($instruction));
-        $values = $inputs->named($fields, $context, 'fields:'.$instruction->uriKey());
+        $values = $inputs->named($fields, $context, 'fields:'.$instruction->publicUriKey());
 
-        if (! $alias->present && $keys->isShared($instruction->uriKey())) {
-            $context->rules->reject(Violation::takenKey($alias->path, $instruction->uriKey()));
+        if (! $alias->present && $keys->isShared($instruction->publicUriKey())) {
+            $context->rules->reject(Violation::takenKey($alias->path, $instruction->publicUriKey()));
         }
 
         $aliased = is_string($alias->value) ? $alias->value : null;
@@ -92,7 +92,7 @@ final readonly class InstructionParser
     private static function find(array $declared, mixed $name): ?Instruction
     {
         foreach ($declared as $instruction) {
-            if ($instruction->uriKey() === $name) {
+            if ($instruction->publicUriKey() === $name) {
                 return $instruction;
             }
         }

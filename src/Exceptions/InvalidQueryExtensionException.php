@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Exceptions;
 
 use Lomkit\Rest\Extensions\ExtensionName;
+use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Query\QueryPart;
 use Lomkit\Rest\Search\Plan\QueryAdditions;
 
@@ -106,5 +107,36 @@ final class InvalidQueryExtensionException extends InvalidExtensionException
         $sizes = implode(', ', $allowed);
 
         return self::about($names[0] ?? '', "The extensions [{$extensions}] narrow the include limit of {$resource} to {$includeLimit}, below every page size [{$sizes}], and narrowing never raises it. Keep a page size of {$includeLimit} or less.");
+    }
+
+    /** @param list<?string> $owners */
+    public static function instructionTaken(string $key, string $resource, array $owners): self
+    {
+        $names = array_map(static fn (?string $owner): string => $owner ?? 'the resource', $owners);
+        sort($names);
+        $declaring = implode(', ', $names);
+        $extension = array_find($owners, static fn (?string $owner): bool => $owner !== null) ?? '';
+
+        return self::about($extension, "The instruction key [{$key}] of {$resource} is declared by [{$declaring}]. Rename one: the key of an extension instruction is the extension name, a dot and the uriKey() of the instruction.");
+    }
+
+    public static function instructionNotAnInstruction(string $name, string $resource, string $entry): self
+    {
+        return self::about($name, "The [{$name}] extension declares, for {$resource}, the instruction [{$entry}], which is not a class that extends ".Instruction::class.'.');
+    }
+
+    public static function instructionBaseListed(string $name, string $resource): self
+    {
+        return self::about($name, "The [{$name}] extension declares, for {$resource}, ".Instruction::class.' itself. Declare a class that extends it.');
+    }
+
+    public static function instructionNotInstantiable(string $name, string $resource, string $class): self
+    {
+        return self::about($name, "The [{$name}] extension declares, for {$resource}, the instruction {$class}, which is abstract or cannot be instantiated. Declare a concrete class.");
+    }
+
+    public static function instructionForeignBinding(string $name, string $resource, string $class, string $bound): self
+    {
+        return self::about($name, "The container builds [{$bound}] for {$class}, which the [{$name}] extension declares for {$resource}: bind {$class} to itself or to a class that extends it.");
     }
 }

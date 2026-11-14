@@ -41,7 +41,7 @@ final class DetailsResponseType
         return Schemas::required([
             'actions' => Schemas::list(DetailsEntryTypes::action(array_values(array_map(fn (Action $action): string => $action->uriKey(), $definition->actions()))), 'With actions or one of its parts'),
             'metrics' => Schemas::list(DetailsEntryTypes::metric(array_values(array_map(fn (Metric $metric): string => $metric->uriKey(), $definition->metrics()))), 'With metrics or one of its parts'),
-            'instructions' => Schemas::list(DetailsEntryTypes::instruction(array_values(array_map(fn (Instruction $instruction): string => $instruction->uriKey(), $definition->instructions()))), 'With instructions or one of its parts'),
+            'instructions' => Schemas::list(DetailsEntryTypes::instruction(array_values(array_map(fn (Instruction $instruction): string => $instruction->publicUriKey(), $definition->instructions()))), 'With instructions or one of its parts'),
             'fields' => Schemas::list(DetailsEntryTypes::field($definition->fields()->names())),
             'limits' => Schemas::list(new IntegerType),
             'scopes' => Schemas::list(DetailsEntryTypes::scope(array_map(fn (Scope $scope): string => $scope->name, $definition->scopes())), 'With scopes or one of its parts'),

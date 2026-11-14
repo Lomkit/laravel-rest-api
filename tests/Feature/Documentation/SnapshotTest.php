@@ -2,8 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
+use Lomkit\Rest\Tests\Fixtures\Festival\ProgramExtension;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
+#[WithConfig('rest.extensions', ['program' => ProgramExtension::class])]
 class SnapshotTest extends DocumentationTestCase
 {
     private const string SNAPSHOT = __DIR__.'/Snapshots/festival.json';
