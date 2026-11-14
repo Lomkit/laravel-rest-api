@@ -41,6 +41,11 @@ final class InvalidExtensionException extends LogicException
         return self::about($name, "The [{$name}] extension is already registered as {$registered}, so {$class} cannot take the same name. Register {$class} under another name.");
     }
 
+    public static function repeatedRegistration(string $name, string $class): self
+    {
+        return self::about($name, "The [{$name}] extension {$class} is registered twice under this name. Remove the second registration: one registration applies it to every resource.");
+    }
+
     public static function lateRegistration(string $name, string $class): self
     {
         return self::about($name, "The [{$name}] extension {$class} is registered after the package built its first context, and the extension list no longer changes then. Register extensions from the register() or boot() method of a service provider, before any request, search or Rest::resource() route.");

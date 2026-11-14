@@ -1471,7 +1471,7 @@ public function register(): void
 `Rest::registerExtensions(['acl' => AccessControlExtension::class, 'tenant' => TenantExtension::class])` registers several. Both work whatever the order of the providers.
 
 - The name is mandatory: 1 to 32 lowercase letters, digits or underscores, starting with a letter. It prefixes the meta keys, cache keys, SQL aliases and instruction keys of the extension. A config list without names is refused.
-- A second class under a registered name is refused, even the same class registered twice.
+- A second class under a registered name is refused. The same class registered twice under one name is refused too, with a message that asks to remove the second registration.
 - The list is fixed when the package builds its first context: an HTTP request, a queued action, `Rest::search()`, a `Rest::resource()` route, the OpenAPI document or `rest:check`. A later registration is refused, so never register from a deferred provider, and register before a provider's `boot()` declares REST routes. In the tests of a package, register through a provider, `defineEnvironment()` or `#[WithConfig('rest.extensions', [...])]`: fixture routes build contexts during the boot of the app.
 - Each refusal throws `Lomkit\Rest\Exceptions\InvalidExtensionException`, which names the extension and the fix.
 

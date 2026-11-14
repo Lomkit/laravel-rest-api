@@ -60,6 +60,27 @@ final class RuntimeExtensionsTest extends TestCase
     }
 
     #[Test]
+    public function it_asks_to_remove_a_class_registered_twice_under_one_name(): void
+    {
+        $extensions = new RuntimeExtensions;
+        $extensions->register('noting', NotingExtension::class);
+
+        try {
+            $extensions->register('noting', NotingExtension::class);
+            $this->fail('A class registered twice under one name was accepted.');
+        } catch (InvalidExtensionException $exception) {
+            $this->assertSame(
+                'The [noting] extension '.NotingExtension::class.' is registered twice under this name. Remove the second registration: one registration applies it to every resource.',
+                $exception->getMessage(),
+            );
+        }
+
+        $this->expectExceptionObject(InvalidExtensionException::repeatedRegistration('noting', NotingExtension::class));
+
+        $extensions->registerAll(['noting' => NotingExtension::class]);
+    }
+
+    #[Test]
     public function it_refuses_a_name_registered_twice_in_one_map(): void
     {
         $extensions = new RuntimeExtensions;

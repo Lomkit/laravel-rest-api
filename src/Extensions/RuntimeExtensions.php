@@ -65,8 +65,14 @@ final class RuntimeExtensions
 
         ExtensionName::ensureValid($name);
 
-        if (isset($this->classes[$name])) {
-            throw InvalidExtensionException::duplicateName($name, $this->classes[$name], $class);
+        if (! isset($this->classes[$name])) {
+            return;
         }
+
+        if ($this->classes[$name] === $class) {
+            throw InvalidExtensionException::repeatedRegistration($name, $class);
+        }
+
+        throw InvalidExtensionException::duplicateName($name, $this->classes[$name], $class);
     }
 }
