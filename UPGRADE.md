@@ -1,5 +1,11 @@
 # Upgrade Guide
 
+## 3.5 additions
+
+Version 3.5 adds features.
+
+- `instructions()` accepts class names next to instances: `return [HeldByInstruction::class, UnendedInstruction::make()->meta(['group' => 'dates'])];`. The container builds the listed classes the first time the resource reads its instructions in a request: a search that sends `instructions`, at its root or in an include of this resource, the search of an action or a metric, or `/details`. Reading one instruction builds the whole list of the resource, so keep the constructors light and do the work in `handle()`. Each class is built once per resource definition, that is once per request; the OpenAPI document and `rest:check` build their own. A request that reads no instruction, such as a mutation or a search without `instructions`, builds none, and registering the routes reads no instruction. Move the settings of an instruction into its properties (`public ?string $name = 'Held by';`) and list it by its class, so that its constructor can inject services; keep the instance form for one built with arguments or reused with other settings. An instruction listed by its class can still override `name()` or `uriKey()`. When the instructions are read, `Lomkit\Rest\Exceptions\InvalidInstructionException` refuses a name that is not a class extending `Instruction`, `Instruction::class` itself, an abstract class and a container binding that returns another class, with a message that names the resource. `php artisan rest:check` builds every instruction of the resources of the checked controllers and of every resource that their relations reach, at any depth, since an include can read them. It reports these errors, a constructor parameter that the container cannot resolve and any other error of a constructor in its `declarations` section, each with the name of the resource, and the section now counts the instructions built (`4 actions, 2 metrics, 3 instructions built`, and `"instructions": 3` in the `declarations` key of `--json`).
+
 ## 3.4 additions
 
 Version 3.4 adds features.

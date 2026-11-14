@@ -19,10 +19,12 @@ use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskCloseTickets;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskGuestTicketBacklog;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskRefreshTickets;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskReportOutage;
+use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTagMatch;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketBacklog;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketController;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketResource;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketsByStatus;
+use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTitleMatch;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\GuardingAction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\GuardingMetric;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\NinthDayMetric;
@@ -239,10 +241,10 @@ class ClassDeclarationRequestsTest extends DeclarationTestCase
         $report = json_decode($output->fetch(), true);
 
         $this->assertSame(
-            [DeskCloseTickets::class, DeskRefreshTickets::class, DeskReportOutage::class, DeskTicketBacklog::class, DeskTicketsByStatus::class, DeskGuestTicketBacklog::class],
+            [DeskCloseTickets::class, DeskRefreshTickets::class, DeskReportOutage::class, DeskTicketBacklog::class, DeskTicketsByStatus::class, DeskGuestTicketBacklog::class, DeskTitleMatch::class, DeskTagMatch::class],
             DeclarationLog::$built,
         );
-        $this->assertSame(['actions' => 4, 'metrics' => 3, 'problems' => []], $report['declarations']);
+        $this->assertSame(['actions' => 4, 'metrics' => 3, 'instructions' => 3, 'problems' => []], $report['declarations']);
         $this->assertContains('POST /desk-tickets/actions/report-outage is not behind an authentication middleware.', $report['problems']);
         $this->assertContains('POST /desk-tickets/metrics/guest-ticket-backlog is not behind an authentication middleware.', $report['problems']);
         $this->assertContains(DeskCloseTickets::class.' of '.DeskTicketResource::class." runs on rows without authorizeEach(): no policy ability is checked on each row. Return the ability to check from authorizeEach(), such as 'update', or 'view' for an action that only reads.", $report['actions']['problems']);

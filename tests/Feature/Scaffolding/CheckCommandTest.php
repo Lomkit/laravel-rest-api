@@ -118,7 +118,7 @@ class CheckCommandTest extends ScaffoldingTestCase
                 'policies' => 2,
                 'problems' => ['POST /api/labels/search is not behind an authentication middleware.'],
                 'search' => '/api/books/search',
-                'declarations' => ['actions' => 0, 'metrics' => 0, 'problems' => []],
+                'declarations' => ['actions' => 0, 'metrics' => 0, 'instructions' => 0, 'problems' => []],
                 'rows' => [
                     'perimeter' => [],
                     'without_perimeter' => [BookResource::class, LabelResource::class, LoanResource::class, ShelfResource::class],

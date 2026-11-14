@@ -34,9 +34,6 @@ final class ResourceDefinition
     /** @var array<int, Relation>|null */
     private ?array $relations = null;
 
-    /** @var array<int, Instruction>|null */
-    private ?array $instructions = null;
-
     private ?ResourceLimits $limits = null;
 
     private ?ResolvedText $text = null;
@@ -89,7 +86,7 @@ final class ResourceDefinition
     /** @return array<int, Instruction> */
     public function instructions(): array
     {
-        return $this->instructions ??= $this->boundInstructions($this->resource->instructions());
+        return $this->declarations->instructions()->all();
     }
 
     /** @internal */
@@ -202,14 +199,5 @@ final class ResourceDefinition
         }
 
         return $bound;
-    }
-
-    /**
-     * @param  array<int, Instruction>  $instructions
-     * @return array<int, Instruction>
-     */
-    private function boundInstructions(array $instructions): array
-    {
-        return array_map(fn (Instruction $instruction): Instruction => $instruction->resource($this->resource), $instructions);
     }
 }

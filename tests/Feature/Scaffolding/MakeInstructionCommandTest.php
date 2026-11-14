@@ -16,6 +16,7 @@ class MakeInstructionCommandTest extends ScaffoldingTestCase
     {
         $this->artisan('rest:instruction', ['name' => 'ScaffoldedInstruction'])
             ->expectsOutputToContain('Instruction [app/Rest/Instructions/ScaffoldedInstruction.php] created successfully.')
+            ->expectsOutputToContain('List it in the instructions() of a resource by its class: ScaffoldedInstruction::class.')
             ->assertSuccessful();
 
         $this->loadGeneratedClass(ScaffoldedInstruction::class);

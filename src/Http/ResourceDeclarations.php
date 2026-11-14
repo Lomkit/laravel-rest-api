@@ -16,6 +16,8 @@ final class ResourceDeclarations
     /** @var DeclarationList<Metric>|null */
     private ?DeclarationList $metrics = null;
 
+    private ?InstructionList $instructions = null;
+
     public function __construct(private readonly Resource $resource, private readonly Container $container) {}
 
     /** @return DeclarationList<Action> */
@@ -28,5 +30,10 @@ final class ResourceDeclarations
     public function metrics(): DeclarationList
     {
         return $this->metrics ??= new DeclarationList(DeclarationKind::Metric, $this->resource->metrics(), $this->resource, $this->container);
+    }
+
+    public function instructions(): InstructionList
+    {
+        return $this->instructions ??= new InstructionList($this->resource->instructions(), $this->resource, $this->container);
     }
 }

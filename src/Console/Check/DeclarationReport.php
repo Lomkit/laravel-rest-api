@@ -15,22 +15,28 @@ final readonly class DeclarationReport
     public function __construct(
         private array $actions = [],
         private int $metrics = 0,
+        private int $instructions = 0,
         private array $problems = [],
     ) {}
 
     public function withAction(string $resource, Action $action): self
     {
-        return new self([...$this->actions, $resource => [...$this->actionsOf($resource), $action]], $this->metrics, $this->problems);
+        return new self([...$this->actions, $resource => [...$this->actionsOf($resource), $action]], $this->metrics, $this->instructions, $this->problems);
     }
 
     public function withMetric(): self
     {
-        return new self($this->actions, $this->metrics + 1, $this->problems);
+        return new self($this->actions, $this->metrics + 1, $this->instructions, $this->problems);
+    }
+
+    public function withInstruction(): self
+    {
+        return new self($this->actions, $this->metrics, $this->instructions + 1, $this->problems);
     }
 
     public function withProblem(string $problem): self
     {
-        return new self($this->actions, $this->metrics, [...$this->problems, $problem]);
+        return new self($this->actions, $this->metrics, $this->instructions, [...$this->problems, $problem]);
     }
 
     /** @return list<Action> */
@@ -44,10 +50,10 @@ final readonly class DeclarationReport
         return $this->problems === [];
     }
 
-    /** @return array{declarations: array{actions: int, metrics: int, problems: list<string>}} */
+    /** @return array{declarations: array{actions: int, metrics: int, instructions: int, problems: list<string>}} */
     public function toArray(): array
     {
-        return ['declarations' => ['actions' => $this->actionCount(), 'metrics' => $this->metrics, 'problems' => $this->problems]];
+        return ['declarations' => ['actions' => $this->actionCount(), 'metrics' => $this->metrics, 'instructions' => $this->instructions, 'problems' => $this->problems]];
     }
 
     public function render(Factory $components): void
@@ -66,7 +72,7 @@ final readonly class DeclarationReport
     {
         $actions = $this->actionCount();
 
-        return "{$actions} ".Str::plural('action', $actions).", {$this->metrics} ".Str::plural('metric', $this->metrics).' built';
+        return "{$actions} ".Str::plural('action', $actions).", {$this->metrics} ".Str::plural('metric', $this->metrics).", {$this->instructions} ".Str::plural('instruction', $this->instructions).' built';
     }
 
     private function actionCount(): int
