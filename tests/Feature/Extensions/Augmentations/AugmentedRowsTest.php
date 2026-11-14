@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Augmentations;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
@@ -242,10 +243,10 @@ class AugmentedRowsTest extends PackageTestCase
         $name = str_repeat('n', 32);
         config(['rest.extensions' => [$name => FirstAugmentation::class]]);
         FirstAugmentation::$augment = static function (AugmentationContext $context): void {
-            AugmentationLog::$aliases[] = $context->select(str_repeat('a', 29), static function (\Illuminate\Database\Query\Builder $query): void {
+            AugmentationLog::$aliases[] = $context->select(str_repeat('a', 29), static function (Builder $query): void {
                 $query->selectRaw('1');
             });
-            $context->select(str_repeat('b', 30), static function (\Illuminate\Database\Query\Builder $query): void {
+            $context->select(str_repeat('b', 30), static function (Builder $query): void {
                 $query->selectRaw('1');
             });
         };
@@ -298,7 +299,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_refuses_an_unknown_relation(): void
     {
-        $this->expectRefusal(static fn (AugmentationContext $context): mixed => $context->with('reviewers'), InvalidQueryExtensionException::unknownRelation('first', 'reviewers', PathAuthorResource::class));
+        $this->expectRefusal(static fn (AugmentationContext $context): mixed => $context->with('editors'), InvalidQueryExtensionException::unknownRelation('first', 'editors', PathAuthorResource::class));
     }
 
     #[Test]
