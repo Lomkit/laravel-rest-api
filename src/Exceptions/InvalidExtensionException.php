@@ -9,7 +9,8 @@ use Lomkit\Rest\Extensions\ExtensionName;
 use Lomkit\Rest\Extensions\Kinds\ExtensionKind;
 use Throwable;
 
-final class InvalidExtensionException extends LogicException
+/** @phpstan-consistent-constructor */
+class InvalidExtensionException extends LogicException
 {
     private ?string $extension = null;
 
@@ -90,9 +91,9 @@ final class InvalidExtensionException extends LogicException
         return $name === null ? "The extension {$class}" : "The [{$name}] extension {$class}";
     }
 
-    private static function about(string $class, string $message, ?Throwable $previous = null): self
+    protected static function about(string $class, string $message, ?Throwable $previous = null): static
     {
-        $exception = new self($message, 0, $previous);
+        $exception = new static($message, 0, $previous);
         $exception->extension = $class;
 
         return $exception;
