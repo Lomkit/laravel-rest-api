@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Console\Check;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Lomkit\Rest\Config\RestConfig;
+use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\ExtensionEntry;
 use Lomkit\Rest\Extensions\ExtensionFactory;
@@ -18,12 +19,18 @@ final readonly class ExtensionCheck
 
     public function run(): ExtensionReport
     {
-        $configured = RestConfig::from($this->container->make(Repository::class))->extensions;
-        $registered = $this->container->make(RuntimeExtensions::class)->all();
+        $report = new ExtensionReport;
 
+        try {
+            $configured = RestConfig::from($this->container->make(Repository::class))->extensions;
+        } catch (InvalidConfigException $exception) {
+            $configured = [];
+            $report = $report->withProblem($exception->getMessage());
+        }
+
+        $registered = $this->container->make(RuntimeExtensions::class)->all();
         $list = ExtensionList::merge($configured, $registered);
         $factory = new ExtensionFactory($this->container);
-        $report = new ExtensionReport;
 
         foreach ($list->refused as $exception) {
             $report = $report->withProblem($exception->getMessage());

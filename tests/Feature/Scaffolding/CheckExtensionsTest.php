@@ -162,6 +162,45 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
+    #[WithConfig('rest.extensions', 'acl')]
+    public function it_reports_an_extension_config_that_is_not_a_map(): void
+    {
+        Rest::registerExtension('noting', NotingExtension::class);
+        $this->expose('trips', TripController::class);
+        $problem = 'The [rest.extensions] option must be a map of extension names to class names or false.';
+
+        $output = $this->check(1, TripController::class);
+
+        $this->assertStringContainsString("  relations ... no relation accepts detach, 1 skipped\n", $output);
+        $this->assertStringEndsWith(
+            "  extensions ... FAILED\n"
+            .'  ⇂ '.rtrim($problem, '.')."\n"
+            ."  noting ... Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension, runtime\n",
+            $output,
+        );
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', 'acl')]
+    public function it_reports_an_extension_config_that_is_not_a_map_as_json(): void
+    {
+        Rest::registerExtension('noting', NotingExtension::class);
+        $this->expose('trips', TripController::class);
+
+        $report = $this->report(1, TripController::class);
+
+        $this->assertArrayHasKey('routes', $report);
+        $this->assertArrayHasKey('relations', $report);
+        $this->assertSame([
+            'registered' => [
+                ['name' => 'noting', 'class' => NotingExtension::class, 'origin' => 'runtime', 'disabled' => false, 'replaces' => null],
+            ],
+            'problems' => ['The [rest.extensions] option must be a map of extension names to class names or false.'],
+        ], $report['extensions']);
+        $this->assertSame([NotingExtension::class], ExtensionLog::$built);
+    }
+
+    #[Test]
     #[WithConfig('rest.extensions', ['counting' => CountingExtension::class, 'Bad' => NotingExtension::class, 0 => BothKindsExtension::class])]
     public function it_lists_the_other_extensions_beside_a_refused_config_entry(): void
     {
