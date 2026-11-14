@@ -49,6 +49,11 @@ final class InvalidQueryExtensionException extends InvalidExtensionException
         return self::about($names[0] ?? '', "The extensions [{$extensions}] select [{$alias}] twice in the rows of {$resource}. Give each select() its own alias.");
     }
 
+    public static function aliasRepeated(string $name, string $alias, string $resource): self
+    {
+        return self::about($name, "The [{$name}] extension selects [{$alias}] twice in the rows of {$resource}. Give each select() its own alias.");
+    }
+
     public static function aliasNamesField(string $name, string $alias, string $resource): self
     {
         return self::about($name, "The [{$name}] extension selects [{$alias}], which is also a field of {$resource}, so the field would render the subquery. Choose another alias.");
@@ -70,6 +75,11 @@ final class InvalidQueryExtensionException extends InvalidExtensionException
         $extensions = implode(', ', $names);
 
         return self::about($names[0] ?? '', "The extensions [{$extensions}] eager load [{$relation}] on {$resource} twice. Load it from one extension, once.");
+    }
+
+    public static function relationRepeated(string $name, string $relation, string $resource): self
+    {
+        return self::about($name, "The [{$name}] extension eager loads [{$relation}] on {$resource} twice. Call with() once for each relation.");
     }
 
     public static function augmentedQuery(string $name, string $resource, QueryPart $part): self

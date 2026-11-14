@@ -2,15 +2,23 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Augmentations;
 
+use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Query\QueryPart;
+use Lomkit\Rest\Search\Plan\QueryAdditions;
+use Lomkit\Rest\Search\Plan\RenderedLevel;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorResource;
@@ -21,6 +29,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentation;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathAuthorController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathAuthorResource;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathPostController;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -266,8 +275,17 @@ class AugmentedRowsTest extends PackageTestCase
     {
         $this->expectRefusal(
             static fn (AugmentationContext $context): array => [$context->select('total', Post::query()->selectRaw('1')), $context->select('total', Post::query()->selectRaw('2'))],
-            InvalidQueryExtensionException::aliasTaken('first__total', PathAuthorResource::class, ['first', 'first']),
+            InvalidQueryExtensionException::aliasRepeated('first', 'first__total', PathAuthorResource::class),
         );
+    }
+
+    #[Test]
+    public function it_names_one_extension_once_when_it_selects_an_alias_twice(): void
+    {
+        $exception = InvalidQueryExtensionException::aliasRepeated('first', 'first__total', PathAuthorResource::class);
+
+        $this->assertSame('The [first] extension selects [first__total] twice in the rows of '.PathAuthorResource::class.'. Give each select() its own alias.', $exception->getMessage());
+        $this->assertTrue($exception->namesExtension('first'));
     }
 
     #[Test]
@@ -338,6 +356,60 @@ class AugmentedRowsTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_refuses_a_relation_that_one_extension_loads_twice(): void
+    {
+        $this->expectRefusal(
+            static function (AugmentationContext $context): void {
+                $context->with('drafts');
+                $context->with('drafts');
+            },
+            InvalidQueryExtensionException::relationRepeated('first', 'drafts', PathAuthorResource::class),
+        );
+    }
+
+    #[Test]
+    public function it_names_one_extension_once_when_it_loads_a_relation_twice(): void
+    {
+        $exception = InvalidQueryExtensionException::relationRepeated('first', 'drafts', PathAuthorResource::class);
+
+        $this->assertSame('The [first] extension eager loads [drafts] on '.PathAuthorResource::class.' twice. Call with() once for each relation.', $exception->getMessage());
+        $this->assertTrue($exception->namesExtension('first'));
+    }
+
+    /** @param Closure(EloquentBuilder<Author>): mixed $change */
+    #[Test]
+    #[DataProvider('outerChanges')]
+    public function it_refuses_a_subquery_that_changes_the_outer_query(Closure $change, QueryPart $part): void
+    {
+        $context = new RestContext(RestRequest::create('/path-authors/search', 'POST'), $this->app);
+        $additions = new QueryAdditions($context->resource(PathAuthorResource::class), RenderedLevel::of([]));
+        $query = Author::query()->select('authors.id');
+        $additions->select('first', 'total', static function (Builder $subquery) use ($query, $change): void {
+            $subquery->selectRaw('1');
+            $change($query);
+        });
+
+        try {
+            $additions->applyTo($query);
+            $this->fail('The subquery changed the outer query without a refusal.');
+        } catch (InvalidQueryExtensionException $exception) {
+            $this->assertEquals(InvalidQueryExtensionException::augmentedQuery('first', PathAuthorResource::class, $part), $exception);
+            $this->assertSame('The [first] extension adds '.$part->value.' to the query of '.PathAuthorResource::class.' while adding to its rows. An augmentation adds columns, subqueries and eager loads only: restrict rows with RestrictsQueries.', $exception->getMessage());
+            $this->assertTrue($exception->namesExtension('first'));
+        }
+    }
+
+    /** @return array<string, array{Closure(EloquentBuilder<Author>): mixed, QueryPart}> */
+    public static function outerChanges(): array
+    {
+        return [
+            'a where' => [static fn (EloquentBuilder $query): EloquentBuilder => $query->where('id', 1), QueryPart::Where],
+            'a join' => [static fn (EloquentBuilder $query): EloquentBuilder => $query->join('posts', 'posts.author_id', '=', 'authors.id'), QueryPart::Join],
+            'a removed scope' => [static fn (EloquentBuilder $query): EloquentBuilder => $query->withoutGlobalScope(SoftDeletingScope::class), QueryPart::RemovedScope],
+        ];
+    }
+
+    #[Test]
     #[DataProvider('invalidColumns')]
     public function it_refuses_an_invalid_column(string $column): void
     {
@@ -400,7 +472,7 @@ class AugmentedRowsTest extends PackageTestCase
         $this->assertSame(['resource '.\Lomkit\Rest\Http\Resource::class, 'user '.Authenticatable::class, 'gates array'], $properties);
     }
 
-    private function expectRefusal(\Closure $augment, InvalidQueryExtensionException $exception): void
+    private function expectRefusal(Closure $augment, InvalidQueryExtensionException $exception): void
     {
         config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
         FirstAugmentation::$augment = $augment;

@@ -59,7 +59,11 @@ final class QueryAdditions
         }
 
         if (isset($this->selects[$final])) {
-            throw InvalidQueryExtensionException::aliasTaken($final, $this->resource::class, self::sorted([$this->selects[$final][0], $extension]));
+            $owner = $this->selects[$final][0];
+
+            throw $owner === $extension
+                ? InvalidQueryExtensionException::aliasRepeated($extension, $final, $this->resource::class)
+                : InvalidQueryExtensionException::aliasTaken($final, $this->resource::class, self::sorted([$owner, $extension]));
         }
 
         if ($this->resource->definition()->fields()->has($final)) {
@@ -76,7 +80,11 @@ final class QueryAdditions
         AugmentedLoad::ensureDeclared($extension, $this->resource, $relation);
 
         if (isset($this->loads[$relation])) {
-            throw InvalidQueryExtensionException::relationTaken($relation, $this->resource::class, self::sorted([$this->loads[$relation][0], $extension]));
+            $owner = $this->loads[$relation][0];
+
+            throw $owner === $extension
+                ? InvalidQueryExtensionException::relationRepeated($extension, $relation, $this->resource::class)
+                : InvalidQueryExtensionException::relationTaken($relation, $this->resource::class, self::sorted([$owner, $extension]));
         }
 
         $this->loads[$relation] = [$extension, $constraint];
@@ -85,7 +93,6 @@ final class QueryAdditions
     /** @param EloquentBuilder<Model> $query */
     public function applyTo(EloquentBuilder $query): void
     {
-        $shape = OuterQueryShape::of($query);
         $loads = $this->keptLoads($query);
         $keys = [];
 
@@ -98,12 +105,11 @@ final class QueryAdditions
         }
 
         AddedColumns::merge($query, [...array_keys($this->columns), ...$keys]);
-        $this->ensureUnchanged($query, $shape, $this->owners([...$this->columns, ...array_column($this->loads, 0)]));
 
         foreach ($this->selects as $alias => [$extension, $subquery]) {
             $before = OuterQueryShape::of($query);
             $query->addSelect([$alias => $subquery]);
-            $this->ensureUnchanged($query, $before, [$extension]);
+            $this->ensureUnchanged($query, $before, $extension);
         }
     }
 
@@ -129,26 +135,14 @@ final class QueryAdditions
         return $kept;
     }
 
-    /**
-     * @param  EloquentBuilder<Model>  $query
-     * @param  list<string>  $owners
-     */
-    private function ensureUnchanged(EloquentBuilder $query, OuterQueryShape $before, array $owners): void
+    /** @param EloquentBuilder<Model> $query */
+    private function ensureUnchanged(EloquentBuilder $query, OuterQueryShape $before, string $extension): void
     {
         $part = OuterQueryShape::of($query)->changedFrom($before);
 
         if ($part !== null) {
-            throw InvalidQueryExtensionException::augmentedQuery(implode(', ', $owners), $this->resource::class, $part);
+            throw InvalidQueryExtensionException::augmentedQuery($extension, $this->resource::class, $part);
         }
-    }
-
-    /**
-     * @param  array<array-key, string>  $owners
-     * @return list<string>
-     */
-    private function owners(array $owners): array
-    {
-        return self::sorted(array_values(array_unique($owners)));
     }
 
     /**
