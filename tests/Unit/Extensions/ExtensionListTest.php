@@ -99,6 +99,14 @@ final class ExtensionListTest extends TestCase
         ExtensionList::merge(['acl' => $value], []);
     }
 
+    #[Test]
+    public function it_asks_for_the_class_name_of_an_instance_in_the_config(): void
+    {
+        $this->expectExceptionObject(InvalidExtensionException::instanceGiven('acl', NotingExtension::class));
+
+        ExtensionList::merge(['acl' => new NotingExtension], []);
+    }
+
     /** @return array<string, array{mixed, string}> */
     public static function neitherClassNamesNorFalse(): array
     {
@@ -107,7 +115,6 @@ final class ExtensionListTest extends TestCase
             'an integer' => [1, 'int'],
             'an array' => [[], 'array'],
             'null' => [null, 'null'],
-            'an instance' => [new NotingExtension, NotingExtension::class],
         ];
     }
 }

@@ -31,6 +31,10 @@ final class RuntimeExtensions
                 throw InvalidExtensionException::missingName(is_string($class) ? $class : get_debug_type($class));
             }
 
+            if (is_object($class)) {
+                throw InvalidExtensionException::instanceGiven($name, $class::class);
+            }
+
             if (! is_string($class)) {
                 throw InvalidExtensionException::notAClass($name, get_debug_type($class));
             }

@@ -38,6 +38,11 @@ final class InvalidExtensionException extends LogicException
         return self::about($name, "The [{$name}] extension is [{$entry}], which is not a class. Give the name of a class that extends ".Extension::class.'; only the [rest.extensions] config accepts false, to disable the extension.');
     }
 
+    public static function instanceGiven(string $name, string $class): self
+    {
+        return self::about($name, "The [{$name}] extension is an instance of {$class}. Register its class name, {$class}::class: the container builds each extension once per context, and an instance would outlive the context.");
+    }
+
     public static function notAnExtension(string $name, string $class): self
     {
         return self::about($name, "The [{$name}] extension {$class} does not extend ".Extension::class.'. Extend it.');

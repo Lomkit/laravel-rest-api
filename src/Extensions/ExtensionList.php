@@ -55,6 +55,10 @@ final readonly class ExtensionList
             return new ExtensionEntry($name, $registered?->class, $registered->origin ?? ExtensionOrigin::Config, true);
         }
 
+        if (is_object($value)) {
+            throw InvalidExtensionException::instanceGiven($name, $value::class);
+        }
+
         if (! is_string($value)) {
             throw InvalidExtensionException::notAClass($name, get_debug_type($value));
         }

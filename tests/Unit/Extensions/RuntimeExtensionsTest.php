@@ -121,6 +121,24 @@ final class RuntimeExtensionsTest extends TestCase
     }
 
     #[Test]
+    public function it_asks_for_the_class_name_of_an_instance(): void
+    {
+        $extensions = new RuntimeExtensions;
+
+        try {
+            $extensions->registerAll(['noting' => new NotingExtension]);
+            $this->fail('The instance was accepted.');
+        } catch (InvalidExtensionException $exception) {
+            $this->assertEquals(InvalidExtensionException::instanceGiven('noting', NotingExtension::class), $exception);
+            $this->assertSame(
+                'The [noting] extension is an instance of '.NotingExtension::class.'. Register its class name, '.NotingExtension::class.'::class: the container builds each extension once per context, and an instance would outlive the context.',
+                $exception->getMessage(),
+            );
+            $this->assertSame([], $extensions->all());
+        }
+    }
+
+    #[Test]
     public function it_keeps_nothing_from_a_map_with_one_refused_entry(): void
     {
         $extensions = new RuntimeExtensions;
@@ -178,7 +196,6 @@ final class RuntimeExtensionsTest extends TestCase
     public static function notClassNames(): array
     {
         return [
-            'an instance' => [new NotingExtension, NotingExtension::class],
             'false' => [false, 'bool'],
             'null' => [null, 'null'],
         ];
