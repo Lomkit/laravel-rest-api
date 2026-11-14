@@ -48,9 +48,14 @@ trait HasPivotFields
     #[\Override]
     public function reservedKeys(): array
     {
+        return [Str::snake($this->pivotAccessor())];
+    }
+
+    public function pivotAccessor(): string
+    {
         $relation = $this->fromResource::newModel()->{$this->relation}();
 
-        return [Str::snake($relation instanceof BelongsToMany ? $relation->getPivotAccessor() : 'pivot')];
+        return $relation instanceof BelongsToMany ? $relation->getPivotAccessor() : 'pivot';
     }
 
     private function pivotModel(): ?Model
