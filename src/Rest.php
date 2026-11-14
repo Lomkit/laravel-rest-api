@@ -27,7 +27,6 @@ class Rest
     public function __construct(
         private readonly ResourceRegistrar $registrar,
         private readonly Repository $config,
-        private readonly Factory $cache,
         private readonly Container $container,
     ) {}
 
@@ -75,6 +74,6 @@ class Rest
 
     private function decisions(): Cache
     {
-        return $this->cache->store(ConfigValue::of($this->config, 'rest.authorizations.cache.store')->nullableString());
+        return $this->container->make(Factory::class)->store(ConfigValue::of($this->config, 'rest.authorizations.cache.store')->nullableString());
     }
 }
