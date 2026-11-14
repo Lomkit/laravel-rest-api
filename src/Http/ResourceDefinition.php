@@ -30,6 +30,9 @@ final class ResourceDefinition
 
     private ?ResourceLimits $limits = null;
 
+    /** @var list<string>|null */
+    private ?array $alwaysSelect = null;
+
     private ?ResolvedText $text = null;
 
     private ?GateVocabulary $gates = null;
@@ -147,6 +150,12 @@ final class ResourceDefinition
     public function inputFields(Action|Instruction $declaration): FieldSet
     {
         return $this->inputs[$declaration] ??= FieldSet::forInputs($declaration->fields(), $declaration::class.'::fields()');
+    }
+
+    /** @return list<string> */
+    public function alwaysSelect(): array
+    {
+        return $this->alwaysSelect ??= $this->resource->alwaysSelect();
     }
 
     public function limits(): ResourceLimits

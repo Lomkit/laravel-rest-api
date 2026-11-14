@@ -44,7 +44,7 @@ enum ColumnSelection
         return ColumnSet::of($model, [
             ...$columns,
             $model->getKeyName(),
-            ...$resource->alwaysSelect(),
+            ...$resource->definition()->alwaysSelect(),
             ...$keys,
             ...self::version($resource, $model, $gates),
         ]);
