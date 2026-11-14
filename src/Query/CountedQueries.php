@@ -2,7 +2,7 @@
 
 namespace Lomkit\Rest\Query;
 
-use Illuminate\Contracts\Database\Query\Expression;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use WeakMap;
@@ -10,15 +10,31 @@ use WeakMap;
 /** @internal */
 final class CountedQueries
 {
-    /** @var WeakMap<Builder<Model>, array{columns: array<Expression|string>|null, select: list<mixed>}>|null */
-    private static ?WeakMap $planned = null;
+    /** @var WeakMap<Builder<Model>, AddedSelection>|null */
+    private static ?WeakMap $augmented = null;
 
-    /** @param Builder<Model> $query */
-    public static function remember(Builder $query): void
+    /**
+     * @param  Builder<Model>  $query
+     * @param  Closure(): void  $augment
+     */
+    public static function augment(Builder $query, Closure $augment): void
     {
-        $base = $query->getQuery();
-        self::$planned ??= new WeakMap;
-        self::$planned[$query] = ['columns' => $base->columns, 'select' => $base->bindings['select']];
+        $before = $query->getQuery();
+        $columns = $before->columns;
+        $bindings = $before->bindings['select'];
+
+        $augment();
+
+        $added = AddedSelection::between($columns, $bindings, $query->getQuery());
+
+        if ($added === null) {
+            return;
+        }
+
+        self::track($query, $added);
+        $query->onClone(static function (Builder $clone) use ($added): void {
+            self::track($clone, $added);
+        });
     }
 
     /**
@@ -27,16 +43,21 @@ final class CountedQueries
      */
     public static function withoutAdditions(Builder $query): Builder
     {
-        $planned = self::$planned[$query] ?? null;
+        $added = self::$augmented[$query] ?? null;
 
-        if ($planned === null) {
+        if ($added === null) {
             return $query;
         }
 
         $counted = $query->clone();
-        $counted->getQuery()->columns = $planned['columns'];
-        $counted->getQuery()->bindings['select'] = $planned['select'];
 
-        return $counted;
+        return $added->removeFrom($counted->getQuery()) ? $counted : $query;
+    }
+
+    /** @param Builder<Model> $query */
+    private static function track(Builder $query, AddedSelection $added): void
+    {
+        self::$augmented ??= new WeakMap;
+        self::$augmented[$query] = $added;
     }
 }

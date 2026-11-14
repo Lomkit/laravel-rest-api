@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Augmentations;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentationLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ClonedCountBookController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CopiesExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ShortCountBookController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UncappedGroupedBookController;
@@ -38,6 +39,7 @@ class AugmentedCountTest extends PackageTestCase
         Rest::resource('capped-books', CappedBookController::class)->register();
         Rest::resource('grouped-books', UncappedGroupedBookController::class)->register();
         Rest::resource('short-count-books', ShortCountBookController::class)->register();
+        Rest::resource('cloned-count-books', ClonedCountBookController::class)->register();
         Book::query()->insert(array_map(static fn (int $id): array => ['id' => $id, 'title' => $id === 1 ? 'Dune' : 'Book '.$id], range(1, 30)));
     }
 
@@ -105,6 +107,22 @@ class AugmentedCountTest extends PackageTestCase
         $this->assertSame([
             'select books.id, (select count(*) from loans where loans.book_id = books.id) as loans__copies from books where title != ? order by books.id desc limit 10 offset 0',
             'select count(*) as aggregate from books where title != ?',
+        ], self::loggedQueries());
+    }
+
+    #[Test]
+    public function it_counts_the_groups_of_a_cloned_query_without_the_augmentation(): void
+    {
+        Loan::query()->insert(array_map(static fn (int $id): array => ['id' => $id, 'book_id' => intdiv($id + 1, 2), 'borrower' => 'Reader '.$id], range(1, 24)));
+        DB::enableQueryLog();
+
+        $response = $this->postJson('/cloned-count-books/search', ['search' => ['selects' => [['field' => 'id']], 'limit' => 10, 'scopes' => [['name' => 'borrowedTwice']]]]);
+
+        $response->assertOk()->assertJsonPath('total', 12);
+        $grouped = 'from books inner join loans on loans.book_id = books.id where books.id > ? group by books.id having count(loans.id) >= 2';
+        $this->assertSame([
+            'select books.id, (select count(*) from loans where loans.book_id = books.id) as loans__copies '.$grouped.' order by books.id desc limit 10 offset 0',
+            'select count(*) as aggregate from (select books.id '.$grouped.') as aggregate_table',
         ], self::loggedQueries());
     }
 

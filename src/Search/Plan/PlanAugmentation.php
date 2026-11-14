@@ -36,11 +36,15 @@ final readonly class PlanAugmentation
             $extension->augment(new AugmentationContext($name, $resource, $user, $gates, $additions));
         }
 
-        if (! $query instanceof Relation) {
-            CountedQueries::remember($eloquent);
+        if ($query instanceof Relation) {
+            $additions->applyTo($eloquent);
+
+            return;
         }
 
-        $additions->applyTo($eloquent);
+        CountedQueries::augment($eloquent, static function () use ($additions, $eloquent): void {
+            $additions->applyTo($eloquent);
+        });
     }
 
     /** @return list<string> */
