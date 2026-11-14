@@ -105,6 +105,43 @@ class RestrictedPathsTest extends PackageTestCase
         );
     }
 
+    /**
+     * @param  array<string, mixed>  $group
+     * @param  list<int>  $ids
+     */
+    #[Test]
+    #[DataProvider('morphGroups')]
+    public function it_restricts_the_targets_of_a_morph_group(array $group, array $ids): void
+    {
+        $response = $this->postJson('/restricted-labels/search', ['search' => ['filters' => [['relation' => 'labelable', ...$group]], 'sorts' => [['field' => 'id']]]]);
+
+        $response->assertOk()->assertJsonPath('data.*.id', $ids);
+        $this->assertSame(['RestrictedLabelResource guest', 'BookResource guest'], RestrictionLog::$seen);
+    }
+
+    /** @return array<string, array{array<string, mixed>, list<int>}> */
+    public static function morphGroups(): array
+    {
+        return [
+            'a target of the type' => [['types' => [Book::class => []]], [1]],
+            'a target that matches its filters' => [['types' => [Book::class => [['field' => 'title', 'value' => 'Hidden']]]], []],
+            'no target of the type' => [['exists' => false, 'types' => [Book::class => []]], [2]],
+        ];
+    }
+
+    #[Test]
+    public function it_restricts_a_morph_group_without_a_target_inside_its_negation(): void
+    {
+        $this->captureQueries();
+
+        $this->postJson('/restricted-labels/search', ['search' => ['filters' => [['relation' => 'labelable', 'exists' => false, 'types' => [Book::class => []]]]]])->assertOk();
+
+        $this->assertSame([[
+            'select labels.id, labels.text, labels.labelable_id, labels.labelable_type from labels where ((labels.text != ?)) and ((not (((labels.labelable_type = ? and exists (select * from books where labels.labelable_id = books.id and ((books.title != ?)))))) or labels.labelable_type is null)) order by labels.id desc limit 50 offset 0',
+            ['Hidden', Book::class, 'Hidden'],
+        ]], $this->readsOf('labels'));
+    }
+
     #[Test]
     public function it_restricts_a_relation_sort(): void
     {
