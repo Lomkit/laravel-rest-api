@@ -8,13 +8,10 @@ use Lomkit\Rest\Contracts\OwnerRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\ResourceLimits;
-use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\Clause;
-use Lomkit\Rest\Query\Clauses\FilterGroupClause;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Query\TextMorphKeys;
 use Lomkit\Rest\Relations\Relation;
-use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Search\IncludeNode;
 use Lomkit\Rest\Search\MorphIncludeNode;
 use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
@@ -61,7 +58,7 @@ final readonly class SearchPlanner
             ->authorizer()
             ->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
-        $aggregates = array_map(self::aggregate(...), $search->aggregates, array_keys($search->aggregates));
+        $aggregates = array_map(AggregatePlan::of(...), $search->aggregates, array_keys($search->aggregates));
 
         return new QueryPlan(
             $resource,
@@ -188,16 +185,5 @@ final readonly class SearchPlanner
     private static function limits(Resource $resource): ResourceLimits
     {
         return $resource->definition()->limits();
-    }
-
-    private static function aggregate(AggregateNode $aggregate, int $position): AggregateClause
-    {
-        $clauses = [new PerimeterClause($aggregate->resource)];
-
-        if ($aggregate->filters->filters !== []) {
-            $clauses[] = FilterGroupClause::of($aggregate->filters);
-        }
-
-        return AggregateClause::of($aggregate, new QueryPlan($aggregate->resource, $clauses, [], [], LimitPolicy::none()), $position);
     }
 }
