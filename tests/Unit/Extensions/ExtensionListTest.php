@@ -105,6 +105,18 @@ final class ExtensionListTest extends TestCase
     }
 
     #[Test]
+    public function it_names_the_index_of_a_config_entry_without_a_name_or_class(): void
+    {
+        $list = ExtensionList::merge([false, 1], []);
+
+        $this->assertEquals([
+            InvalidExtensionException::unnamedEntry(0, false),
+            InvalidExtensionException::unnamedEntry(1, 1),
+        ], $list->refused);
+        $this->assertStringStartsWith('The extension entry at index [0] is [bool] and has no name.', $list->refused[0]->getMessage());
+    }
+
+    #[Test]
     public function it_refuses_an_invalid_config_name(): void
     {
         $this->expectExceptionObject(InvalidExtensionException::invalidName('Acl'));

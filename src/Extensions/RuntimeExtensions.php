@@ -28,7 +28,7 @@ final class RuntimeExtensions
 
         foreach ($classes as $name => $class) {
             if (! is_string($name)) {
-                throw InvalidExtensionException::missingName(is_string($class) ? $class : get_debug_type($class));
+                throw is_string($class) ? InvalidExtensionException::missingName($class) : InvalidExtensionException::unnamedEntry($name, $class);
             }
 
             if (is_object($class)) {

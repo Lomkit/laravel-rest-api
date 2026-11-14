@@ -106,6 +106,41 @@ final class RuntimeExtensionsTest extends TestCase
     }
 
     #[Test]
+    public function it_names_the_index_of_a_map_entry_without_a_name_or_class(): void
+    {
+        $extensions = new RuntimeExtensions;
+
+        try {
+            $extensions->registerAll([1]);
+            $this->fail('The entry was accepted.');
+        } catch (InvalidExtensionException $exception) {
+            $this->assertEquals(InvalidExtensionException::unnamedEntry(0, 1), $exception);
+            $this->assertSame(
+                "The extension entry at index [0] is [int] and has no name. Key the class name of each extension by its name, such as 'acl' => AccessControlExtension::class, in the [rest.extensions] config or in Rest::registerExtensions(); only the config accepts 'acl' => false, to disable an extension.",
+                $exception->getMessage(),
+            );
+            $this->assertSame([], $extensions->all());
+        }
+    }
+
+    #[Test]
+    public function it_asks_for_a_name_and_the_class_name_of_an_unnamed_instance(): void
+    {
+        $extensions = new RuntimeExtensions;
+
+        try {
+            $extensions->registerAll([new NotingExtension]);
+            $this->fail('The instance was accepted.');
+        } catch (InvalidExtensionException $exception) {
+            $this->assertEquals(InvalidExtensionException::unnamedEntry(0, new NotingExtension), $exception);
+            $this->assertSame(
+                'The extension entry at index [0] is an instance of '.NotingExtension::class." and has no name. Key its class name by the extension name, such as 'acl' => ".NotingExtension::class.'::class, in the [rest.extensions] config or in Rest::registerExtensions().',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    #[Test]
     #[DataProvider('notClassNames')]
     public function it_refuses_a_map_value_that_is_not_a_class_name(mixed $value, string $type): void
     {

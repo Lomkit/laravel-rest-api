@@ -64,7 +64,7 @@ final readonly class ExtensionList
     private static function configured(int|string $name, mixed $value, ?ExtensionEntry $registered): ExtensionEntry
     {
         if (! is_string($name)) {
-            throw InvalidExtensionException::missingName(is_string($value) ? $value : get_debug_type($value));
+            throw is_string($value) ? InvalidExtensionException::missingName($value) : InvalidExtensionException::unnamedEntry($name, $value);
         }
 
         ExtensionName::ensureValid($name);

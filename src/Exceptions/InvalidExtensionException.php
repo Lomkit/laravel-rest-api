@@ -16,6 +16,19 @@ final class InvalidExtensionException extends LogicException
         return new self("The extension [{$entry}] has no name. Key it by its name, such as 'acl' => [{$entry}], in the [rest.extensions] config or in Rest::registerExtensions().");
     }
 
+    public static function unnamedEntry(int $index, mixed $value): self
+    {
+        if (is_object($value)) {
+            $class = $value::class;
+
+            return new self("The extension entry at index [{$index}] is an instance of {$class} and has no name. Key its class name by the extension name, such as 'acl' => {$class}::class, in the [rest.extensions] config or in Rest::registerExtensions().");
+        }
+
+        $type = get_debug_type($value);
+
+        return new self("The extension entry at index [{$index}] is [{$type}] and has no name. Key the class name of each extension by its name, such as 'acl' => AccessControlExtension::class, in the [rest.extensions] config or in Rest::registerExtensions(); only the config accepts 'acl' => false, to disable an extension.");
+    }
+
     public static function invalidName(string $name): self
     {
         $length = ExtensionName::MAX_LENGTH;
