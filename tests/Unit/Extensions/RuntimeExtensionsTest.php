@@ -232,6 +232,21 @@ final class RuntimeExtensionsTest extends TestCase
         $this->assertSame(['noting' => NotingExtension::class], $extensions->all());
     }
 
+    #[Test]
+    public function it_advises_register_over_boot_in_a_late_registration(): void
+    {
+        $extensions = new RuntimeExtensions;
+        $extensions->freeze();
+
+        $this->expectExceptionMessage(
+            'The [noting] extension '.NotingExtension::class.' is registered after the package built its first context or registered its first Rest::resource() route, and the extension list no longer changes then.'
+            .' Register extensions from the register() method of a service provider, which runs before the routes in any provider order.'
+            .' Register from boot() only before every provider that declares Rest::resource() routes in its own boot().',
+        );
+
+        $extensions->register('noting', NotingExtension::class);
+    }
+
     /** @return array<string, array{string}> */
     public static function invalidNames(): array
     {
