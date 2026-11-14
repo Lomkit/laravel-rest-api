@@ -4,12 +4,16 @@ namespace Lomkit\Rest\Query;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Http\Resource;
+use ReflectionProperty;
 
 /** @internal */
 final readonly class RestrictionGuard
 {
+    private const string NESTED = 'Nested';
+
     /** @param Builder<Model> $query */
     public static function ensureOnlyWheres(Builder $query, string $extension, Resource $resource): void
     {
@@ -19,7 +23,7 @@ final readonly class RestrictionGuard
             throw InvalidQueryExtensionException::restrictionRemovesScopes($extension, $resource::class, array_map(static fn (mixed $scope): string => is_string($scope) ? $scope : get_debug_type($scope), array_values($removed)));
         }
 
-        $part = self::refused($query);
+        $part = self::refusedIn($query->getQuery(), $query->getModel()->getTable()) ?? self::refusedOn($query);
 
         if ($part !== null) {
             throw InvalidQueryExtensionException::restrictionClause($extension, $resource::class, $part);
@@ -27,11 +31,19 @@ final readonly class RestrictionGuard
     }
 
     /** @param Builder<Model> $query */
-    private static function refused(Builder $query): ?QueryPart
+    private static function refusedOn(Builder $query): ?QueryPart
     {
-        $base = $query->getQuery();
-
         return match (true) {
+            $query->getEagerLoads() !== [] => QueryPart::EagerLoad,
+            self::hidden(Builder::class, 'scopes', $query) !== $query->getModel()->getGlobalScopes() => QueryPart::Scope,
+            self::hidden(Builder::class, 'afterQueryCallbacks', $query) !== [] => QueryPart::AfterCallback,
+            default => null,
+        };
+    }
+
+    private static function refusedIn(QueryBuilder $base, string $table): ?QueryPart
+    {
+        $part = match (true) {
             ! empty($base->joins) => QueryPart::Join,
             ! empty($base->orders) || ! empty($base->unionOrders) => QueryPart::Order,
             $base->limit !== null || $base->unionLimit !== null || $base->groupLimit !== null => QueryPart::Limit,
@@ -42,10 +54,36 @@ final readonly class RestrictionGuard
             ! empty($base->groups) => QueryPart::Group,
             ! empty($base->havings) => QueryPart::Having,
             ! empty($base->unions) => QueryPart::Union,
-            $query->getEagerLoads() !== [] => QueryPart::EagerLoad,
-            $base->from !== $query->getModel()->getTable() => QueryPart::From,
+            $base->from !== $table => QueryPart::From,
             $base->beforeQueryCallbacks !== [] => QueryPart::Callback,
+            self::hidden(QueryBuilder::class, 'afterQueryCallbacks', $base) !== [] => QueryPart::AfterCallback,
             default => null,
         };
+
+        if ($part !== null) {
+            return $part;
+        }
+
+        foreach ($base->wheres as $where) {
+            $nested = is_array($where) && ($where['type'] ?? null) === self::NESTED ? ($where['query'] ?? null) : null;
+            $part = $nested instanceof QueryBuilder ? self::refusedIn($nested, $table) : null;
+
+            if ($part !== null) {
+                return $part;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  class-string  $class
+     * @return array<array-key, mixed>
+     */
+    private static function hidden(string $class, string $property, object $query): array
+    {
+        $value = (new ReflectionProperty($class, $property))->getValue($query);
+
+        return is_array($value) ? $value : [];
     }
 }

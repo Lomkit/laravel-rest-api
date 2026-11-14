@@ -84,6 +84,17 @@ class RestrictionGuardTest extends PackageTestCase
             'another table' => [static fn (Builder $query): Builder => $query->from('posts'), QueryPart::From],
             'a before query callback' => [static fn (Builder $query): Builder => $query->beforeQuery(static function (QueryBuilder $query): void {}), QueryPart::Callback],
             'a clause added last' => [static fn (Builder $query): Builder => $query->where('first_name', 'Ada')->orderBy('id'), QueryPart::Order],
+            'a global scope' => [static fn (Builder $query): Builder => $query->withGlobalScope('nothing', static fn (Builder $query): Builder => $query->whereRaw('0 = 1')), QueryPart::Scope],
+            'a replaced global scope' => [static fn (Builder $query): Builder => $query->withGlobalScope(SoftDeletingScope::class, static function (Builder $query): void {}), QueryPart::Scope],
+            'an after query callback' => [static fn (Builder $query): Builder => $query->afterQuery(static fn (mixed $rows): mixed => $rows), QueryPart::AfterCallback],
+            'an after query callback on the base query' => [static fn (Builder $query): QueryBuilder => $query->getQuery()->afterQuery(static fn (mixed $rows): mixed => $rows), QueryPart::AfterCallback],
+            'a join in a nested group' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where('first_name', 'Ada')->join('posts', 'posts.author_id', '=', 'authors.id')), QueryPart::Join],
+            'an order in a nested group' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where('first_name', 'Ada')->orderBy('id')), QueryPart::Order],
+            'a limit in a nested group' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where('first_name', 'Ada')->limit(1)), QueryPart::Limit],
+            'another table in a nested group' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where('first_name', 'Ada')->from('posts')), QueryPart::From],
+            'an order two groups down' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where(static fn (Builder $deeper): Builder => $deeper->where('first_name', 'Ada')->orderBy('id'))), QueryPart::Order],
+            'an order in a nested base group' => [static fn (Builder $query): QueryBuilder => $query->getQuery()->where(static fn (QueryBuilder $nested): QueryBuilder => $nested->where('first_name', 'Ada')->orderBy('id')), QueryPart::Order],
+            'an after query callback in a nested group' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): QueryBuilder => $nested->where('first_name', 'Ada')->getQuery()->afterQuery(static fn (mixed $rows): mixed => $rows)), QueryPart::AfterCallback],
         ];
     }
 

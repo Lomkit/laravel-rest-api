@@ -78,6 +78,10 @@ class RestrictionGuardPartsTest extends PackageTestCase
             })],
             'a raw where' => [static fn (Builder $query): Builder => $query->whereRaw('0 = 1')],
             'a nested where' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where('id', 1)->orWhere('id', 2))],
+            'a where exists that joins another table' => [static fn (Builder $query): Builder => $query->whereExists(static function (QueryBuilder $posts): void {
+                $posts->from('posts')->join('drafts', 'drafts.post_id', '=', 'posts.id')->whereColumn('posts.author_id', 'authors.id')->orderBy('posts.id')->limit(1);
+            })],
+            'a nested where two groups down' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where(static fn (Builder $deeper): Builder => $deeper->where('id', 1))->orWhere('id', 2))],
             'a where on a qualified column' => [static fn (Builder $query): Builder => $query->where($query->qualifyColumn('last_name'), '!=', 'Hidden')],
         ];
     }

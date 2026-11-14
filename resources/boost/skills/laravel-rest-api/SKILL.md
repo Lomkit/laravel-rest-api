@@ -1561,11 +1561,11 @@ final class TenantExtension extends Extension implements RestrictsQueries
 ```
 
 - Guarantees: `$context->query` is the Eloquent builder of the extension's own where group. The group comes after `perimeterQuery()`, inside its own parentheses, and is AND-ed with the perimeter and with the other extensions: an `orWhere()` in it cannot widen the rows. It reaches every path of the perimeter: searches and includes (through a pivot too), relation filters, sorts and aggregates, metrics and the `global` key of their cache, the key lookups of `mutate`, `destroy`, `restore`, `forceDestroy` and actions, the rows of queued actions, child syncs, attached pivot rows, the records read after a write and the write gates of rendered rows. It also applies to `#[WithoutPerimeter]` resources. `$context->resource` is the restricted resource, the related one on a relation path.
-- Forbids: anything but where clauses. A join, order, limit, offset, select, distinct, lock, group, having, union, eager load, `from()`, `beforeQuery()` callback or removed global scope (`withTrashed()`, `withoutGlobalScope()`) throws `Lomkit\Rest\Exceptions\InvalidQueryExtensionException`, which names the extension and the resource. Reach another table with `whereHas()` or `whereExists()`.
+- Forbids: anything but where clauses. A join, order, limit, offset, select, distinct, lock, group, having, union, eager load, `from()`, `beforeQuery()` or `afterQuery()` callback, global scope added with `withGlobalScope()` or removed global scope (`withTrashed()`, `withoutGlobalScope()`) throws `Lomkit\Rest\Exceptions\InvalidQueryExtensionException`, which names the extension and the resource. The check reads the nested `where(fn ($query) => ...)` groups too. Reach another table with `whereHas()` or `whereExists()`.
 - `$context->user` is the user of the request, `null` for a guest: decide the rows of a guest yourself (`0 = 1` hides them all).
 - Qualify columns with `$context->query->qualifyColumn()`: pivot reads join another table.
 - A restriction may run several times in one request, and again on each attempt of a write transaction: keep it free of side effects.
-- Write where clauses only: a global scope added with `withGlobalScope()` or an `afterQuery()` callback in the group is not applied.
+- Write where clauses only. Laravel drops a global scope or an `afterQuery()` callback added to the Eloquent builder of a nested group before the check can see it, and neither is applied.
 - A text search through a search engine on a restricted resource throws `InvalidTextSearchException`: restrictions do not reach engine pages yet.
 
 ### Adding to rendered rows (`AugmentsQueries`)

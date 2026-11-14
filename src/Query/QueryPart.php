@@ -18,5 +18,7 @@ enum QueryPart: string
     case EagerLoad = 'an eager load';
     case From = 'another table';
     case Callback = 'a before query callback';
+    case AfterCallback = 'an after query callback';
+    case Scope = 'a global scope';
     case RemovedScope = 'a removed global scope';
 }
