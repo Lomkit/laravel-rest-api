@@ -1743,12 +1743,46 @@ final class TenantExtension extends Extension implements DeclaresIndexAttributes
 
 ### Declaring index attributes (`DeclaresIndexAttributes`)
 
-App: the same config line; the attributes come with the extension.
+App: `'readers' => \Vendor\Sharing\ReadersExtension::class` in `rest.extensions`.
+
+Package:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\{EngineRestrictionContext, IndexAttributesContext};
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\{DeclaresIndexAttributes, RestrictsEngineQueries};
+use Lomkit\Rest\Text\Engine\StringListAttribute;
+
+final class ReadersExtension extends Extension implements DeclaresIndexAttributes, RestrictsEngineQueries
+{
+    #[\Override]
+    public function indexAttributes(IndexAttributesContext $context): array
+    {
+        return $context->matchesStringLists ? [StringListAttribute::make('readers')] : [];
+    }
+
+    #[\Override]
+    public function restrictEngine(EngineRestrictionContext $context): void
+    {
+        $reader = $context->user?->getAuthIdentifier();
+
+        if (! $context->matchesStringLists || $reader === null) {
+            $context->query->matchNothing();
+
+            return;
+        }
+
+        $context->query->whereIn('readers', [(string) $reader]);
+    }
+}
+```
+
+The app indexes the key on the model: `toSearchableArray()` returns `'readers' => ['12', 'group-3']`. On an engine without lists, this example shows no row.
 
 - Guarantees: a static kind. It receives `$context->resource` (a class name) and `$context->matchesStringLists`, no user, and runs once per request and resource. Return fields (`ID`, `Integer`, `Number`, `Boolean`, `Text`, `Enum`) or `StringListAttribute::make('readers')` (`Lomkit\Rest\Text\Engine\StringListAttribute`). The attributes keep their real index name, never prefixed. `restrictEngine()`, `ScoutEngine::perimeter()` and `handleEngine()` of instructions can filter on them; clients never can: they stay out of the client grammar (a filter on one is a `422`), `/details` and the OpenAPI document. Same rules as `filterable()`: name pattern, `__soft_deleted` reserved, field types, no `filterUsing()` or `sortUsing()`, operators of the field and of the engine.
 - Forbids: a name that the resource (`filterable()`, `perimeter()`) or another extension declares, or the same name twice: `Lomkit\Rest\Exceptions\InvalidEngineExtensionException` names both owners.
 - The package cannot check that the model indexes these keys: add them to `toSearchableArray()` and to the index settings.
-- Lists of strings: `whereIn('readers', [...])` keeps the rows that share at least one value with the list, `whereNotIn()` the rows that share none (an empty list included). `where()` is refused on a list. Two `whereIn()` lists on one list attribute keep the narrower one when one holds the other, and throw `InvalidEngineQueryException` otherwise. Declare a list only when `$context->matchesStringLists` is `true`, so the extension still works on the other engines. Index schema per engine:
+- Lists of strings: `whereIn('readers', [...])` keeps the rows that share at least one value with the list, `whereNotIn()` the rows that share none (an empty list included). `where()` is refused on a list. Two `whereIn()` lists on one list attribute keep the narrower one when one holds the other, and throw `InvalidEngineQueryException` otherwise, naming the extensions that set them. Declare a list only when `$context->matchesStringLists` is `true`, so the extension still works on the other engines. Index schema per engine:
   - Algolia: `attributesForFaceting` holds `filterOnly(readers)`.
   - Meilisearch: `filterableAttributes` holds `readers`.
   - Typesense: a collection field `['name' => 'readers', 'type' => 'string[]']`.
