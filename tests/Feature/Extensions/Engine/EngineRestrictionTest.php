@@ -356,7 +356,10 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_chains_match_nothing_like_the_other_conditions(): void
     {
-        $this->assertSame('self', (string) (new ReflectionMethod(EngineRestriction::class, 'matchNothing'))->getReturnType());
+        $where = (string) (new ReflectionMethod(EngineRestriction::class, 'where'))->getReturnType();
+
+        $this->assertContains($where, ['self', EngineRestriction::class]);
+        $this->assertSame($where, (string) (new ReflectionMethod(EngineRestriction::class, 'matchNothing'))->getReturnType());
     }
 
     #[Test]
