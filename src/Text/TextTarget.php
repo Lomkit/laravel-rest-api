@@ -22,7 +22,7 @@ final readonly class TextTarget
 
     public static function of(Resource $resource): self
     {
-        $declared = $resource->definition()->fields();
+        $declared = $resource->definition()->declaredFields();
 
         return new self($resource::class, $declared->searchable(), $resource::newModel(), $declared, IndexExtensions::of($resource));
     }

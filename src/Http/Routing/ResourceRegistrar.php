@@ -30,6 +30,18 @@ final class ResourceRegistrar
         return $routes;
     }
 
+    public function groupName(): string
+    {
+        $groups = $this->router->getGroupStack();
+        $group = end($groups);
+
+        if (! is_array($group) || ! is_string($group['as'] ?? null)) {
+            return '';
+        }
+
+        return $group['as'];
+    }
+
     /** @param list<RouteDefinition> $definitions */
     private function ensureDistinct(array $definitions): void
     {

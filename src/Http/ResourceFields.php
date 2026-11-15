@@ -2,33 +2,76 @@
 
 namespace Lomkit\Rest\Http;
 
+use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Fields\NarrowedFields;
 use Lomkit\Rest\Mutations\RowVersion;
 use ReflectionClass;
 
 /** @internal */
 final class ResourceFields
 {
-    private ?FieldSet $fields = null;
+    private ?FieldSet $declared = null;
 
     private ?RowVersion $version = null;
+
+    private ?string $key = null;
+
+    private ?NarrowedFields $narrowed = null;
+
+    private ?FieldSet $fields = null;
+
+    private ?FieldNarrowing $narrowing = null;
 
     public function __construct(private readonly Resource $resource) {}
 
     public function fields(): FieldSet
     {
-        return $this->fields ??= $this->declared();
+        return $this->fields ??= $this->narrowing()->apply($this->declared());
+    }
+
+    public function declared(): FieldSet
+    {
+        return $this->declared ??= $this->declare();
     }
 
     public function version(): ?RowVersion
     {
-        $this->fields();
+        $this->declared();
 
         return $this->version;
     }
 
-    private function declared(): FieldSet
+    public function narrowing(): NarrowedFields
+    {
+        if ($this->narrowed !== null) {
+            return $this->narrowed;
+        }
+
+        if ($this->narrowing !== null) {
+            [$name, $class] = $this->narrowing->running();
+
+            throw InvalidFieldExtensionException::readsNarrowedFields($name, $class, $this->resource::class);
+        }
+
+        $narrowing = FieldNarrowing::of($this->resource);
+
+        if ($narrowing === null) {
+            return $this->narrowed = NarrowedFields::none();
+        }
+
+        $declared = $this->declared();
+        $this->narrowing = $narrowing;
+
+        try {
+            return $this->narrowed = $narrowing->narrowed($declared, $this->version?->column, $this->key);
+        } finally {
+            $this->narrowing = null;
+        }
+    }
+
+    private function declare(): FieldSet
     {
         $fields = FieldSet::of($this->resource->fields(), $this->resource::class.'::fields()');
         $config = $this->resource->context()->config();
@@ -47,6 +90,7 @@ final class ResourceFields
 
         $model = $this->resource::newModel();
         $bound = $fields->bindTo($model);
+        $this->key = $model->getKeyName();
 
         if ($this->resource->versioned()) {
             $this->version = RowVersion::of($this->resource, $model, $bound);

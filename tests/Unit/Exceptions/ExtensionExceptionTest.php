@@ -7,7 +7,11 @@ use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
+use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
+use Lomkit\Rest\Exceptions\InvalidRouteExtensionException;
+use Lomkit\Rest\Fields\FieldReduction;
+use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentation;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BadlyNamedExtension;
@@ -58,6 +62,34 @@ class ExtensionExceptionTest extends TestCase
             method_exists(InvalidAuthorizationExtensionException::class, 'notAClass'),
             $exception->concerns('App\Rest\AclExtension'),
             $exception->concerns('acl'),
+        ]);
+    }
+
+    #[Test]
+    public function it_gives_the_field_extension_exception_the_shared_base_only(): void
+    {
+        $exception = InvalidFieldExtensionException::unknownField('mask', 'App\Rest\MaskExtension', 'App\Rest\PostResource', FieldReduction::Hide, 'salary');
+
+        $this->assertSame([true, false, false, true, false], [
+            is_a($exception, ExtensionException::class),
+            is_a($exception, InvalidExtensionException::class),
+            method_exists(InvalidFieldExtensionException::class, 'notAClass'),
+            $exception->concerns('App\Rest\MaskExtension'),
+            $exception->concerns('mask'),
+        ]);
+    }
+
+    #[Test]
+    public function it_gives_the_route_extension_exception_the_shared_base_only(): void
+    {
+        $exception = InvalidRouteExtensionException::invalidMiddleware('plans', 'App\Rest\PlanRoutes', 'App\Rest\PostResource', Endpoint::Search, 'an empty string');
+
+        $this->assertSame([true, false, false, true, false], [
+            is_a($exception, ExtensionException::class),
+            is_a($exception, InvalidExtensionException::class),
+            method_exists(InvalidRouteExtensionException::class, 'notAClass'),
+            $exception->concerns('App\Rest\PlanRoutes'),
+            $exception->concerns('plans'),
         ]);
     }
 

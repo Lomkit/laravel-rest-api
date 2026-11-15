@@ -26,6 +26,7 @@ final readonly class EndpointRoutes
         private RouteMiddleware $middleware,
         private array $endpointMiddleware,
         private Container $container,
+        private ExtensionMiddleware $extensions,
     ) {}
 
     /**
@@ -36,7 +37,7 @@ final readonly class EndpointRoutes
     {
         $this->checkSoftDeletes($endpoints);
 
-        $definition = $this->definition($endpoints);
+        $definition = $this->context($endpoints)?->resource($this->controller::resourceClass())->definition();
         $definitions = [];
 
         foreach ($endpoints as $endpoint) {
@@ -54,7 +55,7 @@ final readonly class EndpointRoutes
             $endpoint->uri($this->name, $this->verbs),
             $this->names->for($endpoint),
             $this->controller.'@'.$endpoint->value,
-            $this->middlewareFor($endpoint),
+            $this->middlewareFor($endpoint)->with($this->extensions->for($endpoint, $this->names->registered($endpoint))),
         );
 
         $declarations = $definition === null ? [] : self::declarations($endpoint, $definition);
@@ -88,17 +89,19 @@ final readonly class EndpointRoutes
     }
 
     /** @param list<Endpoint> $endpoints */
-    private function definition(array $endpoints): ?ResourceDefinition
+    private function context(array $endpoints): ?RestContext
     {
-        if (! array_any($endpoints, fn (Endpoint $endpoint): bool => in_array($endpoint, [Endpoint::Operate, Endpoint::Metric], true)) || ! is_subclass_of($this->controller, Controller::class)) {
+        if (! is_subclass_of($this->controller, Controller::class) || ! self::declares($endpoints)) {
             return null;
         }
 
-        $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
+        return new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
+    }
 
-        return $context
-            ->resource($this->controller::resourceClass())
-            ->definition();
+    /** @param list<Endpoint> $endpoints */
+    private static function declares(array $endpoints): bool
+    {
+        return array_any($endpoints, fn (Endpoint $endpoint): bool => in_array($endpoint, [Endpoint::Operate, Endpoint::Metric], true));
     }
 
     /** @param list<Endpoint> $endpoints */

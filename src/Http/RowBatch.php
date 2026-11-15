@@ -48,6 +48,8 @@ final readonly class RowBatch
      */
     public function write(Closure $before, Closure $write, Closure $after, string $written): Collection
     {
+        $this->resource->definition()->fieldNarrowing();
+
         WriteTransaction::of($this->resource)
             ->over($this->rows)
             ->run(function () use ($before, $write, $after): void {

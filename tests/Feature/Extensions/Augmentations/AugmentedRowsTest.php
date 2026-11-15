@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
+use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorController;
@@ -24,6 +25,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentationNamedA;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentationNamedB;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FlagExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LongNamedAugmentation;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentationNamedA;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentationNamedB;
@@ -74,6 +76,7 @@ class AugmentedRowsTest extends PackageTestCase
     protected function tearDown(): void
     {
         AugmentationLog::reset();
+        MaskingFields::reset();
 
         parent::tearDown();
     }
@@ -386,6 +389,21 @@ class AugmentedRowsTest extends PackageTestCase
     {
         Rest::resource('alias-field-authors', AliasFieldAuthorController::class)->register();
         config(['rest.extensions' => [FirstAugmentation::class]]);
+        FirstAugmentation::$augment = static fn (AugmentationContext $context): string => $context->select('total', Post::query()->selectRaw('1'));
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidQueryExtensionException::aliasNamesField('first', FirstAugmentation::class, 'first__total', AliasFieldAuthorResource::class));
+
+        $this->postJson('/alias-field-authors/search', ['search' => []]);
+    }
+
+    #[Test]
+    public function it_refuses_an_alias_that_names_a_hidden_field(): void
+    {
+        Rest::resource('alias-field-authors', AliasFieldAuthorController::class)->register();
+        config(['rest.extensions' => [FirstAugmentation::class, MaskingFields::class]]);
+        MaskingFields::reset();
+        MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->hide('first__total');
         FirstAugmentation::$augment = static fn (AugmentationContext $context): string => $context->select('total', Post::query()->selectRaw('1'));
         $this->withoutExceptionHandling();
 

@@ -22,7 +22,13 @@ final readonly class ResourceRuleDetails implements JsonSerializable
 
     public static function of(Resource $resource): self
     {
-        return new self($resource->rules(), $resource->createRules(), $resource->updateRules());
+        $narrowing = $resource->definition()->fieldNarrowing();
+
+        return new self(
+            $narrowing->withoutHidden($resource->rules()),
+            $narrowing->withoutHidden($resource->createRules()),
+            $narrowing->withoutHidden($resource->updateRules()),
+        );
     }
 
     /** @return array{all: stdClass, create: stdClass, update: stdClass} */

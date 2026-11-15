@@ -1,0 +1,80 @@
+<?php
+
+namespace Lomkit\Rest\Http\Routing;
+
+use Lomkit\Rest\Exceptions\InvalidRouteExtensionException;
+use Lomkit\Rest\Extensions\Contexts\RouteMiddlewareContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\AddsRouteMiddleware;
+use Lomkit\Rest\Http\Controllers\Controller;
+use Lomkit\Rest\Http\Resource;
+
+/** @internal */
+final readonly class ExtensionMiddleware
+{
+    /**
+     * @param  class-string<Resource>  $resource
+     * @param  class-string<Controller>  $controller
+     * @param  array<string, Extension&AddsRouteMiddleware>  $extensions
+     * @param  array<string, string>  $classes
+     */
+    private function __construct(
+        private string $resource,
+        private string $controller,
+        private array $extensions,
+        private array $classes,
+    ) {}
+
+    public static function none(): self
+    {
+        return new self(Resource::class, Controller::class, [], []);
+    }
+
+    /**
+     * @param  array<string, Extension&AddsRouteMiddleware>  $extensions
+     * @param  array<string, string>  $classes
+     * @param  class-string<Resource>  $resource
+     * @param  class-string<Controller>  $controller
+     */
+    public static function of(array $extensions, array $classes, string $resource, string $controller): self
+    {
+        if ($extensions === []) {
+            return self::none();
+        }
+
+        return new self($resource, $controller, $extensions, $classes);
+    }
+
+    /** @return list<string> */
+    public function for(Endpoint $endpoint, string $routeName): array
+    {
+        $middleware = [];
+
+        foreach ($this->extensions as $name => $extension) {
+            $added = $extension->routeMiddleware(new RouteMiddlewareContext($this->resource, $endpoint, $this->controller, $routeName));
+
+            array_push($middleware, ...$this->checked($name, $endpoint, $added));
+        }
+
+        return array_values(array_unique($middleware));
+    }
+
+    /**
+     * @param  array<mixed>  $middleware
+     * @return list<string>
+     */
+    private function checked(string $name, Endpoint $endpoint, array $middleware): array
+    {
+        $checked = [];
+
+        foreach ($middleware as $item) {
+            if (! is_string($item) || trim($item) === '') {
+                throw InvalidRouteExtensionException::invalidMiddleware($name, $this->classes[$name], $this->resource, $endpoint, is_string($item) ? 'an empty string' : get_debug_type($item));
+            }
+
+            $checked[] = $item;
+        }
+
+        return $checked;
+    }
+}

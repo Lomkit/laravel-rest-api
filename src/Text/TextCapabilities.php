@@ -29,6 +29,12 @@ final readonly class TextCapabilities implements JsonSerializable
         return new self($target->names(), $modes, $relevance, $target->softDeletes());
     }
 
+    /** @internal */
+    public function withEngine(EngineGrammar $engine): self
+    {
+        return new self($this->fields, $this->modes, $this->relevance, $this->trashed, $this->maxLength, $engine);
+    }
+
     public function supports(TextMode $mode): bool
     {
         return in_array($mode, $this->modes, true);

@@ -47,6 +47,8 @@ final class RestContext
 
     private ?ActingUser $authorizerFor = null;
 
+    private bool $documentation = false;
+
     public function __construct(
         public readonly RestRequest $request,
         private readonly Container $container,
@@ -56,6 +58,15 @@ final class RestContext
         $this->definitions = new WeakMap;
         $this->registrations = $container->make(RuntimeExtensions::class);
         $this->registrations->freeze();
+    }
+
+    /** @internal */
+    public static function forDocumentation(RestRequest $request, Container $container, ActingUser $guest): self
+    {
+        $context = new self($request, $container, $guest);
+        $context->documentation = true;
+
+        return $context;
     }
 
     /** @param class-string<Resource> $class */
@@ -72,6 +83,12 @@ final class RestContext
     public function text(Resource $resource): ResolvedText
     {
         return $this->definition($resource)->text();
+    }
+
+    /** @internal */
+    public function isDocumentation(): bool
+    {
+        return $this->documentation;
     }
 
     public function config(): RestConfig

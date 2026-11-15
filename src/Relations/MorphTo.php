@@ -69,7 +69,7 @@ class MorphTo extends BelongsTo implements PolymorphicRelation
         $resource = $context->resource($target->resource);
         $key = $context->config()->morphTypeKey;
 
-        $fields = $resource->definition()->fields();
+        $fields = $resource->definition()->declaredFields();
 
         if ($fields->has($key)) {
             throw InvalidResourceException::morphTypeKeyField($resource::class, $key, $this->fromResource::class, $this->relation);

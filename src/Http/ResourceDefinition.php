@@ -10,6 +10,7 @@ use Lomkit\Rest\Authorization\CacheContext;
 use Lomkit\Rest\Authorization\CachedAbilities;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Fields\NarrowedFields;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Metrics\Metric;
@@ -36,7 +37,7 @@ final class ResourceDefinition
 
     private readonly ResourceDeclarations $declarations;
 
-    private readonly ResourceFields $declaredFields;
+    private readonly ResourceFields $fields;
 
     private readonly ResourceAuthorization $authorization;
 
@@ -46,18 +47,30 @@ final class ResourceDefinition
         Container $container,
     ) {
         $this->declarations = new ResourceDeclarations($resource, $container);
-        $this->declaredFields = new ResourceFields($resource);
+        $this->fields = new ResourceFields($resource);
         $this->authorization = new ResourceAuthorization($resource);
     }
 
     public function fields(): FieldSet
     {
-        return $this->declaredFields->fields();
+        return $this->fields->fields();
+    }
+
+    /** @internal */
+    public function declaredFields(): FieldSet
+    {
+        return $this->fields->declared();
+    }
+
+    /** @internal */
+    public function fieldNarrowing(): NarrowedFields
+    {
+        return $this->fields->narrowing();
     }
 
     public function version(): ?RowVersion
     {
-        return $this->declaredFields->version();
+        return $this->fields->version();
     }
 
     /** @return list<Scope> */
@@ -164,7 +177,7 @@ final class ResourceDefinition
 
     public function text(): ResolvedText
     {
-        return $this->text ??= ResolvedText::of($this->resource, $this->request);
+        return $this->text ??= ResolvedText::of($this->resource, $this->request)->narrowedBy($this->fields->narrowing());
     }
 
     public function gates(): GateVocabulary

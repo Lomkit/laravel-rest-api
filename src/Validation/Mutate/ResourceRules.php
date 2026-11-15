@@ -23,7 +23,9 @@ final class ResourceRules
         return $this->rules[$resource::class.':'.$operation->value] ??= WriteRules::of(
             $resource->definition()->fields(),
             $operation,
-            MorphTypeRules::of($resource, $operation)->addTo($operation === WriteOperation::Create ? $resource->createRules() : $resource->updateRules()),
+            $resource->definition()->fieldNarrowing()->withoutHidden(
+                MorphTypeRules::of($resource, $operation)->addTo($operation === WriteOperation::Create ? $resource->createRules() : $resource->updateRules()),
+            ),
             $this->shared($resource),
         );
     }
@@ -36,6 +38,6 @@ final class ResourceRules
     /** @return array<array-key, mixed> */
     private function shared(Resource $resource): array
     {
-        return $this->shared[$resource::class] ??= $resource->rules();
+        return $this->shared[$resource::class] ??= $resource->definition()->fieldNarrowing()->withoutHidden($resource->rules());
     }
 }

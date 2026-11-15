@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Text;
 
 use Closure;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
+use Lomkit\Rest\Fields\NarrowedFields;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -37,6 +38,20 @@ final readonly class ResolvedText
         $query = TextQuery::fromSearch($request->input('search.text'));
 
         return self::resolve($resource, $strategy, $query?->hasTerms() ? $query : null);
+    }
+
+    /** @internal */
+    public function narrowedBy(NarrowedFields $narrowing): self
+    {
+        $engine = $this->capabilities?->engine;
+
+        if ($this->capabilities === null || $engine === null || $narrowing->isEmpty()) {
+            return $this;
+        }
+
+        $narrowed = $engine->without($narrowing->unfilterableNames(), $narrowing->unsortableNames());
+
+        return new self($this->backend, $this->query, $this->target, $this->capabilities->withEngine($narrowed), $this->strategy, $this->engine);
     }
 
     public function usesEngine(): bool

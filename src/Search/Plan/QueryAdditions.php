@@ -72,7 +72,7 @@ final class QueryAdditions
             throw InvalidQueryExtensionException::aliasRepeated($extension, $class, $final, $this->resource::class);
         }
 
-        if ($this->resource->definition()->fields()->has($final)) {
+        if ($this->resource->definition()->declaredFields()->has($final)) {
             throw InvalidQueryExtensionException::aliasNamesField($extension, $class, $final, $this->resource::class);
         }
 

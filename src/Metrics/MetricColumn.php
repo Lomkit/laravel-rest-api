@@ -82,7 +82,7 @@ final readonly class MetricColumn
      */
     private static function of(Metric $metric, Builder $query, string $helper, string $use, string $name, string $expected, callable $fits): self
     {
-        $field = $metric->resource->definition()->fields()->find($name);
+        $field = $metric->resource->definition()->declaredFields()->find($name);
 
         if ($field === null || $field->isVirtual()) {
             throw InvalidMetricException::unknownField($metric::class, $helper, $use, $name, $metric->resource::class);

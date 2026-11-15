@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Search\Plan\Columns;
 
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Search\GateAbility;
 
@@ -29,12 +30,17 @@ enum ColumnSelection
         }
 
         $model = $resource::newModel();
-        $fields = $resource->definition()->fields();
+        $definition = $resource->definition();
+        $fields = $definition->fields();
+        $hidden = $definition->fieldNarrowing()->hiddenFrom($definition->declaredFields())->selectable();
         $columns = [];
 
         foreach ($selects ?? $fields->selectable()->names() as $name) {
-            $field = $fields->get($name);
-            $columns = [...$columns, ...$field->isVirtual() ? [] : [$field->name], ...$field->getRequires()];
+            $columns = [...$columns, ...self::columnsOf($fields->get($name))];
+        }
+
+        foreach ($hidden as $field) {
+            $columns = [...$columns, ...self::columnsOf($field)];
         }
 
         foreach ($includes as $include) {
@@ -44,10 +50,16 @@ enum ColumnSelection
         return ColumnSet::of($model, [
             ...$columns,
             $model->getKeyName(),
-            ...$resource->definition()->alwaysSelect(),
+            ...$definition->alwaysSelect(),
             ...$keys,
             ...self::version($resource, $model, $gates),
         ]);
+    }
+
+    /** @return list<string> */
+    private static function columnsOf(Field $field): array
+    {
+        return [...$field->isVirtual() ? [] : [$field->name], ...$field->getRequires()];
     }
 
     /**
