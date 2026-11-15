@@ -31,7 +31,7 @@ final class EngineQuery
             throw InvalidEngineQueryException::trashedUnavailable($index->model->model()::class);
         }
 
-        $this->conditions = new IndexConditions($index->resource);
+        $this->conditions = new IndexConditions($index->searchedClass());
     }
 
     public function where(string $attribute, FilterOperator|string $operator, mixed $value): static
@@ -107,7 +107,7 @@ final class EngineQuery
         $result = $this->index->profile->page($builder, $this->index->model, $perPage, $page, $rows);
 
         if ($rows !== null && ! $rows->applied()) {
-            throw InvalidEngineQueryException::unappliedRowRestriction($this->index->resource, $this->index->profile::class, $this->index->profile->name());
+            throw InvalidEngineQueryException::unappliedRowRestriction($this->index->searchedClass(), $this->index->profile::class, $this->index->profile->name());
         }
 
         return $result;
@@ -125,7 +125,7 @@ final class EngineQuery
     public function restrictRows(ExtensionRestrictions $rows): bool
     {
         if ($this->rows !== null) {
-            throw InvalidEngineQueryException::repeatedRowRestriction($this->index->resource, $this->rows->names());
+            throw InvalidEngineQueryException::repeatedRowRestriction($this->index->searchedClass(), $this->rows->names());
         }
 
         if (! $this->index->profile->appliesRowRestrictions()) {

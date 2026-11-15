@@ -9,16 +9,21 @@ use Lomkit\Rest\Text\TextMode;
 
 final readonly class EngineIndex
 {
-    /** @param class-string<Resource> $resource */
+    /** @param class-string<Resource>|null $resource */
     public function __construct(
-        public string $resource,
         public ScoutModel $model,
         public EngineProfile $profile,
         public IndexAttributes $attributes,
+        public ?string $resource = null,
     ) {}
 
     public function capabilities(): TextCapabilities
     {
         return new TextCapabilities([], [TextMode::Words], true, $this->model->softDeletes(), engine: $this->attributes->grammar($this->profile));
+    }
+
+    public function searchedClass(): string
+    {
+        return $this->resource ?? $this->model->model()::class;
     }
 }

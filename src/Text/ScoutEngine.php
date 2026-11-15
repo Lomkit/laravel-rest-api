@@ -93,6 +93,6 @@ final readonly class ScoutEngine implements EngineTextSearch
 
         $attributes = IndexAttributes::of($target, $profile, $this->filterable, $this->sortable, $this->perimeterAttributes);
 
-        return new EngineIndex($target->resource, $model, $profile, $attributes);
+        return new EngineIndex($model, $profile, $attributes, $target->resource);
     }
 }
