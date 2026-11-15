@@ -113,9 +113,10 @@ return [
     | restore, a force destroy, and each chunk or whole run of an action.
     | "attempts" is how many times a transaction runs when the database
     | reports a deadlock or a lock timeout; 1 runs it once. Each attempt
-    | runs the whole write again, with its events and the handle() method
-    | of the action, right after the failed one. A transaction inside a
-    | transaction of your application is not run again.
+    | runs the whole write again, with its events, the GuardsWrites
+    | extensions and the handle() method of the action, right after the
+    | failed one. A transaction inside a transaction of your application
+    | is not run again.
     |
     */
 
