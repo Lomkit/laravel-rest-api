@@ -36,7 +36,8 @@ final readonly class EndpointRoutes
     {
         $this->checkSoftDeletes($endpoints);
 
-        $definition = $this->definition($endpoints);
+        $context = $this->context($endpoints);
+        $definition = $context === null ? null : $context->resource($this->controller::resourceClass())->definition();
         $definitions = [];
 
         foreach ($endpoints as $endpoint) {
@@ -88,17 +89,19 @@ final readonly class EndpointRoutes
     }
 
     /** @param list<Endpoint> $endpoints */
-    private function definition(array $endpoints): ?ResourceDefinition
+    private function context(array $endpoints): ?RestContext
     {
-        if (! array_any($endpoints, fn (Endpoint $endpoint): bool => in_array($endpoint, [Endpoint::Operate, Endpoint::Metric], true)) || ! is_subclass_of($this->controller, Controller::class)) {
+        if (! is_subclass_of($this->controller, Controller::class) || ! self::declares($endpoints)) {
             return null;
         }
 
-        $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
+        return new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
+    }
 
-        return $context
-            ->resource($this->controller::resourceClass())
-            ->definition();
+    /** @param list<Endpoint> $endpoints */
+    private static function declares(array $endpoints): bool
+    {
+        return array_any($endpoints, fn (Endpoint $endpoint): bool => in_array($endpoint, [Endpoint::Operate, Endpoint::Metric], true));
     }
 
     /** @param list<Endpoint> $endpoints */
