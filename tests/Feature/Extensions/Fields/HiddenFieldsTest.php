@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
+use Lomkit\Rest\Exceptions\SearchRunException;
 use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
@@ -225,6 +226,19 @@ class HiddenFieldsTest extends PackageTestCase
             'operations' => [['operation' => 'update', 'key' => 1]],
             'records' => [['id' => 1, 'category_id' => 1, 'name' => 'Desk light']],
         ]);
+    }
+
+    #[Test]
+    public function it_narrows_an_app_search_for_the_user_of_as_only(): void
+    {
+        $this->actingAs(self::user());
+
+        $guest = Rest::search(ProductResource::class)->as(null)->payload([])->render();
+
+        $this->assertSame(self::PRODUCTS, $guest['data']);
+        $this->expectExceptionObject(SearchRunException::missingUser(ProductResource::class));
+
+        Rest::search(ProductResource::class)->payload([])->render();
     }
 
     #[Test]
