@@ -9,7 +9,6 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Event;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
@@ -463,6 +462,5 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     {
         FirstCacheContext::reset();
         SecondCacheContext::reset();
-        Applicability::flush();
     }
 }

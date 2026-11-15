@@ -10,7 +10,6 @@ use LogicException;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
@@ -259,7 +258,6 @@ class RowCheckPreparationTest extends HelpdeskTestCase
 
         $this->assertSame(0, ScannedTicket::$scans);
         $this->assertSame([], PreparingExtension::$received);
-        Applicability::flush();
         PreparingExtension::$resources = [TicketResource::class];
         $context = $this->contextFor(null);
         $context->authorizer()->inspectEach($context->resource(TicketResource::class), 'update', $tickets);

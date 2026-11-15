@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Support\Facades\DB;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstGates;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -18,7 +17,6 @@ class ExtensionGatesDocumentTest extends DocumentationTestCase
         parent::setUp();
 
         FirstGates::reset();
-        Applicability::flush();
         FirstGates::$gates = ['share'];
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage']]);
@@ -32,7 +30,6 @@ class ExtensionGatesDocumentTest extends DocumentationTestCase
     protected function tearDown(): void
     {
         FirstGates::reset();
-        Applicability::flush();
 
         parent::tearDown();
     }

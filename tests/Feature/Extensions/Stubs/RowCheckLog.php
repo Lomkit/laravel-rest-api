@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Authorization\PendingChecks;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\PreparedTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\RecordingPolicy;
 
@@ -31,6 +30,5 @@ final class RowCheckLog
         AugmentedPreparingExtension::$alias = null;
         AugmentedPreparingExtension::$gates = [];
         AugmentedPreparingExtension::$received = [];
-        Applicability::flush();
     }
 }

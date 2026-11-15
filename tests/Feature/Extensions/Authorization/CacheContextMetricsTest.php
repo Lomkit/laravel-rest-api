@@ -7,7 +7,6 @@ use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
 use Lomkit\Rest\Metrics\CacheScope;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstCacheContext;
@@ -32,7 +31,6 @@ class CacheContextMetricsTest extends SalesTestCase
         parent::setUp();
 
         FirstCacheContext::reset();
-        Applicability::flush();
         FirstCacheContext::$resources = [MetricOrderResource::class];
         $this->actingAs(new GenericUser(['id' => 1, 'team_id' => 1]));
         Event::listen(KeyWritten::class, function (KeyWritten $event): void {
@@ -49,7 +47,6 @@ class CacheContextMetricsTest extends SalesTestCase
     protected function tearDown(): void
     {
         FirstCacheContext::reset();
-        Applicability::flush();
 
         parent::tearDown();
     }

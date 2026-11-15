@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Unit\Authorization;
 
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Authorization\DecisionPreparation;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\ExtensionRegistry;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RowCheckLog;
@@ -21,7 +20,6 @@ class PreparationCostTest extends TestCase
     {
         parent::setUp();
 
-        Applicability::flush();
         RowCheckLog::reset();
         PreparingExtension::$resources = null;
         PreparingExtension::$received = [];

@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Serialization;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Lomkit\Rest\Authorization\Check;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
@@ -29,7 +28,6 @@ class GatePrefetchTest extends HelpdeskTestCase
     {
         parent::setUp();
 
-        Applicability::flush();
         PreparingExtension::$resources = null;
         PreparingExtension::$received = [];
         PreparingExtension::$prepare = null;

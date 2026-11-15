@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Authorization;
 
 use LogicException;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\GatesContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
@@ -252,6 +251,5 @@ class ExtensionGatesTest extends HelpdeskTestCase
         FirstGates::reset();
         SecondGates::reset();
         RowCheckLog::reset();
-        Applicability::flush();
     }
 }

@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Authorization;
 
 use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Builder;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
@@ -27,7 +26,6 @@ class ReachedCacheContextTest extends HelpdeskTestCase
         parent::setUp();
 
         FirstCacheContext::reset();
-        Applicability::flush();
         Rest::resource('context-tag-tickets', ContextTagTicketController::class)->register();
         Team::forceCreate(['id' => 1, 'name' => 'Support']);
         $ticket = Ticket::forceCreate(['id' => 1, 'team_id' => 1, 'title' => 'Ticket 1', 'status' => 'open']);
@@ -39,7 +37,6 @@ class ReachedCacheContextTest extends HelpdeskTestCase
     protected function tearDown(): void
     {
         FirstCacheContext::reset();
-        Applicability::flush();
 
         parent::tearDown();
     }
