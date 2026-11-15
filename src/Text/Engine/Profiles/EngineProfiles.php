@@ -11,11 +11,18 @@ use Laravel\Scout\Engines\NullEngine;
 use Laravel\Scout\Engines\TurbopufferEngine;
 use Laravel\Scout\Engines\TypesenseEngine;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
+use Lomkit\Rest\Text\Engine\IndexExtensions;
 
 final class EngineProfiles
 {
-    public static function for(mixed $engine, string $resource): EngineProfile
+    public static function for(mixed $engine, string $resource, IndexExtensions $extensions = new IndexExtensions): EngineProfile
     {
+        $provided = is_object($engine) ? $extensions->profile($engine) : null;
+
+        if ($provided !== null) {
+            return $provided;
+        }
+
         return match (true) {
             $engine instanceof TurbopufferEngine => new TurbopufferProfile($engine),
             $engine instanceof TypesenseEngine => new TypesenseProfile($engine),

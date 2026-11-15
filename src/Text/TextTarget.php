@@ -7,6 +7,7 @@ use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Text\Engine\IndexExtensions;
 
 final readonly class TextTarget
 {
@@ -16,13 +17,14 @@ final readonly class TextTarget
         public FieldSet $fields,
         public Model $model,
         public FieldSet $declared,
+        public IndexExtensions $extensions = new IndexExtensions,
     ) {}
 
     public static function of(Resource $resource): self
     {
         $declared = $resource->definition()->fields();
 
-        return new self($resource::class, $declared->searchable(), $resource::newModel(), $declared);
+        return new self($resource::class, $declared->searchable(), $resource::newModel(), $declared, IndexExtensions::of($resource));
     }
 
     /** @return non-empty-list<string> */
