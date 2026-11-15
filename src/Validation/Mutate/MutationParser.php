@@ -80,6 +80,7 @@ final readonly class MutationParser
 
     public function entry(Cursor $entry, Resource $resource, int $depth, ?Relation $relation, ?string $type, int $runs): ?MutationNode
     {
+        $resource->definition()->fieldNarrowing();
         $operation = MutationOperation::tryFromEntry($entry->value);
         $listed = $relation?->hasMultipleEntries() === true;
 

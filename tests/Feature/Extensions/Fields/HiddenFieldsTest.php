@@ -315,6 +315,40 @@ class HiddenFieldsTest extends PackageTestCase
         $this->assertSame([$outside], $levels);
     }
 
+    /** @param array<string, mixed> $relations */
+    #[Test]
+    #[DataProvider('nestedLinks')]
+    public function it_narrows_the_related_resource_of_a_nested_link_before_the_transaction(int $category, array $relations, array $featured, array $products): void
+    {
+        $levels = [];
+        MaskingFields::$narrow = static function (FieldsContext $context) use (&$levels): void {
+            $levels[] = [$context->resource::class, DB::transactionLevel()];
+
+            if ($context->resource instanceof ProductResource) {
+                $context->hide('price');
+            }
+        };
+        $outside = DB::transactionLevel();
+
+        $response = $this->actingAs(self::user())->postJson('/api/categories/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => $category, 'relations' => $relations],
+        ]]);
+
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $category, 'relations' => $relations]]]);
+        $this->assertSame([[CategoryResource::class, $outside], [ProductResource::class, $outside]], $levels);
+        $this->assertSame($featured, DB::table('featured_products')->orderBy('product_id')->pluck('product_id')->all());
+        $this->assertSame($products, DB::table('products')->orderBy('id')->pluck('category_id', 'id')->all());
+    }
+
+    /** @return array<string, array{int, array<string, mixed>, list<int>, array<int, int>}> */
+    public static function nestedLinks(): array
+    {
+        return [
+            'a pivot detach' => [1, ['featuredProducts' => [['operation' => 'detach', 'key' => 2]]], [], [1 => 1, 2 => 1, 3 => 2]],
+            'a child attach' => [2, ['products' => [['operation' => 'attach', 'key' => 1]]], [2], [1 => 2, 2 => 1, 3 => 2]],
+        ];
+    }
+
     /**
      * @param  class-string<ProductResource|PricelessProductResource>  $resource
      * @return array<string, list<string>>
