@@ -11,15 +11,6 @@ use Lomkit\Rest\Text\TextQuery;
 
 final class EngineQuery
 {
-    private const array COMPARISONS = [
-        FilterOperator::Equal,
-        FilterOperator::NotEqual,
-        FilterOperator::LessThan,
-        FilterOperator::GreaterThan,
-        FilterOperator::LessThanOrEqual,
-        FilterOperator::GreaterThanOrEqual,
-    ];
-
     private readonly IndexConditions $conditions;
 
     /** @var list<array{string, SortDirection}> */
@@ -44,14 +35,9 @@ final class EngineQuery
 
     public function where(string $attribute, FilterOperator|string $operator, mixed $value): static
     {
-        $declared = $this->attribute($attribute);
-        $comparison = $operator instanceof FilterOperator ? $operator : FilterOperator::tryFrom($operator);
+        $declared = $this->index->attributes->declared($attribute);
 
-        if ($comparison === null || ! in_array($comparison, self::COMPARISONS, true) || ! $declared->supports($comparison)) {
-            throw InvalidEngineQueryException::unsupportedOperator($attribute, $operator instanceof FilterOperator ? $operator->value : $operator);
-        }
-
-        $this->conditions->compare($attribute, $comparison, $declared->value($value));
+        $this->conditions->compare($attribute, $declared->comparison($operator), $declared->value($value));
 
         return $this;
     }
@@ -59,9 +45,9 @@ final class EngineQuery
     /** @param array<mixed> $values */
     public function whereIn(string $attribute, array $values): static
     {
-        $declared = $this->attribute($attribute);
+        $declared = $this->index->attributes->declared($attribute);
 
-        $this->conditions->include($attribute, $this->members($declared, FilterOperator::In, $values), $declared->list);
+        $this->conditions->include($attribute, $declared->members(FilterOperator::In, $values), $declared->list);
 
         return $this;
     }
@@ -69,7 +55,7 @@ final class EngineQuery
     /** @param array<mixed> $values */
     public function whereNotIn(string $attribute, array $values): static
     {
-        $this->conditions->exclude($attribute, $this->members($this->attribute($attribute), FilterOperator::NotIn, $values));
+        $this->conditions->exclude($attribute, $this->index->attributes->declared($attribute)->members(FilterOperator::NotIn, $values));
 
         return $this;
     }
@@ -158,23 +144,5 @@ final class EngineQuery
     public function paging(): EnginePaging
     {
         return new EnginePaging($this->index->profile);
-    }
-
-    private function attribute(string $name): IndexAttribute
-    {
-        return $this->index->attributes->find($name) ?? throw InvalidEngineQueryException::undeclaredAttribute($name);
-    }
-
-    /**
-     * @param  array<mixed>  $values
-     * @return list<int|float|string|bool>
-     */
-    private function members(IndexAttribute $declared, FilterOperator $operator, array $values): array
-    {
-        if (! $declared->supports($operator)) {
-            throw InvalidEngineQueryException::unsupportedOperator($declared->field->name, $operator->value);
-        }
-
-        return array_map(fn (mixed $value): int|float|string|bool => $declared->value($value), array_values($values));
     }
 }

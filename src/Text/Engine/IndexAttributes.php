@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
+use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\TextTarget;
@@ -45,6 +46,11 @@ final readonly class IndexAttributes
     public function find(string $name): ?IndexAttribute
     {
         return $this->filterable[$name] ?? $this->perimeter[$name] ?? $this->owned[$name] ?? null;
+    }
+
+    public function declared(string $name): IndexAttribute
+    {
+        return $this->find($name) ?? throw InvalidEngineQueryException::undeclaredAttribute($name);
     }
 
     public function sorts(string $name): bool
