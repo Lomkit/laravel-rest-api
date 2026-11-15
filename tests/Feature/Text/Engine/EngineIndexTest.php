@@ -37,7 +37,7 @@ class EngineIndexTest extends EngineQueryTestCase
 
         $this->assertNull($index->resource);
         $this->assertSame(Voucher::class, $index->searchedClass());
-        $this->assertSame(VoucherResource::class, new EngineIndex($index->model, $index->profile, $index->attributes, VoucherResource::class)->searchedClass());
+        $this->assertSame(VoucherResource::class, (new EngineIndex($index->model, $index->profile, $index->attributes, VoucherResource::class))->searchedClass());
     }
 
     private function index(): EngineIndex
