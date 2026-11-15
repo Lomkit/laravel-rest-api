@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Writes;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -710,6 +711,31 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertDatabaseCount('job_batches', 0);
         $this->assertDatabaseCount('jobs', 0);
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
+    }
+
+    #[Test]
+    #[WithConfig('queue.default', 'deferred')]
+    public function it_fails_a_job_refused_after_the_response(): void
+    {
+        Exceptions::fake();
+        WriteLog::$refuseAt = 3;
+        $failures = [];
+        Event::listen(JobFailed::class, function (JobFailed $event) use (&$failures): void {
+            $failures[] = [$event->connectionName, $event->exception::class, $event->exception->getMessage()];
+        });
+        Event::listen(JobExceptionOccurred::class, function (JobExceptionOccurred $event) use (&$failures): void {
+            $failures[] = ['exception', $event->exception::class];
+        });
+        $this->seedDocuments(null, null);
+
+        $this->postJson('/written-documents/actions/queued-archive-documents-by-one', ['search' => []])
+            ->assertOk()
+            ->assertExactJson(self::IMPACTED);
+
+        $this->assertSame([['deferred', WriteRefused::class, 'The [quota] extension refused the write.']], $failures);
+        Exceptions::assertNothingReported();
+        $this->assertCount(4, WriteLog::$guards);
+        $this->assertSame([[1, 'Annual report', false], [2, 'Budget', true]], $this->documents());
     }
 
     /** @return array<string, array{string}> */

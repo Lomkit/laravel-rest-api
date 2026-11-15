@@ -9,7 +9,6 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Queue\Middleware\SkipIfBatchCancelled;
 use Lomkit\Rest\Authorization\UserReference;
 use Lomkit\Rest\Exceptions\QueuedActionException;
@@ -69,7 +68,7 @@ final class QueuedAction implements ShouldQueue
         try {
             $this->run($container, $this->user->resolve($auth));
         } catch (WriteRefused $refused) {
-            $this->refused($refused);
+            $this->refused($refused, $container);
         } finally {
             $auth->shouldUse($guard);
         }
@@ -112,13 +111,20 @@ final class QueuedAction implements ShouldQueue
         ActionWrites::of($action, $fields, $resource)->handle($models);
     }
 
-    private function refused(WriteRefused $refused): void
+    private function refused(WriteRefused $refused, Container $container): void
     {
-        if ($this->job === null || $this->job instanceof SyncJob) {
+        if ($this->job === null || $this->answersTheClient($container)) {
             throw $refused;
         }
 
         $this->fail($refused);
+    }
+
+    private function answersTheClient(Container $container): bool
+    {
+        $connection = $this->job?->getConnectionName();
+
+        return $container->make('config')->get("queue.connections.{$connection}.driver") === 'sync';
     }
 
     private function declared(Resource $resource): Action
