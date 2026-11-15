@@ -178,14 +178,40 @@ final class RouteExtensionNamesTest extends HelpdeskTestCase
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
     }
 
-    #[Test]
-    public function it_disables_nothing_with_a_disabled_config_that_is_not_a_list(): void
+    /** @return array<string, array{list<string>, mixed, ?string}> */
+    public static function keptRouteEntries(): array
     {
-        config(['rest.extensions' => [StampRoutes::class], 'rest.disabled_extensions' => ['stamp' => StampRoutes::class]]);
+        return [
+            'a route class beside a map' => [[StampRoutes::class], ['stamp' => StampRoutes::class], null],
+            'a class bound to a route subclass beside a string' => [[StampNamedLimits::class], StampNamedLimits::class, RoutedStampNamedLimits::class],
+        ];
+    }
+
+    /** @param list<string> $extensions */
+    #[Test]
+    #[DataProvider('keptRouteEntries')]
+    public function it_refuses_a_disabled_config_that_is_not_a_list_when_routes_register(array $extensions, mixed $disabled, ?string $binding): void
+    {
+        config(['rest.extensions' => $extensions, 'rest.disabled_extensions' => $disabled]);
+
+        if ($binding !== null) {
+            $this->app->bind($extensions[0], $binding);
+        }
+
+        $this->expectExceptionObject(InvalidConfigException::mustBe('rest.disabled_extensions', 'a list of extension class names'));
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+    }
+
+    #[Test]
+    public function it_registers_routes_beside_a_disabled_config_that_is_not_a_list_without_route_extensions(): void
+    {
+        config(['rest.extensions' => [CountingExtension::class], 'rest.disabled_extensions' => ['counting' => CountingExtension::class]]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
 
-        $this->assertSame([EnforceExpectsJson::class, self::STAMP], $this->search()->middleware());
+        $this->assertSame([EnforceExpectsJson::class], $this->search()->middleware());
+        $this->assertSame([], ExtensionLog::$built);
         $this->expectExceptionObject(InvalidConfigException::mustBe('rest.disabled_extensions', 'a list of extension class names'));
 
         $this->withoutExceptionHandling()->postJson('/routed-tickets/search');
