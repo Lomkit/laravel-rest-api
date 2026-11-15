@@ -17,6 +17,7 @@ use Lomkit\Rest\Tests\Fixtures\Festival\Show;
 use Lomkit\Rest\Tests\Fixtures\Festival\ShowResource;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 #[WithConfig('rest.extensions', ['mask' => MaskingFields::class])]
@@ -156,6 +157,64 @@ class NarrowedShowFieldsTest extends PackageTestCase
         $this->assertLikeUnknown(fn (string $field): TestResponse => $this->postJson('/api/notes/search', ['search' => ['filters' => [
             ['relation' => 'notable', 'types' => [Show::class => [['field' => $field, 'value' => 20]]]],
         ]]]));
+    }
+
+    #[Test]
+    #[DataProvider('rowWrites')]
+    public function it_narrows_the_rows_of_a_row_write_before_writing_them(string $method, string $uri, bool $trashed): void
+    {
+        $this->trashOpeningIf($trashed);
+        $states = [];
+        $this->narrow(function (FieldsContext $context) use (&$states): void {
+            $states[] = $this->openingState();
+            $context->hide('price');
+        });
+        $before = $this->openingState();
+
+        $response = $this->json($method, $uri, ['resources' => [$this->opening]]);
+
+        $response->assertOk()->assertJsonCount(1, 'data');
+        $this->assertSame([$before], $states);
+        $this->assertSame(['id', 'title', 'summary', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'settings', 'updated_at'], array_keys($response->json('data.0')));
+    }
+
+    #[Test]
+    #[DataProvider('rowWrites')]
+    public function it_writes_no_row_when_a_narrowing_fails(string $method, string $uri, bool $trashed): void
+    {
+        $this->trashOpeningIf($trashed);
+        $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('colour'));
+        $before = $this->openingState();
+
+        $response = $this->json($method, $uri, ['resources' => [$this->opening]]);
+
+        $response->assertServerError();
+        $this->assertSame($before, $this->openingState());
+    }
+
+    /** @return array<string, array{string, string, bool}> */
+    public static function rowWrites(): array
+    {
+        return [
+            'a destroy' => ['DELETE', '/api/shows', false],
+            'a restore' => ['POST', '/api/shows/restore', true],
+            'a force destroy' => ['DELETE', '/api/shows/force', true],
+        ];
+    }
+
+    private function trashOpeningIf(bool $trashed): void
+    {
+        if ($trashed) {
+            DB::table('shows')->where('id', $this->opening)->update(['deleted_at' => '2026-02-25 10:00:00']);
+        }
+    }
+
+    /** @return array{int, bool, bool} */
+    private function openingState(): array
+    {
+        $show = Show::withTrashed()->find($this->opening);
+
+        return [DB::transactionLevel(), $show !== null, $show?->trashed() ?? false];
     }
 
     /** @param Closure(FieldsContext): mixed $narrow */
