@@ -3,14 +3,16 @@
 namespace Lomkit\Rest\Tests\Analysis;
 
 use Lomkit\Rest\Authorization\PendingChecks;
+use Lomkit\Rest\Authorization\RowVersions;
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
 use Lomkit\Rest\Extensions\Contexts\GatesContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\ContributesCacheContext;
 use Lomkit\Rest\Extensions\Kinds\DeclaresGates;
 use Lomkit\Rest\Extensions\Kinds\PreparesRowChecks;
+use Lomkit\Rest\Extensions\Kinds\VersionsRowChecks;
 
-final class TicketAuthorizationExtension extends Extension implements ContributesCacheContext, DeclaresGates, PreparesRowChecks
+final class TicketAuthorizationExtension extends Extension implements ContributesCacheContext, DeclaresGates, PreparesRowChecks, VersionsRowChecks
 {
     #[\Override]
     public static function name(): string
@@ -33,6 +35,14 @@ final class TicketAuthorizationExtension extends Extension implements Contribute
         $user = $checks->user?->getAuthIdentifier();
         $key = $checks->resource::class.'|'.$checks->ability.'|'.(is_scalar($user) ? (string) $user : 'guest');
         $this->prepared[$key] = array_values($checks->rows->modelKeys());
+    }
+
+    #[\Override]
+    public function versionRowChecks(RowVersions $versions): void
+    {
+        foreach ($versions->rows as $row) {
+            $versions->add($row, 'grants', $versions->user === null ? 'guest' : 'v1');
+        }
     }
 
     /** @return list<int|string> */

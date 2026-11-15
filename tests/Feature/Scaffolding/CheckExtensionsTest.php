@@ -19,6 +19,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\FailingExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\GrantVersionsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\KindlessExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RivalAclExtension;
@@ -70,6 +71,24 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
             'notes' => [self::IDLE_ACL],
         ], $report['extensions']);
         $this->assertSame([BothKindsExtension::class, CountingExtension::class, BothKindsExtension::class, CountingExtension::class], ExtensionLog::$built);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [GrantVersionsExtension::class])]
+    public function it_builds_and_lists_an_extension_that_versions_row_checks(): void
+    {
+        $this->expose('trips', TripController::class);
+
+        $output = $this->check(0, TripController::class);
+        $report = $this->report(0, TripController::class);
+
+        $this->assertStringEndsWith(
+            "  extensions ... 1 extension built\n"
+            ."  grants ... Lomkit\\Rest\\Tests\\Fixtures\\Extensions\\GrantVersionsExtension, config\n",
+            $output,
+        );
+        $this->assertSame(['registered' => [self::row('grants', GrantVersionsExtension::class, 'config')], 'problems' => [], 'notes' => []], $report['extensions']);
+        $this->assertSame([GrantVersionsExtension::class, GrantVersionsExtension::class], ExtensionLog::$built);
     }
 
     #[Test]
