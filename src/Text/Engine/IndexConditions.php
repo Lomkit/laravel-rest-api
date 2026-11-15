@@ -52,6 +52,11 @@ final class IndexConditions
         $this->nothing = true;
     }
 
+    public function excludesEverything(): bool
+    {
+        return $this->nothing;
+    }
+
     public function matchesNothing(): bool
     {
         return $this->nothing || in_array([], $this->memberships, true);

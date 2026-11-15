@@ -134,7 +134,7 @@ final class EngineQuery
 
     public function reachable(): ?int
     {
-        if ($this->conditions->matchesNothing()) {
+        if ($this->conditions->excludesEverything()) {
             return PHP_INT_MAX;
         }
 

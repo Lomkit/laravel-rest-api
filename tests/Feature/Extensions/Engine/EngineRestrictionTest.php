@@ -29,7 +29,9 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SqlAwareEngineExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamIndexExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnappliedEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PagedMeilisearchEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnboundedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnboundedVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
@@ -41,6 +43,7 @@ use PHPUnit\Framework\Attributes\Test;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
+use RuntimeException;
 
 #[Group('scout')]
 class EngineRestrictionTest extends EngineSearchTestCase
@@ -180,6 +183,18 @@ class EngineRestrictionTest extends EngineSearchTestCase
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
         $this->assertSame([], $this->engine->searches);
+        $this->assertSame([5], Voucher::withTrashed()->where('active', false)->pluck('id')->all());
+    }
+
+    #[Test]
+    public function it_runs_an_action_on_no_row_for_a_guest_when_the_engine_does_not_report_its_limit(): void
+    {
+        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+        $this->useEngine(new PagedMeilisearchEngine(new SettingsClient(fn (): never => throw new RuntimeException('The key cannot read the settings.'))));
+
+        $response = $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
         $this->assertSame([5], Voucher::withTrashed()->where('active', false)->pluck('id')->all());
     }
 
