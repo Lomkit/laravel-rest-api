@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Writes;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Gate;
@@ -650,6 +651,47 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
     }
 
+    #[Test]
+    #[WithConfig('queue.default', 'database')]
+    public function it_guards_each_chunk_of_a_batched_action_in_the_request_and_in_the_worker(): void
+    {
+        config(['queue.batching.database' => config('database.default')]);
+        $this->seedDocuments(null, null);
+
+        $response = $this->postJson('/written-documents/actions/batched-archive-documents-by-one', ['search' => []])->assertOk();
+
+        $batch = DB::table('job_batches')->value('id');
+        $response->assertExactJson(['data' => ['impacted' => 2, 'result' => null, 'batch' => $batch]]);
+        $this->assertSame([[1], [2]], $this->guardedKeys());
+        $this->assertSame([$this->grace, $this->grace], array_map(fn ($context): mixed => $context->user, WriteLog::$guards));
+        $this->app['auth']->forgetGuards();
+        $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
+        $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
+
+        $this->assertSame([[1], [2], [1], [2]], $this->guardedKeys());
+        $this->assertNotSame($this->grace, WriteLog::$guards[2]->user);
+        $this->assertSame(2, WriteLog::$guards[3]->user?->getAuthIdentifier());
+        $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
+    }
+
+    #[Test]
+    #[WithConfig('queue.default', 'database')]
+    public function it_queues_no_batch_when_the_request_guard_refuses(): void
+    {
+        config(['queue.batching.database' => config('database.default')]);
+        WriteLog::$refuseAt = 2;
+        $this->seedDocuments(null, null);
+
+        $this->postJson('/written-documents/actions/batched-archive-documents-by-one', ['search' => []])
+            ->assertStatus(429)
+            ->assertExactJson(['message' => 'The monthly quota is reached.']);
+
+        $this->assertSame([[1], [2]], $this->guardedKeys());
+        $this->assertDatabaseCount('job_batches', 0);
+        $this->assertDatabaseCount('jobs', 0);
+        $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
+    }
+
     /** @return array<string, array{string}> */
     public static function queuedActions(): array
     {
@@ -735,6 +777,12 @@ final class GuardedWritesTest extends PackageTestCase
         return Document::withTrashed()
             ->where('title', 'Minutes')
             ->value('id');
+    }
+
+    /** @return list<list<mixed>> */
+    private function guardedKeys(): array
+    {
+        return array_map(fn ($context): array => array_map(fn (Model $row): mixed => $row->getKey(), $context->rows ?? []), WriteLog::$guards);
     }
 
     /** @return list<string> */

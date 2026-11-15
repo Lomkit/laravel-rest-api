@@ -391,6 +391,26 @@ final class ObservedWritesTest extends PackageTestCase
     }
 
     #[Test]
+    #[WithConfig('queue.default', 'database')]
+    public function it_notifies_a_batched_action_in_the_worker_after_each_job(): void
+    {
+        config(['queue.batching.database' => config('database.default')]);
+        $this->seedDocuments(null, null);
+
+        $response = $this->postJson('/written-documents/actions/batched-archive-documents-by-one', ['search' => []])->assertOk();
+
+        $response->assertExactJson(['data' => ['impacted' => 2, 'result' => null, 'batch' => DB::table('job_batches')->value('id')]]);
+        $this->assertSame([], WriteLog::$writes);
+        $this->app['auth']->forgetGuards();
+        $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
+        $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
+
+        $this->assertSame(['observe operate 1 (1)', 'observe operate 2 (1)'], $this->observedLines());
+        $this->assertSame([2, 2], array_map(fn ($context): mixed => $context->user?->getAuthIdentifier(), WriteLog::$writes));
+        $this->assertNotSame($this->grace, WriteLog::$writes[0]->user);
+    }
+
+    #[Test]
     public function it_hands_copies_that_do_not_change_the_response(): void
     {
         config(['rest.extensions' => ['history' => ChangingWriteObserver::class]]);
