@@ -11,6 +11,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedEverywhereExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
@@ -19,6 +20,9 @@ use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\RouteBoundVoucherController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\RouteBoundVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainEngineVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainEngineVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainProfile;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Ledger;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -74,6 +78,18 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
         $this->assertSame([1, ['perimeter' => [CheckedVoucherResource::class], 'without_perimeter' => [], 'problems' => [$problem]]], [$exitCode, $rows]);
         $this->assertSame(1, $text);
         $this->assertStringContainsString("  rows ... FAILED\n  ⇂ ".rtrim($problem, '.')."\n", $this->summary($output->fetch()));
+    }
+
+    #[Test]
+    public function it_reports_a_restriction_on_a_custom_engine_text_search(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('plain-engine-vouchers', PlainEngineVoucherController::class)->middleware('auth:sanctum')->register());
+        config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        $problem = InvalidTextSearchException::unrestrictedEngine(PlainEngineVoucherResource::class, 'hidden', HiddenRowsExtension::class, PlainProfile::NAME)->getMessage();
+
+        $exitCode = Artisan::call('rest:check', ['controllers' => [PlainEngineVoucherController::class], '--json' => true], $output = new BufferedOutput);
+
+        $this->assertSame([1, [$problem]], [$exitCode, json_decode($output->fetch(), true)['rows']['problems']]);
     }
 
     #[Test]
