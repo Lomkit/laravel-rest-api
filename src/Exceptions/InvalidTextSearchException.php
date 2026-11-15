@@ -154,6 +154,8 @@ final class InvalidTextSearchException extends LogicException
     {
         $extensions = implode(', ', $names);
 
-        return new self("The extensions [{$extensions}] restrict the rows of {$resource}, which searches text through a search engine that these restrictions do not reach yet. Remove the text search of {$resource}, or leave it out of these extensions with appliesTo().");
+        $first = $names[0] ?? 'name';
+
+        return new self("The extensions [{$extensions}] restrict the rows of {$resource}, whose text search runs on a search engine that these restrictions do not reach. Leave {$resource} out of them with appliesTo(), disable one with '{$first}' => false in the [rest.extensions] config, or remove the text search of {$resource}.");
     }
 }

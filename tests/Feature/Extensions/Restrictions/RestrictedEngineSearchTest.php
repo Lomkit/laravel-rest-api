@@ -58,7 +58,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_names_the_extensions_and_how_to_leave_the_resource_out(): void
     {
         $this->assertSame(
-            'The extensions [a, b] restrict the rows of '.VoucherResource::class.', which searches text through a search engine that these restrictions do not reach yet. Remove the text search of '.VoucherResource::class.', or leave it out of these extensions with appliesTo().',
+            'The extensions [a, b] restrict the rows of '.VoucherResource::class.', whose text search runs on a search engine that these restrictions do not reach. Leave '.VoucherResource::class.' out of them with appliesTo(), disable one with \'a\' => false in the [rest.extensions] config, or remove the text search of '.VoucherResource::class.'.',
             InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['a', 'b'])->getMessage(),
         );
     }
