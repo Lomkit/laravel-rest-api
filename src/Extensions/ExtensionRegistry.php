@@ -61,6 +61,8 @@ final class ExtensionRegistry
             }
         }
 
+        ksort($applicable, SORT_STRING);
+
         return $applicable;
     }
 

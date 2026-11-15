@@ -26,8 +26,6 @@ final readonly class ExtensionRestrictions
             return null;
         }
 
-        ksort($extensions);
-
         return new self($resource, $extensions);
     }
 

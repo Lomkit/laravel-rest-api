@@ -26,7 +26,6 @@ final readonly class PlanAugmentation
             return;
         }
 
-        ksort($extensions);
         $eloquent = RelationAggregate::eloquent($query);
         $additions = new QueryAdditions($resource, $plan->rendered);
         $user = $resource->context()->actingUser()->user;

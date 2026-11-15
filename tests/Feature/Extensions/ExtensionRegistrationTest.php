@@ -69,7 +69,7 @@ final class ExtensionRegistrationTest extends PackageTestCase
     #[DefineEnvironment('registerSeveral')]
     public function it_registers_several_extensions_through_the_facade(): void
     {
-        $this->assertSame(['counting', 'both'], array_keys($this->context()->extensions()->applicable(ProductResource::class, CountsResources::class)));
+        $this->assertSame(['both', 'counting'], array_keys($this->context()->extensions()->applicable(ProductResource::class, CountsResources::class)));
     }
 
     #[Test]

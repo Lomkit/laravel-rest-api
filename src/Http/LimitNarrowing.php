@@ -17,7 +17,6 @@ final readonly class LimitNarrowing
             return $limits;
         }
 
-        ksort($extensions);
         $requests = new LimitRequests($resource::class);
         $user = $resource->context()->actingUser()->user;
 

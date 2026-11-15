@@ -18,7 +18,6 @@ final readonly class ExtensionInstructions
             return [];
         }
 
-        ksort($extensions);
         $context = new InstructionsContext($resource::class);
         $declared = [];
 
