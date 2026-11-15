@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Http;
 
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
+use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\NarrowsFields;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\NarrowedFields;
@@ -12,37 +13,42 @@ final class FieldNarrowing
 {
     private string $running = '';
 
-    public function __construct(
+    /** @param array<string, Extension&NarrowsFields> $extensions */
+    private function __construct(
         private readonly Resource $resource,
-        private readonly FieldSet $declared,
-        private readonly ?string $version,
-        private readonly ?string $key,
+        private readonly array $extensions,
     ) {}
+
+    public static function of(Resource $resource): ?self
+    {
+        $context = $resource->context();
+
+        if ($context->isDocumentation()) {
+            return null;
+        }
+
+        $extensions = $context->extensions()->applicable($resource::class, NarrowsFields::class);
+
+        if ($extensions === []) {
+            return null;
+        }
+
+        ksort($extensions);
+
+        return new self($resource, $extensions);
+    }
 
     public function running(): string
     {
         return $this->running;
     }
 
-    public function narrowed(): NarrowedFields
+    public function narrowed(FieldSet $declared, ?string $version, ?string $key): NarrowedFields
     {
-        $context = $this->resource->context();
+        $requests = new FieldRequests($this->resource, $declared, $version, $key);
+        $user = $this->resource->context()->actingUser()->user;
 
-        if ($context->isDocumentation()) {
-            return NarrowedFields::none();
-        }
-
-        $extensions = $context->extensions()->applicable($this->resource::class, NarrowsFields::class);
-
-        if ($extensions === []) {
-            return NarrowedFields::none();
-        }
-
-        ksort($extensions);
-        $requests = new FieldRequests($this->resource, $this->declared, $this->version, $this->key);
-        $user = $context->actingUser()->user;
-
-        foreach ($extensions as $name => $extension) {
+        foreach ($this->extensions as $name => $extension) {
             $this->running = $name;
             $extension->narrowFields(new FieldsContext($name, $this->resource, $user, $requests));
         }

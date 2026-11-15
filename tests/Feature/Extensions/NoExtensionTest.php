@@ -7,12 +7,14 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CountedFieldsProductResource;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Lomkit\Rest\Text\TextBackend;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
@@ -78,6 +80,21 @@ final class NoExtensionTest extends PackageTestCase
             ->definition();
 
         $this->assertSame($definition->declaredFields(), $definition->fields());
+        $this->assertSame([], ExtensionLog::$built);
+    }
+
+    #[Test]
+    public function it_resolves_the_text_search_without_reading_the_fields(): void
+    {
+        CountedFieldsProductResource::$reads = 0;
+        $definition = (new RestContext(RestRequest::create('/api/products/search', 'POST'), $this->app))
+            ->resource(CountedFieldsProductResource::class)
+            ->definition();
+
+        $text = $definition->text();
+
+        $this->assertSame(TextBackend::None, $text->backend);
+        $this->assertSame(0, CountedFieldsProductResource::$reads);
         $this->assertSame([], ExtensionLog::$built);
     }
 }

@@ -53,11 +53,17 @@ final class ResourceFields
             throw InvalidFieldExtensionException::readsNarrowedFields($this->narrowing->running(), $this->resource::class);
         }
 
+        $narrowing = FieldNarrowing::of($this->resource);
+
+        if ($narrowing === null) {
+            return $this->narrowed = NarrowedFields::none();
+        }
+
         $declared = $this->declared();
-        $this->narrowing = new FieldNarrowing($this->resource, $declared, $this->version?->column, $this->key);
+        $this->narrowing = $narrowing;
 
         try {
-            return $this->narrowed = $this->narrowing->narrowed();
+            return $this->narrowed = $narrowing->narrowed($declared, $this->version?->column, $this->key);
         } finally {
             $this->narrowing = null;
         }
