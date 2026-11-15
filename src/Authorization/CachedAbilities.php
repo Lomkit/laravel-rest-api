@@ -15,7 +15,7 @@ final readonly class CachedAbilities
 
     /**
      * @param  array<mixed>  $declared
-     * @param  Closure(): array<mixed>  $context
+     * @param  Closure(): CacheContext  $context
      */
     public static function of(array $declared, string $resource, Closure $context): self
     {
@@ -33,7 +33,7 @@ final readonly class CachedAbilities
             $seconds[$ability] = $duration;
         }
 
-        return new self($seconds, $seconds === [] ? '' : CacheContext::of($context(), $resource));
+        return new self($seconds, $seconds === [] ? '' : $context()->serialized());
     }
 
     public function seconds(string $ability): ?int

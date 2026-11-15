@@ -6,17 +6,34 @@ use Lomkit\Rest\Exceptions\InvalidResourceException;
 
 final readonly class CacheContext
 {
-    /** @param array<mixed> $context */
-    public static function of(array $context, string $resource): string
+    /** @param array<array-key, int|float|string|bool|null> $values */
+    private function __construct(public array $values) {}
+
+    /** @param array<mixed> $declared */
+    public static function of(array $declared, string $resource): self
     {
-        foreach ($context as $key => $value) {
+        $values = [];
+
+        foreach ($declared as $key => $value) {
             if (! is_int($value) && ! is_string($value) && ! is_bool($value) && $value !== null) {
                 throw InvalidResourceException::invalidCacheContext($resource, $key);
             }
+
+            $values[$key] = $value;
         }
 
-        ksort($context, SORT_STRING);
+        ksort($values, SORT_STRING);
 
-        return serialize($context);
+        return new self($values);
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->values === [];
+    }
+
+    public function serialized(): string
+    {
+        return serialize($this->values);
     }
 }

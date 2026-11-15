@@ -6,6 +6,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ItemNotFoundException;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Authorization\CacheContext;
 use Lomkit\Rest\Authorization\CachedAbilities;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\FieldSet;
@@ -174,5 +175,11 @@ final class ResourceDefinition
     public function cachedAbilities(): CachedAbilities
     {
         return $this->authorization->cachedAbilities();
+    }
+
+    /** @internal */
+    public function cacheContext(): CacheContext
+    {
+        return $this->authorization->cacheContext();
     }
 }

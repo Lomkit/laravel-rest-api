@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Http;
 
+use Lomkit\Rest\Authorization\CacheContext;
 use Lomkit\Rest\Authorization\CachedAbilities;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Search\GateVocabulary;
@@ -13,6 +14,8 @@ final class ResourceAuthorization
 
     private ?CachedAbilities $cachedAbilities = null;
 
+    private ?CacheContext $cacheContext = null;
+
     public function __construct(private readonly Resource $resource) {}
 
     public function gates(): GateVocabulary
@@ -22,6 +25,11 @@ final class ResourceAuthorization
 
     public function cachedAbilities(): CachedAbilities
     {
-        return $this->cachedAbilities ??= CachedAbilities::of($this->resource->authorizationCache(), $this->resource::class, $this->resource->authorizationCacheContext(...));
+        return $this->cachedAbilities ??= CachedAbilities::of($this->resource->authorizationCache(), $this->resource::class, $this->cacheContext(...));
+    }
+
+    public function cacheContext(): CacheContext
+    {
+        return $this->cacheContext ??= CacheContext::of($this->resource->authorizationCacheContext(), $this->resource::class);
     }
 }

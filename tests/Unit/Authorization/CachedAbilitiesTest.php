@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Unit\Authorization;
 
+use Lomkit\Rest\Authorization\CacheContext;
 use Lomkit\Rest\Authorization\CachedAbilities;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -16,7 +17,7 @@ class CachedAbilitiesTest extends TestCase
     #[Test]
     public function it_gives_the_seconds_of_each_declared_ability(): void
     {
-        $abilities = CachedAbilities::of(['viewAny' => 300, 'view' => 60], self::RESOURCE, static fn (): array => []);
+        $abilities = CachedAbilities::of(['viewAny' => 300, 'view' => 60], self::RESOURCE, static fn (): CacheContext => CacheContext::of([], self::RESOURCE));
 
         $this->assertSame([300, 60, null], [$abilities->seconds('viewAny'), $abilities->seconds('view'), $abilities->seconds('update')]);
     }
@@ -27,7 +28,7 @@ class CachedAbilitiesTest extends TestCase
     {
         $this->expectExceptionObject(new InvalidResourceException("The resource [App\Rest\Resources\TicketResource] caches the ability [view] in authorizationCache() without a valid duration. Give an integer number of seconds of 1 or more, for example ['view' => 300]."));
 
-        CachedAbilities::of(['viewAny' => 300, 'view' => $seconds], self::RESOURCE, static fn (): array => []);
+        CachedAbilities::of(['viewAny' => 300, 'view' => $seconds], self::RESOURCE, static fn (): CacheContext => CacheContext::of([], self::RESOURCE));
     }
 
     /** @param array<mixed> $declared */
@@ -37,17 +38,17 @@ class CachedAbilitiesTest extends TestCase
     {
         $this->expectExceptionObject(new InvalidResourceException("The resource [App\Rest\Resources\TicketResource] returns the key [{$key}] from authorizationCache(). Key each number of seconds by the name of an ability, for example ['viewAny' => 300]."));
 
-        CachedAbilities::of($declared, self::RESOURCE, static fn (): array => []);
+        CachedAbilities::of($declared, self::RESOURCE, static fn (): CacheContext => CacheContext::of([], self::RESOURCE));
     }
 
     #[Test]
     public function it_reads_the_context_only_when_the_resource_declares_an_ability(): void
     {
         $reads = 0;
-        $context = function () use (&$reads): array {
+        $context = function () use (&$reads): CacheContext {
             $reads++;
 
-            return ['team' => 7];
+            return CacheContext::of(['team' => 7], self::RESOURCE);
         };
 
         $silent = CachedAbilities::of([], self::RESOURCE, $context);
@@ -59,9 +60,9 @@ class CachedAbilitiesTest extends TestCase
     #[Test]
     public function it_keys_the_same_context_the_same_way_whatever_the_order_of_its_keys(): void
     {
-        $first = CachedAbilities::of(['viewAny' => 300], self::RESOURCE, static fn (): array => ['team' => 7, 'locale' => 'fr', 'staff' => true, 'region' => null]);
-        $second = CachedAbilities::of(['viewAny' => 300], self::RESOURCE, static fn (): array => ['staff' => true, 'region' => null, 'locale' => 'fr', 'team' => 7]);
-        $other = CachedAbilities::of(['viewAny' => 300], self::RESOURCE, static fn (): array => ['team' => '7', 'locale' => 'fr', 'staff' => true, 'region' => null]);
+        $first = CachedAbilities::of(['viewAny' => 300], self::RESOURCE, static fn (): CacheContext => CacheContext::of(['team' => 7, 'locale' => 'fr', 'staff' => true, 'region' => null], self::RESOURCE));
+        $second = CachedAbilities::of(['viewAny' => 300], self::RESOURCE, static fn (): CacheContext => CacheContext::of(['staff' => true, 'region' => null, 'locale' => 'fr', 'team' => 7], self::RESOURCE));
+        $other = CachedAbilities::of(['viewAny' => 300], self::RESOURCE, static fn (): CacheContext => CacheContext::of(['team' => '7', 'locale' => 'fr', 'staff' => true, 'region' => null], self::RESOURCE));
 
         $this->assertSame($first->context, $second->context);
         $this->assertNotSame($first->context, $other->context);
@@ -73,7 +74,7 @@ class CachedAbilitiesTest extends TestCase
     {
         $this->expectExceptionObject(new InvalidResourceException("The resource [App\Rest\Resources\TicketResource] returns a value for the key [team] from authorizationCacheContext() that is not an integer, a string, a boolean or null. Give a scalar value, for example ['team' => 1]."));
 
-        CachedAbilities::of(['viewAny' => 300], self::RESOURCE, static fn (): array => ['locale' => 'fr', 'team' => $value]);
+        CachedAbilities::of(['viewAny' => 300], self::RESOURCE, static fn (): CacheContext => CacheContext::of(['locale' => 'fr', 'team' => $value], self::RESOURCE));
     }
 
     /** @return array<string, array{mixed}> */
