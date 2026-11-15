@@ -43,7 +43,7 @@ class NarrowedShowFieldsTest extends PackageTestCase
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage']]);
         $this->opening = DB::table('shows')->insertGetId(['stage_code' => 'main', 'title' => 'Opening night', 'price' => 20, 'seats' => 300, 'level' => 1, 'starts_on' => '2026-07-01', 'starts_at' => '2026-02-20 20:00:00', 'status' => 'on_sale', 'updated_at' => '2026-02-01 08:00:00']);
         DB::table('shows')->insert(['stage_code' => 'main', 'title' => 'Closing night', 'price' => 35, 'seats' => 100, 'level' => 2, 'starts_on' => '2026-07-03', 'starts_at' => '2026-02-21 20:00:00', 'status' => 'planned', 'updated_at' => '2026-02-01 08:00:00']);
-        DB::table('notes')->insert(['notable_type' => Show::class, 'notable_id' => (string) $this->opening, 'body' => 'Sold out soon']);
+        DB::table('notes')->insert(['id' => 1, 'notable_type' => Show::class, 'notable_id' => (string) $this->opening, 'body' => 'Sold out soon']);
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
     }
 
