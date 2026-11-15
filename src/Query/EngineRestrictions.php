@@ -32,8 +32,6 @@ final readonly class EngineRestrictions
             return null;
         }
 
-        ksort($engine);
-
         return new self($resource, $rows, $engine);
     }
 

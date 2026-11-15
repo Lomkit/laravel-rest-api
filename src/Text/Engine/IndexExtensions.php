@@ -46,7 +46,6 @@ final class IndexExtensions
             return null;
         }
 
-        ksort($providers);
         $context = new EngineProfileContext($this->resource, $engine);
         $claims = [];
 
@@ -74,7 +73,6 @@ final class IndexExtensions
             return [];
         }
 
-        ksort($extensions);
         $context = new IndexAttributesContext($this->resource, $profile instanceof MatchesStringLists);
         $declarations = [];
 
