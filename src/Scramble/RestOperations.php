@@ -54,6 +54,7 @@ final readonly class RestOperations implements OperationTransformer
         }
 
         (new ErrorResponses($context->components))->attach($operation, $context);
+        ExtensionResponses::document($operation, $context);
     }
 
     /** @return list<string> */

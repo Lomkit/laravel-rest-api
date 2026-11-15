@@ -85,6 +85,8 @@ final readonly class PageSchema
             $properties[SearchMeta::INSTRUCTIONS] = self::instructions();
         }
 
+        $properties = [...$properties, ...MetaSchema::search($resource)];
+
         if (! Overrides::method($resource, 'searchMeta', Resource::class)) {
             return Schemas::closed($properties);
         }
