@@ -558,34 +558,46 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
     }
 
-    /** @return array<string, array{string, string, array<string, mixed>, bool, int}> */
+    /** @return array<string, array{string, string, array<string, mixed>, bool, int, array<string, mixed>}> */
     public static function deniedWrites(): array
     {
+        $denied = ['message' => 'This action is unauthorized.'];
+
         return [
-            'mutate of a denied row' => ['POST', '/written-documents/mutate', ['mutate' => [['operation' => 'update', 'key' => 2, 'attributes' => ['title' => 'Budget 2027']]]], false, 403],
-            'destroy of a denied row' => ['DELETE', '/written-documents', ['resources' => [1, 2]], false, 403],
-            'action on a denied row' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []], false, 403],
-            'destroy to confirm' => ['DELETE', '/written-documents', ['resources' => [1]], true, 428],
-            'mutate to confirm' => ['POST', '/written-documents/mutate', ['mutate' => [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Annual summary']]]], true, 428],
-            'action to confirm' => ['POST', '/written-documents/actions/confirmed-archive-documents', ['search' => ['filters' => [['field' => 'id', 'value' => 1]]]], true, 428],
+            'mutate of a denied row' => ['POST', '/written-documents/mutate', ['mutate' => [['operation' => 'update', 'key' => 2, 'attributes' => ['title' => 'Budget 2027']]]], false, 403, $denied],
+            'destroy of a denied row' => ['DELETE', '/written-documents', ['resources' => [1, 2]], false, 403, $denied],
+            'action on a denied row' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []], false, 403, $denied],
+            'destroy to confirm' => ['DELETE', '/written-documents', ['resources' => [1]], true, 428, self::confirmation('Delete the documents?', 'db33a074852ff69fdde0ae15936e6d7b5dc1c853420d1bf20e44526c02522c03')],
+            'mutate to confirm' => ['POST', '/written-documents/mutate', ['mutate' => [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Annual summary']]]], true, 428, self::confirmation('Change the documents?', '8db4d793de638eca120a32b93d3d3e37f68db199222c849208c4ef1140bcc7b1')],
+            'action to confirm' => ['POST', '/written-documents/actions/confirmed-archive-documents', ['search' => ['filters' => [['field' => 'id', 'value' => 1]]]], true, 428, self::confirmation('Archive the documents?', 'a0dc008025277ed464ecdc10435a41788db72b29244c43a2c4dba9754bbb09dd')],
         ];
     }
 
-    /** @param array<string, mixed> $body */
+    /**
+     * @param  array<string, mixed>  $body
+     * @param  array<string, mixed>  $answer
+     */
     #[Test]
     #[DataProvider('deniedWrites')]
-    public function it_asks_the_guard_only_after_authorization_and_confirmation(string $method, string $uri, array $body, bool $confirming, int $status): void
+    public function it_asks_the_guard_only_after_authorization_and_confirmation(string $method, string $uri, array $body, bool $confirming, int $status, array $answer): void
     {
         Gate::policy(Document::class, DenyingDocumentPolicy::class);
         WrittenDocumentResource::$confirming = $confirming;
         config(['app.key' => 'base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=']);
+        $this->travelTo('2026-11-08 10:00:00');
         $this->seedDocuments(null, null);
 
-        $this->json($method, $uri, $body)->assertStatus($status);
+        $this->json($method, $uri, $body)->assertStatus($status)->assertExactJson($answer);
 
         $this->assertSame([], WriteLog::$guards);
         $this->assertSame([[1, null], [2, null]], $this->rows());
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
+    }
+
+    /** @return array{message: string, confirmation: array{token: string, expires_at: string, data: array<string, mixed>}} */
+    private static function confirmation(string $message, string $signature): array
+    {
+        return ['message' => $message, 'confirmation' => ['token' => "1794132300.{$signature}", 'expires_at' => '2026-11-08T10:05:00Z', 'data' => []]];
     }
 
     /** @return list<string> */
