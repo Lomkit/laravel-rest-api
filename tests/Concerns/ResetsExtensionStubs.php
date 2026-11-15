@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Concerns;
 
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentationLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingReadObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ClausedExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DeclaredIndexExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
@@ -16,6 +17,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherMaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionStageMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RoutedStampNamedLimits;
@@ -64,6 +66,8 @@ trait ResetsExtensionStubs
         ReadersExtension::$groups = null;
         SqlForeignEngineProfiles::$skipsRows = false;
         RegionStageMeta::$named = null;
+        RecordingReadObserver::$named = null;
+        ChangingReadObserver::$named = null;
         FirstResponses::reset();
         SecondResponses::reset();
     }
