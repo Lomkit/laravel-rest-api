@@ -33,8 +33,6 @@ final class FieldNarrowing
             return null;
         }
 
-        ksort($extensions);
-
         return new self($resource, $extensions);
     }
 
