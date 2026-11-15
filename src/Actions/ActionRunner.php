@@ -12,7 +12,6 @@ use Lomkit\Rest\Actions\Rows\ActionRows;
 use Lomkit\Rest\Authorization\UserReference;
 use Lomkit\Rest\Contracts\BatchableAction;
 use Lomkit\Rest\Http\Requests\OperateRequest;
-use Lomkit\Rest\Http\WriteTransaction;
 use Lomkit\Rest\Query\Trashed;
 
 final readonly class ActionRunner
@@ -27,7 +26,7 @@ final readonly class ActionRunner
         private ?UserReference $user,
         private ?PendingBatch $batch,
         private ?RowChecks $checks,
-        private WriteTransaction $transaction,
+        private ActionWrites $writes,
     ) {}
 
     public static function for(OperateRequest $request, Action $action, ActionFields $fields, bool $perimeter, ?RowChecks $checks): self
@@ -44,13 +43,13 @@ final readonly class ActionRunner
             $action instanceof ShouldQueue ? $user : null,
             $user !== null && $action instanceof BatchableAction ? self::batch($action, $fields, $user) : null,
             $checks,
-            WriteTransaction::of($request->resource),
+            ActionWrites::of($action, $fields, $request->resource),
         );
     }
 
     public function through(ActionRows $rows): int
     {
-        return $this->action->transaction->aroundRun($this->transaction, fn (): int => $this->operate($rows));
+        return $this->writes->around(fn (): int => $this->operate($rows));
     }
 
     /** @param Collection<array-key, Model> $models */
@@ -108,7 +107,7 @@ final readonly class ActionRunner
     /** @param Collection<array-key, Model> $models */
     private function handle(Collection $models): void
     {
-        $this->action->transaction->handle($this->action, $this->fields, $this->transaction, $models);
+        $this->writes->handle($models);
     }
 
     private static function batch(Action $action, ActionFields $fields, UserReference $user): PendingBatch

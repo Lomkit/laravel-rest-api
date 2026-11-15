@@ -18,7 +18,6 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\DeclarationKind;
 use Lomkit\Rest\Http\Routing\DeclaredRoute;
 use Lomkit\Rest\Http\Routing\RouteFingerprint;
-use Lomkit\Rest\Http\WriteTransaction;
 
 final class QueuedAction implements ShouldQueue
 {
@@ -106,7 +105,7 @@ final class QueuedAction implements ShouldQueue
         $inputs = InputValues::fromGiven($resource->definition()->inputFields($action), $this->fields);
         $fields = ActionFields::of($action, $inputs, $this->user->guard, $user);
 
-        $action->transaction->handle($action, $fields, WriteTransaction::of($resource), $models);
+        ActionWrites::of($action, $fields, $resource)->handle($models);
     }
 
     private function declared(Resource $resource): Action
