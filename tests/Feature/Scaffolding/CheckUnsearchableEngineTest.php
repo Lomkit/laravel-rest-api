@@ -46,7 +46,7 @@ final class CheckUnsearchableEngineTest extends ScaffoldingTestCase
 
         $this->assertSame(1, $exitCode);
         $this->assertSame(
-            [IndexedBookResource::class.': the [hidden] extension '.HiddenRowsExtension::class." restricts its rows in SQL but does not implement RestrictsEngineQueries, and rest:check cannot resolve the Scout engine of its text search ({$reason}). A text search of ".IndexedBookResource::class.' is refused on an engine that does not apply SQL restrictions.'],
+            [IndexedBookResource::class.': the [hidden] extension '.HiddenRowsExtension::class." restricts its rows in SQL but does not implement RestrictsEngineQueries, and rest:check cannot resolve the text search or the Scout engine of the resource ({$reason}). A text search of ".IndexedBookResource::class.' is refused on an engine that does not apply SQL restrictions.'],
             json_decode($output->fetch(), true)['rows']['problems'],
         );
     }

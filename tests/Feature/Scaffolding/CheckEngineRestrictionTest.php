@@ -15,6 +15,8 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherResource;
+use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\RouteBoundVoucherController;
+use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\RouteBoundVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Ledger;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -35,6 +37,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     public function resetTheLog(): void
     {
         RestrictionLog::reset();
+        RouteBoundVoucherResource::$textCalls = 0;
     }
 
     #[\Override]
@@ -95,7 +98,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
         [$exitCode, $rows] = $this->rows();
 
         $this->assertSame(1, $exitCode);
-        $this->assertSame([CheckedVoucherResource::class.': the [red] extension '.RedRowsExtension::class.' restricts its rows in SQL but does not implement RestrictsEngineQueries, and rest:check cannot resolve the Scout engine of its text search (Driver [missing] not supported.). A text search of '.CheckedVoucherResource::class.' is refused on an engine that does not apply SQL restrictions.'], $rows['problems']);
+        $this->assertSame([CheckedVoucherResource::class.': the [red] extension '.RedRowsExtension::class.' restricts its rows in SQL but does not implement RestrictsEngineQueries, and rest:check cannot resolve the text search or the Scout engine of the resource (Driver [missing] not supported.). A text search of '.CheckedVoucherResource::class.' is refused on an engine that does not apply SQL restrictions.'], $rows['problems']);
     }
 
     #[Test]
@@ -109,6 +112,32 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
         $this->assertSame(1, $exitCode);
         $this->assertSame([], $report['rows']['problems']);
         $this->assertCount(1, $report['extensions']['problems']);
+    }
+
+    #[Test]
+    public function it_does_not_read_the_text_search_without_an_extension(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('route-bound-vouchers', RouteBoundVoucherController::class)->middleware('auth:sanctum')->register());
+        config(['scout.driver' => 'collection', 'rest.extensions' => []]);
+
+        $exitCode = Artisan::call('rest:check', ['controllers' => [RouteBoundVoucherController::class], '--json' => true], $output = new BufferedOutput);
+
+        $this->assertSame([0, ['perimeter' => [RouteBoundVoucherResource::class], 'without_perimeter' => [], 'problems' => []], 0], [$exitCode, json_decode($output->fetch(), true)['rows'], RouteBoundVoucherResource::$textCalls]);
+    }
+
+    #[Test]
+    public function it_reports_a_text_search_that_throws_in_the_console(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('route-bound-vouchers', RouteBoundVoucherController::class)->middleware('auth:sanctum')->register());
+        config(['scout.driver' => 'collection', 'rest.extensions' => ['red' => RedRowsExtension::class]]);
+
+        $exitCode = Artisan::call('rest:check', ['controllers' => [RouteBoundVoucherController::class], '--json' => true], $output = new BufferedOutput);
+
+        $this->assertSame(1, $exitCode);
+        $this->assertSame(
+            [RouteBoundVoucherResource::class.': the [red] extension '.RedRowsExtension::class.' restricts its rows in SQL but does not implement RestrictsEngineQueries, and rest:check cannot resolve the text search or the Scout engine of the resource (text() needs the request route). A text search of '.RouteBoundVoucherResource::class.' is refused on an engine that does not apply SQL restrictions.'],
+            json_decode($output->fetch(), true)['rows']['problems'],
+        );
     }
 
     /** @return array{int, mixed} */
