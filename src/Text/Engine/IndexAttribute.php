@@ -27,6 +27,13 @@ final readonly class IndexAttribute implements JsonSerializable
         public bool $list = false,
     ) {}
 
+    public function sameAs(self $other): bool
+    {
+        return $this->field::class === $other->field::class
+            && $this->list === $other->list
+            && $this->jsonSerialize() === $other->jsonSerialize();
+    }
+
     public function supports(FilterOperator $operator): bool
     {
         return in_array($operator, $this->operators, true);

@@ -38,7 +38,9 @@ final class InvalidEngineExtensionException extends InvalidExtensionException
 
     public static function indexAttributeTakenByResource(string $name, string $class, string $resource, string $attribute, ResourceIndexList $list): self
     {
-        return self::taken($name, $class, $resource, $attribute, "the {$list->value}() list of its ScoutEngine");
+        return $list === ResourceIndexList::Filterable
+            ? self::about($name, "The [{$name}] extension {$class} declares for {$resource} the index attribute [{$attribute}], which the filterable() list of its ScoutEngine already declares. Index attributes keep their real name: index the attribute under another name for one of them, or leave {$resource} out of the extension with appliesTo().")
+            : self::taken($name, $class, $resource, $attribute, "the {$list->value}() list of its ScoutEngine");
     }
 
     public static function indexAttributeTakenByExtension(string $name, string $class, string $resource, string $attribute, string $owner, string $ownerClass): self
@@ -58,6 +60,6 @@ final class InvalidEngineExtensionException extends InvalidExtensionException
 
     private static function taken(string $name, string $class, string $resource, string $attribute, string $owner): self
     {
-        return self::about($name, "The [{$name}] extension {$class} declares for {$resource} the index attribute [{$attribute}], which {$owner} already declares. Index attributes keep their real name: index the attribute under another name for one of them, or leave {$resource} out of the extension with appliesTo().");
+        return self::about($name, "The [{$name}] extension {$class} declares for {$resource} the index attribute [{$attribute}], which {$owner} already declares with another field type or list marker. Index attributes keep their real name: declare it the same way, index it under another name for one of them, or leave {$resource} out of the extension with appliesTo().");
     }
 }

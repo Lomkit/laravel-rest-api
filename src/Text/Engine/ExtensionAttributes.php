@@ -36,30 +36,43 @@ final readonly class ExtensionAttributes
                     throw InvalidEngineExtensionException::repeatedIndexAttribute($name, $class, $target->resource, $attributeName);
                 }
 
-                $list = match (true) {
-                    isset($filterable[$attributeName]) => ResourceIndexList::Filterable,
-                    isset($perimeter[$attributeName]) => ResourceIndexList::Perimeter,
-                    default => null,
-                };
-
-                if ($list !== null) {
-                    throw InvalidEngineExtensionException::indexAttributeTakenByResource($name, $class, $target->resource, $attributeName, $list);
-                }
-
-                if (isset($owners[$attributeName])) {
-                    throw InvalidEngineExtensionException::indexAttributeTakenByExtension($name, $class, $target->resource, $attributeName, ...$owners[$attributeName]);
-                }
-
                 $own[$attributeName] = true;
-                $attributes[$attributeName] = $attribute;
-            }
 
-            foreach (array_keys($own) as $attributeName) {
+                if (self::shared($target, $name, $class, $attribute, $filterable, $perimeter, $attributes, $owners)) {
+                    continue;
+                }
+
+                $attributes[$attributeName] = $attribute;
                 $owners[$attributeName] = [$name, $class];
             }
         }
 
         return $attributes;
+    }
+
+    /**
+     * @param  array<string, IndexAttribute>  $filterable
+     * @param  array<string, IndexAttribute>  $perimeter
+     * @param  array<string, IndexAttribute>  $attributes
+     * @param  array<string, array{string, string}>  $owners
+     */
+    private static function shared(TextTarget $target, string $name, string $class, IndexAttribute $attribute, array $filterable, array $perimeter, array $attributes, array $owners): bool
+    {
+        $attributeName = $attribute->field->name;
+
+        if (isset($filterable[$attributeName])) {
+            throw InvalidEngineExtensionException::indexAttributeTakenByResource($name, $class, $target->resource, $attributeName, ResourceIndexList::Filterable);
+        }
+
+        if (isset($perimeter[$attributeName]) && ! $perimeter[$attributeName]->sameAs($attribute)) {
+            throw InvalidEngineExtensionException::indexAttributeTakenByResource($name, $class, $target->resource, $attributeName, ResourceIndexList::Perimeter);
+        }
+
+        if (isset($attributes[$attributeName]) && ! $attributes[$attributeName]->sameAs($attribute)) {
+            throw InvalidEngineExtensionException::indexAttributeTakenByExtension($name, $class, $target->resource, $attributeName, ...$owners[$attributeName]);
+        }
+
+        return isset($perimeter[$attributeName]) || isset($attributes[$attributeName]);
     }
 
     private static function attribute(TextTarget $target, EngineProfile $profile, IndexDeclarer $declarer, mixed $entry): ?IndexAttribute

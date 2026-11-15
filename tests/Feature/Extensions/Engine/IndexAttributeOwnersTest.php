@@ -11,9 +11,12 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstIndexExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondIndexExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\ScoutEngineDeclarationTestCase;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
 use Lomkit\Rest\Tests\Fixtures\Ledger\TeamVoucherResource;
+use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use Lomkit\Rest\Text\Engine\ResourceIndexList;
+use Lomkit\Rest\Text\Engine\StringListAttribute;
 use Lomkit\Rest\Text\ScoutEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -52,9 +55,9 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     }
 
     #[Test]
-    public function it_refuses_an_attribute_of_the_resource_perimeter(): void
+    public function it_refuses_an_attribute_that_the_perimeter_declares_with_another_type(): void
     {
-        $this->declare(['first' => [Text::make('team')]]);
+        $this->declare(['first' => [Integer::make('team')]]);
         $text = $this->resource(TeamVoucherResource::class)->text();
         $this->assertInstanceOf(ScoutEngine::class, $text);
 
@@ -66,11 +69,51 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     /** @param list<string> $order */
     #[Test]
     #[DataProvider('orders')]
-    public function it_refuses_an_attribute_that_another_extension_declares_in_any_order(array $order): void
+    public function it_refuses_an_attribute_that_another_extension_declares_with_another_type_in_any_order(array $order): void
+    {
+        $extensions = ['first' => FirstIndexExtension::class, 'second' => SecondIndexExtension::class];
+        DeclaredIndexExtension::$declared = [FirstIndexExtension::class => [Integer::make('owner_id')], SecondIndexExtension::class => [Text::make('owner_id')]];
+        config(['rest.extensions' => array_combine($order, array_map(fn (string $name): string => $extensions[$name], $order))]);
+
+        $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTakenByExtension('second', SecondIndexExtension::class, VoucherResource::class, 'owner_id', 'first', FirstIndexExtension::class));
+
+        $this->capabilities($this->open());
+    }
+
+    /** @param list<string> $order */
+    #[Test]
+    #[DataProvider('orders')]
+    public function it_accepts_one_attribute_declared_alike_by_two_extensions_in_any_order(array $order): void
     {
         $extensions = ['first' => FirstIndexExtension::class, 'second' => SecondIndexExtension::class];
         DeclaredIndexExtension::$declared = [FirstIndexExtension::class => [Integer::make('owner_id')], SecondIndexExtension::class => [Integer::make('owner_id')]];
         config(['rest.extensions' => array_combine($order, array_map(fn (string $name): string => $extensions[$name], $order))]);
+
+        $grammar = $this->capabilities($this->open(['number']))->engine;
+
+        $this->assertNotNull($grammar);
+        $this->assertSame(['number'], array_keys($grammar->filters));
+    }
+
+    #[Test]
+    public function it_accepts_an_attribute_that_the_perimeter_declares_the_same_way(): void
+    {
+        $this->declare(['first' => [Text::make('team')]]);
+        $text = $this->resource(TeamVoucherResource::class)->text();
+        $this->assertInstanceOf(ScoutEngine::class, $text);
+
+        $grammar = $text->capabilities($this->target(TeamVoucherResource::class))->engine;
+
+        $this->assertNotNull($grammar);
+        $this->assertSame(['number', 'price', 'active', 'code'], array_keys($grammar->filters));
+    }
+
+    #[Test]
+    public function it_refuses_an_attribute_that_another_extension_declares_as_a_list(): void
+    {
+        $this->useEngine(new FakeTypesenseEngine);
+        config(['scout.typesense.model-settings.'.Voucher::class.'.search-parameters.query_by' => 'title']);
+        $this->declare(['first' => [Text::make('owner_id')], 'second' => [StringListAttribute::make('owner_id')]]);
 
         $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTakenByExtension('second', SecondIndexExtension::class, VoucherResource::class, 'owner_id', 'first', FirstIndexExtension::class));
 
@@ -128,11 +171,11 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     public function it_names_the_extension_the_resource_and_both_owners(): void
     {
         $this->assertSame(
-            'The [second] extension '.SecondIndexExtension::class.' declares for '.VoucherResource::class.' the index attribute [owner_id], which the [first] extension '.FirstIndexExtension::class.' already declares. Index attributes keep their real name: index the attribute under another name for one of them, or leave '.VoucherResource::class.' out of the extension with appliesTo().',
+            'The [second] extension '.SecondIndexExtension::class.' declares for '.VoucherResource::class.' the index attribute [owner_id], which the [first] extension '.FirstIndexExtension::class.' already declares with another field type or list marker. Index attributes keep their real name: declare it the same way, index it under another name for one of them, or leave '.VoucherResource::class.' out of the extension with appliesTo().',
             InvalidEngineExtensionException::indexAttributeTakenByExtension('second', SecondIndexExtension::class, VoucherResource::class, 'owner_id', 'first', FirstIndexExtension::class)->getMessage(),
         );
         $this->assertSame(
-            'The [first] extension '.FirstIndexExtension::class.' declares for '.TeamVoucherResource::class.' the index attribute [team], which the perimeter() list of its ScoutEngine already declares. Index attributes keep their real name: index the attribute under another name for one of them, or leave '.TeamVoucherResource::class.' out of the extension with appliesTo().',
+            'The [first] extension '.FirstIndexExtension::class.' declares for '.TeamVoucherResource::class.' the index attribute [team], which the perimeter() list of its ScoutEngine already declares with another field type or list marker. Index attributes keep their real name: declare it the same way, index it under another name for one of them, or leave '.TeamVoucherResource::class.' out of the extension with appliesTo().',
             InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, TeamVoucherResource::class, 'team', ResourceIndexList::Perimeter)->getMessage(),
         );
         $this->assertTrue(InvalidEngineExtensionException::repeatedIndexAttribute('first', FirstIndexExtension::class, VoucherResource::class, 'owner_id')->namesExtension('first'));

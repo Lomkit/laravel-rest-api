@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Restrictions;
 
+use Illuminate\Auth\GenericUser;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
@@ -167,6 +168,19 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
         $response->assertOk()->assertExactJson($this->page([], 1));
         $this->assertInstanceOf(RowRestriction::class, ForeignProfile::$pages[0][2]);
         $this->assertSame(['select * from vouchers where (0 = 1) and vouchers.deleted_at is null'], array_map(fn (string $sql): string => str_replace(['"', '`'], '', $sql), ForeignProfile::$sql));
+    }
+
+    #[Test]
+    public function it_restricts_the_engine_on_an_attribute_that_the_perimeter_declares_the_same_way(): void
+    {
+        $this->useEngine(new ForeignEngine);
+        config(['rest.extensions' => ['foreign' => ForeignEngineProfiles::class, 'red' => RedEverywhereExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red', 'blue']]));
+
+        $response = $this->search('team-vouchers', ['text' => ['value' => 'report']]);
+
+        $response->assertOk()->assertExactJson($this->page([3], 1));
+        $this->assertSame(['team' => ['red']], ForeignProfile::$builders[0]->whereIns);
     }
 
     #[Test]
