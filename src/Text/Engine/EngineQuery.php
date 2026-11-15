@@ -7,6 +7,7 @@ use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\TextQuery;
 
@@ -20,7 +21,7 @@ final class EngineQuery
     /** @var array<string, mixed> */
     private array $options = [];
 
-    private ?ExtensionRestrictions $rows = null;
+    private ?RestrictedPage $restricted = null;
 
     public function __construct(
         private readonly EngineIndex $index,
@@ -103,14 +104,9 @@ final class EngineQuery
         }
 
         $builder = (new EngineBuilder($this->index, $this->text, $this->trashed))->build($this->conditions, $this->orders, $this->options);
-        $rows = $this->rows === null ? null : new TrackedRows($this->rows);
-        $result = $this->index->profile->page($builder, $this->index->model, $perPage, $page, $rows);
 
-        if ($rows !== null && ! $rows->applied()) {
-            throw InvalidEngineQueryException::unappliedRowRestriction($this->index->searchedClass(), $this->index->profile::class, $this->index->profile->name());
-        }
-
-        return $result;
+        return $this->restricted?->read($builder, $this->index->model, $perPage, $page)
+            ?? $this->index->profile->page($builder, $this->index->model, $perPage, $page);
     }
 
     /** @internal */
@@ -124,15 +120,15 @@ final class EngineQuery
     /** @internal */
     public function restrictRows(ExtensionRestrictions $rows): bool
     {
-        if ($this->rows !== null) {
-            throw InvalidEngineQueryException::repeatedRowRestriction($this->index->searchedClass(), $this->rows->names());
+        if ($this->restricted !== null) {
+            throw InvalidEngineQueryException::repeatedRowRestriction($this->index->searchedClass(), $this->restricted->names());
         }
 
-        if (! $this->index->profile->appliesRowRestrictions()) {
+        if (! $this->index->profile instanceof AppliesRowRestrictions) {
             return false;
         }
 
-        $this->rows = $rows;
+        $this->restricted = new RestrictedPage($this->index->profile, $rows, $this->index->searchedClass());
 
         return true;
     }

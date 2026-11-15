@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Feature\Text\Engine\Stubs;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Fields\Field;
-use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\Profiles\EngineOperators;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
@@ -30,8 +29,6 @@ final class ForeignProfile implements EngineProfile
     public function __construct(
         private readonly object $engine,
         private readonly int $sortKeys = PHP_INT_MAX,
-        private readonly bool $appliesRows = false,
-        private readonly bool $skipsRows = false,
     ) {}
 
     public static function reset(): void
@@ -87,16 +84,10 @@ final class ForeignProfile implements EngineProfile
     public function ensureUsableBy(TextTarget $target): void {}
 
     #[\Override]
-    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows = null): EnginePage
+    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
-        self::$pages[] = [$perPage, $page, $rows];
+        self::$pages[] = [$perPage, $page, null];
         self::$builders[] = $builder;
-
-        if ($rows !== null && ! $this->skipsRows) {
-            $query = Voucher::query();
-            $rows->apply($query);
-            self::$sql[] = $query->toSql();
-        }
 
         return new EnginePage(['V-a'], 1);
     }
@@ -105,17 +96,5 @@ final class ForeignProfile implements EngineProfile
     public function reachable(ScoutModel $model): int
     {
         return PHP_INT_MAX;
-    }
-
-    #[\Override]
-    public function matchesStringLists(): bool
-    {
-        return false;
-    }
-
-    #[\Override]
-    public function appliesRowRestrictions(): bool
-    {
-        return $this->appliesRows;
     }
 }

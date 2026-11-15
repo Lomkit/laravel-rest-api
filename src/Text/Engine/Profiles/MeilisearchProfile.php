@@ -6,12 +6,11 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
-use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 use Throwable;
 
-final readonly class MeilisearchProfile implements EngineProfile
+final readonly class MeilisearchProfile implements MatchesStringLists
 {
     use PlainLiterals;
 
@@ -63,7 +62,7 @@ final readonly class MeilisearchProfile implements EngineProfile
     public function ensureUsableBy(TextTarget $target): void {}
 
     #[\Override]
-    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows = null): EnginePage
+    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
     }
@@ -81,17 +80,5 @@ final readonly class MeilisearchProfile implements EngineProfile
         $maximum = is_array($pagination) ? ($pagination['maxTotalHits'] ?? null) : null;
 
         return is_int($maximum) && $maximum >= 0 ? $maximum : null;
-    }
-
-    #[\Override]
-    public function matchesStringLists(): bool
-    {
-        return true;
-    }
-
-    #[\Override]
-    public function appliesRowRestrictions(): bool
-    {
-        return false;
     }
 }

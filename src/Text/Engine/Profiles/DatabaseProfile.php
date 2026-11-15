@@ -12,7 +12,7 @@ use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class DatabaseProfile implements EngineProfile
+final readonly class DatabaseProfile implements AppliesRowRestrictions
 {
     use PlainLiterals;
 
@@ -64,7 +64,25 @@ final readonly class DatabaseProfile implements EngineProfile
     public function ensureUsableBy(TextTarget $target): void {}
 
     #[\Override]
-    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows = null): EnginePage
+    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
+    {
+        return $this->read($builder, $model, $perPage, $page, null);
+    }
+
+    #[\Override]
+    public function restrictedPage(Builder $builder, ScoutModel $model, int $perPage, int $page, RowRestriction $rows): EnginePage
+    {
+        return $this->read($builder, $model, $perPage, $page, $rows);
+    }
+
+    #[\Override]
+    public function reachable(ScoutModel $model): int
+    {
+        return PHP_INT_MAX;
+    }
+
+    /** @param Builder<Model> $builder */
+    private function read(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows): EnginePage
     {
         $builder->query(function (EloquentBuilder $query) use ($model, $rows): EloquentBuilder {
             $query->select($model->keyColumn())->setEagerLoads([]);
@@ -77,23 +95,5 @@ final readonly class DatabaseProfile implements EngineProfile
         $keys = array_map(fn (mixed $row): int|string => $row instanceof Model ? $model->keyOf($row) : $model->key($row), $paginator->items());
 
         return new EnginePage(array_values($keys), $paginator->total());
-    }
-
-    #[\Override]
-    public function reachable(ScoutModel $model): int
-    {
-        return PHP_INT_MAX;
-    }
-
-    #[\Override]
-    public function matchesStringLists(): bool
-    {
-        return false;
-    }
-
-    #[\Override]
-    public function appliesRowRestrictions(): bool
-    {
-        return true;
     }
 }

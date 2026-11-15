@@ -10,6 +10,7 @@ use Lomkit\Rest\Extensions\Kinds\ProvidesEngineProfiles;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 
 final class IndexExtensions
 {
@@ -74,7 +75,7 @@ final class IndexExtensions
         }
 
         ksort($extensions);
-        $context = new IndexAttributesContext($this->resource, $profile->matchesStringLists());
+        $context = new IndexAttributesContext($this->resource, $profile instanceof MatchesStringLists);
         $declarations = [];
 
         foreach ($extensions as $name => $extension) {

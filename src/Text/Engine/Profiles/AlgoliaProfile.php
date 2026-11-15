@@ -8,12 +8,11 @@ use Laravel\Scout\Engines\Algolia4Engine;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
-use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 use Throwable;
 
-final readonly class AlgoliaProfile implements EngineProfile
+final readonly class AlgoliaProfile implements MatchesStringLists
 {
     use PlainLiterals;
 
@@ -66,7 +65,7 @@ final readonly class AlgoliaProfile implements EngineProfile
     public function ensureUsableBy(TextTarget $target): void {}
 
     #[\Override]
-    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows = null): EnginePage
+    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
     }
@@ -94,17 +93,5 @@ final readonly class AlgoliaProfile implements EngineProfile
         $client = $this->engine->__call('initIndex', [$index]);
 
         return is_object($client) && method_exists($client, 'getSettings') ? $client->getSettings() : null;
-    }
-
-    #[\Override]
-    public function matchesStringLists(): bool
-    {
-        return true;
-    }
-
-    #[\Override]
-    public function appliesRowRestrictions(): bool
-    {
-        return false;
     }
 }

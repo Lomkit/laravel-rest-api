@@ -14,7 +14,7 @@ final class InvalidEngineQueryException extends LogicException
 
     public static function unappliedRowRestriction(string $resource, string $profile, string $engine): self
     {
-        return new self("The engine profile {$profile} of [{$engine}] answers true to appliesRowRestrictions(), but its page() returned without applying the RowRestriction it received for a text search of {$resource}. Apply it to the SQL query of the page, or answer false so that the extensions restrict the engine with RestrictsEngineQueries.");
+        return new self("The engine profile {$profile} of [{$engine}] implements AppliesRowRestrictions, but its restrictedPage() returned without applying the RowRestriction it received for a text search of {$resource}. Apply it to the SQL query of the page, or do not implement AppliesRowRestrictions so that the extensions restrict the engine with RestrictsEngineQueries.");
     }
 
     /** @param list<string> $extensions */

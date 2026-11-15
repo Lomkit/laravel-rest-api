@@ -9,6 +9,7 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Text\Engine\EngineQuery;
+use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use Lomkit\Rest\Text\Engine\RestrictingExtension;
 
 /** @internal */
@@ -48,7 +49,7 @@ final readonly class EngineRestrictions
         }
 
         $user = $this->resource->context()->actingUser()->user;
-        $lists = $query->profile()->matchesStringLists();
+        $lists = $query->profile() instanceof MatchesStringLists;
 
         foreach ($this->engine as $name => $extension) {
             $restriction = new EngineRestriction($query, new RestrictingExtension($name, $extension::class));

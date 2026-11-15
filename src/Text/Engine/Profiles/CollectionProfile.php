@@ -6,7 +6,6 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\CollectionEngine;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
-use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
@@ -62,7 +61,7 @@ final readonly class CollectionProfile implements EngineProfile
     public function ensureUsableBy(TextTarget $target): void {}
 
     #[\Override]
-    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows = null): EnginePage
+    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
     }
@@ -71,17 +70,5 @@ final readonly class CollectionProfile implements EngineProfile
     public function reachable(ScoutModel $model): int
     {
         return PHP_INT_MAX;
-    }
-
-    #[\Override]
-    public function matchesStringLists(): bool
-    {
-        return false;
-    }
-
-    #[\Override]
-    public function appliesRowRestrictions(): bool
-    {
-        return false;
     }
 }

@@ -8,7 +8,6 @@ use Lomkit\Rest\Text\Engine\EngineLiteral;
 use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\Profiles\DatabaseProfile;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
-use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
@@ -65,9 +64,9 @@ final readonly class NoSqlDatabaseProfile implements EngineProfile
     }
 
     #[\Override]
-    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows = null): EnginePage
+    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
-        return $this->profile->page($builder, $model, $perPage, $page, $rows);
+        return $this->profile->page($builder, $model, $perPage, $page);
     }
 
     #[\Override]
@@ -80,17 +79,5 @@ final readonly class NoSqlDatabaseProfile implements EngineProfile
     public function literal(): EngineLiteral
     {
         return $this->profile->literal();
-    }
-
-    #[\Override]
-    public function matchesStringLists(): bool
-    {
-        return false;
-    }
-
-    #[\Override]
-    public function appliesRowRestrictions(): bool
-    {
-        return false;
     }
 }

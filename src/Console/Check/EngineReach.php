@@ -6,6 +6,7 @@ use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Query\ExtensionRestrictions;
+use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfiles;
 use Lomkit\Rest\Text\ScoutEngine;
 use Lomkit\Rest\Text\TextTarget;
@@ -42,6 +43,6 @@ final class EngineReach
             return InvalidTextSearchException::unresolvedEngine($resource::class, $name, $class, $exception)->getMessage();
         }
 
-        return $profile->appliesRowRestrictions() ? null : InvalidTextSearchException::unrestrictedEngine($resource::class, $name, $class, $profile->name())->getMessage();
+        return $profile instanceof AppliesRowRestrictions ? null : InvalidTextSearchException::unrestrictedEngine($resource::class, $name, $class, $profile->name())->getMessage();
     }
 }
