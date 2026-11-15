@@ -99,8 +99,13 @@ class NarrowedShowFieldsTest extends PackageTestCase
         $this->narrow(static fn (FieldsContext $context): mixed => $context->readOnly('title'));
 
         $response = $this->postJson('/api/shows/search', ['search' => ['text' => ['value' => 'Closing'], 'selects' => [['field' => 'title']]]]);
+        $write = $this->postJson('/api/shows/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => $this->opening, 'attributes' => ['title' => 'Gala night']],
+        ]]);
 
         $response->assertOk()->assertJsonPath('data', [['title' => 'Closing night']]);
+        $write->assertUnprocessable()->assertJsonPath('errors', ['mutate.0.attributes' => ['The title key of the mutate.0.attributes field is not writable on update.']]);
+        $this->assertSame('Opening night', Show::query()->findOrFail($this->opening)->getAttribute('title'));
     }
 
     #[Test]

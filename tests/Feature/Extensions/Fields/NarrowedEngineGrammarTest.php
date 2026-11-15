@@ -112,8 +112,19 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
         $this->narrow(static fn (FieldsContext $context): mixed => $context->readOnly('team'));
 
         $response = $this->search('team-vouchers', ['text' => ['value' => 'report']]);
+        $details = $this->getJson('/api/team-vouchers?with=fields.capabilities');
 
         $response->assertOk()->assertJsonPath('data', []);
+        $details->assertOk()->assertJsonPath('data.fields.3', [
+            'name' => 'team',
+            'label' => null,
+            'type' => 'text',
+            'nullable' => false,
+            'select' => true,
+            'sort' => true,
+            'create' => false,
+            'update' => false,
+        ]);
     }
 
     #[Test]
