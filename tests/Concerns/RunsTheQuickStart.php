@@ -6,6 +6,7 @@ use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Http\Request;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,8 @@ use Lomkit\Rest\Console\Check\DetachCheck;
 use Lomkit\Rest\Console\Check\ExtensionCheck;
 use Lomkit\Rest\Console\Check\PerimeterCheck;
 use Lomkit\Rest\Console\QuickStart\ExposureCheck;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Fixtures\Blog\FakeApiInstallCommand;
 
 trait RunsTheQuickStart
@@ -133,10 +136,11 @@ trait RunsTheQuickStart
             $controllers = array_values(array_filter($arguments, fn (string $argument): bool => ! str_starts_with($argument, '--')));
             $this->app->make(HttpKernel::class);
             $access = $this->app->make(ExposureCheck::class)->run($controllers);
-            $declarations = $this->app->make(DeclarationCheck::class)->run($controllers);
-            $rows = $this->app->make(PerimeterCheck::class)->run($controllers, $declarations);
-            $links = $this->app->make(DetachCheck::class)->run($controllers);
-            $extensions = $this->app->make(ExtensionCheck::class)->run();
+            $context = new RestContext(RestRequest::createFrom($this->app->make(Request::class)), $this->app);
+            $declarations = $this->app->make(DeclarationCheck::class)->run($controllers, $context);
+            $rows = $this->app->make(PerimeterCheck::class)->run($controllers, $declarations, $context);
+            $links = $this->app->make(DetachCheck::class)->run($controllers, $context);
+            $extensions = $this->app->make(ExtensionCheck::class)->run($context);
             $report = (string) json_encode([...$access->toArray(), ...$declarations->toArray(), ...$rows->toArray(), ...$links->toArray(), ...$extensions->toArray()], JSON_UNESCAPED_SLASHES);
 
             return Process::result($report, '', $access->passed() && $declarations->passed() && $rows->passed() && $links->passed() && $extensions->passed() ? 0 : 1);

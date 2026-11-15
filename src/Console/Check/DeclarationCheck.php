@@ -5,13 +5,11 @@ namespace Lomkit\Rest\Console\Check;
 use Closure;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Http\Request;
 use LogicException;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
 use Lomkit\Rest\Http\DeclarationList;
 use Lomkit\Rest\Http\InstructionList;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Metrics\Metric;
@@ -22,9 +20,8 @@ final readonly class DeclarationCheck
     public function __construct(private Container $container) {}
 
     /** @param list<string> $controllers */
-    public function run(array $controllers): DeclarationReport
+    public function run(array $controllers, RestContext $context): DeclarationReport
     {
-        $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
         $resources = ControllerResources::of($controllers);
         $report = new DeclarationReport;
 

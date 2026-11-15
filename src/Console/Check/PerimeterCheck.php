@@ -2,12 +2,9 @@
 
 namespace Lomkit\Rest\Console\Check;
 
-use Illuminate\Contracts\Container\Container;
-use Illuminate\Http\Request;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Attributes\WithoutPerimeter;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use ReflectionClass;
@@ -15,12 +12,9 @@ use ReflectionMethod;
 
 final readonly class PerimeterCheck
 {
-    public function __construct(private Container $container) {}
-
     /** @param list<string> $controllers */
-    public function run(array $controllers, DeclarationReport $declarations): PerimeterReport
+    public function run(array $controllers, DeclarationReport $declarations, RestContext $context): PerimeterReport
     {
-        $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
         $resources = ControllerResources::of($controllers);
         $report = new PerimeterReport;
 
