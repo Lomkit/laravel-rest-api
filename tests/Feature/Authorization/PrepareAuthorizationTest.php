@@ -320,6 +320,9 @@ class PrepareAuthorizationTest extends HelpdeskTestCase
         ['Printer jam' => $jam] = $this->seedTickets();
         $resource = new PreparedTicketResource;
         $stored = new Check($resource, 'update', $jam);
+        $this->authorizer()->inspectEach($resource, 'update', collect([$jam]));
+        $this->assertSame(['prepare update '.$jam->id.' for guest', 'update '.$jam->id], $this->tickets->calls);
+        $this->tickets->calls = [];
         $authorizer = new Authorizer(Gate::forUser(null), $this->store([$stored->key() => Decision::allow()]));
 
         $authorizer->inspectEach($resource, 'update', collect([$jam]));

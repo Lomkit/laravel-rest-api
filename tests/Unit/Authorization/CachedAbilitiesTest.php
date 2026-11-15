@@ -81,21 +81,25 @@ class CachedAbilitiesTest extends TestCase
     }
 
     #[Test]
-    public function it_reads_neither_the_context_nor_the_extensions_when_nothing_is_declared(): void
+    public function it_reads_the_context_and_the_extensions_only_when_an_ability_is_declared(): void
     {
         $reads = [0, 0];
-
-        $abilities = CachedAbilities::of([], self::RESOURCE, function () use (&$reads): CacheContext {
+        $context = function () use (&$reads): CacheContext {
             $reads[0]++;
 
-            return CacheContext::of([], self::RESOURCE);
-        }, function () use (&$reads): CacheContributions {
+            return CacheContext::of(['team' => 7], self::RESOURCE);
+        };
+        $contributions = function () use (&$reads): CacheContributions {
             $reads[1]++;
 
             return new CacheContributions(TicketResource::class);
-        });
+        };
 
-        $this->assertSame(['', [0, 0]], [$abilities->context, $reads]);
+        $silent = CachedAbilities::of([], self::RESOURCE, $context, $contributions);
+        $this->assertSame(['', [0, 0]], [$silent->context, $reads]);
+
+        $declaring = CachedAbilities::of(['viewAny' => 300], self::RESOURCE, $context, $contributions);
+        $this->assertSame([serialize(['team' => 7]), [1, 1]], [$declaring->context, $reads]);
     }
 
     #[Test]
