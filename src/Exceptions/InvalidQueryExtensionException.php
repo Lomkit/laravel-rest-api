@@ -41,14 +41,6 @@ final class InvalidQueryExtensionException extends ExtensionException
         return self::about($name, "The [{$name}] extension selects [{$alias}] in the rows of {$resource}, longer than {$length} characters with its prefix, which PostgreSQL would cut. Shorten the alias.");
     }
 
-    /** @param list<string> $names */
-    public static function aliasTaken(string $alias, string $resource, array $names): self
-    {
-        $extensions = implode(', ', $names);
-
-        return self::about($names[0] ?? '', "The extensions [{$extensions}] select [{$alias}] twice in the rows of {$resource}. Give each select() its own alias.");
-    }
-
     public static function aliasRepeated(string $name, string $alias, string $resource): self
     {
         return self::about($name, "The [{$name}] extension selects [{$alias}] twice in the rows of {$resource}. Give each select() its own alias.");

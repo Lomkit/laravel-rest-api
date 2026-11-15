@@ -24,7 +24,7 @@ final class QueryAdditions
     /** @var array<string, string> */
     private array $columns = [];
 
-    /** @var array<string, array{string, Closure|QueryBuilder|EloquentBuilder<Model>}> */
+    /** @var array<string, Closure|QueryBuilder|EloquentBuilder<Model>> */
     private array $selects = [];
 
     /** @var array<string, array{string, Closure|null}> */
@@ -69,18 +69,14 @@ final class QueryAdditions
         }
 
         if (isset($this->selects[$final])) {
-            $owner = $this->selects[$final][0];
-
-            throw $owner === $extension
-                ? InvalidQueryExtensionException::aliasRepeated($extension, $final, $this->resource::class)
-                : InvalidQueryExtensionException::aliasTaken($final, $this->resource::class, self::sorted([$owner, $extension]));
+            throw InvalidQueryExtensionException::aliasRepeated($extension, $final, $this->resource::class);
         }
 
         if ($this->resource->definition()->fields()->has($final)) {
             throw InvalidQueryExtensionException::aliasNamesField($extension, $final, $this->resource::class);
         }
 
-        $this->selects[$final] = [$extension, $subquery];
+        $this->selects[$final] = $subquery;
 
         return $final;
     }
@@ -118,7 +114,7 @@ final class QueryAdditions
 
         AddedColumns::merge($query, [...array_keys($this->columns), ...$keys]);
 
-        foreach ($this->selects as $alias => [, $subquery]) {
+        foreach ($this->selects as $alias => $subquery) {
             $query->addSelect([$alias => $subquery]);
         }
     }

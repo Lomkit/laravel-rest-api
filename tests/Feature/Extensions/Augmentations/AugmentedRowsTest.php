@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
 use Lomkit\Rest\Facades\Rest;
@@ -358,16 +359,20 @@ class AugmentedRowsTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_refuses_an_alias_that_two_extension_names_reach(): void
+    public function it_refuses_an_extension_name_that_would_reach_the_alias_of_another(): void
     {
         config(['rest.extensions' => ['a__b' => FirstAugmentation::class, 'a' => SecondAugmentation::class]]);
-        FirstAugmentation::$augment = static fn (AugmentationContext $context): string => $context->select('c', Post::query()->selectRaw('1'));
-        SecondAugmentation::$augment = static fn (AugmentationContext $context): string => $context->select('b__c', Post::query()->selectRaw('2'));
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::aliasTaken('a__b__c', PathAuthorResource::class, ['a', 'a__b']));
+        $this->expectExceptionObject(InvalidExtensionException::invalidName('a__b'));
 
         $this->postJson('/path-authors/search', ['search' => []]);
+    }
+
+    #[Test]
+    public function it_has_no_refusal_for_an_alias_that_two_extension_names_reach(): void
+    {
+        $this->assertFalse(method_exists(InvalidQueryExtensionException::class, 'aliasTaken'));
     }
 
     #[Test]
