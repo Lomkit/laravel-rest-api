@@ -85,6 +85,19 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_matches_an_engine_text_search_on_a_hidden_indexed_value(): void
+    {
+        $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('title'));
+
+        $response = $this->search('vouchers', ['text' => ['value' => 'inactive']]);
+
+        $response->assertOk()->assertJsonPath('data', [
+            ['id' => 5, 'code' => 'V-e', 'number' => 5, 'team' => 'red', 'price' => 40, 'active' => false],
+        ]);
+        $this->assertStringNotContainsString('inactive', (string) $response->getContent());
+    }
+
+    #[Test]
     public function it_narrows_an_engine_attribute_declared_as_a_field_instance(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('field-vouchers', FieldVoucherController::class)->register());
