@@ -18,10 +18,12 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CheapEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ComparedPriceVoucherController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GuestlessEngineExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\NumberEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OwnerEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PriceEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedTeamEngineRestriction;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RowReplacingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamIndexExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnappliedEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
@@ -251,10 +253,48 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $methods = array_map(fn (ReflectionMethod $method): string => $method->getName(), (new ReflectionClass(EngineRestriction::class))->getMethods(ReflectionMethod::IS_PUBLIC));
 
         $this->assertSame(['where', 'whereIn', 'whereNotIn', 'matchNothing'], array_values(array_diff($methods, ['__construct'])));
-        $this->assertSame(['query', 'resource', 'user', 'matchesStringLists'], array_map(
+        $this->assertSame(['query', 'resource', 'user', 'matchesStringLists', 'rowsRestrictedInSql'], array_map(
             fn (ReflectionProperty $property): string => $property->getName(),
             (new ReflectionClass(EngineRestrictionContext::class))->getProperties(ReflectionProperty::IS_PUBLIC),
         ));
+    }
+
+    /** @param array{bool, bool} $expected */
+    #[Test]
+    #[DataProvider('capabilities')]
+    public function it_tells_the_extension_what_the_engine_can_do(?string $driver, array $expected): void
+    {
+        if ($driver !== null) {
+            config(['scout.driver' => $driver]);
+        }
+
+        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+
+        $this->search('vouchers', ['text' => ['value' => 'report']])->assertOk();
+
+        $context = EngineLog::$contexts[0];
+        $this->assertInstanceOf(EngineRestrictionContext::class, $context);
+        $this->assertSame($expected, [$context->matchesStringLists, $context->rowsRestrictedInSql]);
+    }
+
+    /** @return array<string, array{?string, array{bool, bool}}> */
+    public static function capabilities(): array
+    {
+        return [
+            'the collection engine' => [null, [false, false]],
+            'the database engine' => ['database', [false, true]],
+        ];
+    }
+
+    #[Test]
+    public function it_keeps_the_rows_of_the_extensions_from_an_instruction(): void
+    {
+        config(['scout.driver' => 'database', 'rest.extensions' => ['hidden' => HiddenRowsExtension::class, 'rr' => RowReplacingExtension::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidEngineQueryException::repeatedRowRestriction());
+
+        $this->search('vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'rr.replace-rows']]]);
     }
 
     #[Test]

@@ -6,6 +6,7 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\NullEngine;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
+use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
@@ -61,7 +62,7 @@ final readonly class NullProfile implements EngineProfile
     public function ensureUsableBy(TextTarget $target): void {}
 
     #[\Override]
-    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
+    public function page(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows = null): EnginePage
     {
         return EnginePage::empty();
     }
@@ -74,6 +75,12 @@ final readonly class NullProfile implements EngineProfile
 
     #[\Override]
     public function matchesStringLists(): bool
+    {
+        return false;
+    }
+
+    #[\Override]
+    public function appliesRowRestrictions(): bool
     {
         return false;
     }

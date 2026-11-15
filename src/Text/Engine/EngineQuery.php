@@ -28,6 +28,8 @@ final class EngineQuery
     /** @var array<string, mixed> */
     private array $options = [];
 
+    private ?RowRestriction $rows = null;
+
     public function __construct(
         private readonly EngineIndex $index,
         private readonly TextQuery $text,
@@ -104,8 +106,14 @@ final class EngineQuery
         }
 
         $builder = (new EngineBuilder($this->index, $this->text, $this->trashed))->build($this->conditions, $this->orders, $this->options);
+        $rows = $this->rows === null ? null : new TrackedRows($this->rows);
+        $result = $this->index->profile->page($builder, $this->index->model, $perPage, $page, $rows);
 
-        return $this->index->profile->page($builder, $this->index->model, $perPage, $page);
+        if ($rows !== null && ! $rows->applied()) {
+            throw InvalidEngineQueryException::unappliedRowRestriction($this->index->profile->name());
+        }
+
+        return $result;
     }
 
     /** @internal */
@@ -114,6 +122,22 @@ final class EngineQuery
         $this->conditions->nothing();
 
         return $this;
+    }
+
+    /** @internal */
+    public function restrictRows(RowRestriction $rows): bool
+    {
+        if ($this->rows !== null) {
+            throw InvalidEngineQueryException::repeatedRowRestriction();
+        }
+
+        if (! $this->index->profile->appliesRowRestrictions()) {
+            return false;
+        }
+
+        $this->rows = $rows;
+
+        return true;
     }
 
     /** @internal */

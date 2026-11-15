@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Exceptions;
 
-use Illuminate\Support\Arr;
 use LogicException;
 use Throwable;
 
@@ -150,15 +149,8 @@ final class InvalidTextSearchException extends LogicException
         return new self("The text search of the resource [{$resource}] does not run on a search engine.");
     }
 
-    /** @param list<array{string, string}> $extensions */
-    public static function restrictedByExtensions(string $resource, array $extensions): self
+    public static function unrestrictedEngine(string $resource, string $name, string $class, string $engine): self
     {
-        usort($extensions, static fn (array $first, array $second): int => strcmp($first[0], $second[0]));
-        $named = array_map(static fn (array $extension): string => "the [{$extension[0]}] extension {$extension[1]}", $extensions);
-
-        $restricting = ucfirst(Arr::join($named, ', ', ' and '));
-        [$restrict, $one] = count($extensions) > 1 ? ['restrict', 'one of these classes'] : ['restricts', 'this class'];
-
-        return new self("{$restricting} {$restrict} the rows of {$resource}, whose text search runs on a search engine that these restrictions do not reach. Leave {$resource} out of them with appliesTo(), add {$one} to the [rest.disabled_extensions] config, or remove the text search of {$resource}.");
+        return new self("The [{$name}] extension {$class} restricts the rows of {$resource} in SQL, but the text search of {$resource} runs on [{$engine}], which does not apply SQL restrictions. Implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries in {$class} to restrict the engine search too, index the model with the Scout database driver, or leave {$resource} out of the extension with appliesTo().");
     }
 }

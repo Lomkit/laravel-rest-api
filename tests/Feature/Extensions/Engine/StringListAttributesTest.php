@@ -12,6 +12,7 @@ use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AdaptiveReadersExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
@@ -185,6 +186,26 @@ class StringListAttributesTest extends EngineSearchTestCase
             'typesense' => [new FilterCapturingTypesenseEngine, true],
             'collection' => [new CollectionEngine, false],
         ];
+    }
+
+    #[Test]
+    public function it_serves_every_engine_with_one_extension(): void
+    {
+        config(['rest.extensions' => ['readers' => AdaptiveReadersExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+        $typesense = new FilterCapturingTypesenseEngine;
+
+        config(['scout.driver' => 'collection']);
+        $collection = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
+        config(['scout.driver' => 'database']);
+        $database = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
+        $this->useEngine($typesense);
+        $engine = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
+
+        $collection->assertOk()->assertExactJson($this->page([], 0));
+        $database->assertOk()->assertExactJson($this->page([5, 1, 3], 3));
+        $engine->assertOk();
+        $this->assertSame(['readers:=[`ann`]'], $typesense->filters);
     }
 
     private function engine(string $engine): object

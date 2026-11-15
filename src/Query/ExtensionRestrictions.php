@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Extensions\Contexts\RestrictionContext;
 use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
 use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Text\Engine\RowRestriction;
 
 /** @internal */
-final readonly class ExtensionRestrictions
+final readonly class ExtensionRestrictions implements RowRestriction
 {
     /** @param non-empty-array<string, Extension&RestrictsQueries> $extensions */
     private function __construct(
@@ -30,6 +32,7 @@ final readonly class ExtensionRestrictions
     }
 
     /** @param Builder<Model> $query */
+    #[\Override]
     public function apply(Builder $query): void
     {
         $user = $this->resource->context()->actingUser()->user;
@@ -49,5 +52,11 @@ final readonly class ExtensionRestrictions
         $registry = $this->resource->context()->extensions();
 
         return array_map(static fn (string $name): array => [$name, $registry->classOf($name)], array_keys($this->extensions));
+    }
+
+    /** @return array<string, Extension&RestrictsQueries> */
+    public function unreached(): array
+    {
+        return array_filter($this->extensions, fn (Extension $extension): bool => ! $extension instanceof RestrictsEngineQueries);
     }
 }

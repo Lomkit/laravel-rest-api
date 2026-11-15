@@ -13,5 +13,6 @@ final readonly class EngineRestrictionContext
         public Resource $resource,
         public ?Authenticatable $user,
         public bool $matchesStringLists,
+        public bool $rowsRestrictedInSql,
     ) {}
 }

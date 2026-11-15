@@ -68,24 +68,26 @@ class EngineProfilesTest extends EngineTestCase
     }
 
     #[Test]
-    #[DataProvider('listMatches')]
-    public function it_states_which_engines_match_string_lists(string $engine, bool $matches): void
+    #[DataProvider('sqlAndLists')]
+    public function it_states_which_engines_apply_sql_restrictions_and_match_string_lists(string $engine, bool $sql, bool $lists): void
     {
-        $this->assertSame($matches, EngineProfiles::for($this->engine($engine), VoucherResource::class)->matchesStringLists());
+        $profile = EngineProfiles::for($this->engine($engine), VoucherResource::class);
+
+        $this->assertSame([$sql, $lists], [$profile->appliesRowRestrictions(), $profile->matchesStringLists()]);
     }
 
-    /** @return array<string, array{class-string, bool}> */
-    public static function listMatches(): array
+    /** @return array<string, array{class-string, bool, bool}> */
+    public static function sqlAndLists(): array
     {
         return [
-            'collection' => [CollectionEngine::class, false],
-            'database' => [DatabaseEngine::class, false],
-            'meilisearch' => [FakeMeilisearchEngine::class, true],
-            'typesense' => [FakeTypesenseEngine::class, true],
-            'algolia 3' => [FakeAlgolia3Engine::class, true],
-            'algolia 4' => [FakeAlgolia4Engine::class, true],
-            'turbopuffer' => [FakeTurbopufferEngine::class, false],
-            'null' => [NullEngine::class, false],
+            'collection' => [CollectionEngine::class, false, false],
+            'database' => [DatabaseEngine::class, true, false],
+            'meilisearch' => [FakeMeilisearchEngine::class, false, true],
+            'typesense' => [FakeTypesenseEngine::class, false, true],
+            'algolia 3' => [FakeAlgolia3Engine::class, false, true],
+            'algolia 4' => [FakeAlgolia4Engine::class, false, true],
+            'turbopuffer' => [FakeTurbopufferEngine::class, false, false],
+            'null' => [NullEngine::class, false, false],
         ];
     }
 

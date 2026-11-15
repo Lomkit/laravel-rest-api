@@ -62,7 +62,7 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'limit' => 10]);
 
         $response->assertOk()->assertExactJson($this->page([3], 1, 10));
-        $this->assertSame([[10, 1]], ForeignProfile::$pages);
+        $this->assertSame([[10, 1, null]], ForeignProfile::$pages);
     }
 
     #[Test]
@@ -73,7 +73,7 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([3], 1));
-        $this->assertSame([[50, 1]], ForeignProfile::$pages);
+        $this->assertSame([[50, 1, null]], ForeignProfile::$pages);
     }
 
     /** @param array<string, class-string> $extensions */
