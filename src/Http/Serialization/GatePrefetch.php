@@ -52,15 +52,16 @@ final readonly class GatePrefetch
     {
         $resource = $plan->resource;
 
-        if (! $resource->isGatingEnabled() || ! $resource->context()->config()->cacheEnabled) {
+        if ($plan->gates === null || $plan->gates === [] || ! $resource->isGatingEnabled()) {
             return [];
         }
 
-        $abilities = $resource->definition()->cachedAbilities();
+        $cached = $resource->context()->config()->cacheEnabled ? $resource->definition()->cachedAbilities() : null;
+        $prepares = ! $classLevel && $resource->context()->authorizer()->prepares($resource);
 
         return array_values(array_filter(
-            $plan->gates ?? [],
-            static fn (GateAbility $gate): bool => $gate->isClassLevel() === $classLevel && $abilities->seconds($gate->name()) !== null,
+            $plan->gates,
+            static fn (GateAbility $gate): bool => $gate->isClassLevel() === $classLevel && ($prepares || $cached?->seconds($gate->name()) !== null),
         ));
     }
 }

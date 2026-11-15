@@ -70,19 +70,28 @@ final readonly class CacheDecisionStore implements DecisionStore
      */
     private function entries(array $checks): array
     {
-        return array_filter(array_map($this->entry(...), $checks));
+        $read = [];
+        $entries = [];
+
+        foreach ($checks as $key => $check) {
+            if ($check->isKeyedByInstance()) {
+                continue;
+            }
+
+            $abilities = $read[spl_object_id($check->resource)] ??= $check->resource->definition()->cachedAbilities();
+            $entry = $this->entry($check, $abilities);
+
+            if ($entry !== null) {
+                $entries[$key] = $entry;
+            }
+        }
+
+        return $entries;
     }
 
     /** @return array{DecisionKey, int}|null */
-    private function entry(Check $check): ?array
+    private function entry(Check $check, CachedAbilities $abilities): ?array
     {
-        if ($check->isKeyedByInstance()) {
-            return null;
-        }
-
-        $abilities = $check->resource
-            ->definition()
-            ->cachedAbilities();
         $seconds = $abilities->seconds($check->ability);
 
         if ($seconds === null) {

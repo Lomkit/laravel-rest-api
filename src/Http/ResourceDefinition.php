@@ -6,6 +6,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ItemNotFoundException;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Authorization\CacheContext;
 use Lomkit\Rest\Authorization\CachedAbilities;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\FieldSet;
@@ -13,12 +14,10 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Mutations\RowVersion;
-use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Search\GateVocabulary;
 use Lomkit\Rest\Text\ResolvedText;
-use WeakMap;
 
 final class ResourceDefinition
 {
@@ -35,25 +34,20 @@ final class ResourceDefinition
 
     private ?ResolvedText $text = null;
 
-    private ?GateVocabulary $gates = null;
-
-    private ?CachedAbilities $cachedAbilities = null;
-
-    /** @var WeakMap<Action|Instruction, FieldSet> */
-    private WeakMap $inputs;
-
     private readonly ResourceDeclarations $declarations;
 
     private readonly ResourceFields $declaredFields;
+
+    private readonly ResourceAuthorization $authorization;
 
     public function __construct(
         private readonly Resource $resource,
         private readonly RestRequest $request,
         Container $container,
     ) {
-        $this->inputs = new WeakMap;
         $this->declarations = new ResourceDeclarations($resource, $container);
         $this->declaredFields = new ResourceFields($resource);
+        $this->authorization = new ResourceAuthorization($resource);
     }
 
     public function fields(): FieldSet
@@ -149,7 +143,7 @@ final class ResourceDefinition
 
     public function inputFields(Action|Instruction $declaration): FieldSet
     {
-        return $this->inputs[$declaration] ??= FieldSet::forInputs($declaration->fields(), $declaration::class.'::fields()');
+        return $this->declarations->inputFields($declaration);
     }
 
     /** @return list<string> */
@@ -175,11 +169,17 @@ final class ResourceDefinition
 
     public function gates(): GateVocabulary
     {
-        return $this->gates ??= GateVocabulary::of($this->resource->gates(), $this->resource::class.'::gates()', Trashed::supportedBy($this->resource::modelClass()));
+        return $this->authorization->gates();
     }
 
     public function cachedAbilities(): CachedAbilities
     {
-        return $this->cachedAbilities ??= CachedAbilities::of($this->resource->authorizationCache(), $this->resource::class, $this->resource->authorizationCacheContext(...));
+        return $this->authorization->cachedAbilities();
+    }
+
+    /** @internal */
+    public function cacheContext(): CacheContext
+    {
+        return $this->authorization->cacheContext();
     }
 }

@@ -78,6 +78,29 @@ class DecisionBatchTest extends TestCase
     }
 
     #[Test]
+    public function it_writes_what_a_resolve_decided_before_an_exception_and_starts_clean(): void
+    {
+        [$billing, $support, $sales] = [$this->check(1), $this->check(2), $this->check(3)];
+        $batch = new DecisionBatch($this->store(), new DecisionMemo);
+
+        try {
+            $batch->resolve($this->keyed($billing, $support), function (Check $check) use ($support): Decision {
+                if ($check->key() === $support->key()) {
+                    throw new LogicException('The policy failed.');
+                }
+
+                return Decision::allow();
+            });
+        } catch (LogicException) {
+        }
+
+        $this->assertSame([[$billing->key()]], $this->writes);
+        $this->resolve($batch, $sales);
+        $this->assertSame([[$billing->key(), $support->key()], [$sales->key()]], $this->reads);
+        $this->assertSame([[$billing->key()], [$sales->key()]], $this->writes);
+    }
+
+    #[Test]
     public function it_reads_and_writes_a_check_outside_a_batch_at_once(): void
     {
         $billing = $this->check(1);

@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Authorization;
 use Closure;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 
+/** @internal */
 final readonly class CachedAbilities
 {
     /** @param array<string, int> $seconds */
@@ -15,9 +16,10 @@ final readonly class CachedAbilities
 
     /**
      * @param  array<mixed>  $declared
-     * @param  Closure(): array<mixed>  $context
+     * @param  Closure(): CacheContext  $context
+     * @param  Closure(): CacheContributions  $contributions
      */
-    public static function of(array $declared, string $resource, Closure $context): self
+    public static function of(array $declared, string $resource, Closure $context, Closure $contributions): self
     {
         $seconds = [];
 
@@ -33,7 +35,13 @@ final readonly class CachedAbilities
             $seconds[$ability] = $duration;
         }
 
-        return new self($seconds, $seconds === [] ? '' : CacheContext::of($context(), $resource));
+        if ($seconds === []) {
+            return new self([], '');
+        }
+
+        $seconds = $contributions()->narrow($seconds);
+
+        return new self($seconds, $seconds === [] ? '' : $context()->serialized());
     }
 
     public function seconds(string $ability): ?int

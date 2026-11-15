@@ -1155,7 +1155,7 @@ public function metrics(): array
 
 - `->cacheFor()`, or `public ?int $cacheFor = 600;` in the class, keeps the result for that long; without it nothing is kept and no cache store is called. Less than 1 second throws `InvalidMetricException` when the metric is built.
 - Each user gets their own result. `->cacheScope('global')`, or `public CacheScope $cacheScope = CacheScope::Global;` (`Lomkit\Rest\Metrics\CacheScope`), shares one result between the users and guests whose `perimeterQuery()` compiles to the same SQL and bindings, on the resource and on each resource that the `search` reaches through a relation filter or group: the users of one team share it, another team gets its own. Only that SQL is keyed: a perimeter that also depends on something else, such as a global scope of the model or one that it removes for some users, adds that to `authorizationCacheContext()`. With several tenants, put the tenant in it: per-tenant databases compile the same perimeter SQL and a tenant global scope is not keyed, so the tenants would share one global result. Another scope than `'user'` or `'global'` throws `InvalidMetricException`.
-- The key holds the user (guard, user class and key, or guest; with `'global'`, the SQL and bindings of `perimeterQuery()` instead, on the resource and on each resource that the `search` reaches; in both scopes, the SQL and bindings of each of these perimeters that an extension restricts, so a restriction that reads a tenant or a flag never shares a result, and the key does not change without one), the resource, the metric class and `uriKey()`, the public properties of the metric that hold a number, a string, a boolean, `null` or an enum (`->limit()`, `->weekStartsOn()`, the scope, your own settings), the `range` and `timezone` of the request (the first range and `config('app.timezone')` when it sends none), its `search` (the keys of an object in any order), the values of `authorizationCacheContext()` on the resource and on each resource that the `search` reaches, and the stamps of the decision cache. A metric that reads anything else, such as a header, adds it to `authorizationCacheContext()`.
+- The key holds the user (guard, user class and key, or guest; with `'global'`, the SQL and bindings of `perimeterQuery()` instead, on the resource and on each resource that the `search` reaches; in both scopes, the SQL and bindings of each of these perimeters that an extension restricts, so a restriction that reads a tenant or a flag never shares a result, and the key does not change without one), the resource, the metric class and `uriKey()`, the public properties of the metric that hold a number, a string, a boolean, `null` or an enum (`->limit()`, `->weekStartsOn()`, the scope, your own settings), the `range` and `timezone` of the request (the first range and `config('app.timezone')` when it sends none), its `search` (the keys of an object in any order), the values of `authorizationCacheContext()` and the items of `ContributesCacheContext` extensions on the resource and on each resource that the `search` reaches, and the stamps of the decision cache. A metric that reads anything else, such as a header, adds it to `authorizationCacheContext()`.
 - The result goes to the store of `authorizations.cache.store` as the JSON text of `data`: any store works, `cache.serializable_classes = false` included.
 - A kept result still runs validation, the abilities, the middleware and `searching()`; it skips every query of the metric. A metric with ranges counts them back from the instant of the first request until the result expires.
 - `Rest::forgetAuthorizationsFor($user)` drops the results of that user (the global ones stay), `Rest::forgetAuthorizations()` drops every result, and `authorizations.cache.enabled = false` keeps none. After a deploy that changes what a metric computes, call `Rest::forgetAuthorizations()`.
@@ -1388,7 +1388,9 @@ The queries check `viewAny` again on each resource they search (and `create` on 
 
 Within a request, each distinct check (ability, resource, model or model class) runs the policy once and the later checks reuse its decision, so `GateEvaluated` listeners and `Gate::after()` see one evaluation per distinct check. A decision read from the cross-request cache dispatches no `GateEvaluated` either. Policies run with `Gate::forUser($request->user())`, and a change of user starts a new set of decisions. The package drops the decisions on a model after writing it, and keeps them for a row that a mutation only attaches, detaches or leaves unchanged; a hook that writes a model itself calls `$request->context()->authorizer()->forget($model)`.
 
-The cross-request cache keeps only what a resource declares in `authorizationCache(): array` (ability => seconds, for example `['viewAny' => 300, 'view' => 60]`); a resource that declares nothing keeps nothing. Declared decisions are stored as scalars in the store of `authorizations.cache.store` (`null`: the default store), keyed by guard, user class and key, resource, ability, model class, key and `updated_at`, the values of `authorizationCacheContext(): array` (for example `['team' => $this->request()->user()?->current_team_id]`; integers, strings, booleans or `null`) and a stamp per user, and are read wherever the ability is checked, write endpoints included. The key holds no tenant: with several tenants whose users share identifiers, return the tenant from `authorizationCacheContext()` of the base resource (`['tenant' => tenant()?->getTenantKey()]`), which also keys metric results, or name a per-tenant store; the tags of stancl/tenancy's `CacheTenancyBootstrapper` do not reach the package's `store()` call, and `forgetAuthorizationsFor()` drops the user's entries in every tenant of the store. Checks on unsaved models and the `update` checks of `mutate` are never kept. A row without `updated_at`, or written since the second its request started, keeps no decision; a search selects `updated_at` on a level that asks a kept row gate; a check on a row the request wrote is never kept. `Rest::forgetAuthorizationsFor($user)` drops a user's kept decisions and metric results (all guards, every store) and `Rest::forgetAuthorizations()` drops everyone's, guests included. `authorizations.cache.enabled = false` (`REST_AUTHORIZATIONS_CACHE_ENABLED=false`) turns it off for every resource.
+**Preparing the row checks.** A resource can override `prepareAuthorization(\Lomkit\Rest\Authorization\PendingChecks $checks): void` (the default does nothing). `$checks->resource` is the resource, `$checks->ability` the exact ability the Gate checks, `$checks->rows` an Eloquent `Collection` of rows about to be checked for it, and `$checks->user` the user the policies run for (`null` for a guest; the user of `Rest::search()->as($user)` in such a search). `PreparesRowChecks` extensions receive the same object after the hook. The hook may be called zero or more times per request, each time with a subset of the rows about to be checked for one ability (rows of one resource class at several levels of a page share a call; a single check on an undecided row is a call with one row); it must be idempotent and decides nothing. Use it for data that is not a relation of the row: a permission table, an external ACL, a lookup read once for all rows (for example read the granted keys of `$checks->user` among `$checks->rows->modelKeys()` in one query and store them where the policy reads them). For a relation that a policy reads, use Laravel's `Model::automaticallyEagerLoadRelationships()`. Leave the rows as they are: they are the rendered models, and an included relation carries the filters and limits of the client. Never change an attribute of a row or of a related model, never replace or drop a relation loaded before the hook, and never add, remove or reorder its models; loading a relation that was not loaded is allowed and does not render. A `PreparesRowChecks` extension that changes the rows throws `InvalidAuthorizationExtensionException` (the kind lists what counts as a change); the hook itself is not checked, and the reference state of each extension is taken after it. Key what the hook stores by user and row key, since `Rest::search()->as($user)` can check for another user in the same request. The policy still runs for each row, with `Gate::before()`, an overridden `authorizedTo()` and its `Response`. Only stored, unchanged rows checked alone reach it: rows already decided (earlier in the request, or read from `authorizationCache()`), class-level checks (`viewAny`, `create`), drafts, the `update` checks of a mutation (they carry their changes) and link abilities (they also take the related row) never do. An exception thrown by the hook propagates before any policy of that batch runs. The rendered row gates of a page are checked in one batch when the resource keeps them in the cache or prepares its row checks.
+
+The cross-request cache keeps only what a resource declares in `authorizationCache(): array` (ability => seconds, for example `['viewAny' => 300, 'view' => 60]`); a resource that declares nothing keeps nothing. Declared decisions are stored as scalars in the store of `authorizations.cache.store` (`null`: the default store), keyed by guard, user class and key, resource, ability, model class, key and `updated_at`, the values of `authorizationCacheContext(): array` (for example `['team' => $this->request()->user()?->current_team_id]`; integers, strings, booleans or `null`), the items of `ContributesCacheContext` extensions and a stamp per user, and are read wherever the ability is checked, write endpoints included. The key holds no tenant: with several tenants whose users share identifiers, return the tenant from `authorizationCacheContext()` of the base resource (`['tenant' => tenant()?->getTenantKey()]`), which also keys metric results, or name a per-tenant store; the tags of stancl/tenancy's `CacheTenancyBootstrapper` do not reach the package's `store()` call, and `forgetAuthorizationsFor()` drops the user's entries in every tenant of the store. Checks on unsaved models and the `update` checks of `mutate` are never kept. A row without `updated_at`, or written since the second its request started, keeps no decision; a search selects `updated_at` on a level that asks a kept row gate; a check on a row the request wrote is never kept. `Rest::forgetAuthorizationsFor($user)` drops a user's kept decisions and metric results (all guards, every store) and `Rest::forgetAuthorizations()` drops everyone's, guests included. `authorizations.cache.enabled = false` (`REST_AUTHORIZATIONS_CACHE_ENABLED=false`) turns it off for every resource.
 
 ### 2. Gates
 
@@ -1405,7 +1407,7 @@ public function gates(): array
 }
 ```
 
-Clients list `download` in `gates` next to the built-in abilities, at every level of that resource, and each row answers `authorized_to_download` (renamed in `rest.gates.names` like the others) from `download($user, $model)` on the policy. A declared gate is row-level only, never in `meta`, and a policy without the method denies it. A name is camelCase, listed once, neither `viewAny` nor a built-in ability: another value throws `InvalidResourceException` when the gates are first read (details with `with=gates`, or a search with `gates`). The details list every accepted gate under `gates`.
+Clients list `download` in `gates` next to the built-in abilities, at every level of that resource, and each row answers `authorized_to_download` (renamed in `rest.gates.names` like the others) from `download($user, $model)` on the policy. A declared gate is row-level only, never in `meta`, and a policy without the method denies it. A name is camelCase, listed once, neither `viewAny` nor a built-in ability: another value throws `InvalidResourceException` when the gates are first read (details with `with=gates`, or a search with `gates`). The details list every accepted gate under `gates`. Extensions can add gates (`DeclaresGates`), listed after those of the resource.
 
 ## Custom Response
 
@@ -1526,7 +1528,7 @@ final class ArchiveExtension extends Extension implements RestrictsQueries
 
 - `name()` returns the name of the extension, which prefixes every key it adds. A subclass inherits it; override it only to run the subclass beside its parent.
 - Register the class, never an instance: the container builds each extension once per context (request, queued job, search), at first use, so its constructor can inject services. `registerExtension()` takes a class name, so an instance is a PHP `TypeError`; in `registerExtensions()` or the config, it throws `InvalidExtensionException`. Keep settings in properties; for other settings, register a subclass. Never bind the extension as a singleton: one instance would then serve every context of an Octane or queue worker.
-- `RestrictsQueries` is one of the kinds the extension implements, the interfaces of `Lomkit\Rest\Extensions\Kinds` described below; the constructor injects what their methods use. Each kind method receives one context object of `Lomkit\Rest\Extensions\Contexts`, and each kind calls its extensions in name order. Implement at least one kind. An abstract class is refused at registration, or, listed in the config, when a context first reads its extensions; a class with no kind or a binding that builds another class is refused when the extensions are built.
+- `RestrictsQueries` is one of the kinds the extension implements, the interfaces of `Lomkit\Rest\Extensions\Kinds` described below; the constructor injects what their methods use. Each kind method receives one context object of `Lomkit\Rest\Extensions\Contexts`, except `PreparesRowChecks`, which receives the `Lomkit\Rest\Authorization\PendingChecks` of `prepareAuthorization()`, and each kind calls its extensions in name order. Implement at least one kind. An abstract class is refused at registration, or, listed in the config, when a context first reads its extensions; a class with no kind or a binding that builds another class is refused when the extensions are built.
 - `appliesTo()` returns `true` by default. Each context (request, queued job, search) asks it once per resource class and keeps the answer: answer from the resource class and the config, never from the user or the request (use a request kind for that).
 - An exception thrown by an extension reaches the caller.
 - With no extension registered, nothing is built and nothing is read beyond the config.
@@ -1573,6 +1575,7 @@ final class TenantExtension extends Extension implements RestrictsQueries
 - A restriction may run several times in one request, and again on each attempt of a write transaction: keep it free of side effects.
 - Write where clauses only. Laravel drops a global scope or an `afterQuery()` callback added to the Eloquent builder of a nested group before the check can see it, and neither is applied.
 - Search engines: on the Scout `database` and `collection` drivers, the restriction applies in the SQL of the engine query, with an exact total; the `null` driver returns no row. On every engine, the rows of a page are read again by key through the restriction, so a row changed since indexing is dropped. On another engine, implement `RestrictsEngineQueries` too, or a text search of the resource throws `InvalidTextSearchException` (`rest:check` reports it); its message also offers to leave the resource out with `appliesTo()` or to add the extension class to `rest.disabled_extensions`.
+- A tenant that does not come from `$context->user` (a subdomain, a header, a job payload) is not in the keys of kept decisions: add it with `ContributesCacheContext` (`$context->put('id', ...)`, see below).
 
 ### Adding to rendered rows (`AugmentsQueries`)
 
@@ -1834,6 +1837,104 @@ final class OpenSearchExtension extends Extension implements ProvidesEngineProfi
 - `EngineProfile` has the methods of 3.5. Optional interfaces of `Lomkit\Rest\Text\Engine\Profiles` add capabilities, checked with `instanceof`: `MatchesStringLists` (the engine matches lists of strings), `ComparesColumns` (Scout compares conditions with the columns of the model table) and `AppliesRowRestrictions` (the profile runs SQL). `AppliesRowRestrictions::restrictedPage()` receives a `Lomkit\Rest\Text\Engine\RowRestriction` and applies it to the Eloquent query it runs, so `RestrictsQueries` extensions work on that engine without `RestrictsEngineQueries`. It is only called when such a restriction applies; `page()` serves the other searches. A `restrictedPage()` that returns without calling `apply()` throws `InvalidEngineQueryException`; the package checks the call, not that the page came from the restricted query, so run that query.
 - Forbids: two extensions that provide a profile for one engine: `InvalidEngineExtensionException` names both, by name and class, and the engine class; return `null` from one of them for this engine, or add one class to `rest.disabled_extensions`.
 
+### Preparing row checks (`PreparesRowChecks`)
+
+App: `\Vendor\Acl\AccessControlExtension::class` in the `rest.extensions` list.
+
+Package, which registers the class alone with `Rest::registerExtension(AccessControlExtension::class)`:
+
+```php
+use Lomkit\Rest\Authorization\PendingChecks;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\PreparesRowChecks;
+
+final class AccessControlExtension extends Extension implements PreparesRowChecks
+{
+    public function __construct(private readonly GrantTable $grants) {}
+
+    #[\Override]
+    public static function name(): string
+    {
+        return 'acl';
+    }
+
+    #[\Override]
+    public function prepareRowChecks(PendingChecks $checks): void
+    {
+        $this->grants->load($checks->user, $checks->resource::class, $checks->ability, $checks->rows->modelKeys());
+    }
+}
+```
+
+- Guarantees: a request kind. It receives the `PendingChecks` that `prepareAuthorization()` of the resource receives, the same object, after the hook, in name order. `$checks->ability` is the exact string the Gate checks (never the rendered gate key), `$checks->user` the user the policies run for (`null` for a guest, the user of `Rest::search()->as($user)`), and `$checks->rows` only stored, unchanged rows checked alone that no decision of the request or of `authorizationCache()` covers: the same model instances that carry the columns of `AugmentsQueries` and that the policy receives. Rows of one resource class at several levels of a page share a call. It decides nothing and changes none of the rows it receives: the policy runs on every row. Without the hook and without such an extension, a resource does no preparation work.
+- Forbids: changing the rows: `InvalidAuthorizationExtensionException` names the extension by its name and its class (`concerns(AccessControlExtension::class)` is `true`). A change is an attribute of a row; a relation loaded before the preparation, at any depth, that is replaced or dropped or whose models are added, removed, replaced or reordered; the settings that decide where and how a row is written (`exists`, table, connection, key name, casts, timestamps); or the list of rows. An attribute is compared strictly with the value the row stores, so `'1'` in place of `1` is a change. Reading an attribute through a cast is not a change, even when the cast stores its object as other text or encrypts it again: for an attribute that a cast has read, the check compares the values the cast reads (decrypted), so `APP_PREVIOUS_KEYS` changes nothing; changing the object that a cast returned is, when Eloquent would store another value. Loading a relation that was not loaded is allowed, on a row or on a related model, also when the hook or another extension loaded it first; it does not render. The check does not read the attributes of related models: leave them as they are. Store what the policies read in a service of the extension, keyed by user and row key: the kind runs zero or more times per request, so it must be idempotent. An exception thrown by it stops the request before any policy of that batch runs.
+- The check catches mistakes and is not a sandbox: an extension runs in the process with full access, and the check does not read the attributes of related models.
+- The hook itself is not checked: each extension is compared with the rows as the hook and the extensions before it left them (the reference state is taken after the hook), and a relation counts as loaded before the preparation when it was loaded before the hook.
+
+### Adding to the cache context (`ContributesCacheContext`)
+
+App: `\Vendor\Tenancy\TenantExtension::class` in the `rest.extensions` list.
+
+Package, which registers the class alone with `Rest::registerExtension(TenantExtension::class)`:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\ContributesCacheContext;
+
+final class TenantExtension extends Extension implements ContributesCacheContext
+{
+    public function __construct(private readonly Tenants $tenants, private readonly RuleVersions $rules) {}
+
+    #[\Override]
+    public static function name(): string
+    {
+        return 'tenant';
+    }
+
+    #[\Override]
+    public function contributeCacheContext(CacheContributionContext $context): void
+    {
+        $context->put('id', $this->tenants->current()?->id);
+        $context->put('rules', $this->rules->fingerprint());
+        $context->shorten('view', 60);
+    }
+}
+```
+
+- Guarantees: a request kind (`$context->resource`, `$context->user`), called at most once per resource and acting user per request (read again when the guard or the user changes, as the authorizer), only when the resource keeps a decision or a metric key reads its context. Each item goes under `{name}.{key}`, where `{name}` is what `name()` returns (`tenant.rules`), next to `authorizationCacheContext()`, in the key of every kept decision of the resource and of every metric result that reads it, on the resource and on each resource its `search` reaches, `'global'` scope included: another tenant or rules version never reads a kept decision or result. `shorten()` keeps the smallest duration of the resource and the extensions, and `forget()` keeps no decision of the ability, in any order. Without items, the keys do not change.
+- Forbids: adding an ability (an ability that `authorizationCache()` does not list is ignored) and lengthening a duration (a larger value is ignored). It does not change `cacheFor()` of metrics. A key that is not 1 to 64 letters, digits or underscores starting with a letter, a float that is not finite, a duration below 1 second, and a key that `authorizationCacheContext()` returns under the same name throw `InvalidAuthorizationExtensionException`, naming the extension by its name and its class, and the resource.
+
+### Declaring gates (`DeclaresGates`)
+
+App: `\Vendor\Sharing\SharingExtension::class` in the `rest.extensions` list.
+
+Package, which registers the class alone with `Rest::registerExtension(SharingExtension::class)`:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\GatesContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\DeclaresGates;
+
+final class SharingExtension extends Extension implements DeclaresGates
+{
+    #[\Override]
+    public static function name(): string
+    {
+        return 'share';
+    }
+
+    #[\Override]
+    public function gates(GatesContext $context): array
+    {
+        return ['share'];
+    }
+}
+```
+
+- Guarantees: a static kind. It receives the resource class only, no user. Its gates come after those of the resource, in name order, each listed once even when the resource or another extension declares it too. They show in `/details` (`with=gates`), are accepted in `search.gates` at every level of the resource and answered from the policy method (`share($user, $model)`, `authorized_to_share`, renamed in `rest.gates.names`), and the OpenAPI document lists them. A resource that turns its gates off lists none.
+- Forbids: what `gates()` of a resource refuses (a name that is not camelCase, `viewAny`, a built-in ability) and a name listed twice by one extension. `InvalidAuthorizationExtensionException` names the extension by its name and its class, and the resource, when the gates are first read.
+
 ## Artisan commands shipped by the package
 
 - `rest:resource {Name} --model=Model` — generate a Resource. Without `--model`, the model is guessed from the name (`PostResource` → `App\Models\Post`) when that class exists; otherwise the `$model` line is left out and the command warns.
@@ -1875,7 +1976,7 @@ final class OpenSearchExtension extends Extension implements ProvidesEngineProfi
 - Config — `src/Config/RestConfig.php` (the typed values of `config/rest.php`, read once per request through `RestContext::config()`) and `src/Config/ConfigValue.php` (the typed read of one key, also used for `rest.limits` and `rest.precognition.enabled`)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details,Batch}Request.php`; the details response in `src/Http/Details/` (`DetailsSelection`, the values of `with`, and `ResourceDetails`, which builds the requested sections)
 - Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, read with `$resource->definition()`, and their lookups `relation()`, `scope()`, `action()`, `instruction()` and `inputFields()`; kept by `src/Http/RestContext.php`, whose limits are a `src/Http/ResourceLimits.php`), `src/Concerns/Resource/*` (`DeclaresFields`, `DeclaresScopes`, `Paginable`, `Relationable`, `Contextual` with `definition()` and `request()`, hooks, ...)
-- Authorization — `src/Authorization/*` (`Authorizer`, `ActingUser` (the guard and user that a `RestContext` checks for, when it is not the user of the request), `Check`, `Changes`, `Decision`, `Denial`, `DecisionMemo` and the decision stores), `src/Concerns/Authorizable.php`, `src/Exceptions/{AuthorizationDenied,DenialsRenderer,UnplannedCheckException}.php`; the checks made before validation are collected by the parsers (`ParsedRules::reach()`), and run by `RestRequest::passesAuthorization()`
+- Authorization — `src/Authorization/*` (`Authorizer`, `ActingUser` (the guard and user that a `RestContext` checks for, when it is not the user of the request), `Check`, `Changes`, `Decision`, `Denial`, `DecisionMemo`, `DecisionBatch` (reads the store once per batch and calls `prepareAuthorization()` and the `PreparesRowChecks` extensions through `DecisionPreparation`, with a `PendingChecks`), `CacheContext` and `CacheContributions` (the cache context of a resource and the items of extensions) and the decision stores), `src/Http/ResourceAuthorization.php` (the gates, cached abilities and cache context of a definition), `src/Concerns/Authorizable.php`, `src/Exceptions/{AuthorizationDenied,DenialsRenderer,UnplannedCheckException}.php`; the checks made before validation are collected by the parsers (`ParsedRules::reach()`), and run by `RestRequest::passesAuthorization()`
 - Query layer — `src/Query/PageQuery.php` (the default `paginate()`: the page first, the count only when the page does not give the total), `src/Query/EngineSearch.php` (the search of a `ScoutEngine` text) and `src/Query/SqlSearch.php` (the search in the database), the two `SearchSource` implementations that read one page, `src/Search/Run/SearchRun.php` (the search of a resource from a validated `SearchNode`, which the search endpoint runs: `searching()`, one page from its source, the include overflow trimmed, `searched()`; its `SearchedPage` builds the response; `lazy()` reads the keys of every row once with `SqlSearch::chunks()`, then loads, trims and renders them by chunks of keys with `src/Actions/Rows/KeyChunks.php`), `src/Search/Run/PendingSearch.php` (the builder that `Rest::search()` returns: `as()`, `payload()`, `page()`, `render()`, `lazy()`) and `src/Search/Run/PayloadSearchRequest.php` (the `SearchRequest` that validates the payload of a `PendingSearch` for its user), `src/Query/AttributeWriter.php`, which fills a model from the writable fields of a mutation, `src/Query/RelationAggregate.php` (the subquery of an aggregate over a relation, selected by `AggregateClause` and ordered by `RelationSortClause` and `AggregateSortClause`), and `src/Search/Plan/*` (`SearchPlanner`, `QueryPlan` (its `query()` starts from the query of the model and applies the plan), `PlannedPage` (the plan and the rows of a search engine page), `PlannedRows` (the plan of `lazy()` and the `KeyChunks` of its rows), `LimitPolicy`, the row sources `SqlRows` and `KeyedRows` (the rows of a `KeySet`: the `EngineKeys` of an engine page, or the `RecordKeys` of the records of a mutation), the column selection in `src/Search/Plan/Columns/` (`ColumnSet`, the columns of one level; `ColumnSelection`, the returned columns or every column; `RelationKeys`, the keys of each Eloquent relation class), and the `IncludeClause`, `AliasedIncludeClause` (an alias loaded on copies of the parent rows), `MorphToIncludeClause` (a `MorphTo` include, loaded per stored type) and `DefaultOrderClause` clauses)
 - Responses — `src/Http/Response.php` (the envelope, `map()` and `rows()`), `src/Http/MutateResponse.php` (the mutation in one transaction, its `operations` and, with `response`, its `records`, read by `src/Http/WrittenRecords.php`), `src/Http/OperateResponse.php` (`impacted` and the `result` of an action), `src/Http/BatchProgress.php` (the progress of a batch) and `src/Http/Serialization/*`: `RowSerializer` renders the rows of one plan level with `RowFields` (which converts only the returned columns), `GateTable`, `RelationRenderer` and `PivotRenderer`, and `MorphToSerializer` the targets of a `MorphTo` include, type first (both are `RowRenderer`s), and `PageEnvelope` or `PlainEnvelope` (the `Envelope` strategies) wraps them; `src/Pagination/LengthAwarePaginator.php` gives the page keys
 - Writes — `src/Mutations/Mutator.php` (writes the entries of `payload()` in the transaction of `MutateResponse`, reads each row from the `RowSet` that the key check of validation loaded (`src/Mutations/RowSet.php`, one instance per row) and collects the entries of the response in an `OperationLog` of `OperationEntry` objects) and `src/Mutations/RelationWrites.php` (the writes of each Eloquent relation class: `OwnerWrites`, `ChildWrites`, `PivotWrites` with `PivotSet` and its `PivotPlan`, `NoWrites`), checked before the first write by `src/Mutations/WriteChecks.php`; the pivot rows are written by a `src/Contracts/PivotPersister.php` (`persistedBy()` in `src/Concerns/Relations/PersistsPivots.php`), called with a `src/Mutations/PivotWrite.php`: `EloquentPivots` by default, a declared one wrapped in `VerifiedPersister`, which reads the links back with `LinkedKeys`

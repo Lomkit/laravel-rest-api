@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Lomkit\Rest\Exceptions\AuthorizationDenied;
 use Lomkit\Rest\Exceptions\UnplannedCheckException;
 use Lomkit\Rest\Http\Resource;
 
@@ -17,13 +16,15 @@ final class Authorizer
 
     private readonly DecisionBatch $batch;
 
+    /** @internal */
     public function __construct(
         private readonly Gate $gate,
         DecisionStore $store = new NullDecisionStore,
         private readonly DecisionMemo $memo = new DecisionMemo,
         private readonly bool $strict = false,
+        private readonly DecisionPreparation $preparation = new DecisionPreparation,
     ) {
-        $this->batch = new DecisionBatch($store, $memo);
+        $this->batch = new DecisionBatch($store, $memo, $preparation);
     }
 
     public function inspect(Check $check): Decision
@@ -57,7 +58,7 @@ final class Authorizer
     /** @param list<Check> $checks */
     public function authorizeAll(array $checks): void
     {
-        self::enforce($checks, $this->inspectAll($checks));
+        Denials::enforce($checks, $this->inspectAll($checks));
     }
 
     /**
@@ -92,7 +93,7 @@ final class Authorizer
     /** @param list<Check> $checks */
     public function plan(array $checks): void
     {
-        self::enforce($checks, $this->batch($checks, fn (): array => array_map($this->planned(...), $checks)));
+        Denials::enforce($checks, $this->batch($checks, fn (): array => array_map($this->planned(...), $checks)));
     }
 
     /**
@@ -131,23 +132,10 @@ final class Authorizer
         $this->memo->forget($model);
     }
 
-    /**
-     * @param  list<Check>  $checks
-     * @param  list<Decision>  $decisions
-     */
-    private static function enforce(array $checks, array $decisions): void
+    /** @internal */
+    public function prepares(Resource $resource): bool
     {
-        $denials = [];
-
-        foreach ($decisions as $index => $decision) {
-            if (! $decision->allowed) {
-                $denials[] = Denial::of($checks[$index], $decision);
-            }
-        }
-
-        if ($denials !== []) {
-            throw new AuthorizationDenied($denials);
-        }
+        return $this->preparation->prepares($resource);
     }
 
     private static function keyOf(Check $check): ?string

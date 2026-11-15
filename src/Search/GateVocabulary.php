@@ -12,8 +12,11 @@ final readonly class GateVocabulary
     /** @param array<string, GateAbility> $gates */
     private function __construct(private array $gates) {}
 
-    /** @param array<mixed> $declared */
-    public static function of(array $declared, string $owner, bool $softDeletes): self
+    /**
+     * @param  array<mixed>  $declared
+     * @param  list<DeclaredGateList>  $extensions
+     */
+    public static function of(array $declared, string $owner, bool $softDeletes, array $extensions = []): self
     {
         $gates = [];
 
@@ -23,12 +26,19 @@ final readonly class GateVocabulary
             }
         }
 
-        foreach (array_values($declared) as $index => $name) {
-            if (! is_string($name) || preg_match(self::NAME, $name) !== 1 || $name === 'viewAny' || Ability::tryFrom($name) !== null || isset($gates[$name])) {
-                throw InvalidResourceException::invalidGate($owner, $index, $name);
-            }
+        $resource = new DeclaredGateList($declared, static fn (int $index, mixed $name): InvalidResourceException => InvalidResourceException::invalidGate($owner, $index, $name));
 
-            $gates[$name] = new GateAbility($name);
+        foreach ([$resource, ...$extensions] as $list) {
+            $listed = [];
+
+            foreach (array_values($list->names) as $index => $name) {
+                if (! is_string($name) || ! self::declarable($name) || isset($listed[$name])) {
+                    throw $list->refuse($index, $name);
+                }
+
+                $listed[$name] = true;
+                $gates[$name] ??= new GateAbility($name);
+            }
         }
 
         return new self($gates);
@@ -43,5 +53,10 @@ final readonly class GateVocabulary
     public function find(mixed $name): ?GateAbility
     {
         return is_string($name) ? $this->gates[$name] ?? null : null;
+    }
+
+    private static function declarable(string $name): bool
+    {
+        return preg_match(self::NAME, $name) === 1 && $name !== 'viewAny' && Ability::tryFrom($name) === null;
     }
 }

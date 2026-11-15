@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Metrics;
 
 use BackedEnum;
-use Lomkit\Rest\Authorization\CacheContext;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
@@ -29,7 +28,7 @@ final readonly class MetricKey
             $node->range?->value,
             $metric->timezone()->getName(),
             self::canonical($metric->request()->input('search', [])),
-            CacheContext::of($resource->authorizationCacheContext(), $resource::class),
+            $resource->definition()->cacheContext()->serialized(),
         ];
         $contexts = self::contexts($others);
 
@@ -87,10 +86,10 @@ final readonly class MetricKey
         $contexts = [];
 
         foreach ($others as $class => $resource) {
-            $context = $resource->authorizationCacheContext();
+            $context = $resource->definition()->cacheContext();
 
-            if ($context !== []) {
-                $contexts[$class] = CacheContext::of($context, $class);
+            if (! $context->isEmpty()) {
+                $contexts[$class] = $context->serialized();
             }
         }
 
