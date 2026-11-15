@@ -46,6 +46,69 @@ class PreparedRowsTest extends TestCase
         }];
     }
 
+    /** @param Closure(Model): mixed $change */
+    #[Test]
+    #[DataProvider('relatedChanges')]
+    public function it_refuses_a_change_to_the_models_of_a_relation_loaded_before_the_preparation(Closure $change): void
+    {
+        $checks = $this->checks();
+        $row = $checks->rows->firstOrFail();
+        $row->setRelation('links', new Collection([$this->related(2), $this->related(3)]));
+        $row->getRelation('links')->firstOrFail()->setRelation('links', new Collection([$this->related(4)]));
+        $start = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, $start);
+
+        $change($row);
+
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', $checks);
+    }
+
+    /** @return iterable<string, array{Closure(Model): mixed}> */
+    public static function relatedChanges(): iterable
+    {
+        yield 'a model pushed' => [static fn (Model $row): mixed => $row->getRelation('links')->push(new PreparedDocument)];
+        yield 'a model removed' => [static fn (Model $row): mixed => $row->getRelation('links')->forget(1)];
+        yield 'a model put in place of another' => [static fn (Model $row): mixed => $row->getRelation('links')->put(1, new PreparedDocument)];
+        yield 'the models reordered' => [static fn (Model $row): mixed => $row->setRelation('links', $row->getRelation('links')->reverse())];
+        yield 'a model pushed into a nested relation' => [static fn (Model $row): mixed => $row->getRelation('links')->firstOrFail()->getRelation('links')->push(new PreparedDocument)];
+        yield 'a nested relation replaced' => [static fn (Model $row): mixed => $row->getRelation('links')->firstOrFail()->setRelation('links', new Collection)];
+        yield 'a nested relation removed' => [static fn (Model $row): mixed => $row->getRelation('links')->firstOrFail()->unsetRelation('links')];
+    }
+
+    #[Test]
+    public function it_lets_an_extension_load_a_relation_of_a_related_model(): void
+    {
+        $checks = $this->checks();
+        $row = $checks->rows->firstOrFail();
+        $row->setRelation('links', new Collection([$this->related(2)]));
+        $start = PreparedRows::of($checks->rows);
+        $row->getRelation('links')->firstOrFail()->setRelation('team', $this->related(5));
+        $rows = PreparedRows::of($checks->rows, $start);
+
+        $row->getRelation('links')->firstOrFail()->setRelation('team', $this->related(6));
+        $row->getRelation('links')->firstOrFail()->setRelation('owner', $this->related(7));
+
+        $rows->ensureUnchanged('acl', $checks);
+        $this->assertSame(6, $row->getRelation('links')->firstOrFail()->getRelation('team')->getKey());
+    }
+
+    #[Test]
+    public function it_keeps_a_row_whose_related_models_point_back_to_it(): void
+    {
+        $checks = $this->checks();
+        $row = $checks->rows->firstOrFail();
+        $child = $this->related(2);
+        $row->setRelation('links', new Collection([$child]));
+        $child->setRelation('parent', $row);
+        $rows = PreparedRows::of($checks->rows, PreparedRows::of($checks->rows));
+
+        $child->getRelation('parent');
+
+        $rows->ensureUnchanged('acl', $checks);
+        $this->assertSame($row, $child->getRelation('parent'));
+    }
+
     #[Test]
     public function it_keeps_a_row_whose_cast_attribute_is_read(): void
     {
@@ -190,5 +253,10 @@ class PreparedRowsTest extends TestCase
         ]);
 
         return new PendingChecks(new TicketResource, 'view', new Collection([$row]), null);
+    }
+
+    private function related(int $id): PreparedDocument
+    {
+        return (new PreparedDocument)->newFromBuilder(['id' => $id]);
     }
 }

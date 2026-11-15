@@ -385,6 +385,59 @@ class RowCheckPreparationTest extends HelpdeskTestCase
 
     /** @param Closure(Model): mixed $change */
     #[Test]
+    #[DataProvider('relatedChanges')]
+    public function it_refuses_an_extension_that_changes_the_models_of_an_included_relation(Closure $change): void
+    {
+        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        ['Printer jam' => $jam] = $this->seedTickets();
+        $jam->tags()->attach(Tag::create(['id' => 1, 'name' => 'Hardware'])->id);
+        PreparingExtension::$prepare = static function (PendingChecks $checks) use ($change): void {
+            $change($checks->rows->firstOrFail());
+        };
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', TicketResource::class, 'update'));
+
+        try {
+            $this->postJson('/api/tickets/search', ['search' => [
+                'gates' => ['update'],
+                'includes' => [['relation' => 'tags'], ['relation' => 'team.tickets']],
+                'sorts' => [['field' => 'id']],
+            ]]);
+        } finally {
+            $this->assertSame(['viewAny'], array_values(array_filter($this->tickets->calls, fn (string $call): bool => ! str_starts_with($call, 'ext '))));
+        }
+    }
+
+    /** @return iterable<string, array{Closure(Model): mixed}> */
+    public static function relatedChanges(): iterable
+    {
+        yield 'a model pushed into a loaded relation' => [static fn (Model $row): mixed => $row->getRelation('tags')->push(new Tag(['id' => 2, 'name' => 'Other']))];
+        yield 'a model removed from a loaded relation' => [static fn (Model $row): mixed => $row->getRelation('tags')->forget(0)];
+        yield 'a model put in place of another' => [static fn (Model $row): mixed => $row->getRelation('tags')->put(0, new Tag(['id' => 2, 'name' => 'Other']))];
+        yield 'a model pushed into a nested relation' => [static fn (Model $row): mixed => $row->getRelation('team')->getRelation('tickets')->push(new Ticket(['title' => 'Other']))];
+        yield 'a nested relation replaced' => [static fn (Model $row): mixed => $row->getRelation('team')->setRelation('tickets', new Collection)];
+    }
+
+    #[Test]
+    public function it_lets_an_extension_load_a_relation_of_an_included_model(): void
+    {
+        $this->seedTickets();
+        $payload = ['search' => ['gates' => ['update'], 'includes' => [['relation' => 'team']], 'sorts' => [['field' => 'id']]]];
+        $plain = $this->postJson('/api/tickets/search', $payload)->assertOk()->json();
+        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        PreparingExtension::$prepare = static function (PendingChecks $checks): void {
+            $checks->rows->each(fn (Model $row): mixed => $row->getRelation('team')->loadMissing('tickets'));
+        };
+
+        $prepared = $this->postJson('/api/tickets/search', $payload)->assertOk()->json();
+
+        $this->assertSame($plain, $prepared);
+        $this->assertTrue(PreparingExtension::$received[0]->rows->firstOrFail()->getRelation('team')->relationLoaded('tickets'));
+    }
+
+    /** @param Closure(Model): mixed $change */
+    #[Test]
     #[DataProvider('writeSettingChanges')]
     public function it_refuses_an_extension_that_changes_where_a_destroyed_row_is_written(Closure $change): void
     {

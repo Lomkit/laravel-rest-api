@@ -14,25 +14,20 @@ final readonly class RowState
      * @param  list<mixed>  $settings
      * @param  array<string, mixed>  $original
      * @param  array<string, mixed>  $attributes
-     * @param  array<array-key, mixed>  $relations
      */
     private function __construct(
         private Model $row,
         private array $settings,
         private array $original,
         private array $attributes,
-        private array $relations,
+        private LoadedRelations $relations,
     ) {}
 
     public static function of(Model $row, ?self $start = null): self
     {
-        $relations = $row->getRelations();
+        $attributes = self::stored($row, self::castKeys($row));
 
-        if ($start !== null) {
-            $relations = array_intersect_key($relations, $start->relations);
-        }
-
-        return new self($row, self::settings($row), $row->getRawOriginal(), self::stored($row, self::castKeys($row)), $relations);
+        return new self($row, self::settings($row), $row->getRawOriginal(), $attributes, LoadedRelations::of($row, $start?->relations));
     }
 
     public function row(): Model
@@ -42,19 +37,11 @@ final readonly class RowState
 
     public function keeps(Model $row): bool
     {
-        if ($row !== $this->row || self::settings($row) !== $this->settings || $row->getRawOriginal() !== $this->original) {
-            return false;
-        }
-
-        $relations = $row->getRelations();
-
-        foreach ($this->relations as $name => $related) {
-            if (! array_key_exists($name, $relations) || $relations[$name] !== $related) {
-                return false;
-            }
-        }
-
-        return $this->keepsAttributes($row);
+        return $row === $this->row
+            && self::settings($row) === $this->settings
+            && $row->getRawOriginal() === $this->original
+            && $this->relations->keep($row)
+            && $this->keepsAttributes($row);
     }
 
     /** @return list<mixed> */
