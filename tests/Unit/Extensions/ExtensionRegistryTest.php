@@ -187,6 +187,15 @@ final class ExtensionRegistryTest extends TestCase
     }
 
     #[Test]
+    public function it_does_not_ask_an_extension_of_another_kind(): void
+    {
+        $registry = ExtensionRegistry::of([], [], [ProductsOnlyExtension::class], new IlluminateContainer);
+
+        $this->assertSame([], $registry->applicable(ProductResource::class, CountsResources::class));
+        $this->assertSame([], ExtensionLog::$asked);
+    }
+
+    #[Test]
     public function it_throws_the_first_invalid_entry_when_built(): void
     {
         $registry = ExtensionRegistry::of([], [], [NotingExtension::class, KindlessExtension::class], new IlluminateContainer);
