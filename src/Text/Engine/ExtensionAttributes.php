@@ -35,15 +35,18 @@ final readonly class ExtensionAttributes
                     throw InvalidEngineExtensionException::repeatedIndexAttribute($name, $class, $target->resource, $attributeName);
                 }
 
-                $owner = match (true) {
-                    isset($filterable[$attributeName]) => 'the filterable() list of its ScoutEngine',
-                    isset($perimeter[$attributeName]) => 'the perimeter() list of its ScoutEngine',
-                    isset($owners[$attributeName]) => $owners[$attributeName],
+                $list = match (true) {
+                    isset($filterable[$attributeName]) => ResourceIndexList::Filterable,
+                    isset($perimeter[$attributeName]) => ResourceIndexList::Perimeter,
                     default => null,
                 };
 
-                if ($owner !== null) {
-                    throw InvalidEngineExtensionException::indexAttributeTaken($name, $class, $target->resource, $attributeName, $owner);
+                if ($list !== null) {
+                    throw InvalidEngineExtensionException::indexAttributeTakenByResource($name, $class, $target->resource, $attributeName, $list);
+                }
+
+                if (isset($owners[$attributeName])) {
+                    throw InvalidEngineExtensionException::indexAttributeTakenByExtension($name, $class, $target->resource, $attributeName, ...$owners[$attributeName]);
                 }
 
                 $own[$attributeName] = true;
@@ -51,7 +54,7 @@ final readonly class ExtensionAttributes
             }
 
             foreach (array_keys($own) as $attributeName) {
-                $owners[$attributeName] = "the [{$name}] extension {$class}";
+                $owners[$attributeName] = [$name, $class];
             }
         }
 

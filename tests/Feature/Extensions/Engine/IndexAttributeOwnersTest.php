@@ -13,6 +13,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondIndexExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\ScoutEngineDeclarationTestCase;
 use Lomkit\Rest\Tests\Fixtures\Ledger\TeamVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
+use Lomkit\Rest\Text\Engine\ResourceIndexList;
 use Lomkit\Rest\Text\ScoutEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -45,7 +46,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     {
         $this->declare(['first' => [Integer::make('number')]]);
 
-        $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTaken('first', FirstIndexExtension::class, VoucherResource::class, 'number', 'the filterable() list of its ScoutEngine'));
+        $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, VoucherResource::class, 'number', ResourceIndexList::Filterable));
 
         $this->capabilities($this->open(['number']));
     }
@@ -57,7 +58,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
         $text = $this->resource(TeamVoucherResource::class)->text();
         $this->assertInstanceOf(ScoutEngine::class, $text);
 
-        $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTaken('first', FirstIndexExtension::class, TeamVoucherResource::class, 'team', 'the perimeter() list of its ScoutEngine'));
+        $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, TeamVoucherResource::class, 'team', ResourceIndexList::Perimeter));
 
         $text->capabilities($this->target(TeamVoucherResource::class));
     }
@@ -71,7 +72,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
         DeclaredIndexExtension::$declared = [FirstIndexExtension::class => [Integer::make('owner_id')], SecondIndexExtension::class => [Integer::make('owner_id')]];
         config(['rest.extensions' => array_combine($order, array_map(fn (string $name): string => $extensions[$name], $order))]);
 
-        $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTaken('second', SecondIndexExtension::class, VoucherResource::class, 'owner_id', 'the [first] extension '.FirstIndexExtension::class));
+        $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTakenByExtension('second', SecondIndexExtension::class, VoucherResource::class, 'owner_id', 'first', FirstIndexExtension::class));
 
         $this->capabilities($this->open());
     }
@@ -128,7 +129,11 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     {
         $this->assertSame(
             'The [second] extension '.SecondIndexExtension::class.' declares for '.VoucherResource::class.' the index attribute [owner_id], which the [first] extension '.FirstIndexExtension::class.' already declares. Index attributes keep their real name: index the attribute under another name for one of them, or leave '.VoucherResource::class.' out of the extension with appliesTo().',
-            InvalidEngineExtensionException::indexAttributeTaken('second', SecondIndexExtension::class, VoucherResource::class, 'owner_id', 'the [first] extension '.FirstIndexExtension::class)->getMessage(),
+            InvalidEngineExtensionException::indexAttributeTakenByExtension('second', SecondIndexExtension::class, VoucherResource::class, 'owner_id', 'first', FirstIndexExtension::class)->getMessage(),
+        );
+        $this->assertSame(
+            'The [first] extension '.FirstIndexExtension::class.' declares for '.TeamVoucherResource::class.' the index attribute [team], which the perimeter() list of its ScoutEngine already declares. Index attributes keep their real name: index the attribute under another name for one of them, or leave '.TeamVoucherResource::class.' out of the extension with appliesTo().',
+            InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, TeamVoucherResource::class, 'team', ResourceIndexList::Perimeter)->getMessage(),
         );
         $this->assertTrue(InvalidEngineExtensionException::repeatedIndexAttribute('first', FirstIndexExtension::class, VoucherResource::class, 'owner_id')->namesExtension('first'));
     }

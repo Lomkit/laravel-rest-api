@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Exceptions;
 
+use Lomkit\Rest\Text\Engine\ResourceIndexList;
+
 final class InvalidEngineExtensionException extends InvalidExtensionException
 {
     public static function notAnIndexAttribute(string $name, string $class, string $resource, int $index, string $type): self
@@ -34,9 +36,14 @@ final class InvalidEngineExtensionException extends InvalidExtensionException
         return self::about($name, "The [{$name}] extension {$class} declares for {$resource} the index attribute [{$attribute}] more than once. Declare it once.");
     }
 
-    public static function indexAttributeTaken(string $name, string $class, string $resource, string $attribute, string $owner): self
+    public static function indexAttributeTakenByResource(string $name, string $class, string $resource, string $attribute, ResourceIndexList $list): self
     {
-        return self::about($name, "The [{$name}] extension {$class} declares for {$resource} the index attribute [{$attribute}], which {$owner} already declares. Index attributes keep their real name: index the attribute under another name for one of them, or leave {$resource} out of the extension with appliesTo().");
+        return self::taken($name, $class, $resource, $attribute, "the {$list->value}() list of its ScoutEngine");
+    }
+
+    public static function indexAttributeTakenByExtension(string $name, string $class, string $resource, string $attribute, string $owner, string $ownerClass): self
+    {
+        return self::taken($name, $class, $resource, $attribute, "the [{$owner}] extension {$ownerClass}");
     }
 
     public static function unsupportedStringList(string $name, string $class, string $resource, string $attribute, string $engine): self
@@ -47,5 +54,10 @@ final class InvalidEngineExtensionException extends InvalidExtensionException
     public static function conflictingProfiles(string $engine, string $resource, string $first, string $firstClass, string $second, string $secondClass): self
     {
         return self::about($second, "The [{$first}] extension {$firstClass} and the [{$second}] extension {$secondClass} both provide the engine profile of [{$engine}] for {$resource}. Let one of them provide it: return null from engineProfile() of the other for this engine, or disable one of them in rest.extensions.");
+    }
+
+    private static function taken(string $name, string $class, string $resource, string $attribute, string $owner): self
+    {
+        return self::about($name, "The [{$name}] extension {$class} declares for {$resource} the index attribute [{$attribute}], which {$owner} already declares. Index attributes keep their real name: index the attribute under another name for one of them, or leave {$resource} out of the extension with appliesTo().");
     }
 }
