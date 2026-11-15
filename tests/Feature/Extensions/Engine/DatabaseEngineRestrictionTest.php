@@ -17,6 +17,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TitledRowsExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -41,14 +42,50 @@ class DatabaseEngineRestrictionTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_restricts_the_rows_and_the_total_of_a_database_engine_search(): void
+    #[DataProvider('drivers')]
+    public function it_restricts_the_rows_and_the_total_of_a_search_on_a_sql_driver(string $driver): void
     {
-        config(['rest.extensions' => [RedRowsExtension::class]]);
+        config(['scout.driver' => $driver, 'rest.extensions' => [RedRowsExtension::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([5, 1, 3], 3));
         $this->assertSame(['VoucherResource', 'VoucherResource'], RestrictionLog::$seen);
+    }
+
+    #[Test]
+    public function it_keeps_the_client_filters_on_the_collection_driver(): void
+    {
+        config(['scout.driver' => 'collection', 'rest.extensions' => [RedRowsExtension::class]]);
+
+        $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [
+            ['field' => 'number', 'operator' => '>', 'value' => 1],
+            ['field' => 'code', 'operator' => 'in', 'value' => ['V-a', 'V-c', 'V-d']],
+        ]]);
+
+        $response->assertOk()->assertExactJson($this->page([1], 1));
+    }
+
+    #[Test]
+    public function it_keeps_the_client_exclusions_on_the_collection_driver(): void
+    {
+        config(['scout.driver' => 'collection', 'rest.extensions' => [RedRowsExtension::class]]);
+
+        $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [
+            ['field' => 'code', 'operator' => 'not in', 'value' => ['V-a', 'V-d']],
+        ]]);
+
+        $response->assertOk()->assertExactJson($this->page([5, 1], 2));
+    }
+
+    #[Test]
+    public function it_returns_an_empty_page_on_the_null_driver(): void
+    {
+        config(['scout.driver' => 'null', 'rest.extensions' => [RedRowsExtension::class]]);
+
+        $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
+
+        $response->assertOk()->assertExactJson($this->page([], 0));
     }
 
     #[Test]
@@ -95,9 +132,10 @@ class DatabaseEngineRestrictionTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_restricts_the_targets_of_an_action_on_the_database_engine(): void
+    #[DataProvider('drivers')]
+    public function it_restricts_the_targets_of_an_action_on_a_sql_driver(string $driver): void
     {
-        config(['rest.extensions' => [RedRowsExtension::class]]);
+        config(['scout.driver' => $driver, 'rest.extensions' => [RedRowsExtension::class]]);
 
         $response = $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 

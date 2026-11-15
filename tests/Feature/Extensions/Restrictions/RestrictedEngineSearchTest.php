@@ -95,17 +95,6 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_restricts_a_text_search_on_the_database_engine(): void
-    {
-        config(['scout.driver' => 'database', 'rest.extensions' => [HiddenRowsExtension::class]]);
-
-        $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
-
-        $response->assertOk()->assertExactJson($this->page([5, 4, 1, 3], 4));
-        $this->assertSame(['VoucherResource guest', 'VoucherResource guest'], RestrictionLog::$seen);
-    }
-
-    #[Test]
     public function it_still_searches_without_text_on_a_restricted_resource(): void
     {
         config(['rest.extensions' => [HiddenRowsExtension::class]]);
