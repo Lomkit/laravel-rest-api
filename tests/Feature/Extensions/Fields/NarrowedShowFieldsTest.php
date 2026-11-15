@@ -22,6 +22,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', ['mask' => MaskingFields::class])]
 class NarrowedShowFieldsTest extends PackageTestCase
 {
+    private int $opening = 0;
+
     #[\Override]
     protected function fixtures(): array
     {
@@ -37,11 +39,9 @@ class NarrowedShowFieldsTest extends PackageTestCase
         Applicability::flush();
         MaskingFields::reset();
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage']]);
-        DB::table('shows')->insert([
-            ['id' => 1, 'stage_code' => 'main', 'title' => 'Opening night', 'price' => 20, 'seats' => 300, 'level' => 1, 'starts_on' => '2026-07-01', 'starts_at' => '2026-02-20 20:00:00', 'status' => 'on_sale', 'updated_at' => '2026-02-01 08:00:00'],
-            ['id' => 2, 'stage_code' => 'main', 'title' => 'Closing night', 'price' => 35, 'seats' => 100, 'level' => 2, 'starts_on' => '2026-07-03', 'starts_at' => '2026-02-21 20:00:00', 'status' => 'planned', 'updated_at' => '2026-02-01 08:00:00'],
-        ]);
-        DB::table('notes')->insert([['id' => 1, 'notable_type' => Show::class, 'notable_id' => '1', 'body' => 'Sold out soon']]);
+        $this->opening = DB::table('shows')->insertGetId(['stage_code' => 'main', 'title' => 'Opening night', 'price' => 20, 'seats' => 300, 'level' => 1, 'starts_on' => '2026-07-01', 'starts_at' => '2026-02-20 20:00:00', 'status' => 'on_sale', 'updated_at' => '2026-02-01 08:00:00']);
+        DB::table('shows')->insert(['stage_code' => 'main', 'title' => 'Closing night', 'price' => 35, 'seats' => 100, 'level' => 2, 'starts_on' => '2026-07-03', 'starts_at' => '2026-02-21 20:00:00', 'status' => 'planned', 'updated_at' => '2026-02-01 08:00:00']);
+        DB::table('notes')->insert(['notable_type' => Show::class, 'notable_id' => (string) $this->opening, 'body' => 'Sold out soon']);
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
     }
 
@@ -73,7 +73,7 @@ class NarrowedShowFieldsTest extends PackageTestCase
         });
 
         $update = $this->postJson('/api/shows/mutate', ['mutate' => [
-            ['operation' => 'update', 'key' => 1, 'version' => '2026-02-01T08:00:00.000000Z', 'attributes' => ['title' => 'First night']],
+            ['operation' => 'update', 'key' => $this->opening, 'version' => '2026-02-01T08:00:00.000000Z', 'attributes' => ['title' => 'First night']],
         ], 'response' => ['selects' => [['field' => 'updated_at']]]]);
         $filter = $this->postJson('/api/shows/search', ['search' => ['filters' => [['field' => 'updated_at', 'value' => '2026-02-01T08:00:00.000000Z']]]]);
 
@@ -109,8 +109,11 @@ class NarrowedShowFieldsTest extends PackageTestCase
 
         $created = $this->postJson('/api/shows/mutate', ['mutate' => [['operation' => 'create', 'attributes' => $show]]]);
 
-        $created->assertOk()->assertJsonPath('operations', [['operation' => 'create', 'key' => 3]]);
-        $this->assertNull(Show::query()->findOrFail(3)->getAttribute('price'));
+        $created->assertOk()->assertJsonPath('operations.0.operation', 'create');
+        $this->assertSame([null, 'Matinee'], [
+            Show::query()->findOrFail($created->json('operations.0.key'))->getAttribute('price'),
+            Show::query()->findOrFail($created->json('operations.0.key'))->getAttribute('title'),
+        ]);
         $this->assertLikeUnknown(fn (string $field): TestResponse => $this->postJson('/api/shows/mutate', ['mutate' => [
             ['operation' => 'create', 'attributes' => [...$show, $field => 12]],
         ]]));
