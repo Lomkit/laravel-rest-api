@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Laravel\Scout\Builder;
+use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Extensions\Contexts\EngineRestriction;
@@ -335,9 +336,27 @@ class EngineRestrictionTest extends EngineSearchTestCase
         config(['rest.extensions' => ['owner' => OwnerEngineRestriction::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidEngineQueryException::undeclaredAttribute('owner'));
+        $this->expectExceptionObject(InvalidEngineExtensionException::refusedEngineCondition('owner', OwnerEngineRestriction::class, VoucherResource::class, InvalidEngineQueryException::undeclaredAttribute('owner')));
 
         $this->search('vouchers', ['text' => ['value' => 'report']]);
+    }
+
+    #[Test]
+    public function it_names_the_extension_in_a_refused_condition(): void
+    {
+        $exception = InvalidEngineExtensionException::refusedEngineCondition('owner', OwnerEngineRestriction::class, VoucherResource::class, InvalidEngineQueryException::undeclaredAttribute('owner'));
+
+        $this->assertSame(
+            'The [owner] extension '.OwnerEngineRestriction::class.' restricts the engine search of '.VoucherResource::class.' with a condition that the engine query refuses: The engine query has no attribute [owner]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.',
+            $exception->getMessage(),
+        );
+        $this->assertTrue($exception->namesExtension('owner'));
+    }
+
+    #[Test]
+    public function it_chains_match_nothing_like_the_other_conditions(): void
+    {
+        $this->assertSame('self', (string) (new ReflectionMethod(EngineRestriction::class, 'matchNothing'))->getReturnType());
     }
 
     #[Test]

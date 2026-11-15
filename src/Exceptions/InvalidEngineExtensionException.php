@@ -53,6 +53,11 @@ final class InvalidEngineExtensionException extends InvalidExtensionException
         return self::about($second, "The [{$first}] extension {$firstClass} and the [{$second}] extension {$secondClass} both provide the engine profile of [{$engine}] for {$resource}. Let one of them provide it: return null from engineProfile() of the other for this engine, or disable one of them in rest.extensions.");
     }
 
+    public static function refusedEngineCondition(string $name, string $class, string $resource, InvalidEngineQueryException $reason): self
+    {
+        return self::about($name, "The [{$name}] extension {$class} restricts the engine search of {$resource} with a condition that the engine query refuses: {$reason->getMessage()}");
+    }
+
     private static function taken(string $name, string $class, string $resource, string $attribute, string $owner): self
     {
         return self::about($name, "The [{$name}] extension {$class} declares for {$resource} the index attribute [{$attribute}], which {$owner} already declares with another field type or list marker. Index attributes keep their real name: declare it the same way, index it under another name for one of them, or leave {$resource} out of the extension with appliesTo().");

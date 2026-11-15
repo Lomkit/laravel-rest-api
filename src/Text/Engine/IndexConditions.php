@@ -7,6 +7,7 @@ use Laravel\Scout\Builder;
 use Lomkit\Rest\Exceptions\ConflictingListsException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
+/** @internal */
 final class IndexConditions
 {
     /** @var list<array{string, FilterOperator, int|float|string|bool}> */

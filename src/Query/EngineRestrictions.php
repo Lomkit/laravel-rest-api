@@ -54,7 +54,7 @@ final readonly class EngineRestrictions
         $columns = $query->profile() instanceof ComparesColumns;
 
         foreach ($this->engine as $name => $extension) {
-            $restriction = new EngineRestriction($query, new RestrictingExtension($name, $extension::class));
+            $restriction = new EngineRestriction($query, new RestrictingExtension($name, $extension::class), $this->resource::class);
 
             $extension->restrictEngine(new EngineRestrictionContext($restriction, $this->resource, $user, $lists, $inSql?->restricts($name) === true, $columns));
         }
