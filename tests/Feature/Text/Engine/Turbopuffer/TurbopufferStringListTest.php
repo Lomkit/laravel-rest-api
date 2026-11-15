@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
@@ -21,6 +22,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('turbopuffer')]
 class TurbopufferStringListTest extends TurbopufferTestCase
 {
+    use ResetsExtensionStubs;
+
     private const array RANKED = ['rank_by' => ['title', 'BM25', 'report']];
 
     private const array COUNT = ['aggregate_by' => ['count' => ['Count']]];
@@ -40,20 +43,7 @@ class TurbopufferStringListTest extends TurbopufferTestCase
     {
         parent::setUp();
 
-        EngineLog::reset();
-        ReadersExtension::$excludes = false;
-        ReadersExtension::$groups = null;
         config(['rest.extensions' => [ReadersExtension::class]]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        EngineLog::reset();
-        ReadersExtension::$excludes = false;
-        ReadersExtension::$groups = null;
-
-        parent::tearDown();
     }
 
     #[\Override]
