@@ -71,8 +71,10 @@ final class DecisionPreparation
             $checks->resource->prepareAuthorization($checks);
         }
 
-        foreach ($this->extensionsOf($checks->resource) as $extension) {
+        foreach ($this->extensionsOf($checks->resource) as $name => $extension) {
+            $rows = PreparedRows::of($checks->rows);
             $extension->prepareRowChecks($checks);
+            $rows->ensureUnchanged($name, $checks);
         }
     }
 

@@ -2,11 +2,14 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Authorization;
 
+use Closure;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Authorization\PendingChecks;
+use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
@@ -22,6 +25,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondPreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SubjectTicketPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\CachedTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
@@ -344,6 +348,57 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $this->assertSame(['seen', 'seen', 'seen', 'seen'], $rows->map(fn (Model $row): mixed => $row->getAttribute('aug__flag'))->all());
         $this->assertSame(array_map(fn (Model $row): array => [spl_object_id($row), 'seen'], $rows->all()), $policy->subjects);
         $this->assertSame(['id', 'team_id', 'title', 'status', 'gates'], array_keys($response->json('data.0')));
+    }
+
+    /** @param Closure(PendingChecks): mixed $change */
+    #[Test]
+    #[DataProvider('rowChanges')]
+    public function it_refuses_an_extension_that_changes_a_prepared_row(Closure $change): void
+    {
+        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        $this->seedTickets();
+        PreparingExtension::$prepare = static function (PendingChecks $checks) use ($change): void {
+            $change($checks);
+        };
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', TicketResource::class, 'update'));
+
+        try {
+            $this->postJson('/api/tickets/search', ['search' => ['gates' => ['update'], 'includes' => [['relation' => 'team']], 'sorts' => [['field' => 'id']]]]);
+        } finally {
+            $this->assertSame(['viewAny'], array_values(array_filter($this->tickets->calls, fn (string $call): bool => ! str_starts_with($call, 'ext '))));
+        }
+    }
+
+    /** @return iterable<string, array{Closure(PendingChecks): mixed}> */
+    public static function rowChanges(): iterable
+    {
+        yield 'an attribute' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setAttribute('title', 'Changed')];
+        yield 'an attribute kept as original' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setAttribute('title', 'Changed')->syncOriginal()];
+        yield 'a loaded relation' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setRelation('team', new Team(['name' => 'Other']))];
+        yield 'a removed relation' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->unsetRelation('team')];
+        yield 'the list of rows' => [static fn (PendingChecks $checks): ?Model => $checks->rows->pop()];
+        yield 'a row of the list' => [static fn (PendingChecks $checks): Collection => $checks->rows->put(0, new Ticket(['title' => 'Other']))];
+    }
+
+    #[Test]
+    public function it_lets_an_extension_read_the_rows_and_load_a_relation_that_was_not_loaded(): void
+    {
+        $this->seedTickets();
+        $payload = ['search' => ['gates' => ['update'], 'includes' => [['relation' => 'team']], 'sorts' => [['field' => 'id']]]];
+        $plain = $this->postJson('/api/tickets/search', $payload)->assertOk()->json();
+        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        $read = [];
+        PreparingExtension::$prepare = static function (PendingChecks $checks) use (&$read): void {
+            $checks->rows->loadMissing('tags');
+            $read = $checks->rows->map(fn (Model $row): array => [$row->getAttribute('title'), $row->getRelation('team')->getAttribute('name')])->all();
+        };
+
+        $prepared = $this->postJson('/api/tickets/search', $payload)->assertOk()->json();
+
+        $this->assertSame($plain, $prepared);
+        $this->assertSame([['Printer jam', 'Billing'], ['Password reset', 'Support'], ['Printer toner', 'Billing'], ['Laptop setup', 'Support']], $read);
     }
 
     /**
