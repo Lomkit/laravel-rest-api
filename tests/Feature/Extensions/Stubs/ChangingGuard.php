@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\GuardsWrites;
 final class ChangingGuard extends Extension implements GuardsWrites
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
+    #[\Override]
     public function guardWrite(WriteGuardContext $context): void
     {
         WriteLog::$guards[] = $context;

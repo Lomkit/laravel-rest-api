@@ -10,6 +10,12 @@ use RuntimeException;
 final class FailingReadObserver extends Extension implements ObservesReads
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'reads';
+    }
+
+    #[\Override]
     public function observeRead(ReadObservationContext $context): void
     {
         throw new RuntimeException('The read log is offline.');

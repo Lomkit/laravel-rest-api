@@ -6,8 +6,14 @@ use Lomkit\Rest\Extensions\Contexts\WriteGuardContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\GuardsWrites;
 
-final class QuotaGuard extends Extension implements GuardsWrites
+class QuotaGuard extends Extension implements GuardsWrites
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
     #[\Override]
     public function guardWrite(WriteGuardContext $context): void
     {

@@ -10,6 +10,12 @@ use Lomkit\Rest\Extensions\Kinds\GuardsWrites;
 final class FrozenRowGuard extends Extension implements GuardsWrites
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'frozen';
+    }
+
+    #[\Override]
     public function guardWrite(WriteGuardContext $context): void
     {
         $keys = array_map(fn (Model $row): mixed => $row->getKey(), $context->rows);

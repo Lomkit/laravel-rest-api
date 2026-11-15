@@ -12,6 +12,12 @@ use Lomkit\Rest\Tests\Fixtures\Library\LoanResource;
 final class LoanWritesExtension extends Extension implements GuardsWrites, ObservesWrites
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'loans';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === LoanResource::class;

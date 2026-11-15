@@ -9,8 +9,14 @@ use Lomkit\Rest\Extensions\Kinds\ObservesReads;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 
-final class RecordingReadObserver extends Extension implements ObservesReads
+class RecordingReadObserver extends Extension implements ObservesReads
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'reads';
+    }
+
     #[\Override]
     public function observeRead(ReadObservationContext $context): void
     {

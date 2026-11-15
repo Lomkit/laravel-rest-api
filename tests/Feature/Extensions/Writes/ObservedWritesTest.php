@@ -23,6 +23,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AtomicArchiveDocuments;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DirectArchiveDocuments;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FailingWriteObserver;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FailingWriteObserverNamedArchive;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ModeChangingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
@@ -75,7 +76,7 @@ final class ObservedWritesTest extends PackageTestCase
         ExtensionLog::reset();
         EventLog::reset();
         WriteLog::reset();
-        config(['rest.extensions' => ['history' => RecordingWriteObserver::class]]);
+        config(['rest.extensions' => [RecordingWriteObserver::class]]);
         Rest::resource('written-documents', WrittenDocumentController::class)
             ->withSoftDeletes()
             ->register();
@@ -222,7 +223,7 @@ final class ObservedWritesTest extends PackageTestCase
     #[Test]
     public function it_runs_each_chunk_in_its_transaction_when_an_observer_changes_the_action(): void
     {
-        config(['rest.extensions' => ['history' => RecordingWriteObserver::class, 'mode' => ModeChangingExtension::class]]);
+        config(['rest.extensions' => [RecordingWriteObserver::class, ModeChangingExtension::class]]);
         $this->seedDocuments(null, null);
         EventLog::listen();
 
@@ -276,20 +277,20 @@ final class ObservedWritesTest extends PackageTestCase
         $this->assertSame([[1, 'Annual report', true], [2, 'Budget', false]], $this->documents());
     }
 
-    /** @return array<string, array{array<string, class-string>, list<string>}> */
+    /** @return array<string, array{list<class-string>, list<string>}> */
     public static function failingOrders(): array
     {
         $recorded = 'observe mutate update:1,create:#';
 
         return [
-            'failing last' => [['history' => RecordingWriteObserver::class, 'webhooks' => FailingWriteObserver::class], [$recorded, 'observe failing']],
-            'failing last, configured first' => [['webhooks' => FailingWriteObserver::class, 'history' => RecordingWriteObserver::class], [$recorded, 'observe failing']],
-            'failing first' => [['archive' => FailingWriteObserver::class, 'history' => RecordingWriteObserver::class], ['observe failing', $recorded]],
+            'failing last' => [[RecordingWriteObserver::class, FailingWriteObserver::class], [$recorded, 'observe failing']],
+            'failing last, configured first' => [[FailingWriteObserver::class, RecordingWriteObserver::class], [$recorded, 'observe failing']],
+            'failing first' => [[FailingWriteObserverNamedArchive::class, RecordingWriteObserver::class], ['observe failing', $recorded]],
         ];
     }
 
     /**
-     * @param  array<string, class-string>  $extensions
+     * @param  list<class-string>  $extensions
      * @param  list<string>  $lines
      */
     #[Test]
@@ -409,7 +410,7 @@ final class ObservedWritesTest extends PackageTestCase
         $this->seedDocuments(null, null);
 
         $without = $this->scheduledCallbacks([], $method, $uri, $body, $answer);
-        $with = $this->scheduledCallbacks(['history' => RecordingWriteObserver::class], $method, $uri, $body, $answer);
+        $with = $this->scheduledCallbacks([RecordingWriteObserver::class], $method, $uri, $body, $answer);
 
         $this->assertSame($without + $transactions, $with);
         $this->assertSame([], WriteLog::$writes);
@@ -460,7 +461,7 @@ final class ObservedWritesTest extends PackageTestCase
     #[Test]
     public function it_hands_copies_that_do_not_change_the_response(): void
     {
-        config(['rest.extensions' => ['history' => ChangingWriteObserver::class]]);
+        config(['rest.extensions' => [ChangingWriteObserver::class]]);
         $this->seedDocuments(null, null);
 
         $destroyed = $this->deleteJson('/written-documents', ['resources' => [1, 2]]);
@@ -473,7 +474,7 @@ final class ObservedWritesTest extends PackageTestCase
     }
 
     /**
-     * @param  array<string, class-string>  $extensions
+     * @param  list<class-string>  $extensions
      * @param  array<string, mixed>  $body
      * @param  Closure(?int): array<string, mixed>  $answer
      */

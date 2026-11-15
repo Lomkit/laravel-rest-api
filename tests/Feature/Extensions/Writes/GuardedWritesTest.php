@@ -39,6 +39,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FrozenGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FrozenRowGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ModeChangingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaGuard;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaGuardNamedArchive;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
@@ -91,7 +92,7 @@ final class GuardedWritesTest extends PackageTestCase
         EventLog::reset();
         WriteLog::reset();
         WrittenDocumentResource::$confirming = false;
-        config(['rest.extensions' => ['quota' => RecordingGuard::class]]);
+        config(['rest.extensions' => [RecordingGuard::class]]);
         Rest::resource('written-documents', WrittenDocumentController::class)
             ->withSoftDeletes()
             ->register();
@@ -252,7 +253,7 @@ final class GuardedWritesTest extends PackageTestCase
     #[DataProvider('refusedWrites')]
     public function it_answers_a_refusal_and_writes_nothing(string $method, string $uri, array $body, ?string $deletedAt, bool $transacted): void
     {
-        config(['rest.extensions' => ['quota' => QuotaGuard::class]]);
+        config(['rest.extensions' => [QuotaGuard::class]]);
         $this->seedDocuments($deletedAt, $deletedAt);
         $events = [ResourceMutated::class, ResourceDestroyed::class, ResourceRestored::class, ResourceForceDestroyed::class, ActionOperated::class];
         Event::fake($events);
@@ -275,7 +276,7 @@ final class GuardedWritesTest extends PackageTestCase
     #[Test]
     public function it_refuses_with_403_by_default(): void
     {
-        config(['rest.extensions' => ['frozen' => FrozenGuard::class]]);
+        config(['rest.extensions' => [FrozenGuard::class]]);
         $this->seedDocuments(null, null);
 
         $this->deleteJson('/written-documents', ['resources' => [1, 2]])
@@ -285,26 +286,28 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertSame([[1, null], [2, null]], $this->rows());
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>, int, string}> */
     public static function guardOrders(): array
     {
         return [
-            'frozen first' => [['frozen' => FrozenGuard::class, 'quota' => QuotaGuard::class]],
-            'quota first' => [['quota' => QuotaGuard::class, 'frozen' => FrozenGuard::class]],
+            'frozen first' => [[FrozenGuard::class, QuotaGuard::class], 403, 'The archive is frozen.'],
+            'quota first' => [[QuotaGuard::class, FrozenGuard::class], 403, 'The archive is frozen.'],
+            'quota named archive, configured last' => [[FrozenGuard::class, QuotaGuardNamedArchive::class], 429, 'The monthly quota is reached.'],
+            'quota named archive, configured first' => [[QuotaGuardNamedArchive::class, FrozenGuard::class], 429, 'The monthly quota is reached.'],
         ];
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('guardOrders')]
-    public function it_answers_the_refusal_of_the_first_guard_in_name_order(array $extensions): void
+    public function it_answers_the_refusal_of_the_first_guard_in_name_order(array $extensions, int $status, string $message): void
     {
         config(['rest.extensions' => $extensions]);
         $this->seedDocuments(null, null);
 
         $this->deleteJson('/written-documents', ['resources' => [1, 2]])
-            ->assertForbidden()
-            ->assertExactJson(['message' => 'The archive is frozen.']);
+            ->assertStatus($status)
+            ->assertExactJson(['message' => $message]);
     }
 
     /** @return array<string, array{int}> */
@@ -447,7 +450,7 @@ final class GuardedWritesTest extends PackageTestCase
     #[Test]
     public function it_refuses_a_whole_action_on_a_frozen_row_and_writes_nothing(): void
     {
-        config(['rest.extensions' => ['frozen' => FrozenRowGuard::class]]);
+        config(['rest.extensions' => [FrozenRowGuard::class]]);
         WriteLog::$frozen = [2];
         $this->seedDocuments(null, null);
         Event::fake([ActionOperated::class]);
@@ -467,7 +470,7 @@ final class GuardedWritesTest extends PackageTestCase
     #[Test]
     public function it_guards_each_transaction_of_an_action_whose_mode_an_extension_changes(): void
     {
-        config(['rest.extensions' => ['mode' => ModeChangingExtension::class, 'quota' => RecordingGuard::class]]);
+        config(['rest.extensions' => [ModeChangingExtension::class, RecordingGuard::class]]);
         WriteLog::$refuseAt = 2;
         $this->seedDocuments(null, null);
         EventLog::listen();
@@ -538,7 +541,7 @@ final class GuardedWritesTest extends PackageTestCase
     #[DataProvider('handledModes')]
     public function it_asks_the_extensions_in_handle_and_notifies_them_except_for_a_whole_run(ActionTransaction $mode, string $uriKey, array $lines): void
     {
-        config(['rest.extensions' => ['history' => RecordingWriteObserver::class, 'quota' => RecordingGuard::class]]);
+        config(['rest.extensions' => [RecordingWriteObserver::class, RecordingGuard::class]]);
         $this->seedDocuments(null, null);
         $request = RestRequest::create('/')->setContainer($this->app);
         $request->setUserResolver(fn (): ArchiveUser => $this->grace);
@@ -556,7 +559,7 @@ final class GuardedWritesTest extends PackageTestCase
     #[Test]
     public function it_runs_an_action_that_is_not_bound_to_a_resource_without_extensions(): void
     {
-        config(['rest.extensions' => ['history' => RecordingWriteObserver::class, 'quota' => RecordingGuard::class]]);
+        config(['rest.extensions' => [RecordingWriteObserver::class, RecordingGuard::class]]);
         $this->seedDocuments(null, null);
         $request = RestRequest::create('/')->setContainer($this->app);
         $resource = $request->context()->resource(WrittenDocumentResource::class);
@@ -611,7 +614,7 @@ final class GuardedWritesTest extends PackageTestCase
     #[Test]
     public function it_writes_nothing_that_a_guard_changes(): void
     {
-        config(['rest.extensions' => ['quota' => ChangingGuard::class]]);
+        config(['rest.extensions' => [ChangingGuard::class]]);
         $this->seedDocuments(null, null);
 
         $this->postJson('/written-documents/mutate', ['mutate' => [['operation' => 'update', 'key' => 1, 'attributes' => ['archived' => true]]]])
@@ -768,7 +771,7 @@ final class GuardedWritesTest extends PackageTestCase
     #[WithConfig('queue.default', 'database')]
     public function it_fails_a_refused_job_without_a_retry(string $uriKey): void
     {
-        config(['rest.extensions' => ['frozen' => FrozenRowGuard::class], 'queue.failed.database' => config('database.default')]);
+        config(['rest.extensions' => [FrozenRowGuard::class], 'queue.failed.database' => config('database.default')]);
         $failures = [];
         Event::listen(JobFailed::class, function (JobFailed $event) use (&$failures): void {
             $failures[] = [$event->exception::class, $event->exception->getMessage(), $event->exception instanceof WriteRefused ? $event->exception->reason : null];

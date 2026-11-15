@@ -10,6 +10,12 @@ use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 final class TeamReadingObserver extends Extension implements ObservesReads
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'reads';
+    }
+
+    #[\Override]
     public function observeRead(ReadObservationContext $context): void
     {
         foreach ($context->rows ?? [] as $row) {

@@ -12,6 +12,12 @@ use Lomkit\Rest\Extensions\Kinds\ObservesWrites;
 final class ModeChangingExtension extends Extension implements GuardsWrites, ObservesWrites
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'mode';
+    }
+
+    #[\Override]
     public function guardWrite(WriteGuardContext $context): void
     {
         if ($context->action !== null) {

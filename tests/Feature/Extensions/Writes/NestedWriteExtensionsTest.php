@@ -82,7 +82,7 @@ final class NestedWriteExtensionsTest extends PackageTestCase
     #[Test]
     public function it_refuses_a_nested_write_with_the_guard_of_the_related_resource(): void
     {
-        config(['rest.extensions' => ['loans' => LoanWritesExtension::class]]);
+        config(['rest.extensions' => [LoanWritesExtension::class]]);
         WriteLog::$refuseAt = 1;
         WriteLog::$refusal = 'Loans are frozen.';
         WriteLog::$status = 423;
@@ -100,7 +100,7 @@ final class NestedWriteExtensionsTest extends PackageTestCase
     #[Test]
     public function it_asks_a_guard_once_for_each_resource_of_a_mutation(): void
     {
-        config(['rest.extensions' => ['quota' => RecordingGuard::class]]);
+        config(['rest.extensions' => [RecordingGuard::class]]);
 
         $this->postJson('/api/books/mutate', self::NESTED)
             ->assertOk()
@@ -116,7 +116,7 @@ final class NestedWriteExtensionsTest extends PackageTestCase
     #[Test]
     public function it_notifies_the_observer_of_the_related_resource_of_its_nested_rows(): void
     {
-        config(['rest.extensions' => ['loans' => LoanWritesExtension::class]]);
+        config(['rest.extensions' => [LoanWritesExtension::class]]);
 
         $this->postJson('/api/books/mutate', self::NESTED)
             ->assertOk()
@@ -129,7 +129,7 @@ final class NestedWriteExtensionsTest extends PackageTestCase
     #[Test]
     public function it_notifies_an_observer_once_for_each_resource_with_its_own_rows(): void
     {
-        config(['rest.extensions' => ['history' => RecordingWriteObserver::class]]);
+        config(['rest.extensions' => [RecordingWriteObserver::class]]);
 
         $this->postJson('/api/books/mutate', self::NESTED)
             ->assertOk()
@@ -145,7 +145,7 @@ final class NestedWriteExtensionsTest extends PackageTestCase
     #[Test]
     public function it_hands_the_rows_that_a_sync_detaches_to_the_guard_and_the_observer(): void
     {
-        config(['rest.extensions' => ['history' => RecordingWriteObserver::class, 'quota' => RecordingGuard::class]]);
+        config(['rest.extensions' => [RecordingWriteObserver::class, RecordingGuard::class]]);
 
         $this->postJson('/api/books/mutate', self::SYNC)
             ->assertOk()
@@ -178,7 +178,7 @@ final class NestedWriteExtensionsTest extends PackageTestCase
     #[DataProvider('unlinkedShelves')]
     public function it_refuses_the_unlinking_of_a_held_row_whether_named_or_left_out_of_a_sync(array $shelves): void
     {
-        config(['rest.extensions' => ['hold' => HeldShelfGuard::class]]);
+        config(['rest.extensions' => [HeldShelfGuard::class]]);
         $library = self::library();
 
         $this->postJson('/api/books/mutate', ['mutate' => [['operation' => 'update', 'key' => 101, 'relations' => ['shelves' => $shelves]]]])
@@ -208,7 +208,7 @@ final class NestedWriteExtensionsTest extends PackageTestCase
         }
 
         $this->app?->bind(BookResource::class, LinkCheckedBookResource::class);
-        config(['rest.extensions' => ['quota' => RecordingGuard::class]]);
+        config(['rest.extensions' => [RecordingGuard::class]]);
         $library = self::library();
 
         $this->postJson('/api/books/mutate', ['mutate' => [$entry]])
@@ -233,14 +233,14 @@ final class NestedWriteExtensionsTest extends PackageTestCase
     public function it_neither_asks_nor_schedules_an_extension_of_a_resource_that_a_mutation_does_not_reach(): void
     {
         $without = $this->scheduledCallbacks([]);
-        $with = $this->scheduledCallbacks(['loans' => LoanWritesExtension::class]);
+        $with = $this->scheduledCallbacks([LoanWritesExtension::class]);
 
         $this->assertSame($without, $with);
         $this->assertSame([], WriteLog::$guards);
         $this->assertSame([], WriteLog::$writes);
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     private function scheduledCallbacks(array $extensions): int
     {
         config(['rest.extensions' => $extensions]);

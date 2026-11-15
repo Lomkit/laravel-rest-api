@@ -12,6 +12,12 @@ use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 final class RecordingGuard extends Extension implements GuardsWrites
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
+    #[\Override]
     public function guardWrite(WriteGuardContext $context): void
     {
         WriteLog::$guards[] = $context;

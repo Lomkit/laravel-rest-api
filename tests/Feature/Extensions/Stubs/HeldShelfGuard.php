@@ -11,6 +11,12 @@ use Lomkit\Rest\Tests\Fixtures\Library\ShelfResource;
 final class HeldShelfGuard extends Extension implements GuardsWrites
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'hold';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === ShelfResource::class;

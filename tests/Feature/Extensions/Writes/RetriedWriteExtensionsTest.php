@@ -73,7 +73,7 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
         EventLog::reset();
         WriteLog::reset();
         Interruptions::reset([]);
-        config(['rest.extensions' => ['quota' => RecordingGuard::class, 'history' => RecordingWriteObserver::class]]);
+        config(['rest.extensions' => [RecordingGuard::class, RecordingWriteObserver::class]]);
 
         foreach (['Annual report', 'Roadmap', 'Minutes'] as $title) {
             SecondaryDocument::query()->create(['title' => $title]);

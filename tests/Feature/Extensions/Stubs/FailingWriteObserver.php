@@ -8,8 +8,14 @@ use Lomkit\Rest\Extensions\Kinds\ObservesWrites;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use RuntimeException;
 
-final class FailingWriteObserver extends Extension implements ObservesWrites
+class FailingWriteObserver extends Extension implements ObservesWrites
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'webhooks';
+    }
+
     #[\Override]
     public function observeWrite(WriteObservationContext $context): void
     {

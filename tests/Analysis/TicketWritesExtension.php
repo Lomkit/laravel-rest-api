@@ -17,6 +17,12 @@ use Lomkit\Rest\Mutations\WrittenRow;
 
 final class TicketWritesExtension extends Extension implements GuardsWrites, ObservesReads, ObservesWrites
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'ticket_writes';
+    }
+
     /** @var list<string> */
     private array $history = [];
 

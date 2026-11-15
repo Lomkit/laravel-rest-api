@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\ObservesWrites;
 final class ChangingWriteObserver extends Extension implements ObservesWrites
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'history';
+    }
+
+    #[\Override]
     public function observeWrite(WriteObservationContext $context): void
     {
         foreach ($context->rows ?? [] as $row) {

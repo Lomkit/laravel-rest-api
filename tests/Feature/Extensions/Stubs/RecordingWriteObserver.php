@@ -11,6 +11,12 @@ use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 final class RecordingWriteObserver extends Extension implements ObservesWrites
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'history';
+    }
+
+    #[\Override]
     public function observeWrite(WriteObservationContext $context): void
     {
         WriteLog::$writes[] = $context;
