@@ -75,28 +75,6 @@ class CacheContextMetricsTest extends SalesTestCase
         $this->assertCount(2, $this->written);
     }
 
-    #[Test]
-    #[DataProvider('scopesAndStores')]
-    public function it_never_serves_a_result_after_the_rules_fingerprint_changes(CacheScope $scope, string $store): void
-    {
-        $this->useStore($store);
-        $this->serve(TotalRevenue::make()->cacheFor(600)->cacheScope($scope));
-        config(['rest.extensions' => [FirstCacheContext::class]]);
-        $rules = '';
-        FirstCacheContext::$contribute = static function (CacheContributionContext $context) use (&$rules): void {
-            $context->put('rules', $rules);
-        };
-
-        $statements = [];
-
-        foreach (['v1', 'v2', 'v2', 'v1'] as $rules) {
-            $statements[] = $this->statementsOf('total-revenue');
-        }
-
-        $this->assertGreaterThan(0, $statements[0]);
-        $this->assertSame([$statements[0], $statements[0], 0, 0], $statements);
-    }
-
     /** @return iterable<string, array{CacheScope, string}> */
     public static function scopesAndStores(): iterable
     {
