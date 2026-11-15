@@ -12,7 +12,7 @@ final class TeamReadingObserver extends Extension implements ObservesReads
     #[\Override]
     public function observeRead(ReadObservationContext $context): void
     {
-        foreach ($context->rows as $row) {
+        foreach ($context->rows ?? [] as $row) {
             EventLog::record('read team '.$row->getAttribute('team_id'));
         }
     }

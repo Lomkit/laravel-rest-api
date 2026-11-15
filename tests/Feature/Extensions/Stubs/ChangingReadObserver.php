@@ -13,7 +13,7 @@ final class ChangingReadObserver extends Extension implements ObservesReads
     #[\Override]
     public function observeRead(ReadObservationContext $context): void
     {
-        foreach ($context->rows as $row) {
+        foreach ($context->rows ?? [] as $row) {
             $row->setAttribute('title', 'Changed');
 
             if ($row->relationLoaded('team') && $row->getRelation('team') !== null) {

@@ -13,7 +13,7 @@ final readonly class ReadObservationContext
     /**
      * @internal
      *
-     * @param  list<Model>  $rows
+     * @param  list<Model>|null  $rows
      * @param  array<array-key, mixed>|null  $result
      * @param  array<array-key, mixed>|null  $details
      */
@@ -21,7 +21,7 @@ final readonly class ReadObservationContext
         public Resource $resource,
         public Endpoint $endpoint,
         public ?Authenticatable $user,
-        public array $rows = [],
+        public ?array $rows = null,
         public ?int $total = null,
         public ?int $page = null,
         public ?int $perPage = null,

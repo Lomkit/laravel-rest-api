@@ -57,7 +57,7 @@ final class TicketWritesExtension extends Extension implements GuardsWrites, Obs
     #[\Override]
     public function observeRead(ReadObservationContext $context): void
     {
-        $this->history[] = $context->endpoint->value.' '.count($context->rows).' of '.($context->total ?? 0).' '.json_encode([$context->result, $context->details, $context->metric?->uriKey()], JSON_THROW_ON_ERROR);
+        $this->history[] = $context->endpoint->value.' '.count($context->rows ?? []).' of '.($context->total ?? 0).' '.json_encode([$context->result, $context->details, $context->metric?->uriKey()], JSON_THROW_ON_ERROR);
     }
 
     /** @return list<string> */

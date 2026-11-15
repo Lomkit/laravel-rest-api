@@ -21,7 +21,7 @@ final class RecordingReadObserver extends Extension implements ObservesReads
     private static function subject(ReadObservationContext $context): string
     {
         if ($context->endpoint === Endpoint::Search) {
-            return implode(',', array_map(fn (Model $row): string => $row->getKey().' '.$row->getAttribute('title'), $context->rows))." of {$context->total}";
+            return implode(',', array_map(fn (Model $row): string => $row->getKey().' '.$row->getAttribute('title'), $context->rows ?? []))." of {$context->total}";
         }
 
         if ($context->endpoint === Endpoint::Metric) {

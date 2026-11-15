@@ -138,7 +138,7 @@ final class ObservedReadsTest extends HelpdeskTestCase
             $this->assertSame(Endpoint::Metric, $context->endpoint);
             $this->assertInstanceOf(OpenTicketCount::class, $context->metric);
             $this->assertSame(['type' => 'value', 'value' => 2, 'previous' => null], $context->result);
-            $this->assertSame([], $context->rows);
+            $this->assertNull($context->rows);
         }
     }
 
@@ -150,6 +150,17 @@ final class ObservedReadsTest extends HelpdeskTestCase
         $this->assertSame(['describing', 'described fields,limits,meta', 'read details fields,limits,meta'], EventLog::$lines);
         $this->assertSame(self::DETAILS['data'], WriteLog::$reads[0]->details);
         $this->assertSame(Endpoint::Details, WriteLog::$reads[0]->endpoint);
+        $this->assertNull(WriteLog::$reads[0]->rows);
+    }
+
+    #[Test]
+    public function it_hands_an_empty_list_for_a_search_without_rows(): void
+    {
+        $this->postJson('/observed-tickets/search', ['search' => ['filters' => [['field' => 'status', 'value' => 'archived']]]])->assertOk();
+
+        $this->assertCount(1, WriteLog::$reads);
+        $this->assertSame([], WriteLog::$reads[0]->rows);
+        $this->assertSame(0, WriteLog::$reads[0]->total);
     }
 
     /** @return array<string, array{string, string, array<string, mixed>, bool}> */
