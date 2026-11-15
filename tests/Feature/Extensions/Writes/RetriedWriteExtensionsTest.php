@@ -8,6 +8,7 @@ use Illuminate\Database\Events\TransactionBeginning;
 use Illuminate\Database\Events\TransactionCommitted;
 use Illuminate\Database\Events\TransactionRolledBack;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Lomkit\Rest\Facades\Rest;
@@ -267,6 +268,32 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
         $this->assertSame(['begin secondary', 'guard destroy 1,3', 'rollback secondary'], EventLog::$lines);
         $this->assertCount(1, WriteLog::$guards);
         $this->assertSame(['Annual report', 'Roadmap', 'Minutes'], SecondaryDocument::query()->orderBy('id')->pluck('title')->all());
+    }
+
+    #[Test]
+    public function it_notifies_a_write_while_another_connection_has_a_transaction_open(): void
+    {
+        DB::connection()->beginTransaction();
+
+        $this->deleteJson('/retried-documents', ['resources' => [1, 3]])->assertOk()->assertExactJson(self::DESTROYED);
+
+        $this->assertCount(1, WriteLog::$writes);
+        DB::connection()->rollBack();
+        $this->assertCount(1, WriteLog::$writes);
+        $this->assertSame(['Roadmap'], SecondaryDocument::query()->pluck('title')->all());
+    }
+
+    #[Test]
+    public function it_waits_for_a_transaction_of_the_app_on_the_connection_of_the_resource(): void
+    {
+        DB::connection('secondary')->beginTransaction();
+
+        $this->deleteJson('/retried-documents', ['resources' => [1, 3]])->assertOk()->assertExactJson(self::DESTROYED);
+
+        $this->assertSame([], WriteLog::$writes);
+        DB::connection('secondary')->commit();
+        $this->assertCount(1, WriteLog::$writes);
+        $this->assertSame(['Roadmap'], SecondaryDocument::query()->pluck('title')->all());
     }
 
     /** @return array{operations: list<array{operation: string, key: int}>} */

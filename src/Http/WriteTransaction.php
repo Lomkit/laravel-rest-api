@@ -3,7 +3,10 @@
 namespace Lomkit\Rest\Http;
 
 use Closure;
+use Illuminate\Container\Container;
 use Illuminate\Database\Connection;
+use Illuminate\Database\DatabaseTransactionRecord;
+use Illuminate\Database\DatabaseTransactionsManager;
 use Illuminate\Database\Eloquent\Model;
 
 final readonly class WriteTransaction
@@ -57,7 +60,25 @@ final readonly class WriteTransaction
     /** @param Closure(): void $callback */
     public function afterCommit(Closure $callback): void
     {
-        $this->connection->afterCommit($callback);
+        $container = Container::getInstance();
+        $transactions = $container->bound('db.transactions') ? $container->make('db.transactions') : null;
+
+        if (! $transactions instanceof DatabaseTransactionsManager) {
+            $this->connection->afterCommit($callback);
+
+            return;
+        }
+
+        $pending = $transactions->callbackApplicableTransactions()
+            ->last(fn (DatabaseTransactionRecord $record): bool => $record->connection === $this->connection->getName());
+
+        if ($pending === null) {
+            $callback();
+
+            return;
+        }
+
+        $pending->addCallback($callback);
     }
 
     private function restore(): void
