@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Meta;
 
 use ArrayObject;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
@@ -22,6 +23,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnencodableMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueSearchMeta;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -216,6 +218,30 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $path, $type));
+
+        $this->postJson('/meta-tickets/search', self::SEARCH);
+    }
+
+    #[Test]
+    public function it_refuses_a_model_in_the_meta(): void
+    {
+        MetaLog::$value = ['ticket' => new Ticket(['title' => 'Printer jam'])];
+        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.ticket', Ticket::class));
+
+        $this->postJson('/meta-tickets/search', self::SEARCH);
+    }
+
+    #[Test]
+    public function it_refuses_an_eloquent_collection_in_the_meta(): void
+    {
+        MetaLog::$value = ['tickets' => new EloquentCollection([new Ticket(['title' => 'Printer jam'])])];
+        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.tickets', EloquentCollection::class));
 
         $this->postJson('/meta-tickets/search', self::SEARCH);
     }

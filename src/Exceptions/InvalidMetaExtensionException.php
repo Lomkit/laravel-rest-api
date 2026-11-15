@@ -23,7 +23,7 @@ final class InvalidMetaExtensionException extends ExtensionException
 
     public static function notEncodable(string $name, string $class, string $resource, string $method, string $path, string $type): self
     {
-        return self::about($name, "The [{$name}] extension {$class} returns {$type} at [{$path}] from {$method}() for {$resource}, which the response cannot encode as JSON. Return null, booleans, integers, finite floats, strings, arrays, stdClass, backed enums or JsonSerializable objects.");
+        return self::about($name, "The [{$name}] extension {$class} returns {$type} at [{$path}] from {$method}() for {$resource}, which extension meta does not accept. Return null, booleans, integers, finite floats, strings, arrays, stdClass, backed enums or JsonSerializable objects; for a model or an Eloquent collection, which would render every visible attribute, return the values the client needs.");
     }
 
     public static function notJson(string $name, string $class, string $resource, string $method, string $reason): self

@@ -20,6 +20,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionDetailsMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnencodableMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueDetailsMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -134,6 +135,18 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', 'value.value.list.0', 'ArrayObject'));
+
+        $this->getJson('/meta-tickets');
+    }
+
+    #[Test]
+    public function it_refuses_a_model_in_the_details_meta(): void
+    {
+        MetaLog::$value = ['list' => [new Ticket(['title' => 'Printer jam'])]];
+        config(['rest.extensions' => ['value' => ValueDetailsMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', 'value.value.list.0', Ticket::class));
 
         $this->getJson('/meta-tickets');
     }

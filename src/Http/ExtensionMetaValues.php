@@ -4,6 +4,8 @@ namespace Lomkit\Rest\Http;
 
 use BackedEnum;
 use Closure;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
 use JsonException;
 use JsonSerializable;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
@@ -44,6 +46,10 @@ final readonly class ExtensionMetaValues
     /** @param Closure(string, string): InvalidMetaExtensionException $refuse */
     private static function ensureEncodable(mixed $value, string $path, int $depth, Closure $refuse): void
     {
+        if ($value instanceof Model || $value instanceof EloquentCollection) {
+            throw $refuse($path, get_debug_type($value));
+        }
+
         if ($value === null || is_bool($value) || is_int($value) || is_string($value) || $value instanceof JsonSerializable || $value instanceof BackedEnum) {
             return;
         }
