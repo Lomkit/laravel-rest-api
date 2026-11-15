@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 use Lomkit\Rest\Exceptions\InvalidActionException;
 use Lomkit\Rest\Exceptions\InvalidMetricException;
 use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
+use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
+use Lomkit\Rest\Http\Routing\RouteExtensions;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeclarationLog;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketController;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketResource;
@@ -129,7 +131,7 @@ class ClassDeclarationRoutesTest extends DeclarationTestCase
     {
         $resolved = [];
         $this->app->beforeResolving(function (string $abstract) use (&$resolved): void {
-            if (! str_starts_with($abstract, 'Lomkit\\Rest\\Extensions\\') && ! str_starts_with($abstract, 'Lomkit\\Rest\\Http\\Routing\\')) {
+            if (! in_array($abstract, [RuntimeExtensions::class, RouteExtensions::class], true)) {
                 $resolved[] = $abstract;
             }
         });
