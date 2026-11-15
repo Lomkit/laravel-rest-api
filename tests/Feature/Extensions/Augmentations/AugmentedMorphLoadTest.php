@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentation;
 use Lomkit\Rest\Tests\Feature\MorphTargets\MorphTargetsTestCase;
 use Lomkit\Rest\Tests\Fixtures\Library\LabelResource;
@@ -17,14 +18,7 @@ use PHPUnit\Framework\Attributes\Test;
 class AugmentedMorphLoadTest extends MorphTargetsTestCase
 {
     use CapturesQueries;
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        FirstAugmentation::$augment = null;
-
-        parent::tearDown();
-    }
+    use ResetsExtensionStubs;
 
     #[Test]
     public function it_eager_loads_a_morph_to_relation(): void

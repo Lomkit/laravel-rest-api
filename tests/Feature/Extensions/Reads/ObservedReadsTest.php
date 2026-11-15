@@ -8,22 +8,18 @@ use Lomkit\Rest\Exceptions\MissingColumnException;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingReadObserver;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingReadObserverNamedFirst;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingReadObserverNamedSecond;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FailingReadObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ObservedTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ObservedTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OpenTicketCount;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserver;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserverNamedFirst;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserverNamedSecond;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamReadingObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
-use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
@@ -33,6 +29,8 @@ use RuntimeException;
 
 final class ObservedReadsTest extends HelpdeskTestCase
 {
+    use ResetsExtensionStubs;
+
     private const array SEARCH = ['search' => [
         'filters' => [['field' => 'status', 'value' => 'open']],
         'includes' => [['relation' => 'team']],
@@ -63,10 +61,6 @@ final class ObservedReadsTest extends HelpdeskTestCase
     {
         parent::setUp();
 
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
-        MaskingFields::reset();
         $this->travelTo('2026-11-08 10:00:00');
         $this->ids = array_map(fn (Ticket $ticket): int => $ticket->getKey(), $this->seedTickets());
         $this->billing = Team::query()
@@ -76,17 +70,6 @@ final class ObservedReadsTest extends HelpdeskTestCase
         $this->lead = new GenericUser(['id' => TicketPolicy::LEAD]);
         $this->actingAs($this->lead);
         config(['rest.extensions' => [RecordingReadObserver::class]]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
-        MaskingFields::reset();
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -212,21 +195,12 @@ final class ObservedReadsTest extends HelpdeskTestCase
         $this->json($method, $uri, $body);
     }
 
-    /** @return array<string, array{list<class-string>}> */
-    public static function readOrders(): array
-    {
-        return [
-            'changing first' => [[ChangingReadObserverNamedFirst::class, RecordingReadObserverNamedSecond::class]],
-            'recording first' => [[RecordingReadObserverNamedFirst::class, ChangingReadObserverNamedSecond::class]],
-        ];
-    }
-
-    /** @param list<class-string> $extensions */
     #[Test]
-    #[DataProvider('readOrders')]
-    public function it_hands_each_extension_its_own_copies(array $extensions): void
+    public function it_hands_each_extension_its_own_copies(): void
     {
-        config(['rest.extensions' => $extensions]);
+        ChangingReadObserver::$named = 'first';
+        RecordingReadObserver::$named = 'second';
+        config(['rest.extensions' => [ChangingReadObserver::class, RecordingReadObserver::class]]);
 
         $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson($this->page());
 
@@ -234,17 +208,16 @@ final class ObservedReadsTest extends HelpdeskTestCase
         $this->assertSame([['Billing'], ['Billing']], array_map(fn (Model $row): array => [$row->getRelation('team')?->getAttribute('name')], WriteLog::$reads[0]->rows));
     }
 
-    /** @return array<string, array{list<class-string>, list<string>}> */
+    /** @return array<string, array{list<class-string>, string, string, list<string>}> */
     public static function configuredOrders(): array
     {
         $changingFirst = ['read readonly', 'read details fields,limits,meta'];
         $recordingFirst = ['read details fields,limits,meta', 'read readonly'];
 
         return [
-            'in name order' => [[ChangingReadObserverNamedFirst::class, RecordingReadObserverNamedSecond::class], $changingFirst],
-            'against name order' => [[RecordingReadObserverNamedSecond::class, ChangingReadObserverNamedFirst::class], $changingFirst],
-            'recording named first, in name order' => [[RecordingReadObserverNamedFirst::class, ChangingReadObserverNamedSecond::class], $recordingFirst],
-            'recording named first, against name order' => [[ChangingReadObserverNamedSecond::class, RecordingReadObserverNamedFirst::class], $recordingFirst],
+            'changing named first, against name order' => [[RecordingReadObserver::class, ChangingReadObserver::class], 'second', 'first', $changingFirst],
+            'recording named first, in name order' => [[RecordingReadObserver::class, ChangingReadObserver::class], 'first', 'second', $recordingFirst],
+            'recording named first, in class order' => [[ChangingReadObserver::class, RecordingReadObserver::class], 'first', 'second', $recordingFirst],
         ];
     }
 
@@ -254,8 +227,10 @@ final class ObservedReadsTest extends HelpdeskTestCase
      */
     #[Test]
     #[DataProvider('configuredOrders')]
-    public function it_notifies_the_read_observers_in_name_order(array $extensions, array $lines): void
+    public function it_notifies_the_read_observers_in_name_order(array $extensions, string $recording, string $changing, array $lines): void
     {
+        RecordingReadObserver::$named = $recording;
+        ChangingReadObserver::$named = $changing;
         config(['rest.extensions' => $extensions]);
 
         $this->getJson('/observed-tickets')->assertOk()->assertExactJson(self::DETAILS);

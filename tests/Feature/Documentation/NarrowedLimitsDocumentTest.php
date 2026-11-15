@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Auth\GenericUser;
 use Lomkit\Rest\Extensions\Contexts\LimitsContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstNarrowing;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
@@ -11,6 +12,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [FirstNarrowing::class])]
 class NarrowedLimitsDocumentTest extends DocumentationTestCase
 {
+    use ResetsExtensionStubs;
+
     /** @var list<?int> */
     private array $narrowed = [];
 
@@ -23,14 +26,6 @@ class NarrowedLimitsDocumentTest extends DocumentationTestCase
             $this->narrowed[] = $context->user?->getAuthIdentifier();
             $context->allowSizes([10]);
         };
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        FirstNarrowing::$narrow = null;
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -49,7 +44,7 @@ class NarrowedLimitsDocumentTest extends DocumentationTestCase
     {
         $schemas = $this->document()['components']['schemas'];
 
-        $this->assertArrayHasKey('total_capped', $schemas['ShowPaginated']['properties']);
+        $this->assertSame('{"type":"boolean","description":"True when more rows match than the resource counts: total is then a lower bound"}', json_encode($schemas['ShowPaginated']['properties']['total_capped']));
         $this->assertNotContains('total_capped', $schemas['ShowPaginated']['required']);
     }
 }

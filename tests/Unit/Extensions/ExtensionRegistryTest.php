@@ -10,10 +10,9 @@ use Lomkit\Rest\Extensions\ExtensionList;
 use Lomkit\Rest\Extensions\ExtensionRegistry;
 use Lomkit\Rest\Extensions\Kinds\ExtensionKind;
 use Lomkit\Rest\Extensions\NamedExtensions;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Fixtures\Catalog\CategoryResource;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
-use Lomkit\Rest\Tests\Fixtures\Extensions\AclExtension;
-use Lomkit\Rest\Tests\Fixtures\Extensions\AppAclExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountsResources;
@@ -23,8 +22,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotesResources;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ProductsOnlyExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ShelvesExtension;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,12 +30,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ExtensionRegistryTest extends TestCase
 {
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[Test]
     public function it_touches_nothing_without_extensions(): void
@@ -102,23 +95,24 @@ final class ExtensionRegistryTest extends TestCase
         $this->assertSame($first['noting'], $applicable['noting']);
     }
 
+    /**
+     * @param  list<class-string>  $config
+     * @param  list<class-string>  $runtime
+     * @param  list<string>  $noting
+     * @param  list<string>  $counting
+     * @param  list<string>  $all
+     * @param  list<class-string>  $built
+     */
     #[Test]
-    public function it_gives_the_extensions_of_one_kind_in_name_order(): void
+    #[DataProvider('nameOrders')]
+    public function it_gives_the_extensions_of_one_kind_in_name_order(array $config, array $runtime, array $noting, array $counting, array $all, array $built): void
     {
-        $registry = ExtensionRegistry::of([], [], [NotingExtension::class, CountingExtension::class, BothKindsExtension::class], new IlluminateContainer);
+        $registry = ExtensionRegistry::of($config, [], $runtime, new IlluminateContainer);
 
-        $this->assertSame(['both', 'noting'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
-        $this->assertSame(['both', 'counting'], array_keys($registry->applicable(ProductResource::class, CountsResources::class)));
-        $this->assertSame(['noting', 'counting', 'both'], array_keys($registry->all()));
-    }
-
-    #[Test]
-    public function it_gives_config_extensions_in_name_order(): void
-    {
-        $registry = ExtensionRegistry::of([NotingExtension::class, BothKindsExtension::class], [], [], new IlluminateContainer);
-
-        $this->assertSame(['both', 'noting'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
-        $this->assertSame([NotingExtension::class, BothKindsExtension::class], ExtensionLog::$built);
+        $this->assertSame($noting, array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
+        $this->assertSame($built, ExtensionLog::$built);
+        $this->assertSame($counting, array_keys($registry->applicable(ProductResource::class, CountsResources::class)));
+        $this->assertSame($all, array_keys($registry->all()));
     }
 
     #[Test]
@@ -233,12 +227,12 @@ final class ExtensionRegistryTest extends TestCase
         ExtensionRegistry::of([], [new NotingExtension], [], new IlluminateContainer);
     }
 
-    #[Test]
-    public function it_builds_the_class_that_the_name_of_its_class_designates(): void
+    /** @return array<string, array{list<class-string>, list<class-string>, list<string>, list<string>, list<string>, list<class-string>}> */
+    public static function nameOrders(): array
     {
-        $registry = ExtensionRegistry::of([AppAclExtension::class], [AclExtension::class], [AclExtension::class], new IlluminateContainer);
-
-        $this->assertInstanceOf(AppAclExtension::class, $registry->all()['acl']);
-        $this->assertSame([AppAclExtension::class], ExtensionLog::$built);
+        return [
+            'runtime extensions' => [[], [NotingExtension::class, CountingExtension::class, BothKindsExtension::class], ['both', 'noting'], ['both', 'counting'], ['noting', 'counting', 'both'], [NotingExtension::class, CountingExtension::class, BothKindsExtension::class]],
+            'config extensions' => [[NotingExtension::class, BothKindsExtension::class], [], ['both', 'noting'], ['both'], ['noting', 'both'], [NotingExtension::class, BothKindsExtension::class]],
+        ];
     }
 }

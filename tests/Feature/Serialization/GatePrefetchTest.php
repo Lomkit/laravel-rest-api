@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Serialization;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
@@ -34,38 +35,28 @@ class GatePrefetchTest extends HelpdeskTestCase
         config(['rest.authorizations.cache.enabled' => true]);
     }
 
+    /**
+     * @param  class-string<Resource>  $resource
+     * @param  list<class-string<Extension>>  $extensions
+     * @param  list<string>  $expected
+     */
     #[Test]
-    public function it_batches_no_row_gate_that_is_neither_cached_nor_prepared(): void
+    #[DataProvider('rowGates')]
+    public function it_batches_the_row_gates_that_are_cached_or_prepared(string $resource, array $extensions, bool $cache, array $expected): void
     {
-        $this->assertSame([], $this->rowChecks(TicketResource::class));
+        config(['rest.extensions' => $extensions, 'rest.authorizations.cache.enabled' => $cache]);
+
+        $this->assertSame($expected, $this->rowChecks($resource));
     }
 
-    #[Test]
-    public function it_batches_every_row_gate_of_a_resource_that_prepares(): void
+    /** @return iterable<string, array{class-string<Resource>, list<class-string<Extension>>, bool, list<string>}> */
+    public static function rowGates(): iterable
     {
-        $this->assertSame(['update 1', 'update 2', 'escalate 1', 'escalate 2'], $this->rowChecks(PreparedTicketResource::class));
-    }
-
-    #[Test]
-    public function it_batches_every_row_gate_when_a_row_check_extension_applies(): void
-    {
-        config(['rest.extensions' => [PreparingExtension::class]]);
-
-        $this->assertSame(['update 1', 'update 2', 'escalate 1', 'escalate 2'], $this->rowChecks(TicketResource::class));
-    }
-
-    #[Test]
-    public function it_batches_only_the_cached_row_gates_otherwise(): void
-    {
-        $this->assertSame(['update 1', 'update 2'], $this->rowChecks(CachedTicketResource::class));
-    }
-
-    #[Test]
-    public function it_batches_no_row_gate_of_a_cached_resource_when_the_cache_is_off(): void
-    {
-        config(['rest.authorizations.cache.enabled' => false]);
-
-        $this->assertSame([], $this->rowChecks(CachedTicketResource::class));
+        yield 'no row gate that is neither cached nor prepared' => [TicketResource::class, [], true, []];
+        yield 'every row gate of a resource that prepares' => [PreparedTicketResource::class, [], true, ['update 1', 'update 2', 'escalate 1', 'escalate 2']];
+        yield 'every row gate when a row check extension applies' => [TicketResource::class, [PreparingExtension::class], true, ['update 1', 'update 2', 'escalate 1', 'escalate 2']];
+        yield 'only the cached row gates otherwise' => [CachedTicketResource::class, [], true, ['update 1', 'update 2']];
+        yield 'no row gate of a cached resource when the cache is off' => [CachedTicketResource::class, [], false, []];
     }
 
     #[Test]

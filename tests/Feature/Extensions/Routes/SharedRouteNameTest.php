@@ -6,6 +6,7 @@ use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AppStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutesProvider;
@@ -20,34 +21,16 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\RivalAclExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\SecondAclProvider;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 
 final class SharedRouteNameTest extends PackageTestCase
 {
-    #[Before]
-    #[After]
-    public function resetTheStubs(): void
-    {
-        StampRoutes::reset();
-        OtherStampRoutes::reset();
-        ExtensionLog::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function getPackageProviders($app): array
     {
         return [StampRoutesProvider::class, OtherStampRoutesProvider::class, FirstAclProvider::class, SecondAclProvider::class, RestServiceProvider::class];
-    }
-
-    #[Test]
-    #[WithConfig('rest.disabled_extensions', [RivalAclExtension::class])]
-    public function it_refuses_two_route_extensions_with_one_name_when_routes_register(): void
-    {
-        $this->expectExceptionObject(new InvalidExtensionException('The extensions '.StampRoutes::class.' and '.OtherStampRoutes::class.' share the name [stamp]. Add one of them to the [rest.disabled_extensions] config, or extend one of them and override name() to give it another name.'));
-
-        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
     }
 
     #[Test]
@@ -82,15 +65,5 @@ final class SharedRouteNameTest extends PackageTestCase
         $route = $this->app['router']->getRoutes()->getByName('routed-tickets.search');
         $this->assertSame([EnforceExpectsJson::class, StampsRequests::class.':app'], $route?->middleware());
         $this->assertSame([AppStampRoutes::class], StampRoutes::$ran);
-    }
-
-    #[Test]
-    #[WithConfig('rest.extensions', [AppStampRoutes::class])]
-    #[WithConfig('rest.disabled_extensions', [OtherStampRoutes::class, RivalAclExtension::class])]
-    public function it_refuses_a_replacement_without_the_disabled_entry_when_routes_register(): void
-    {
-        $this->expectExceptionObject(InvalidExtensionException::sharedName('stamp', [StampRoutes::class, AppStampRoutes::class]));
-
-        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
     }
 }

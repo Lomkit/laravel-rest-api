@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Engine;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Extensions\Contexts\EngineProfileContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CollectionEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EarlyForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
@@ -19,25 +20,23 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionClass;
-use ReflectionProperty;
 
 #[Group('scout')]
 class EngineProfileProvidersTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        EngineLog::reset();
         ForeignProfile::reset();
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        EngineLog::reset();
         ForeignProfile::reset();
 
         parent::tearDown();
@@ -80,10 +79,15 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
     /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('rivals')]
-    public function it_refuses_two_extensions_that_claim_one_engine_in_any_order(array $extensions): void
+    public function it_refuses_two_extensions_that_claim_one_engine_in_any_order(array $extensions, bool $subclass): void
     {
         $this->useEngine(new ForeignEngine);
         config(['rest.extensions' => $extensions]);
+
+        if ($subclass) {
+            $this->app?->bind(RivalEngineProfiles::class, static fn (): RivalEngineProfiles => new class extends RivalEngineProfiles {});
+        }
+
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidEngineExtensionException::conflictingProfiles(ForeignEngine::class, VoucherResource::class, 'a', EarlyForeignEngineProfiles::class, 'b', RivalEngineProfiles::class));
@@ -91,26 +95,14 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
         $this->search('vouchers', ['text' => ['value' => 'report']]);
     }
 
-    /** @return array<string, array{list<class-string>}> */
+    /** @return array<string, array{list<class-string>, bool}> */
     public static function rivals(): array
     {
         return [
-            'in name order' => [[EarlyForeignEngineProfiles::class, RivalEngineProfiles::class]],
-            'in reverse order' => [[RivalEngineProfiles::class, EarlyForeignEngineProfiles::class]],
+            'in name order' => [[EarlyForeignEngineProfiles::class, RivalEngineProfiles::class], false],
+            'in reverse order' => [[RivalEngineProfiles::class, EarlyForeignEngineProfiles::class], false],
+            'with the second bound to a subclass' => [[EarlyForeignEngineProfiles::class, RivalEngineProfiles::class], true],
         ];
-    }
-
-    #[Test]
-    public function it_names_the_registered_class_of_a_provider_bound_to_a_subclass(): void
-    {
-        $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => [EarlyForeignEngineProfiles::class, RivalEngineProfiles::class]]);
-        $this->app?->bind(RivalEngineProfiles::class, static fn (): RivalEngineProfiles => new class extends RivalEngineProfiles {});
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidEngineExtensionException::conflictingProfiles(ForeignEngine::class, VoucherResource::class, 'a', EarlyForeignEngineProfiles::class, 'b', RivalEngineProfiles::class));
-
-        $this->search('vouchers', ['text' => ['value' => 'report']]);
     }
 
     #[Test]
@@ -161,10 +153,6 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
         $context = EngineLog::$contexts[0];
         $this->assertInstanceOf(EngineProfileContext::class, $context);
         $this->assertSame([VoucherResource::class, $engine], [$context->resource, $context->engine]);
-        $this->assertSame(['resource', 'engine'], array_map(
-            fn (ReflectionProperty $property): string => $property->getName(),
-            (new ReflectionClass(EngineProfileContext::class))->getProperties(ReflectionProperty::IS_PUBLIC),
-        ));
     }
 
     #[Test]

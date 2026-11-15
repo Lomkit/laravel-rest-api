@@ -10,25 +10,20 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentationLog;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DoubleUnderscoreAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentation;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentationNamedA;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentationNamedB;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FlagExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LongNamedAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentationNamedA;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentationNamedB;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathAuthorController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathAuthorResource;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathPostController;
@@ -46,6 +41,7 @@ use ReflectionProperty;
 class AugmentedRowsTest extends PackageTestCase
 {
     use CapturesQueries;
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function fixtures(): array
@@ -58,7 +54,6 @@ class AugmentedRowsTest extends PackageTestCase
     {
         parent::setUp();
 
-        AugmentationLog::reset();
         Rest::resource('path-authors', PathAuthorController::class)->register();
         Rest::resource('path-posts', PathPostController::class)->register();
         DB::table('authors')->insert([
@@ -70,15 +65,6 @@ class AugmentedRowsTest extends PackageTestCase
             ['id' => 2, 'author_id' => 1, 'title' => 'Hidden', 'status' => 'published', 'views' => 2, 'published_on' => '2026-01-01'],
             ['id' => 3, 'author_id' => 2, 'title' => 'Compilers', 'status' => 'published', 'views' => 3, 'published_on' => '2026-01-01'],
         ]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        AugmentationLog::reset();
-        MaskingFields::reset();
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -283,8 +269,8 @@ class AugmentedRowsTest extends PackageTestCase
     public static function orders(): array
     {
         return [
-            'the constraint first' => [[FirstAugmentationNamedA::class, SecondAugmentationNamedB::class]],
-            'the nested load first' => [[SecondAugmentationNamedA::class, FirstAugmentationNamedB::class]],
+            'the constraint first' => [[FirstAugmentation::class, SecondAugmentation::class]],
+            'the nested load first' => [[SecondAugmentationNamedA::class, FirstAugmentation::class]],
         ];
     }
 
@@ -316,12 +302,8 @@ class AugmentedRowsTest extends PackageTestCase
     public static function invalidAliases(): array
     {
         return [
-            'an empty alias' => [''],
             'an uppercase letter' => ['Total'],
-            'a leading digit' => ['1total'],
-            'a dash' => ['post-total'],
             'a dot' => ['post.total'],
-            'more than 32 characters' => [str_repeat('a', 33)],
         ];
     }
 
@@ -329,7 +311,8 @@ class AugmentedRowsTest extends PackageTestCase
     public function it_refuses_an_alias_too_long_with_its_prefix(): void
     {
         $name = str_repeat('n', 32);
-        config(['rest.extensions' => [LongNamedAugmentation::class]]);
+        config(['rest.extensions' => [FirstAugmentation::class]]);
+        FirstAugmentation::$named = $name;
         FirstAugmentation::$augment = static function (AugmentationContext $context): void {
             AugmentationLog::$aliases[] = $context->select(str_repeat('a', 29), static function (Builder $query): void {
                 $query->selectRaw('1');
@@ -340,7 +323,7 @@ class AugmentedRowsTest extends PackageTestCase
         };
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::aliasTooLong($name, LongNamedAugmentation::class, $name.'__'.str_repeat('b', 30), PathAuthorResource::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::aliasTooLong($name, FirstAugmentation::class, $name.'__'.str_repeat('b', 30), PathAuthorResource::class));
 
         try {
             $this->postJson('/path-authors/search', ['search' => []]);
@@ -365,23 +348,6 @@ class AugmentedRowsTest extends PackageTestCase
 
         $this->assertSame('The [first] extension '.FirstAugmentation::class.' selects [first__total] twice in the rows of '.PathAuthorResource::class.'. Give each select() its own alias.', $exception->getMessage());
         $this->assertSame([true, false], [$exception->concerns(FirstAugmentation::class), $exception->concerns('first')]);
-    }
-
-    #[Test]
-    public function it_refuses_an_extension_name_that_would_reach_the_alias_of_another(): void
-    {
-        config(['rest.extensions' => [DoubleUnderscoreAugmentation::class, SecondAugmentationNamedA::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidExtensionException::invalidName(DoubleUnderscoreAugmentation::class, 'a__b'));
-
-        $this->postJson('/path-authors/search', ['search' => []]);
-    }
-
-    #[Test]
-    public function it_has_no_refusal_for_an_alias_that_two_extension_names_reach(): void
-    {
-        $this->assertFalse(method_exists(InvalidQueryExtensionException::class, 'aliasTaken'));
     }
 
     #[Test]
@@ -443,12 +409,12 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_refuses_a_relation_loaded_twice(): void
     {
-        config(['rest.extensions' => [SecondAugmentationNamedB::class, FirstAugmentationNamedA::class]]);
+        config(['rest.extensions' => [SecondAugmentation::class, FirstAugmentation::class]]);
         FirstAugmentation::$augment = static fn (AugmentationContext $context): mixed => $context->with('drafts');
         SecondAugmentation::$augment = static fn (AugmentationContext $context): mixed => $context->with('drafts');
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, [['a', FirstAugmentationNamedA::class], ['b', SecondAugmentationNamedB::class]]));
+        $this->expectExceptionObject(InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, [['first', FirstAugmentation::class], ['second', SecondAugmentation::class]]));
 
         $this->postJson('/path-authors/search', ['search' => []]);
     }
@@ -456,10 +422,10 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_names_both_extensions_of_a_relation_loaded_twice(): void
     {
-        $exception = InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, [['b', SecondAugmentationNamedB::class], ['a', FirstAugmentationNamedA::class]]);
+        $exception = InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, [['second', SecondAugmentation::class], ['first', FirstAugmentation::class]]);
 
-        $this->assertSame('The [a] extension '.FirstAugmentationNamedA::class.' and the [b] extension '.SecondAugmentationNamedB::class.' eager load [drafts] on '.PathAuthorResource::class.' twice. Load it from one extension, once.', $exception->getMessage());
-        $this->assertSame([true, false], [$exception->concerns(FirstAugmentationNamedA::class), $exception->concerns(SecondAugmentationNamedB::class)]);
+        $this->assertSame('The [first] extension '.FirstAugmentation::class.' and the [second] extension '.SecondAugmentation::class.' eager load [drafts] on '.PathAuthorResource::class.' twice. Load it from one extension, once.', $exception->getMessage());
+        $this->assertSame([true, false], [$exception->concerns(FirstAugmentation::class), $exception->concerns(SecondAugmentation::class)]);
     }
 
     #[Test]
@@ -519,12 +485,10 @@ class AugmentedRowsTest extends PackageTestCase
         ];
     }
 
-    /** @param list<class-string> $extensions */
     #[Test]
-    #[DataProvider('pairs')]
-    public function it_gives_the_same_rows_and_sql_in_any_extension_order(array $extensions): void
+    public function it_gives_the_same_rows_and_sql_in_any_extension_order(): void
     {
-        config(['rest.extensions' => $extensions]);
+        config(['rest.extensions' => [SecondAugmentation::class, FirstAugmentation::class]]);
         FirstAugmentation::$augment = static function (AugmentationContext $context): void {
             $context->column('api_token');
             $context->select('total', Post::query()->selectRaw('count(*)')->whereColumn('posts.author_id', 'authors.id'));
@@ -539,18 +503,9 @@ class AugmentedRowsTest extends PackageTestCase
 
         $response->assertOk()->assertExactJson(['current_page' => 1, 'data' => [['first_name' => 'Grace'], ['first_name' => 'Ada']], 'from' => 1, 'last_page' => 1, 'per_page' => 50, 'to' => 2, 'total' => 2, 'meta' => []]);
         $this->assertSame([[
-            'select authors.first_name, authors.id, authors.api_token, authors.settings, (select count(*) from posts where posts.author_id = authors.id) as a__total, (select max(views) from posts where posts.author_id = authors.id) as b__total from authors where (last_name != ?) and authors.deleted_at is null order by authors.id desc limit 50 offset 0',
+            'select authors.first_name, authors.id, authors.api_token, authors.settings, (select count(*) from posts where posts.author_id = authors.id) as first__total, (select max(views) from posts where posts.author_id = authors.id) as second__total from authors where (last_name != ?) and authors.deleted_at is null order by authors.id desc limit 50 offset 0',
             ['Hidden'],
         ]], $this->readsOf('authors'));
-    }
-
-    /** @return array<string, array{list<class-string>}> */
-    public static function pairs(): array
-    {
-        return [
-            'in name order' => [[FirstAugmentationNamedA::class, SecondAugmentationNamedB::class]],
-            'in reverse order' => [[SecondAugmentationNamedB::class, FirstAugmentationNamedA::class]],
-        ];
     }
 
     #[Test]

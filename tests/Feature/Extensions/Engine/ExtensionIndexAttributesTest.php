@@ -3,33 +3,25 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions\Engine;
 
 use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedTeamIndexExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionClass;
-use ReflectionProperty;
 
 #[Group('scout')]
 class ExtensionIndexAttributesTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        EngineLog::reset();
         config(['rest.extensions' => [RedTeamIndexExtension::class]]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        EngineLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -75,9 +67,5 @@ class ExtensionIndexAttributesTest extends EngineSearchTestCase
         $context = EngineLog::$contexts[0];
         $this->assertInstanceOf(IndexAttributesContext::class, $context);
         $this->assertSame([VoucherResource::class, false], [$context->resource, $context->matchesStringLists]);
-        $this->assertSame(['resource', 'matchesStringLists'], array_map(
-            fn (ReflectionProperty $property): string => $property->getName(),
-            (new ReflectionClass(IndexAttributesContext::class))->getProperties(ReflectionProperty::IS_PUBLIC),
-        ));
     }
 }

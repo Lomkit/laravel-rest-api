@@ -6,10 +6,10 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ContextTagTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstCacheContext;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TagsCacheContext;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
@@ -21,12 +21,13 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('cache.serializable_classes', false)]
 class ReachedCacheContextTest extends HelpdeskTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        FirstCacheContext::reset();
         Rest::resource('context-tag-tickets', ContextTagTicketController::class)->register();
         Team::forceCreate(['id' => 1, 'name' => 'Support']);
         $ticket = Ticket::forceCreate(['id' => 1, 'team_id' => 1, 'title' => 'Ticket 1', 'status' => 'open']);
@@ -34,19 +35,12 @@ class ReachedCacheContextTest extends HelpdeskTestCase
         $ticket->tags()->attach(1);
     }
 
-    #[\Override]
-    protected function tearDown(): void
-    {
-        FirstCacheContext::reset();
-
-        parent::tearDown();
-    }
-
     #[Test]
     #[DataProvider('scopes')]
     public function it_keys_the_extension_items_of_each_reached_resource(string $metric, string $seen, string $hidden): void
     {
-        config(['rest.extensions' => [TagsCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
+        FirstCacheContext::$named = 'tags';
         FirstCacheContext::$resources = [TagResource::class];
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('reveal', config()->boolean('helpdesk.reveal_secret_tags'));
         Tag::addGlobalScope('secret', fn (Builder $query): Builder => config()->boolean('helpdesk.reveal_secret_tags') ? $query : $query->where('tags.name', '!=', 'Secret'));

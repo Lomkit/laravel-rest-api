@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ClausedExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstHalfExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GuestlessExtension;
@@ -22,12 +23,12 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class RestrictionGroupsTest extends PackageTestCase
 {
     use CapturesQueries;
+    use ResetsExtensionStubs;
 
     private const string ROOT = 'select authors.id from authors where %sauthors.deleted_at is null order by authors.id desc limit 50 offset 0';
 
@@ -42,9 +43,6 @@ class RestrictionGroupsTest extends PackageTestCase
     {
         parent::setUp();
 
-        RestrictionLog::reset();
-        ExtensionLog::reset();
-        ClausedExtension::$clause = null;
         Rest::resource('path-authors', PathAuthorController::class)->register();
         Rest::resource('restricted-authors', RestrictedAuthorController::class)->register();
         DB::table('authors')->insert([
@@ -58,16 +56,6 @@ class RestrictionGroupsTest extends PackageTestCase
             ['id' => 2, 'author_id' => 3, 'title' => 'Compilers', 'status' => 'published', 'views' => 2, 'published_on' => '2026-01-01'],
         ]);
         DB::table('books')->insert([['id' => 1, 'title' => 'Dune'], ['id' => 2, 'title' => 'Hidden'], ['id' => 3, 'title' => 'Emma']]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        RestrictionLog::reset();
-        ExtensionLog::reset();
-        ClausedExtension::$clause = null;
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -119,27 +107,16 @@ class RestrictionGroupsTest extends PackageTestCase
         $response->assertOk()->assertJsonPath('data.*.id', [3, 1]);
     }
 
-    /** @param list<class-string> $extensions */
     #[Test]
-    #[DataProvider('orders')]
-    public function it_gives_the_same_rows_and_sql_in_any_extension_order(array $extensions): void
+    public function it_gives_the_same_rows_and_sql_in_any_extension_order(): void
     {
-        config(['rest.extensions' => $extensions]);
+        config(['rest.extensions' => [SecondHalfExtension::class, FirstHalfExtension::class]]);
         $this->captureQueries();
 
         $response = $this->postJson('/restricted-authors/search', ['search' => ['selects' => [['field' => 'id']]]]);
 
         $response->assertOk()->assertJsonPath('data.*.id', [4, 2]);
         $this->assertSame([[sprintf(self::ROOT, '((authors.id != ?) and (authors.id != ?)) and '), [1, 3]]], $this->readsOf('authors'));
-    }
-
-    /** @return array<string, array{list<class-string>}> */
-    public static function orders(): array
-    {
-        return [
-            'in name order' => [[FirstHalfExtension::class, SecondHalfExtension::class]],
-            'in reverse order' => [[SecondHalfExtension::class, FirstHalfExtension::class]],
-        ];
     }
 
     #[Test]

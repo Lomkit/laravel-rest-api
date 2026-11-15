@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\ResourceLimits;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CappedBookLimitsResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstNarrowing;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondNarrowing;
@@ -20,32 +21,12 @@ use PHPUnit\Framework\Attributes\Test;
 
 class LimitNarrowingTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function fixtures(): array
     {
         return [new Library];
-    }
-
-    #[\Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        self::reset();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        self::reset();
-
-        parent::tearDown();
-    }
-
-    #[Test]
-    public function it_keeps_the_limits_without_an_extension(): void
-    {
-        $this->assertSame([[10, 25, 50], 50, 10, null], self::values($this->limits(BookResource::class)));
     }
 
     #[Test]
@@ -91,18 +72,6 @@ class LimitNarrowingTest extends PackageTestCase
         $removed = $this->limits(CappedBookLimitsResource::class, static fn (LimitsContext $context): mixed => $context->allowSizes([1, 25]));
 
         $this->assertSame([1, 10, 1], [$between->includeLimit, $above->includeLimit, $removed->includeLimit]);
-    }
-
-    #[Test]
-    public function it_narrows_the_limits_as_the_narrows_limits_example_of_the_skill(): void
-    {
-        $limits = $this->limits(BookResource::class, static function (LimitsContext $context): void {
-            $context->allowSizes([10, 25]);
-            $context->maxTotal(1000);
-            $context->includeLimit(10);
-        });
-
-        $this->assertSame([[10, 25], 25, 10, 1000], self::values($limits));
     }
 
     #[Test]
@@ -217,10 +186,8 @@ class LimitNarrowingTest extends PackageTestCase
         $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->resource->definition()->limits());
     }
 
-    /** @param list<class-string> $extensions */
     #[Test]
-    #[DataProvider('orders')]
-    public function it_gives_the_same_limits_in_any_extension_order(array $extensions): void
+    public function it_combines_the_narrowings_of_every_extension(): void
     {
         FirstNarrowing::$narrow = static function (LimitsContext $context): void {
             $context->allowSizes([1, 10, 25]);
@@ -231,20 +198,11 @@ class LimitNarrowingTest extends PackageTestCase
             $context->maxTotal(50);
             $context->includeLimit(5);
         };
-        config(['rest.extensions' => $extensions]);
+        config(['rest.extensions' => [SecondNarrowing::class, FirstNarrowing::class]]);
 
         $limits = $this->context()->resource(CappedBookLimitsResource::class)->definition()->limits();
 
         $this->assertSame([[1, 10], 10, 1, 40], self::values($limits));
-    }
-
-    /** @return array<string, array{list<class-string>}> */
-    public static function orders(): array
-    {
-        return [
-            'in name order' => [[FirstNarrowing::class, SecondNarrowing::class]],
-            'in reverse order' => [[SecondNarrowing::class, FirstNarrowing::class]],
-        ];
     }
 
     /** @param class-string<Resource> $resource */
@@ -267,11 +225,5 @@ class LimitNarrowingTest extends PackageTestCase
     private static function values(ResourceLimits $limits): array
     {
         return [$limits->allowed, $limits->defaultLimit, $limits->includeLimit, $limits->maxTotal];
-    }
-
-    private static function reset(): void
-    {
-        FirstNarrowing::$narrow = null;
-        SecondNarrowing::$narrow = null;
     }
 }

@@ -11,10 +11,12 @@ use Lomkit\Rest\Tests\Fixtures\Festival\StageResource;
 
 class RegionStageMeta extends Extension implements AddsDetailsMeta, AddsSearchMeta
 {
+    public static ?string $named = null;
+
     #[\Override]
     public static function name(): string
     {
-        return 'region';
+        return self::$named ?? 'region';
     }
 
     #[\Override]

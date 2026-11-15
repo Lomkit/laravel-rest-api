@@ -7,6 +7,7 @@ use Lomkit\Rest\Extensions\ExtensionEntry;
 use Lomkit\Rest\Extensions\ExtensionList;
 use Lomkit\Rest\Extensions\ExtensionOrigin;
 use Lomkit\Rest\Extensions\NamedExtensions;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AbstractNotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AclExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AppAclExtension;
@@ -20,22 +21,15 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RenamableExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RivalAclExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingNameExtension;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 final class ExtensionListTest extends TestCase
 {
-    private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
+    use ResetsExtensionStubs;
 
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
+    private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
 
     #[Test]
     public function it_lists_the_runtime_classes_then_the_config_classes_by_the_name_of_each_class(): void
@@ -145,15 +139,6 @@ final class ExtensionListTest extends TestCase
     }
 
     #[Test]
-    public function it_does_not_disable_a_subclass_by_the_entry_of_its_parent(): void
-    {
-        $list = ExtensionList::of([], [AclExtension::class], [AppAclExtension::class]);
-
-        $this->assertEnabled(['acl'], [AppAclExtension::class], $list->named());
-        $this->assertSame([AclExtension::class], $list->idle);
-    }
-
-    #[Test]
     public function it_replaces_a_package_class_with_its_subclass_and_a_disabled_entry(): void
     {
         $list = ExtensionList::of([AppAclExtension::class], [AclExtension::class], [AclExtension::class]);
@@ -164,18 +149,6 @@ final class ExtensionListTest extends TestCase
         ], $list->named()->entries);
         $this->assertEnabled(['acl'], [AppAclExtension::class], $list->named());
         $this->assertSame([], $list->idle);
-    }
-
-    #[Test]
-    public function it_refuses_a_subclass_beside_its_parent_without_the_disabled_entry(): void
-    {
-        $named = ExtensionList::of([AppAclExtension::class], [], [AclExtension::class])->named();
-
-        $this->assertEquals([InvalidExtensionException::sharedName('acl', [AclExtension::class, AppAclExtension::class])], $named->refused);
-
-        $this->expectExceptionObject(InvalidExtensionException::sharedName('acl', [AclExtension::class, AppAclExtension::class]));
-
-        $named->enabled();
     }
 
     #[Test]

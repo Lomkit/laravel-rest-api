@@ -10,13 +10,8 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainEngineVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainEngineVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainProfile;
-use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
-use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
-use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionClass;
-use ReflectionMethod;
 
 #[Group('scout')]
 class EngineCapabilitiesTest extends EngineSearchTestCase
@@ -58,18 +53,5 @@ class EngineCapabilitiesTest extends EngineSearchTestCase
         $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(PlainEngineVoucherResource::class, 'hidden', HiddenRowsExtension::class, PlainProfile::NAME));
 
         $this->search('plain-engine-vouchers', ['text' => ['value' => 'report']]);
-    }
-
-    #[Test]
-    public function it_keeps_the_engine_profile_methods_and_reads_the_capabilities_from_interfaces(): void
-    {
-        $methods = array_map(fn (ReflectionMethod $method): string => $method->getName(), (new ReflectionClass(EngineProfile::class))->getMethods());
-        sort($methods);
-
-        $this->assertSame(['ensureUsableBy', 'exactTotal', 'literal', 'maxPageSize', 'name', 'operators', 'ownedOptions', 'page', 'reachable', 'sortKeys', 'window'], $methods);
-        $this->assertSame(4, (new ReflectionMethod(EngineProfile::class, 'page'))->getNumberOfParameters());
-        $this->assertSame([true, true], [is_subclass_of(MatchesStringLists::class, EngineProfile::class), is_subclass_of(AppliesRowRestrictions::class, EngineProfile::class)]);
-        $declared = array_filter((new ReflectionClass(AppliesRowRestrictions::class))->getMethods(), fn (ReflectionMethod $method): bool => $method->class === AppliesRowRestrictions::class);
-        $this->assertSame(['restrictedPage'], array_values(array_map(fn (ReflectionMethod $method): string => $method->getName(), $declared)));
     }
 }

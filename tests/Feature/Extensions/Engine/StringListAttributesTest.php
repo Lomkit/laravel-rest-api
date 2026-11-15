@@ -12,6 +12,7 @@ use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AdaptiveReadersExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupsExtension;
@@ -40,41 +41,18 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class StringListAttributesTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        EngineLog::reset();
-        ReadersExtension::$excludes = false;
-        ReadersExtension::$groups = null;
         Route::prefix('api')->group(fn () => Rest::resource('reader-vouchers', ReaderVoucherController::class)->register());
         config([
             'rest.extensions' => [ReadersExtension::class],
             'scout.typesense.model-settings.'.ReaderVoucher::class.'.search-parameters.query_by' => 'title',
         ]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        EngineLog::reset();
-        ReadersExtension::$excludes = false;
-        ReadersExtension::$groups = null;
-
-        parent::tearDown();
-    }
-
-    #[Test]
-    #[DataProvider('listEngines')]
-    public function it_accepts_a_string_list_on_engines_that_match_lists(string $engine): void
-    {
-        $this->useEngine($this->engine($engine));
-
-        $grammar = $this->capabilities()->engine;
-
-        $this->assertNotNull($grammar);
-        $this->assertArrayNotHasKey('readers', $grammar->filters);
     }
 
     /** @return array<string, array{class-string}> */
@@ -90,6 +68,7 @@ class StringListAttributesTest extends EngineSearchTestCase
     }
 
     #[Test]
+    #[DataProvider('listEngines')]
     #[DataProvider('scalarEngines')]
     public function it_declares_a_string_list_on_every_engine(string $engine): void
     {
@@ -172,17 +151,6 @@ class StringListAttributesTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_refuses_two_lists_that_neither_holds_on_one_list_attribute(): void
-    {
-        $this->useEngine(new FakeTypesenseEngine);
-        $query = $this->engineQuery()->whereIn('readers', ['ann', 'bob']);
-
-        $this->expectExceptionObject(ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', null, null));
-
-        $query->whereIn('readers', ['ann', 'cid']);
-    }
-
-    #[Test]
     public function it_names_the_two_extensions_whose_lists_neither_holds(): void
     {
         $this->useEngine(new FakeTypesenseEngine);
@@ -192,6 +160,10 @@ class StringListAttributesTest extends EngineSearchTestCase
         $exception = ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('groups', ReaderGroupsExtension::class), new RestrictingExtension('readers', ReadersExtension::class));
 
         $this->assertSame('The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [groups] extension '.ReaderGroupsExtension::class.' and the [readers] extension '.ReadersExtension::class.', and neither list holds the other. The engine matches one list per attribute: restrict [readers] with one list, or with lists that hold one another.', $exception->getMessage());
+        $this->assertSame(
+            'The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [readers] extension '.ReadersExtension::class.' and ScoutEngine::perimeter() or an instruction, and neither list holds the other. The engine matches one list per attribute: restrict [readers] with one list, or with lists that hold one another.',
+            ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('readers', ReadersExtension::class), null)->getMessage(),
+        );
         $this->expectExceptionObject($exception);
 
         $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
@@ -210,42 +182,33 @@ class StringListAttributesTest extends EngineSearchTestCase
         $response->assertStatus(422)->assertExactJson(['message' => $message, 'errors' => ['search.instructions.0' => [$message]]]);
     }
 
+    /**
+     * @param  list<string>|null  $groups
+     * @param  list<string>  $filters
+     */
     #[Test]
-    public function it_names_the_perimeter_or_an_instruction_beside_an_extension(): void
-    {
-        $this->assertSame(
-            'The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [readers] extension '.ReadersExtension::class.' and ScoutEngine::perimeter() or an instruction, and neither list holds the other. The engine matches one list per attribute: restrict [readers] with one list, or with lists that hold one another.',
-            ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('readers', ReadersExtension::class), null)->getMessage(),
-        );
-    }
-
-    #[Test]
-    public function it_sends_a_string_list_filter_to_typesense(): void
+    #[DataProvider('typesenseFilters')]
+    public function it_sends_a_string_list_filter_to_typesense(?array $groups, array $filters): void
     {
         $engine = new FilterCapturingTypesenseEngine;
         $this->useEngine($engine);
         $this->actingAs(new GenericUser(['id' => 'ann']));
+        ReadersExtension::$groups = $groups;
 
         $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
         ReadersExtension::$excludes = true;
         $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
 
-        $this->assertSame(['readers:=[`ann`]', 'readers:!=[`ann`]'], $engine->filters);
+        $this->assertSame($filters, $engine->filters);
     }
 
-    #[Test]
-    public function it_sends_a_string_list_of_two_values_to_typesense(): void
+    /** @return array<string, array{list<string>|null, list<string>}> */
+    public static function typesenseFilters(): array
     {
-        $engine = new FilterCapturingTypesenseEngine;
-        $this->useEngine($engine);
-        $this->actingAs(new GenericUser(['id' => 'ann']));
-        ReadersExtension::$groups = ['ann', 'cid'];
-
-        $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
-        ReadersExtension::$excludes = true;
-        $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
-
-        $this->assertSame(['readers:=[`ann`, `cid`]', 'readers:!=[`ann`, `cid`]'], $engine->filters);
+        return [
+            'the user' => [null, ['readers:=[`ann`]', 'readers:!=[`ann`]']],
+            'two values' => [['ann', 'cid'], ['readers:=[`ann`, `cid`]', 'readers:!=[`ann`, `cid`]']],
+        ];
     }
 
     #[Test]

@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Augmentations;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentationLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FlagExtension;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathAuthorController;
@@ -19,6 +20,7 @@ use PHPUnit\Framework\Attributes\Test;
 class AugmentedPathsTest extends PackageTestCase
 {
     use CapturesQueries;
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function fixtures(): array
@@ -31,7 +33,6 @@ class AugmentedPathsTest extends PackageTestCase
     {
         parent::setUp();
 
-        AugmentationLog::reset();
         Rest::resource('path-authors', PathAuthorController::class)->register();
         Rest::resource('path-posts', PathPostController::class)->register();
         DB::table('authors')->insert([
@@ -43,14 +44,6 @@ class AugmentedPathsTest extends PackageTestCase
             ['id' => 2, 'author_id' => 2, 'title' => 'Compilers', 'status' => 'draft', 'views' => 2, 'published_on' => '2026-01-01'],
         ]);
         $this->captureQueries();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        AugmentationLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

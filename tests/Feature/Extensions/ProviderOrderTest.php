@@ -7,6 +7,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Rest;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BootingExtensionProvider;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
@@ -21,18 +22,18 @@ use PHPUnit\Framework\Attributes\Test;
 
 final class ProviderOrderTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
+
     #[Before]
     public function forgetTheFacadeRoot(): void
     {
         EarlyExtensionProvider::$root = null;
-        ExtensionLog::reset();
     }
 
     #[After]
     public function clearTheFacadeRoot(): void
     {
         EarlyExtensionProvider::$root = null;
-        ExtensionLog::reset();
     }
 
     #[\Override]
@@ -50,18 +51,13 @@ final class ProviderOrderTest extends PackageTestCase
     #[Test]
     public function it_accepts_registrations_whatever_the_provider_order(): void
     {
-        $context = new RestContext(RestRequest::create('/api/products/search', 'POST'), $this->app);
-
-        $this->assertSame(['noting', 'both', 'counting'], array_keys($context->extensions()->all()));
-        $this->assertSame([NotingExtension::class, BothKindsExtension::class, CountingExtension::class], ExtensionLog::$built);
-    }
-
-    #[Test]
-    public function it_keeps_one_store_for_every_provider(): void
-    {
         $store = $this->app->make(RuntimeExtensions::class);
+        $context = new RestContext(RestRequest::create('/api/products/search', 'POST'), $this->app);
 
         $this->assertSame($store, $this->app->make(RuntimeExtensions::class));
         $this->assertSame([NotingExtension::class, BothKindsExtension::class, CountingExtension::class], $store->all());
+
+        $this->assertSame(['noting', 'both', 'counting'], array_keys($context->extensions()->all()));
+        $this->assertSame([NotingExtension::class, BothKindsExtension::class, CountingExtension::class], ExtensionLog::$built);
     }
 }

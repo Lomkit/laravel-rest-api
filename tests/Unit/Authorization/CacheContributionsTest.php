@@ -178,22 +178,22 @@ class CacheContributionsTest extends TestCase
     }
 
     #[Test]
-    public function it_refuses_a_duration_below_one_second(): void
-    {
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidCacheDuration('acl', self::ACL, TicketResource::class, 'view', 0));
-
-        (new CacheContributions(TicketResource::class))->shorten('acl', self::ACL, 'view', 0);
-    }
-
-    #[Test]
-    public function it_names_the_extension_in_each_refusal(): void
+    #[DataProvider('shortDurations')]
+    public function it_refuses_a_duration_below_one_second_and_names_the_extension(int $seconds): void
     {
         try {
-            (new CacheContributions(TicketResource::class))->shorten('acl', self::ACL, 'view', -5);
+            (new CacheContributions(TicketResource::class))->shorten('acl', self::ACL, 'view', $seconds);
             $this->fail('The duration was not refused.');
         } catch (InvalidAuthorizationExtensionException $exception) {
             $this->assertSame([true, false], [$exception->concerns(self::ACL), $exception->concerns('acl')]);
-            $this->assertSame('The [acl] extension '.self::ACL.' shortens the cache of the ability [view] of '.TicketResource::class." to -5 seconds. Give 1 second or more, or call forget('view') to keep no decision.", $exception->getMessage());
+            $this->assertSame('The [acl] extension '.self::ACL.' shortens the cache of the ability [view] of '.TicketResource::class." to {$seconds} seconds. Give 1 second or more, or call forget('view') to keep no decision.", $exception->getMessage());
         }
+    }
+
+    /** @return iterable<string, array{int}> */
+    public static function shortDurations(): iterable
+    {
+        yield 'zero' => [0];
+        yield 'a negative duration' => [-5];
     }
 }

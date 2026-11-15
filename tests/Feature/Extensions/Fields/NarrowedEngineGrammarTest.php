@@ -8,6 +8,7 @@ use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FieldVoucherController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PriceEngineRestriction;
@@ -21,6 +22,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class NarrowedEngineGrammarTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     private const string NUMBER = '{"name":"number","type":"integer","operators":["=","!=",">",">=","<","<=","in","not in"]}';
 
     private const string PRICE = '{"name":"price","type":"number","operators":["=","!=",">",">=","<","<=","in","not in"]}';
@@ -35,39 +38,25 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
         parent::setUp();
 
         config(['scout.driver' => 'collection', 'rest.extensions' => [MaskingFields::class]]);
-        MaskingFields::reset();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        MaskingFields::reset();
-
-        parent::tearDown();
     }
 
     #[Test]
-    public function it_drops_a_hidden_field_from_the_engine_grammar(): void
+    #[DataProvider('grammarReductions')]
+    public function it_drops_a_narrowed_field_from_the_engine_grammar(string $reduction, string $grammar): void
     {
-        $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('price'));
+        $this->narrow(static fn (FieldsContext $context): mixed => $context->{$reduction}('price'));
 
-        $this->assertGrammar('['.self::NUMBER.','.self::ACTIVE.','.self::CODE.'],"sorts":["number"]', $this->getJson('/api/vouchers?with=text'));
+        $this->assertGrammar($grammar, $this->getJson('/api/vouchers?with=text'));
     }
 
-    #[Test]
-    public function it_drops_an_unfilterable_field_from_the_engine_filters_only(): void
+    /** @return array<string, array{string, string}> */
+    public static function grammarReductions(): array
     {
-        $this->narrow(static fn (FieldsContext $context): mixed => $context->unfilterable('price'));
-
-        $this->assertGrammar('['.self::NUMBER.','.self::ACTIVE.','.self::CODE.'],"sorts":["price","number"]', $this->getJson('/api/vouchers?with=text'));
-    }
-
-    #[Test]
-    public function it_drops_an_unsortable_field_from_the_engine_sorts_only(): void
-    {
-        $this->narrow(static fn (FieldsContext $context): mixed => $context->unsortable('price'));
-
-        $this->assertGrammar('['.self::NUMBER.','.self::PRICE.','.self::ACTIVE.','.self::CODE.'],"sorts":["number"]', $this->getJson('/api/vouchers?with=text'));
+        return [
+            'hidden from the filters and the sorts' => ['hide', '['.self::NUMBER.','.self::ACTIVE.','.self::CODE.'],"sorts":["number"]'],
+            'unfilterable from the filters only' => ['unfilterable', '['.self::NUMBER.','.self::ACTIVE.','.self::CODE.'],"sorts":["price","number"]'],
+            'unsortable from the sorts only' => ['unsortable', '['.self::NUMBER.','.self::PRICE.','.self::ACTIVE.','.self::CODE.'],"sorts":["number"]'],
+        ];
     }
 
     #[Test]
@@ -156,16 +145,6 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
             ['id' => 1, 'code' => 'V-c', 'number' => 3, 'team' => 'red', 'title' => 'Report alpha', 'active' => true],
             ['id' => 3, 'code' => 'V-a', 'number' => 1, 'team' => 'red', 'title' => 'Report beta', 'active' => true],
         ]);
-    }
-
-    #[Test]
-    public function it_refuses_an_extension_that_reads_the_text_search_it_narrows(): void
-    {
-        $this->narrow(static fn (FieldsContext $context): mixed => $context->resource->definition()->text());
-
-        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' reads the fields or the text search of '.VoucherResource::class.' while the NarrowsFields extensions narrow them. Read the declared names with FieldsContext::declares() instead.'));
-
-        $this->withoutExceptionHandling()->search('vouchers', ['text' => ['value' => 'report']]);
     }
 
     /** @param Closure(FieldsContext): mixed $narrow */

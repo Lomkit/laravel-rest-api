@@ -10,10 +10,12 @@ use Lomkit\Rest\Http\Resource;
 
 class FirstCacheContext extends Extension implements ContributesCacheContext
 {
+    public static ?string $named = null;
+
     #[\Override]
     public static function name(): string
     {
-        return 'acl';
+        return self::$named ?? 'acl';
     }
 
     /** @var list<class-string<Resource>>|null */
@@ -27,6 +29,7 @@ class FirstCacheContext extends Extension implements ContributesCacheContext
 
     public static function reset(): void
     {
+        self::$named = null;
         self::$resources = null;
         self::$contribute = null;
         self::$contexts = [];

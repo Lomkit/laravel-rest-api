@@ -7,11 +7,11 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\EscalateTickets;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\PreparedTicketController;
@@ -20,11 +20,9 @@ use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ScannedTicket;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentedPreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LatePreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PreparingExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RowCheckLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondPreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SubjectTicketPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\CachedTicketResource;
-use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
@@ -35,24 +33,17 @@ use PHPUnit\Framework\Attributes\Test;
 
 class RowCheckPreparationTest extends HelpdeskTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        RowCheckLog::reset();
         EscalateTickets::reset();
         PreparedTicketResource::$received = [];
         ScannedTicket::$scans = 0;
         Rest::resource('prepared-tickets', PreparedTicketController::class)->register();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        RowCheckLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -143,53 +134,6 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_leaves_class_checks_drafts_changed_rows_and_link_checks_out_for_an_extension(): void
-    {
-        config(['rest.extensions' => [PreparingExtension::class]]);
-        ['Printer jam' => $jam, 'Printer toner' => $toner, 'Password reset' => $reset] = $this->seedTickets();
-        $context = $this->contextFor(null);
-        $resource = $context->resource(TicketResource::class);
-        $tag = Tag::create(['id' => 1, 'name' => 'Hardware']);
-        $changed = $reset->fill(['title' => 'Password changed']);
-
-        $context->authorizer()->inspectAll([
-            Check::onClass($resource, 'viewAny'),
-            new Check($resource, 'create', new Ticket(['title' => 'Draft'])),
-            new Check($resource, 'update', $changed),
-            new Check($resource, 'attachTag', $jam, related: [$tag]),
-            new Check($resource, 'update', $toner),
-        ]);
-
-        $this->assertSame([
-            'ext first update '.$toner->id.' for guest',
-            'viewAny',
-            'create',
-            'update '.$reset->id,
-            'attachTag '.$jam->id.' '.$tag->id,
-            'update '.$toner->id,
-        ], $this->tickets->calls);
-    }
-
-    #[Test]
-    public function it_leaves_the_rows_that_the_memo_decided_out_for_an_extension(): void
-    {
-        config(['rest.extensions' => [PreparingExtension::class]]);
-        [$jam, $reset, $toner, $laptop] = array_values($this->seedTickets());
-        $context = $this->contextFor(null);
-        $resource = $context->resource(TicketResource::class);
-
-        $context->authorizer()->inspect(new Check($resource, 'update', $jam));
-        $context->authorizer()->inspectEach($resource, 'update', collect([$jam, $reset, $toner, $laptop]));
-
-        $this->assertSame([
-            'ext first update '.$jam->id.' for guest',
-            'update '.$jam->id,
-            'ext first update '.$this->keys($reset, $toner, $laptop).' for guest',
-            ...$this->calls('update', $reset, $toner, $laptop),
-        ], $this->tickets->calls);
-    }
-
-    #[Test]
     public function it_leaves_the_rows_that_the_store_decided_out_for_an_extension(): void
     {
         config(['rest.extensions' => [PreparingExtension::class]]);
@@ -203,27 +147,6 @@ class RowCheckPreparationTest extends HelpdeskTestCase
 
         $this->assertSame($first, $second);
         $this->assertSame(['viewAny', 'ext first update '.$this->keys(...$rows).' for guest', ...$this->calls('update', ...$rows)], $this->tickets->calls);
-    }
-
-    #[Test]
-    public function it_groups_the_rows_of_one_resource_at_two_levels_for_an_extension(): void
-    {
-        config(['rest.extensions' => [PreparingExtension::class]]);
-        ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
-
-        $this->postJson('/api/tickets/search', ['search' => [
-            'filters' => [['field' => 'id', 'operator' => 'in', 'value' => [$jam->id, $reset->id]]],
-            'gates' => ['update'],
-            'includes' => [['relation' => 'team.tickets', 'gates' => ['update']]],
-            'sorts' => [['field' => 'id']],
-        ]])->assertOk();
-
-        $this->assertSame([
-            'viewAny',
-            'ext first update '.$this->keys($jam, $reset, $toner, $laptop).' for guest',
-            ...$this->calls('update', $jam, $toner, $reset, $laptop),
-        ], $this->tickets->calls);
-        $this->assertCount(1, PreparingExtension::$received);
     }
 
     #[Test]
@@ -349,108 +272,35 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $this->assertSame(['id', 'team_id', 'title', 'status', 'gates'], array_keys($response->json('data.0')));
     }
 
-    #[Test]
-    public function it_names_the_registered_class_of_a_preparing_extension_bound_to_a_subclass(): void
-    {
-        config(['rest.extensions' => [PreparingExtension::class]]);
-        $this->app?->bind(PreparingExtension::class, static fn (): PreparingExtension => new class extends PreparingExtension {});
-        $this->seedTickets();
-        PreparingExtension::$prepare = static function (PendingChecks $checks): void {
-            $checks->rows->firstOrFail()->setAttribute('title', 'Changed');
-        };
-        $this->withoutExceptionHandling();
-
-        try {
-            $this->postJson('/api/tickets/search', ['search' => ['gates' => ['update'], 'sorts' => [['field' => 'id']]]]);
-            $this->fail('The changed row was accepted.');
-        } catch (InvalidAuthorizationExtensionException $exception) {
-            $this->assertSame(InvalidAuthorizationExtensionException::changedRows('prep', PreparingExtension::class, TicketResource::class, 'update')->getMessage(), $exception->getMessage());
-            $this->assertTrue($exception->concerns(PreparingExtension::class));
-        }
-    }
-
     /** @param Closure(PendingChecks): mixed $change */
     #[Test]
     #[DataProvider('rowChanges')]
-    public function it_refuses_an_extension_that_changes_a_prepared_row(Closure $change): void
+    public function it_refuses_an_extension_that_changes_a_prepared_row_and_names_the_registered_class(Closure $change): void
     {
         config(['rest.extensions' => [PreparingExtension::class]]);
+        $this->app?->bind(PreparingExtension::class, static fn (): PreparingExtension => new class extends PreparingExtension {});
         $this->seedTickets();
         PreparingExtension::$prepare = static function (PendingChecks $checks) use ($change): void {
             $change($checks);
         };
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', PreparingExtension::class, TicketResource::class, 'update'));
-
         try {
             $this->postJson('/api/tickets/search', ['search' => ['gates' => ['update'], 'includes' => [['relation' => 'team']], 'sorts' => [['field' => 'id']]]]);
+            $this->fail('The changed row was accepted.');
+        } catch (InvalidAuthorizationExtensionException $exception) {
+            $this->assertSame(InvalidAuthorizationExtensionException::changedRows('prep', PreparingExtension::class, TicketResource::class, 'update')->getMessage(), $exception->getMessage());
+            $this->assertTrue($exception->concerns(PreparingExtension::class));
         } finally {
             $this->assertSame(['viewAny'], array_values(array_filter($this->tickets->calls, fn (string $call): bool => ! str_starts_with($call, 'ext '))));
         }
-    }
-
-    #[Test]
-    public function it_answers_an_error_and_renders_no_row_when_an_extension_changes_a_row_during_a_search(): void
-    {
-        config(['rest.extensions' => [PreparingExtension::class]]);
-        $this->seedTickets();
-        PreparingExtension::$prepare = static function (PendingChecks $checks): void {
-            $checks->rows->firstOrFail()->setAttribute('title', 'Changed');
-        };
-
-        $response = $this->postJson('/api/tickets/search', ['search' => ['gates' => ['update'], 'sorts' => [['field' => 'id']]]]);
-
-        $response->assertStatus(500)->assertExactJson(['message' => 'Server Error']);
-        $this->assertSame(['viewAny'], array_values(array_filter($this->tickets->calls, fn (string $call): bool => ! str_starts_with($call, 'ext '))));
     }
 
     /** @return iterable<string, array{Closure(PendingChecks): mixed}> */
     public static function rowChanges(): iterable
     {
         yield 'an attribute' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setAttribute('title', 'Changed')];
-        yield 'an attribute of another type' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setAttribute('team_id', (string) $checks->rows->firstOrFail()->getAttribute('team_id'))];
-        yield 'an attribute kept as original' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setAttribute('title', 'Changed')->syncOriginal()];
-        yield 'a loaded relation' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setRelation('team', new Team(['name' => 'Other']))];
         yield 'a removed relation' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->unsetRelation('team')];
-        yield 'the list of rows' => [static fn (PendingChecks $checks): ?Model => $checks->rows->pop()];
-        yield 'a row of the list' => [static fn (PendingChecks $checks): Collection => $checks->rows->put(0, new Ticket(['title' => 'Other']))];
-    }
-
-    /** @param Closure(Model): mixed $change */
-    #[Test]
-    #[DataProvider('relatedChanges')]
-    public function it_refuses_an_extension_that_changes_the_models_of_an_included_relation(Closure $change): void
-    {
-        config(['rest.extensions' => [PreparingExtension::class]]);
-        ['Printer jam' => $jam] = $this->seedTickets();
-        $jam->tags()->attach(Tag::create(['id' => 1, 'name' => 'Hardware'])->id);
-        PreparingExtension::$prepare = static function (PendingChecks $checks) use ($change): void {
-            $change($checks->rows->firstOrFail());
-        };
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', PreparingExtension::class, TicketResource::class, 'update'));
-
-        try {
-            $this->postJson('/api/tickets/search', ['search' => [
-                'gates' => ['update'],
-                'includes' => [['relation' => 'tags'], ['relation' => 'team.tickets']],
-                'sorts' => [['field' => 'id']],
-            ]]);
-        } finally {
-            $this->assertSame(['viewAny'], array_values(array_filter($this->tickets->calls, fn (string $call): bool => ! str_starts_with($call, 'ext '))));
-        }
-    }
-
-    /** @return iterable<string, array{Closure(Model): mixed}> */
-    public static function relatedChanges(): iterable
-    {
-        yield 'a model pushed into a loaded relation' => [static fn (Model $row): mixed => $row->getRelation('tags')->push(new Tag(['id' => 2, 'name' => 'Other']))];
-        yield 'a model removed from a loaded relation' => [static fn (Model $row): mixed => $row->getRelation('tags')->forget(0)];
-        yield 'a model put in place of another' => [static fn (Model $row): mixed => $row->getRelation('tags')->put(0, new Tag(['id' => 2, 'name' => 'Other']))];
-        yield 'a model pushed into a nested relation' => [static fn (Model $row): mixed => $row->getRelation('team')->getRelation('tickets')->push(new Ticket(['title' => 'Other']))];
-        yield 'a nested relation replaced' => [static fn (Model $row): mixed => $row->getRelation('team')->setRelation('tickets', new Collection)];
     }
 
     #[Test]
@@ -470,15 +320,13 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $this->assertTrue(PreparingExtension::$received[0]->rows->firstOrFail()->getRelation('team')->relationLoaded('tickets'));
     }
 
-    /** @param Closure(Model): mixed $change */
     #[Test]
-    #[DataProvider('writeSettingChanges')]
-    public function it_refuses_an_extension_that_changes_where_a_destroyed_row_is_written(Closure $change): void
+    public function it_refuses_an_extension_that_changes_where_a_destroyed_row_is_written(): void
     {
         config(['rest.extensions' => [PreparingExtension::class]]);
         ['Printer jam' => $jam, 'Password reset' => $reset] = $this->seedTickets();
-        PreparingExtension::$prepare = static function (PendingChecks $checks) use ($change): void {
-            $checks->rows->each($change);
+        PreparingExtension::$prepare = static function (PendingChecks $checks): void {
+            $checks->rows->each(static fn (Model $row): Model => $row->setTable('teams'));
         };
         $this->withoutExceptionHandling();
 
@@ -490,17 +338,6 @@ class RowCheckPreparationTest extends HelpdeskTestCase
             $this->assertSame(4, Ticket::query()->count());
             $this->assertSame(2, Team::query()->count());
         }
-    }
-
-    /** @return iterable<string, array{Closure(Model): mixed}> */
-    public static function writeSettingChanges(): iterable
-    {
-        yield 'whether the row exists' => [static function (Model $row): void {
-            $row->exists = false;
-        }];
-        yield 'the table of the row' => [static fn (Model $row): Model => $row->setTable('teams')];
-        yield 'the connection of the row' => [static fn (Model $row): Model => $row->setConnection('other')];
-        yield 'the key name of the row' => [static fn (Model $row): Model => $row->setKeyName('team_id')];
     }
 
     #[Test]

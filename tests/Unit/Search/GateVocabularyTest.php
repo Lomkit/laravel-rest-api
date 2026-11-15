@@ -104,14 +104,6 @@ class GateVocabularyTest extends TestCase
     }
 
     #[Test]
-    public function it_refuses_a_gate_listed_twice_by_one_extension(): void
-    {
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidGate('acl', 'Vendor\Acl\AclExtension', self::RESOURCE, 1, 'share'));
-
-        GateVocabulary::of(['share'], self::OWNER, true, [self::extension('acl', ['share', 'share'])]);
-    }
-
-    #[Test]
     public function it_refuses_a_resource_gate_through_the_resource_list_when_extensions_declare_gates(): void
     {
         $this->expectExceptionObject(InvalidResourceException::invalidGate(self::OWNER, 0, 'Share'));

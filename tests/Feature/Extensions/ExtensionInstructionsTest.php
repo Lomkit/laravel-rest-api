@@ -18,10 +18,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\BrokenInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CollidingAuthorController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CollidingAuthorResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MarkedInstruction;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MarkedInstructionsExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OneMarkedInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TwinInstructionsExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TwoMarkedInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WithArchivedInstruction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ZuluMarkedInstructionsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\FailingExtension;
@@ -155,33 +152,12 @@ class ExtensionInstructionsTest extends PackageTestCase
     public function it_gives_each_extension_its_own_copy_of_a_shared_instance(): void
     {
         $this->app?->singleton(MarkedInstruction::class);
-        config(['rest.extensions' => [OneMarkedInstructionsExtension::class, TwoMarkedInstructionsExtension::class]]);
+        config(['rest.extensions' => [AlphaMarkedInstructionsExtension::class, ZuluMarkedInstructionsExtension::class]]);
 
         $response = $this->getJson('/api/posts?with=instructions');
 
-        $response->assertOk()->assertJsonPath('data.instructions.*.uriKey', ['highlight-posts', 'in-status', 'one.marked', 'two.marked']);
+        $response->assertOk()->assertJsonPath('data.instructions.*.uriKey', ['highlight-posts', 'in-status', 'alpha.marked', 'zulu.marked']);
         $this->assertSame('marked', $this->app?->make(MarkedInstruction::class)->publicUriKey());
-    }
-
-    /** @param list<class-string> $extensions */
-    #[Test]
-    #[DataProvider('orders')]
-    public function it_lists_the_instructions_in_the_same_order_whatever_the_extension_order(array $extensions): void
-    {
-        config(['rest.extensions' => $extensions]);
-
-        $response = $this->getJson('/api/posts?with=instructions');
-
-        $response->assertOk()->assertJsonPath('data.instructions.*.uriKey', ['highlight-posts', 'in-status', 'arc.marked', 'zed.marked']);
-    }
-
-    /** @return array<string, array{list<class-string>}> */
-    public static function orders(): array
-    {
-        return [
-            'in name order' => [[ArchiveInstructionsExtension::class, MarkedInstructionsExtension::class]],
-            'in reverse order' => [[MarkedInstructionsExtension::class, ArchiveInstructionsExtension::class]],
-        ];
     }
 
     /** @param list<class-string> $extensions */

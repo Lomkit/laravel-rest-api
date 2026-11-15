@@ -6,28 +6,21 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\IndexedBookController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\IndexedBookResource;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 #[WithConfig('auth.guards.sanctum', ['driver' => 'session', 'provider' => 'users'])]
 final class CheckUnsearchableEngineTest extends ScaffoldingTestCase
 {
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        RestrictionLog::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function fixtures(): array
@@ -46,7 +39,7 @@ final class CheckUnsearchableEngineTest extends ScaffoldingTestCase
 
         $this->assertSame(1, $exitCode);
         $this->assertSame(
-            ['The [hidden] extension '.HiddenRowsExtension::class.' restricts the rows of '.IndexedBookResource::class.' in SQL but does not implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries, and the text search or the Scout engine of '.IndexedBookResource::class." cannot be resolved ({$reason->getMessage()}). A text search of ".IndexedBookResource::class.' is refused on an engine that does not apply SQL restrictions. Implement RestrictsEngineQueries in '.HiddenRowsExtension::class.' to restrict the engine search too, index the model with the Scout database or collection driver, leave '.IndexedBookResource::class.' out of the extension with appliesTo(), or add '.HiddenRowsExtension::class.' to the [rest.disabled_extensions] config.'],
+            [InvalidTextSearchException::unresolvedEngine(IndexedBookResource::class, 'hidden', HiddenRowsExtension::class, $reason)->getMessage()],
             json_decode($output->fetch(), true)['rows']['problems'],
         );
     }

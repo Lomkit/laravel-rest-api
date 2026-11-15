@@ -8,6 +8,7 @@ use Lomkit\Rest\Extensions\Contexts\LimitsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CappedBookLimitsController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstNarrowing;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LimitShelfResource;
@@ -23,6 +24,7 @@ class NarrowedLimitsTest extends PackageTestCase
 {
     use AssertsExactErrors;
     use CapturesQueries;
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function fixtures(): array
@@ -53,14 +55,6 @@ class NarrowedLimitsTest extends PackageTestCase
         Book::query()->insert(array_map(static fn (int $id): array => ['id' => $id, 'title' => 'Book '.$id], range(1, 40)));
         DB::table('shelves')->insert([['id' => 1, 'name' => 'Classics'], ['id' => 2, 'name' => 'Poetry']]);
         DB::table('book_shelf')->insert([['book_id' => 40, 'shelf_id' => 1], ['book_id' => 40, 'shelf_id' => 2]]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        FirstNarrowing::$narrow = null;
-
-        parent::tearDown();
     }
 
     #[Test]

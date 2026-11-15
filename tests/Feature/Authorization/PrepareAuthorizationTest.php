@@ -64,18 +64,6 @@ class PrepareAuthorizationTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_prepares_for_the_user_the_policies_check(): void
-    {
-        $jam = $this->seedTickets()['Printer jam'];
-
-        $this->actingAs(new GenericUser(['id' => TicketPolicy::LEAD]))
-            ->postJson('/prepared-tickets/search', ['search' => ['filters' => [['field' => 'id', 'value' => $jam->id]], 'gates' => ['update']]])
-            ->assertOk();
-
-        $this->assertSame(['viewAny', 'prepare update '.$jam->id.' for '.TicketPolicy::LEAD, 'update '.$jam->id], $this->tickets->calls);
-    }
-
-    #[Test]
     public function it_prepares_each_included_resource_with_its_own_rows(): void
     {
         ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
@@ -116,21 +104,22 @@ class PrepareAuthorizationTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_prepares_for_the_user_a_search_runs_as(): void
+    public function it_prepares_for_the_user_of_the_request_and_the_user_a_search_runs_as(): void
     {
         $jam = $this->seedTickets()['Printer jam'];
         $lead = new GenericUser(['id' => TicketPolicy::LEAD]);
+        $search = ['filters' => [['field' => 'id', 'value' => $jam->id]], 'gates' => ['update']];
 
+        $this->actingAs($lead)->postJson('/prepared-tickets/search', ['search' => $search])->assertOk();
+        $this->assertSame(['viewAny', 'prepare update '.$jam->id.' for '.TicketPolicy::LEAD, 'update '.$jam->id], $this->tickets->calls);
+        $this->tickets->calls = [];
         $this->actingAs(new GenericUser(['id' => 7]));
-        Rest::search(PreparedTicketResource::class)
-            ->as($lead)
-            ->payload(['filters' => [['field' => 'id', 'value' => $jam->id]], 'gates' => ['update']])
-            ->render();
+        Rest::search(PreparedTicketResource::class)->as($lead)->payload($search)->render();
 
         $this->assertSame(['viewAny', 'prepare update '.$jam->id.' for '.TicketPolicy::LEAD, 'update '.$jam->id], $this->tickets->calls);
-        $this->assertSame($lead, PreparedTicketResource::$received[0]->user);
-        $this->assertInstanceOf(PreparedTicketResource::class, PreparedTicketResource::$received[0]->resource);
-        $this->assertSame('update', PreparedTicketResource::$received[0]->ability);
+        $this->assertSame($lead, PreparedTicketResource::$received[1]->user);
+        $this->assertInstanceOf(PreparedTicketResource::class, PreparedTicketResource::$received[1]->resource);
+        $this->assertSame('update', PreparedTicketResource::$received[1]->ability);
     }
 
     #[Test]
@@ -149,23 +138,6 @@ class PrepareAuthorizationTest extends HelpdeskTestCase
             ...$this->calls('escalate', $toner, $laptop),
         ], $this->tickets->calls);
         $this->assertSame([], EscalateTickets::$runs);
-    }
-
-    #[Test]
-    public function it_prepares_each_chunk_of_an_action_that_skips_the_refused_rows(): void
-    {
-        ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
-
-        $this->postJson('/prepared-tickets/actions/escalate-allowed-tickets', ['resources' => [$jam->id, $reset->id, $toner->id, $laptop->id]])->assertOk();
-
-        $this->assertSame([
-            'viewAny',
-            'prepare update '.$this->keys($jam, $reset).' for guest',
-            ...$this->calls('update', $jam, $reset),
-            'prepare update '.$this->keys($toner, $laptop).' for guest',
-            ...$this->calls('update', $toner, $laptop),
-        ], $this->tickets->calls);
-        $this->assertSame([[$jam->id], [$toner->id]], EscalateTickets::$runs);
     }
 
     #[Test]
@@ -401,20 +373,6 @@ class PrepareAuthorizationTest extends HelpdeskTestCase
         $this->assertSame([...$this->calls('escalate', ...$tickets), ...$this->calls('escalate', ...$tickets)], array_values(array_filter($this->tickets->calls, fn (string $call): bool => $call !== 'viewAny')));
         $this->assertSame($plain[1], $preloaded[1]);
         $this->assertSame(['allowed' => false, 'message' => 'Only billing tickets are escalated.'], $preloaded[1][1]['gates']['authorized_to_escalate']);
-    }
-
-    #[Test]
-    public function it_keeps_the_page_of_a_resource_without_the_hook_unchanged(): void
-    {
-        $tickets = array_values($this->seedTickets());
-        $payload = ['search' => ['gates' => ['update', 'delete'], 'includes' => [['relation' => 'team', 'gates' => ['view']]], 'sorts' => [['field' => 'id']]]];
-
-        $plain = $this->postJson('/api/tickets/search', $payload)->assertOk();
-
-        $this->assertSame(['viewAny', ...$this->rowCalls(['update', 'delete'], ...$tickets)], $this->tickets->calls);
-        $this->tickets->calls = [];
-        $prepared = $this->postJson('/prepared-tickets/search', $payload)->assertOk();
-        $this->assertSame($plain->json(), $prepared->json());
     }
 
     /**

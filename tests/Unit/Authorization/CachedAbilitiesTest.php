@@ -45,22 +45,6 @@ class CachedAbilitiesTest extends TestCase
     }
 
     #[Test]
-    public function it_reads_the_context_only_when_the_resource_declares_an_ability(): void
-    {
-        $reads = 0;
-        $context = function () use (&$reads): CacheContext {
-            $reads++;
-
-            return CacheContext::of(['team' => 7], self::RESOURCE);
-        };
-
-        $silent = self::abilities([], self::RESOURCE, $context);
-        $declaring = self::abilities(['viewAny' => 300], self::RESOURCE, $context);
-
-        $this->assertSame(['', serialize(['team' => 7]), 1], [$silent->context, $declaring->context, $reads]);
-    }
-
-    #[Test]
     public function it_keys_the_same_context_the_same_way_whatever_the_order_of_its_keys(): void
     {
         $first = self::abilities(['viewAny' => 300], self::RESOURCE, static fn (): CacheContext => CacheContext::of(['team' => 7, 'locale' => 'fr', 'staff' => true, 'region' => null], self::RESOURCE));

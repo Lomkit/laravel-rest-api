@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictedAuthorController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictedLabelController;
@@ -26,6 +27,7 @@ use PHPUnit\Framework\Attributes\Test;
 class RestrictedPathsTest extends PackageTestCase
 {
     use CapturesQueries;
+    use ResetsExtensionStubs;
 
     /** @var list<string> */
     private array $checks = [];
@@ -41,7 +43,6 @@ class RestrictedPathsTest extends PackageTestCase
     {
         parent::setUp();
 
-        RestrictionLog::reset();
         Rest::resource('restricted-authors', RestrictedAuthorController::class)->register();
         Rest::resource('restricted-posts', RestrictedPostController::class)->register();
         Rest::resource('restricted-labels', RestrictedLabelController::class)->register();
@@ -72,14 +73,6 @@ class RestrictedPathsTest extends PackageTestCase
             ['id' => 1, 'text' => 'classic', 'labelable_type' => Book::class, 'labelable_id' => 1],
             ['id' => 2, 'text' => 'secret', 'labelable_type' => Book::class, 'labelable_id' => 2],
         ]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        RestrictionLog::reset();
-
-        parent::tearDown();
     }
 
     /**

@@ -6,8 +6,8 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherTeamsExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Feature\Metrics\SalesTestCase;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\SharedOrderCount;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -17,21 +17,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [OtherTeamsExtension::class])]
 class RestrictedMetricsTest extends SalesTestCase
 {
-    #[\Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        RestrictionLog::reset();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        RestrictionLog::reset();
-
-        parent::tearDown();
-    }
+    use ResetsExtensionStubs;
 
     #[Test]
     public function it_keeps_a_global_result_of_each_restriction_apart(): void

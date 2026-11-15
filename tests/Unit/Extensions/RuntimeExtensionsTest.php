@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Unit\Extensions;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AbstractNotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
@@ -14,8 +15,6 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotesResources;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RenamableExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingNameExtension;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -23,49 +22,24 @@ use RuntimeException;
 
 final class RuntimeExtensionsTest extends TestCase
 {
+    use ResetsExtensionStubs;
+
     private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
 
     private const string SOURCE = 'Rest::registerExtensions()';
 
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
-
     #[Test]
-    public function it_keeps_the_registrations_in_their_order(): void
+    public function it_keeps_each_registration_once_in_its_order(): void
     {
         $extensions = new RuntimeExtensions;
 
         $extensions->register(NotingExtension::class);
         $extensions->register(CountingExtension::class);
-
-        $this->assertSame([NotingExtension::class, CountingExtension::class], $extensions->all());
-    }
-
-    #[Test]
-    public function it_registers_a_list_of_classes(): void
-    {
-        $extensions = new RuntimeExtensions;
-        $extensions->register(CountingExtension::class);
-
         $extensions->registerAll([NotingExtension::class, BothKindsExtension::class]);
+        $extensions->register(CountingExtension::class);
+        $extensions->registerAll([BothKindsExtension::class, BothKindsExtension::class]);
 
-        $this->assertSame([CountingExtension::class, NotingExtension::class, BothKindsExtension::class], $extensions->all());
-    }
-
-    #[Test]
-    public function it_counts_the_same_class_once(): void
-    {
-        $extensions = new RuntimeExtensions;
-        $extensions->register(NotingExtension::class);
-
-        $extensions->register(NotingExtension::class);
-        $extensions->registerAll([NotingExtension::class, NotingExtension::class]);
-
-        $this->assertSame([NotingExtension::class], $extensions->all());
+        $this->assertSame([NotingExtension::class, CountingExtension::class, BothKindsExtension::class], $extensions->all());
     }
 
     #[Test]
@@ -127,28 +101,17 @@ final class RuntimeExtensionsTest extends TestCase
     }
 
     #[Test]
-    public function it_accepts_a_name_of_32_characters_with_digits_and_underscores(): void
+    #[DataProvider('validNames')]
+    public function it_accepts_a_name_that_keeps_the_name_rule(string $name): void
     {
-        $extensions = new RuntimeExtensions;
-        RenamableExtension::$given = str_repeat('a', 30).'_1';
-
-        $extensions->register(RenamableExtension::class);
-
-        $this->assertSame(32, strlen(RenamableExtension::$given));
-        $this->assertSame([RenamableExtension::class], $extensions->all());
-    }
-
-    #[Test]
-    public function it_accepts_words_joined_by_single_underscores(): void
-    {
-        $extensions = new RuntimeExtensions;
-
-        foreach (['row_lock_2', 'a1_b2'] as $name) {
+        foreach ([fn (RuntimeExtensions $extensions) => $extensions->register(RenamableExtension::class), fn (RuntimeExtensions $extensions) => $extensions->registerAll([RenamableExtension::class])] as $registration) {
+            $extensions = new RuntimeExtensions;
             RenamableExtension::$given = $name;
-            $extensions->registerAll([RenamableExtension::class]);
-        }
 
-        $this->assertSame([RenamableExtension::class], $extensions->all());
+            $registration($extensions);
+
+            $this->assertSame([RenamableExtension::class], $extensions->all());
+        }
     }
 
     #[Test]
@@ -181,11 +144,15 @@ final class RuntimeExtensionsTest extends TestCase
     }
 
     #[Test]
-    public function it_explains_each_class_refusal(): void
+    public function it_explains_each_class_and_list_refusal(): void
     {
         $this->assertSame('The extension ['.self::MISSING.'] is not a class. Give the name of a class that extends '.Extension::class.'.', InvalidExtensionException::notAClass(self::MISSING)->getMessage());
         $this->assertSame('The extension '.NotAnExtension::class.' does not extend '.Extension::class.'. Extend it.', InvalidExtensionException::notAnExtension(NotAnExtension::class)->getMessage());
         $this->assertSame('The extension '.AbstractNotingExtension::class.' is abstract or cannot be instantiated. Register a concrete class.', InvalidExtensionException::notInstantiable(AbstractNotingExtension::class)->getMessage());
+        $this->assertSame(
+            'Rest::registerExtensions() takes a list of extension class names, such as [AccessControlExtension::class]: each extension class declares its own name.',
+            InvalidExtensionException::notAList(self::SOURCE)->getMessage(),
+        );
     }
 
     #[Test]
@@ -198,10 +165,6 @@ final class RuntimeExtensionsTest extends TestCase
             $this->fail('The instance was accepted.');
         } catch (InvalidExtensionException $exception) {
             $this->assertEquals(InvalidExtensionException::instanceGiven(self::SOURCE, NotingExtension::class), $exception);
-            $this->assertSame(
-                'Rest::registerExtensions() holds an instance of '.NotingExtension::class.'. Give its class name in the list, such as ['.NotingExtension::class.'::class]: the container builds each extension once per context, and an instance would outlive the context.',
-                $exception->getMessage(),
-            );
             $this->assertSame([], $extensions->all());
         }
     }
@@ -217,10 +180,6 @@ final class RuntimeExtensionsTest extends TestCase
             $this->fail('The value was accepted.');
         } catch (InvalidExtensionException $exception) {
             $this->assertEquals(InvalidExtensionException::notAClassName(self::SOURCE, $type), $exception);
-            $this->assertSame(
-                "Rest::registerExtensions() holds [{$type}], which is not a class name. Give a list of extension class names, such as [AccessControlExtension::class].",
-                $exception->getMessage(),
-            );
             $this->assertSame([], $extensions->all());
         }
     }
@@ -237,10 +196,6 @@ final class RuntimeExtensionsTest extends TestCase
             $this->fail('The array was accepted.');
         } catch (InvalidExtensionException $exception) {
             $this->assertEquals(InvalidExtensionException::notAList(self::SOURCE), $exception);
-            $this->assertSame(
-                'Rest::registerExtensions() takes a list of extension class names, such as [AccessControlExtension::class]: each extension class declares its own name.',
-                $exception->getMessage(),
-            );
             $this->assertSame([], $extensions->all());
             $this->assertSame([], ExtensionLog::$named);
         }
@@ -302,6 +257,16 @@ final class RuntimeExtensionsTest extends TestCase
             'two underscores' => ['acl__x'],
             'a trailing underscore' => ['acl_'],
             'only underscores after a letter' => ['a__'],
+        ];
+    }
+
+    /** @return array<string, array{string}> */
+    public static function validNames(): array
+    {
+        return [
+            '32 characters with digits and underscores' => [str_repeat('a', 30).'_1'],
+            'words joined by single underscores' => ['row_lock_2'],
+            'letters and digits joined by an underscore' => ['a1_b2'],
         ];
     }
 

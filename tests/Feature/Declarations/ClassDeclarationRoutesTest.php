@@ -131,7 +131,9 @@ class ClassDeclarationRoutesTest extends DeclarationTestCase
     {
         $resolved = [];
         $this->app->beforeResolving(function (string $abstract) use (&$resolved): void {
-            $resolved[] = $abstract;
+            if (! in_array($abstract, [RuntimeExtensions::class, RouteExtensions::class], true)) {
+                $resolved[] = $abstract;
+            }
         });
 
         Rest::resource('desk-tickets', DeskTicketController::class)->register();
@@ -139,20 +141,7 @@ class ClassDeclarationRoutesTest extends DeclarationTestCase
         Rest::resource('teams', TeamController::class)->only('operate', 'metric')->register();
 
         $this->assertSame([], DeclarationLog::$built);
-        $this->assertSame([
-            RuntimeExtensions::class,
-            RouteExtensions::class,
-            'request',
-            RuntimeExtensions::class,
-            DeskTicketResource::class,
-            RuntimeExtensions::class,
-            RouteExtensions::class,
-            RuntimeExtensions::class,
-            RouteExtensions::class,
-            'request',
-            RuntimeExtensions::class,
-            'Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource',
-        ], $resolved);
+        $this->assertSame(['request', DeskTicketResource::class, 'request', 'Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource'], $resolved);
     }
 
     #[Test]

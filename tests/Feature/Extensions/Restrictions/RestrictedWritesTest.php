@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Restrictions;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Feature\Mutate\Concerns\SeedsLibraryRows;
@@ -23,6 +24,7 @@ class RestrictedWritesTest extends PackageTestCase
 {
     use AssertsExactErrors;
     use CapturesQueries;
+    use ResetsExtensionStubs;
     use SeedsLibraryRows;
 
     #[\Override]
@@ -36,16 +38,7 @@ class RestrictedWritesTest extends PackageTestCase
     {
         parent::setUp();
 
-        RestrictionLog::reset();
         $this->seedLibrary();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        RestrictionLog::reset();
-
-        parent::tearDown();
     }
 
     /** @param array<string, mixed> $entry */

@@ -9,10 +9,12 @@ use Lomkit\Rest\Http\Resource;
 
 class FirstGates extends Extension implements DeclaresGates
 {
+    public static ?string $named = null;
+
     #[\Override]
     public static function name(): string
     {
-        return 'acl';
+        return self::$named ?? 'acl';
     }
 
     /** @var list<class-string<Resource>>|null */
@@ -26,6 +28,7 @@ class FirstGates extends Extension implements DeclaresGates
 
     public static function reset(): void
     {
+        self::$named = null;
         self::$resources = null;
         self::$gates = [];
         self::$contexts = [];

@@ -2,26 +2,21 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Routes;
 
+use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutesProvider;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampsRequests;
 use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketController;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 
 class RuntimeRouteMiddlewareTest extends HelpdeskTestCase
 {
-    #[Before]
-    #[After]
-    public function resetTheStubs(): void
-    {
-        StampRoutes::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function getPackageProviders($app): array
@@ -42,15 +37,16 @@ class RuntimeRouteMiddlewareTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_skips_a_disabled_runtime_extension(): void
+    public function it_refuses_a_disabled_config_that_is_not_a_list_beside_a_runtime_route_extension(): void
     {
-        config(['rest.extensions' => [], 'rest.disabled_extensions' => [StampRoutes::class]]);
-        StampRoutes::reset();
+        config(['rest.extensions' => [], 'rest.disabled_extensions' => ['stamp' => StampRoutes::class]]);
 
-        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+        $this->expectExceptionObject(InvalidConfigException::mustBe('rest.disabled_extensions', 'a list of extension class names'));
 
-        $route = $this->app['router']->getRoutes()->getByName('routed-tickets.search');
-        $this->assertSame([EnforceExpectsJson::class], $route?->middleware());
-        $this->assertSame(0, StampRoutes::$built);
+        try {
+            Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+        } finally {
+            $this->assertNull($this->app['router']->getRoutes()->getByName('routed-tickets.search'));
+        }
     }
 }

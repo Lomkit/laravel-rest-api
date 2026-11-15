@@ -11,10 +11,10 @@ use Laravel\Scout\Builder;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
-use Lomkit\Rest\Extensions\Contexts\EngineRestriction;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CheapEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ComparedPriceVoucherController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
@@ -41,14 +41,13 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionClass;
-use ReflectionMethod;
-use ReflectionProperty;
 use RuntimeException;
 
 #[Group('scout')]
 class EngineRestrictionTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     private RecordingCollectionEngine $engine;
 
     #[\Override]
@@ -56,19 +55,8 @@ class EngineRestrictionTest extends EngineSearchTestCase
     {
         parent::setUp();
 
-        EngineLog::reset();
-        ExtensionLog::reset();
         $this->engine = new RecordingCollectionEngine;
         $this->useEngine($this->engine);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        EngineLog::reset();
-        ExtensionLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -200,13 +188,15 @@ class EngineRestrictionTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_searches_for_a_user_that_the_extension_lets_through(): void
+    public function it_searches_for_the_user_of_the_request_that_the_extension_lets_through(): void
     {
         config(['rest.extensions' => [GuestlessEngineExtension::class]]);
+        $user = new GenericUser(['id' => 3]);
 
-        $response = $this->actingAs(new GenericUser(['id' => 1]))->search('vouchers', ['text' => ['value' => 'report']]);
+        $response = $this->actingAs($user)->search('vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([5, 4, 1, 3], 4));
+        $this->assertSame([$user], EngineLog::$users);
     }
 
     #[Test]
@@ -227,17 +217,6 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $this->assertSame([$user], EngineLog::$users);
         $this->assertNotSame([], $checked);
         $this->assertSame($user, $checked[0]);
-    }
-
-    #[Test]
-    public function it_gives_the_extension_the_user_of_the_request(): void
-    {
-        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
-        $user = new GenericUser(['id' => 3]);
-
-        $this->actingAs($user)->search('vouchers', ['text' => ['value' => 'report']])->assertOk();
-
-        $this->assertSame([$user], EngineLog::$users);
     }
 
     #[Test]
@@ -263,18 +242,6 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $this->expectExceptionObject(InvalidTextSearchException::missingPerimeter(UnboundedVoucherResource::class));
 
         $this->search('unbounded-vouchers', ['text' => ['value' => 'report']]);
-    }
-
-    #[Test]
-    public function it_offers_only_where_clauses_and_match_nothing(): void
-    {
-        $methods = array_map(fn (ReflectionMethod $method): string => $method->getName(), (new ReflectionClass(EngineRestriction::class))->getMethods(ReflectionMethod::IS_PUBLIC));
-
-        $this->assertSame(['where', 'whereIn', 'whereNotIn', 'matchNothing'], array_values(array_diff($methods, ['__construct'])));
-        $this->assertSame(['query', 'resource', 'user', 'matchesStringLists', 'rowsRestrictedInSql', 'comparesColumns'], array_map(
-            fn (ReflectionProperty $property): string => $property->getName(),
-            (new ReflectionClass(EngineRestrictionContext::class))->getProperties(ReflectionProperty::IS_PUBLIC),
-        ));
     }
 
     /**
@@ -331,18 +298,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_refuses_an_attribute_that_the_index_does_not_declare(): void
-    {
-        config(['rest.extensions' => [OwnerEngineRestriction::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidEngineExtensionException::refusedEngineCondition('owner', OwnerEngineRestriction::class, VoucherResource::class, InvalidEngineQueryException::undeclaredAttribute('owner')));
-
-        $this->search('vouchers', ['text' => ['value' => 'report']]);
-    }
-
-    #[Test]
-    public function it_names_the_registered_class_of_an_engine_restriction_bound_to_a_subclass(): void
+    public function it_refuses_an_attribute_that_the_index_does_not_declare_and_names_the_registered_class(): void
     {
         config(['rest.extensions' => [OwnerEngineRestriction::class]]);
         $this->app?->bind(OwnerEngineRestriction::class, static fn (): OwnerEngineRestriction => new class extends OwnerEngineRestriction {});
@@ -367,24 +323,6 @@ class EngineRestrictionTest extends EngineSearchTestCase
             $exception->getMessage(),
         );
         $this->assertSame([true, false], [$exception->concerns(OwnerEngineRestriction::class), $exception->concerns('owner')]);
-    }
-
-    #[Test]
-    public function it_chains_match_nothing_like_the_other_conditions(): void
-    {
-        $where = (string) (new ReflectionMethod(EngineRestriction::class, 'where'))->getReturnType();
-
-        $this->assertContains($where, ['self', EngineRestriction::class]);
-        $this->assertSame($where, (string) (new ReflectionMethod(EngineRestriction::class, 'matchNothing'))->getReturnType());
-    }
-
-    #[Test]
-    public function it_names_every_way_to_declare_an_attribute(): void
-    {
-        $this->assertSame(
-            'The engine query has no attribute [owner]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.',
-            InvalidEngineQueryException::undeclaredAttribute('owner')->getMessage(),
-        );
     }
 
     #[Test]

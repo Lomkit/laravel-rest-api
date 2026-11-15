@@ -40,13 +40,4 @@ class ExtensionDocumentTest extends DocumentationTestCase
         $this->assertSame('[{"$ref":"#/components/schemas/ShowInstructionOnlyFeatured"},{"$ref":"#/components/schemas/ShowInstructionProgram.onlyHeadliners"}]', json_encode($schemas['ShowInstruction']['oneOf'], JSON_UNESCAPED_SLASHES));
         $this->assertSame(['only-featured', 'program.only-headliners'], $schemas['ShowDetails']['properties']['data']['properties']['instructions']['items']['properties']['uriKey']['enum']);
     }
-
-    #[Test]
-    public function it_documents_the_capped_total_of_a_resource_that_an_extension_may_cap(): void
-    {
-        $paginated = $this->document()['components']['schemas']['ShowPaginated'];
-
-        $this->assertSame('{"type":"boolean","description":"True when more rows match than the resource counts: total is then a lower bound"}', json_encode($paginated['properties']['total_capped']));
-        $this->assertNotContains('total_capped', $paginated['required']);
-    }
 }

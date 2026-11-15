@@ -4,24 +4,18 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Routes;
 
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampsRequests;
 use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketController;
 use Orchestra\Testbench\Attributes\WithConfig;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 
 #[WithConfig('rest.extensions', [StampRoutes::class, 'Missing\Extension'])]
 class RouteExtensionBootTest extends HelpdeskTestCase
 {
-    #[Before]
-    #[After]
-    public function resetTheStubs(): void
-    {
-        StampRoutes::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function defineRoutes($router): void

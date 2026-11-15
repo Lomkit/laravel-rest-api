@@ -15,6 +15,7 @@ final class AugmentationLog
         self::$aliases = [];
         self::$gates = [];
         FirstAugmentation::$augment = null;
+        FirstAugmentation::$named = null;
         SecondAugmentation::$augment = null;
     }
 }

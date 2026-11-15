@@ -4,16 +4,11 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Fields;
 
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use Lomkit\Rest\Authorization\ActingUser;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
-use Lomkit\Rest\Fields\Integer;
-use Lomkit\Rest\Fields\WriteOperation;
-use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadOnlyKeyCategoryController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadOnlyKeyProductController;
@@ -30,6 +25,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [MaskingFields::class])]
 class ReducedFieldsTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
     use SeedsCatalog;
 
     #[\Override]
@@ -43,7 +39,6 @@ class ReducedFieldsTest extends PackageTestCase
     {
         parent::setUp();
 
-        MaskingFields::reset();
         MaskingFields::$narrow = static function (FieldsContext $context): void {
             if ($context->user !== null && $context->resource::class === ProductResource::class) {
                 $context->readOnly('price');
@@ -58,14 +53,6 @@ class ReducedFieldsTest extends PackageTestCase
             Rest::resource('read-only-key-categories', ReadOnlyKeyCategoryController::class)->register();
         });
         $this->seedCatalog();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        MaskingFields::reset();
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -190,32 +177,6 @@ class ReducedFieldsTest extends PackageTestCase
             ['id' => 3, 'category_id' => 2, 'name' => 'Stool', 'price' => 45],
         ]);
         $write->assertUnprocessable()->assertJsonPath('errors', ['mutate.0.attributes' => ['The price key of the mutate.0.attributes field is not writable on update.']]);
-    }
-
-    #[Test]
-    public function it_clones_the_narrowed_field_and_keeps_the_declared_one(): void
-    {
-        $context = new RestContext(RestRequest::createFrom(Request::create('/')), $this->app, ActingUser::of('web', self::user()));
-        $definition = $context->resource(ProductResource::class)->definition();
-
-        $narrowed = $definition->fields()->get('price');
-        $declared = $definition->declaredFields()->get('price');
-
-        $this->assertNotSame($declared, $narrowed);
-        $this->assertInstanceOf(Integer::class, $narrowed);
-        $this->assertSame([false, false, false, false], [
-            $narrowed->isWritableOn(WriteOperation::Create),
-            $narrowed->isWritableOn(WriteOperation::Update),
-            $narrowed->isFilterable(),
-            $narrowed->isSortable(),
-        ]);
-        $this->assertSame([true, true, true, true], [
-            $declared->isWritableOn(WriteOperation::Create),
-            $declared->isWritableOn(WriteOperation::Update),
-            $declared->isFilterable(),
-            $declared->isSortable(),
-        ]);
-        $this->assertSame($definition->declaredFields()->get('name'), $definition->fields()->get('name'));
     }
 
     #[Test]

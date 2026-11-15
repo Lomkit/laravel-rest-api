@@ -2,11 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 
-final class RecordingReadObserverNamedSecond extends RecordingReadObserver
+final class QuotaMetaNamedGates extends QuotaMeta
 {
     #[\Override]
     public static function name(): string
     {
-        return 'second';
+        return 'gates';
     }
 }

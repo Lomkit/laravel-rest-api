@@ -10,10 +10,12 @@ use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 
 class ChangingReadObserver extends Extension implements ObservesReads
 {
+    public static ?string $named = null;
+
     #[\Override]
     public static function name(): string
     {
-        return 'reads';
+        return self::$named ?? 'reads';
     }
 
     #[\Override]

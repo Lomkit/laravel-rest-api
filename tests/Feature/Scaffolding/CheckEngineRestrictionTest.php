@@ -9,12 +9,12 @@ use Laravel\Scout\ScoutServiceProvider;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedEverywhereExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedRowsExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\RouteBoundVoucherController;
@@ -28,21 +28,23 @@ use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 #[Group('scout')]
 #[WithConfig('auth.guards.sanctum', ['driver' => 'session', 'provider' => 'users'])]
 final class CheckEngineRestrictionTest extends ScaffoldingTestCase
 {
+    use ResetsExtensionStubs;
     use RunsTheQuickStart;
 
     #[Before]
     #[After]
     public function resetTheLog(): void
     {
-        RestrictionLog::reset();
         RouteBoundVoucherResource::$textCalls = 0;
     }
 
@@ -66,21 +68,25 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
         Route::prefix('api')->group(fn () => Rest::resource('checked-vouchers', CheckedVoucherController::class)->middleware('auth:sanctum')->register());
     }
 
-    #[Test]
-    public function it_reports_the_registered_class_of_a_restriction_bound_to_a_subclass(): void
+    /** @return array<string, array{bool}> */
+    public static function bindings(): array
     {
-        $this->useForeignEngine([RedRowsExtension::class]);
-        $this->app?->bind(RedRowsExtension::class, static fn (): RedRowsExtension => new class extends RedRowsExtension {});
-
-        [$exitCode, $rows] = $this->rows();
-
-        $this->assertSame([1, [InvalidTextSearchException::unrestrictedEngine(CheckedVoucherResource::class, 'red', RedRowsExtension::class, ForeignEngine::class)->getMessage()]], [$exitCode, $rows['problems']]);
+        return [
+            'the registered class' => [false],
+            'the registered class bound to a subclass' => [true],
+        ];
     }
 
     #[Test]
-    public function it_reports_a_restriction_that_an_engine_search_cannot_apply(): void
+    #[DataProvider('bindings')]
+    public function it_reports_a_restriction_that_an_engine_search_cannot_apply(bool $bound): void
     {
         $this->useForeignEngine([RedRowsExtension::class]);
+
+        if ($bound) {
+            $this->app?->bind(RedRowsExtension::class, static fn (): RedRowsExtension => new class extends RedRowsExtension {});
+        }
+
         $problem = InvalidTextSearchException::unrestrictedEngine(CheckedVoucherResource::class, 'red', RedRowsExtension::class, ForeignEngine::class)->getMessage();
 
         [$exitCode, $rows] = $this->rows();
@@ -164,7 +170,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
 
         $this->assertSame(1, $exitCode);
         $this->assertSame(
-            ['The [red] extension '.RedRowsExtension::class.' restricts the rows of '.RouteBoundVoucherResource::class.' in SQL but does not implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries, and the text search or the Scout engine of '.RouteBoundVoucherResource::class.' cannot be resolved (text() needs the request route). A text search of '.RouteBoundVoucherResource::class.' is refused on an engine that does not apply SQL restrictions. Implement RestrictsEngineQueries in '.RedRowsExtension::class.' to restrict the engine search too, index the model with the Scout database or collection driver, leave '.RouteBoundVoucherResource::class.' out of the extension with appliesTo(), or add '.RedRowsExtension::class.' to the [rest.disabled_extensions] config.'],
+            [InvalidTextSearchException::unresolvedEngine(RouteBoundVoucherResource::class, 'red', RedRowsExtension::class, new RuntimeException('text() needs the request route'))->getMessage()],
             json_decode($output->fetch(), true)['rows']['problems'],
         );
     }

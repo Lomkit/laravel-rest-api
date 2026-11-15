@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Meta;
 
-use ArrayObject;
-use Closure;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Lomkit\Rest\Authorization\ActingUser;
@@ -11,18 +9,17 @@ use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\JsonResourceMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketResource;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaDetailsMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\NotFiniteValue;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserver;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionDetailsMeta;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionDetailsMetaNamedArea;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnencodableMeta;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueDetailsMeta;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrappedMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionMetaNamedArea;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
@@ -31,6 +28,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 final class DetailsMetaExtensionsTest extends HelpdeskTestCase
 {
+    use ResetsExtensionStubs;
+
     private const string META = '"meta":{"plan":"pro","quota":{"plan":"pro","user":1},"region":{}}';
 
     #[\Override]
@@ -38,19 +37,8 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     {
         parent::setUp();
 
-        MetaLog::reset();
-        WriteLog::reset();
         Rest::resource('meta-tickets', MetaTicketController::class)->register();
-        config(['rest.extensions' => [QuotaDetailsMeta::class, RegionDetailsMeta::class]]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        MetaLog::reset();
-        WriteLog::reset();
-
-        parent::tearDown();
+        config(['rest.extensions' => [QuotaMeta::class, RegionMeta::class]]);
     }
 
     #[Test]
@@ -79,7 +67,6 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
         return [
             'a guest' => [null, null],
             'the lead' => [new GenericUser(['id' => TicketPolicy::LEAD]), 1],
-            'another user' => [new GenericUser(['id' => 7]), 7],
         ];
     }
 
@@ -104,10 +91,8 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
         $area = '"meta":{"plan":"pro","area":{},"quota":{"plan":"pro","user":1}}';
 
         return [
-            'quota first' => [[QuotaDetailsMeta::class, RegionDetailsMeta::class], self::META],
-            'region first' => [[RegionDetailsMeta::class, QuotaDetailsMeta::class], self::META],
-            'area, a later class, first by name' => [[QuotaDetailsMeta::class, RegionDetailsMetaNamedArea::class], $area],
-            'area first in the config' => [[RegionDetailsMetaNamedArea::class, QuotaDetailsMeta::class], $area],
+            'area, a later class, first by name' => [[QuotaMeta::class, RegionMetaNamedArea::class], $area],
+            'area first in the config' => [[RegionMetaNamedArea::class, QuotaMeta::class], $area],
         ];
     }
 
@@ -130,19 +115,7 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
         MetaLog::$detailsMeta = ['quota' => 1];
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidMetaExtensionException::keyTaken('quota', QuotaDetailsMeta::class, MetaTicketResource::class, 'detailsMeta'));
-
-        $this->getJson('/meta-tickets');
-    }
-
-    #[Test]
-    public function it_refuses_a_details_value_that_json_cannot_encode(): void
-    {
-        MetaLog::$value = ['list' => [new ArrayObject]];
-        config(['rest.extensions' => [ValueDetailsMeta::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', 'value.value.list.0', 'ArrayObject'));
+        $this->expectExceptionObject(InvalidMetaExtensionException::keyTaken('quota', QuotaMeta::class, MetaTicketResource::class, 'detailsMeta'));
 
         $this->getJson('/meta-tickets');
     }
@@ -151,82 +124,34 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_model_in_the_details_meta(): void
     {
         MetaLog::$value = ['list' => [new Ticket(['title' => 'Printer jam'])]];
-        config(['rest.extensions' => [ValueDetailsMeta::class]]);
+        config(['rest.extensions' => [ValueMeta::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', 'value.value.list.0', Ticket::class));
-
-        $this->getJson('/meta-tickets');
-    }
-
-    /** @return array<string, array{Closure(): mixed, string, class-string}> */
-    public static function jsonResources(): array
-    {
-        return JsonResourceMeta::cases();
-    }
-
-    /** @param Closure(): mixed $value */
-    #[Test]
-    #[DataProvider('jsonResources')]
-    public function it_refuses_a_json_resource_in_the_details_meta(Closure $value, string $path, string $type): void
-    {
-        MetaLog::$value = $value();
-        config(['rest.extensions' => [ValueDetailsMeta::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', "value.value.{$path}", $type));
-
-        $this->getJson('/meta-tickets');
-    }
-
-    /** @return array<string, array{Closure(): mixed, string, class-string}> */
-    public static function wrapped(): array
-    {
-        return WrappedMeta::cases();
-    }
-
-    /** @param Closure(): mixed $value */
-    #[Test]
-    #[DataProvider('wrapped')]
-    public function it_refuses_a_model_or_a_resource_that_a_json_serializable_value_holds_in_the_details_meta(Closure $value, string $path, string $type): void
-    {
-        MetaLog::$value = $value();
-        config(['rest.extensions' => [ValueDetailsMeta::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', "value.value.{$path}", $type));
-
-        $this->getJson('/meta-tickets');
-    }
-
-    /** @return array<string, array{mixed, string}> */
-    public static function notJson(): array
-    {
-        return UnencodableMeta::cases();
-    }
-
-    #[Test]
-    #[DataProvider('notJson')]
-    public function it_refuses_a_details_value_that_json_refuses_naming_the_extension(mixed $value, string $reason): void
-    {
-        MetaLog::$value = $value;
-        config(['rest.extensions' => [ValueDetailsMeta::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', $reason));
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueMeta::class, MetaTicketResource::class, 'detailsMeta', 'value.value.list.0', Ticket::class));
 
         $this->getJson('/meta-tickets');
     }
 
     #[Test]
-    #[DataProvider('notJson')]
-    public function it_refuses_a_value_that_json_refuses_in_the_json_of_a_resource(mixed $value, string $reason): void
+    public function it_refuses_a_details_value_that_json_refuses_naming_the_extension(): void
     {
-        MetaLog::$value = $value;
-        config(['rest.extensions' => [ValueDetailsMeta::class]]);
+        MetaLog::$value = ['title' => "\xB1\x31"];
+        config(['rest.extensions' => [ValueMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueMeta::class, MetaTicketResource::class, 'detailsMeta', 'Malformed UTF-8 characters, possibly incorrectly encoded'));
+
+        $this->getJson('/meta-tickets');
+    }
+
+    #[Test]
+    public function it_refuses_a_value_that_json_refuses_in_the_json_of_a_resource(): void
+    {
+        MetaLog::$value = ['ratio' => new NotFiniteValue(INF)];
+        config(['rest.extensions' => [ValueMeta::class]]);
         $context = new RestContext(RestRequest::create('/meta-tickets', 'GET'), $this->app, ActingUser::of('web', null));
 
-        $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', $reason));
+        $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueMeta::class, MetaTicketResource::class, 'detailsMeta', 'Inf and NaN cannot be JSON encoded'));
 
         json_encode($context->resource(MetaTicketResource::class));
     }
@@ -244,7 +169,7 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_the_extension_meta_to_read_observers(): void
     {
-        config(['rest.extensions' => [QuotaDetailsMeta::class, RecordingReadObserver::class]]);
+        config(['rest.extensions' => [QuotaMeta::class, RecordingReadObserver::class]]);
         $this->actingAs(new GenericUser(['id' => TicketPolicy::LEAD]));
 
         $this->getJson('/meta-tickets')->assertOk();

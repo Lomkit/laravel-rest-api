@@ -28,7 +28,7 @@ final readonly class RouteEntries
     /** @param list<string> $registered */
     public static function of(Repository $config, Container $container, array $registered): self
     {
-        $configured = self::listed($config, RestConfig::EXTENSIONS);
+        $configured = self::configured($config);
 
         if ($configured === [] && $registered === []) {
             return new self([], []);
@@ -37,8 +37,16 @@ final readonly class RouteEntries
         $factory = new ExtensionFactory($container);
         $routed = [];
         $bound = [];
+        $unreadDisabled = null;
 
-        foreach (ExtensionList::of($configured, self::listed($config, RestConfig::DISABLED_EXTENSIONS), $registered)->entries as $entry) {
+        try {
+            $disabled = RestConfig::extensionClasses($config, RestConfig::DISABLED_EXTENSIONS);
+        } catch (InvalidConfigException $exception) {
+            $disabled = [];
+            $unreadDisabled = $exception;
+        }
+
+        foreach (ExtensionList::of($configured, $disabled, $registered)->entries as $entry) {
             if ($entry->disabled) {
                 continue;
             }
@@ -55,6 +63,10 @@ final readonly class RouteEntries
             }
         }
 
+        if ($unreadDisabled !== null && $routed !== []) {
+            throw $unreadDisabled;
+        }
+
         $classes = NamedExtensions::of($routed)->enabled();
         ksort($classes, SORT_STRING);
 
@@ -67,14 +79,14 @@ final readonly class RouteEntries
     }
 
     /** @return list<mixed> */
-    private static function listed(Repository $config, string $key): array
+    private static function configured(Repository $config): array
     {
         try {
-            return RestConfig::extensionClasses($config, $key);
+            return RestConfig::extensionClasses($config, RestConfig::EXTENSIONS);
         } catch (InvalidConfigException $exception) {
-            $value = $config->get($key);
+            $value = $config->get(RestConfig::EXTENSIONS);
 
-            if ($key === RestConfig::EXTENSIONS && is_array($value) && array_any($value, self::addsRouteMiddleware(...))) {
+            if (is_array($value) && array_any($value, self::addsRouteMiddleware(...))) {
                 throw $exception;
             }
 

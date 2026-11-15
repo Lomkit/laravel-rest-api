@@ -7,6 +7,7 @@ use Dedoc\Scramble\ScrambleServiceProvider;
 use Laravel\Scout\ScoutServiceProvider;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DeclaredIndexExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstIndexExtension;
@@ -17,6 +18,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class ScrambleEngineExtensionsTest extends ScrambleTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function fixtures(): array
     {
@@ -34,17 +37,7 @@ class ScrambleEngineExtensionsTest extends ScrambleTestCase
     {
         parent::setUp();
 
-        EngineLog::reset();
         DeclaredIndexExtension::$declared = [FirstIndexExtension::class => [Integer::make('owner_marker')]];
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        EngineLog::reset();
-        DeclaredIndexExtension::$declared = [];
-
-        parent::tearDown();
     }
 
     #[Test]

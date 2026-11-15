@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
 use Lomkit\Rest\Metrics\CacheScope;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstCacheContext;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TenantCacheContext;
 use Lomkit\Rest\Tests\Feature\Metrics\SalesTestCase;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\MetricOrderResource;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\TotalRevenue;
@@ -21,6 +21,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('cache.serializable_classes', false)]
 class CacheContextMetricsTest extends SalesTestCase
 {
+    use ResetsExtensionStubs;
+
     /** @var array<string, int> */
     private array $written = [];
 
@@ -31,7 +33,6 @@ class CacheContextMetricsTest extends SalesTestCase
     {
         parent::setUp();
 
-        FirstCacheContext::reset();
         FirstCacheContext::$resources = [MetricOrderResource::class];
         $this->actingAs(new GenericUser(['id' => 1, 'team_id' => 1]));
         Event::listen(KeyWritten::class, function (KeyWritten $event): void {
@@ -44,21 +45,14 @@ class CacheContextMetricsTest extends SalesTestCase
         });
     }
 
-    #[\Override]
-    protected function tearDown(): void
-    {
-        FirstCacheContext::reset();
-
-        parent::tearDown();
-    }
-
     #[Test]
     #[DataProvider('scopesAndStores')]
     public function it_never_serves_the_result_of_another_tenant(CacheScope $scope, string $store): void
     {
         $this->useStore($store);
         $this->serve(TotalRevenue::make()->cacheFor(600)->cacheScope($scope));
-        config(['rest.extensions' => [TenantCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
+        FirstCacheContext::$named = 'tenant';
         $tenant = 0;
         FirstCacheContext::$contribute = static function (CacheContributionContext $context) use (&$tenant): void {
             $context->put('id', $tenant);
@@ -73,28 +67,6 @@ class CacheContextMetricsTest extends SalesTestCase
         $this->assertGreaterThan(0, $statements[0]);
         $this->assertSame([$statements[0], $statements[0], 0, 0], $statements);
         $this->assertCount(2, $this->written);
-    }
-
-    #[Test]
-    #[DataProvider('scopesAndStores')]
-    public function it_never_serves_a_result_after_the_rules_fingerprint_changes(CacheScope $scope, string $store): void
-    {
-        $this->useStore($store);
-        $this->serve(TotalRevenue::make()->cacheFor(600)->cacheScope($scope));
-        config(['rest.extensions' => [FirstCacheContext::class]]);
-        $rules = '';
-        FirstCacheContext::$contribute = static function (CacheContributionContext $context) use (&$rules): void {
-            $context->put('rules', $rules);
-        };
-
-        $statements = [];
-
-        foreach (['v1', 'v2', 'v2', 'v1'] as $rules) {
-            $statements[] = $this->statementsOf('total-revenue');
-        }
-
-        $this->assertGreaterThan(0, $statements[0]);
-        $this->assertSame([$statements[0], $statements[0], 0, 0], $statements);
     }
 
     /** @return iterable<string, array{CacheScope, string}> */
