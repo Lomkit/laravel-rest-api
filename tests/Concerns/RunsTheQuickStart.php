@@ -142,7 +142,7 @@ trait RunsTheQuickStart
             $rows = $this->app->make(PerimeterCheck::class)->run($controllers, $declarations, $context);
             $links = $this->app->make(DetachCheck::class)->run($controllers, $context);
             $extensions = $this->app->make(ExtensionCheck::class)->run($context);
-            $checks = $this->app->make(ExtensionResourceCheck::class)->run($controllers);
+            $checks = $this->app->make(ExtensionResourceCheck::class)->run($controllers, $context);
             $report = (string) json_encode([...$access->toArray(), ...$declarations->toArray(), ...$rows->toArray(), ...$links->toArray(), ...$extensions->toArray(), ...$checks->toArray()], JSON_UNESCAPED_SLASHES);
 
             return Process::result($report, '', $access->passed() && $declarations->passed() && $rows->passed() && $links->passed() && $extensions->passed() && $checks->passed() ? 0 : 1);

@@ -80,7 +80,7 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
             ."  counting ... Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension, config\n",
             $output,
         );
-        $this->assertSame([BothKindsExtension::class, CountingExtension::class, BothKindsExtension::class, CountingExtension::class], ExtensionLog::$built);
+        $this->assertSame([BothKindsExtension::class, CountingExtension::class], ExtensionLog::$built);
     }
 
     #[Test]

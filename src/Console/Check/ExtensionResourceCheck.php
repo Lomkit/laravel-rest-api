@@ -2,37 +2,29 @@
 
 namespace Lomkit\Rest\Console\Check;
 
-use Illuminate\Contracts\Container\Container;
-use Illuminate\Http\Request;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\ResourceCheckContext;
 use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\ExtensionRegistry;
 use Lomkit\Rest\Extensions\Kinds\ChecksResources;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Throwable;
 
 final readonly class ExtensionResourceCheck
 {
-    public function __construct(private Container $container) {}
-
     /** @param list<string> $controllers */
-    public function run(array $controllers): ExtensionResourceReport
+    public function run(array $controllers, RestContext $context): ExtensionResourceReport
     {
-        $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
         $report = new ExtensionResourceReport;
+        $extensions = BuiltExtensions::in($context) ? $context->extensions()->ofKind(ChecksResources::class) : [];
 
-        if (! BuiltExtensions::in($context) || ! $context->extensions()->hasKind(ChecksResources::class)) {
+        if ($extensions === []) {
             return $report;
         }
 
-        $extensions = array_filter($context->extensions()->all(), fn (Extension $extension): bool => $extension instanceof ChecksResources);
-        ksort($extensions);
-
         foreach ((new ReachedResources($context))->from(ControllerResources::of($controllers)) as $resource) {
             foreach ($extensions as $name => $extension) {
-                $report = self::check($report, $name, $extension, $resource);
+                $report = self::check($report, $context->extensions(), $name, $extension, $resource);
             }
         }
 
@@ -40,12 +32,12 @@ final readonly class ExtensionResourceCheck
     }
 
     /** @param class-string<Resource> $resource */
-    private static function check(ExtensionResourceReport $report, string $name, Extension&ChecksResources $extension, string $resource): ExtensionResourceReport
+    private static function check(ExtensionResourceReport $report, ExtensionRegistry $registry, string $name, Extension&ChecksResources $extension, string $resource): ExtensionResourceReport
     {
         $class = $extension::class;
 
         try {
-            $applies = Applicability::of($extension, $resource);
+            $applies = $registry->appliesTo($name, $resource);
         } catch (Throwable $exception) {
             return $report->withProblem("The [{$name}] extension {$class} throws while it tells whether it applies to {$resource}: {$exception->getMessage()}");
         }

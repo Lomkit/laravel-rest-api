@@ -38,7 +38,7 @@ class CheckCommand extends Command
         $rows = $this->laravel->make(PerimeterCheck::class)->run($controllers, $declarations, $context);
         $links = $this->laravel->make(DetachCheck::class)->run($controllers, $context);
         $extensions = $this->laravel->make(ExtensionCheck::class)->run($context);
-        $checks = $this->laravel->make(ExtensionResourceCheck::class)->run($controllers);
+        $checks = $this->laravel->make(ExtensionResourceCheck::class)->run($controllers, $context);
 
         if ($this->option('json') === true) {
             $this->output->writeln(json_encode([...$access->toArray(), ...$declarations->toArray(), ...$rows->toArray(), ...$links->toArray(), ...$extensions->toArray(), ...$checks->toArray()], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), OutputInterface::OUTPUT_RAW);

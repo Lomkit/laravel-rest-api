@@ -59,17 +59,36 @@ final class ExtensionRegistry
      */
     public function applicable(string $resource, string $kind): array
     {
-        $applicable = [];
+        return array_filter($this->ofKind($kind), fn (Extension $extension, string $name): bool => $this->applies($name, $extension, $resource), ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * @template TKind of ExtensionKind
+     *
+     * @param  class-string<TKind>  $kind
+     * @return array<string, Extension&TKind>
+     */
+    public function ofKind(string $kind): array
+    {
+        $extensions = [];
 
         foreach ($this->all() as $name => $extension) {
-            if ($extension instanceof $kind && $this->applies($name, $extension, $resource)) {
-                $applicable[$name] = $extension;
+            if ($extension instanceof $kind) {
+                $extensions[$name] = $extension;
             }
         }
 
-        ksort($applicable, SORT_STRING);
+        ksort($extensions, SORT_STRING);
 
-        return $applicable;
+        return $extensions;
+    }
+
+    /** @param class-string<Resource> $resource */
+    public function appliesTo(string $name, string $resource): bool
+    {
+        $extension = $this->all()[$name] ?? null;
+
+        return $extension !== null && $this->applies($name, $extension, $resource);
     }
 
     /**
