@@ -103,14 +103,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
             'to' => 2,
             'total' => 2,
         ]);
-    }
-
-    #[Test]
-    public function it_renders_the_empty_meta_of_an_extension_as_an_object(): void
-    {
-        $content = (string) $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->getContent();
-
-        $this->assertStringContainsString('"meta":{"count":2,"quota":{"remaining":98,"titles":["Printer jam","Printer toner"],"user":1},"region":{}}', $content);
+        $this->assertStringContainsString('"meta":{"count":2,"quota":{"remaining":98,"titles":["Printer jam","Printer toner"],"user":1},"region":{}}', (string) $response->getContent());
     }
 
     #[Test]
@@ -134,8 +127,6 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $quota = '"quota":{"remaining":98,"titles":["Printer jam","Printer toner"],"user":1}';
 
         return [
-            'quota first' => [[QuotaSearchMeta::class, RegionSearchMeta::class], '"meta":{"count":2,'.$quota.',"region":{}}'],
-            'region first' => [[RegionSearchMeta::class, QuotaSearchMeta::class], '"meta":{"count":2,'.$quota.',"region":{}}'],
             'area, a later class, first by name' => [[QuotaSearchMeta::class, RegionSearchMetaNamedArea::class], '"meta":{"count":2,"area":{},'.$quota.'}'],
             'area first in the config' => [[RegionSearchMetaNamedArea::class, QuotaSearchMeta::class], '"meta":{"count":2,"area":{},'.$quota.'}'],
         ];
@@ -215,28 +206,63 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         ]);
     }
 
-    /** @return array<string, array{mixed, string, string}> */
-    public static function unencodable(): array
+    /** @return array<string, array{Closure(): mixed, string, string}> */
+    public static function refusedValues(): array
     {
-        return [
-            'an object' => [new ArrayObject, 'ArrayObject', 'value.value'],
-            'an infinite float' => [INF, 'float', 'value.value'],
-            'a nested object' => [['nested' => new SplObjectStorage], 'SplObjectStorage', 'value.value.nested'],
-            'a pure enum' => [['shape' => MetaShape::Round], MetaShape::class, 'value.value.shape'],
+        $ticket = fn (): Ticket => new Ticket(['title' => 'Printer jam']);
+        $cases = [
+            'an object' => [fn (): ArrayObject => new ArrayObject, 'value.value', ArrayObject::class],
+            'an infinite float' => [fn (): float => INF, 'value.value', 'float'],
+            'a nested object' => [fn (): array => ['nested' => new SplObjectStorage], 'value.value.nested', SplObjectStorage::class],
+            'a pure enum' => [fn (): array => ['shape' => MetaShape::Round], 'value.value.shape', MetaShape::class],
+            'a model' => [fn (): array => ['ticket' => $ticket()], 'value.value.ticket', Ticket::class],
+            'an Eloquent collection' => [fn (): array => ['tickets' => new EloquentCollection([$ticket()])], 'value.value.tickets', EloquentCollection::class],
+            'a model inside a plain collection' => [fn (): array => ['tickets' => collect([$ticket()])], 'value.value.tickets.0', Ticket::class],
+            'the models of an Eloquent collection turned into a plain one' => [fn (): array => ['tickets' => (new EloquentCollection([$ticket()]))->toBase()], 'value.value.tickets.0', Ticket::class],
         ];
+
+        foreach ([...JsonResourceMeta::cases(), ...WrappedMeta::cases()] as $name => [$value, $path, $type]) {
+            $cases[$name] = [$value, "value.value.{$path}", $type];
+        }
+
+        return $cases;
     }
 
+    /** @param Closure(): mixed $value */
     #[Test]
-    #[DataProvider('unencodable')]
-    public function it_refuses_a_value_that_json_cannot_encode(mixed $value, string $type, string $path): void
+    #[DataProvider('refusedValues')]
+    public function it_refuses_a_model_a_resource_or_a_value_that_json_cannot_encode(Closure $value, string $path, string $type): void
     {
-        MetaLog::$value = $value;
+        MetaLog::$value = $value();
         config(['rest.extensions' => [ValueSearchMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $path, $type));
 
         $this->postJson('/meta-tickets/search', self::SEARCH);
+    }
+
+    /** @return array<string, array{Closure(): mixed, string}> */
+    public static function acceptedValues(): array
+    {
+        return [
+            'a plain collection of values' => [fn (): array => ['titles' => collect(['Printer jam', 'Printer toner'])], '{"titles":["Printer jam","Printer toner"]}'],
+            'JsonSerializable wrappers of plain values' => [fn (): array => ['wrapper' => new Fluent(['plan' => 'pro', 'ratio' => 0.5]), 'dto' => new MetaDto(new MetaDto(['n' => 1]))], '{"wrapper":{"plan":"pro","ratio":0.5},"dto":{"data":{"data":{"n":1}}}}'],
+            'JsonSerializable values' => [fn (): array => ['at' => now(), 'tags' => (object) ['a' => 1], 'ratio' => 0.5, 'status' => MetaStatus::Open, 'none' => null], '{"at":"2026-11-15T10:00:00.000000Z","tags":{"a":1},"ratio":0.5,"status":"open","none":null}'],
+        ];
+    }
+
+    /** @param Closure(): mixed $value */
+    #[Test]
+    #[DataProvider('acceptedValues')]
+    public function it_renders_a_value_that_holds_no_model_and_no_resource(Closure $value, string $json): void
+    {
+        MetaLog::$value = $value();
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
+
+        $content = (string) $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->getContent();
+
+        $this->assertStringContainsString('"meta":{"count":2,"value":{"value":'.$json.'}}', $content);
     }
 
     #[Test]
@@ -278,83 +304,6 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->assertSame([$expected, true, false], [$exception?->getMessage(), $exception?->concerns(PageCountMetaExtensionNamedInstructions::class), $exception?->concerns($bound::class)]);
     }
 
-    #[Test]
-    public function it_refuses_a_model_in_the_meta(): void
-    {
-        MetaLog::$value = ['ticket' => new Ticket(['title' => 'Printer jam'])];
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.ticket', Ticket::class));
-
-        $this->postJson('/meta-tickets/search', self::SEARCH);
-    }
-
-    #[Test]
-    public function it_refuses_an_eloquent_collection_in_the_meta(): void
-    {
-        MetaLog::$value = ['tickets' => new EloquentCollection([new Ticket(['title' => 'Printer jam'])])];
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.tickets', EloquentCollection::class));
-
-        $this->postJson('/meta-tickets/search', self::SEARCH);
-    }
-
-    #[Test]
-    public function it_refuses_a_model_inside_a_plain_collection_in_the_meta(): void
-    {
-        MetaLog::$value = ['tickets' => collect([new Ticket(['title' => 'Printer jam'])])];
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.tickets.0', Ticket::class));
-
-        $this->postJson('/meta-tickets/search', self::SEARCH);
-    }
-
-    #[Test]
-    public function it_refuses_the_models_of_an_eloquent_collection_turned_into_a_plain_one(): void
-    {
-        MetaLog::$value = ['tickets' => (new EloquentCollection([new Ticket(['title' => 'Printer jam'])]))->toBase()];
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.tickets.0', Ticket::class));
-
-        $this->postJson('/meta-tickets/search', self::SEARCH);
-    }
-
-    /** @return array<string, array{Closure(): mixed, string, class-string}> */
-    public static function jsonResources(): array
-    {
-        return JsonResourceMeta::cases();
-    }
-
-    /** @param Closure(): mixed $value */
-    #[Test]
-    #[DataProvider('jsonResources')]
-    public function it_refuses_a_json_resource_in_the_meta(Closure $value, string $path, string $type): void
-    {
-        MetaLog::$value = $value();
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', "value.value.{$path}", $type));
-
-        $this->postJson('/meta-tickets/search', self::SEARCH);
-    }
-
-    #[Test]
-    public function it_renders_a_plain_collection_of_values(): void
-    {
-        MetaLog::$value = ['titles' => collect(['Printer jam', 'Printer toner'])];
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
-
-        $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->assertJsonPath('meta.value', ['value' => ['titles' => ['Printer jam', 'Printer toner']]]);
-    }
-
     /** @return array<string, array{mixed, string}> */
     public static function notJson(): array
     {
@@ -372,48 +321,6 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $reason));
 
         $this->postJson('/meta-tickets/search', self::SEARCH);
-    }
-
-    /** @return array<string, array{Closure(): mixed, string, class-string}> */
-    public static function wrapped(): array
-    {
-        return WrappedMeta::cases();
-    }
-
-    /** @param Closure(): mixed $value */
-    #[Test]
-    #[DataProvider('wrapped')]
-    public function it_refuses_a_model_or_a_resource_that_a_json_serializable_value_holds(Closure $value, string $path, string $type): void
-    {
-        MetaLog::$value = $value();
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', "value.value.{$path}", $type));
-
-        $this->postJson('/meta-tickets/search', self::SEARCH);
-    }
-
-    #[Test]
-    public function it_renders_json_serializable_wrappers_of_plain_values(): void
-    {
-        MetaLog::$value = ['wrapper' => new Fluent(['plan' => 'pro', 'ratio' => 0.5]), 'dto' => new MetaDto(new MetaDto(['n' => 1]))];
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
-
-        $content = (string) $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->getContent();
-
-        $this->assertStringContainsString('"value":{"value":{"wrapper":{"plan":"pro","ratio":0.5},"dto":{"data":{"data":{"n":1}}}}}', $content);
-    }
-
-    #[Test]
-    public function it_renders_json_serializable_values(): void
-    {
-        MetaLog::$value = ['at' => now(), 'tags' => (object) ['a' => 1], 'ratio' => 0.5, 'status' => MetaStatus::Open, 'none' => null];
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
-
-        $content = (string) $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->getContent();
-
-        $this->assertStringContainsString('"meta":{"count":2,"value":{"value":{"at":"2026-11-15T10:00:00.000000Z","tags":{"a":1},"ratio":0.5,"status":"open","none":null}}}', $content);
     }
 
     #[Test]
