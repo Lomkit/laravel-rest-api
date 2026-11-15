@@ -1912,7 +1912,7 @@ final class SharingExtension extends Extension implements DeclaresGates
 ```
 
 - Guarantees: a static kind. It receives the resource class only, no user. Its gates come after those of the resource, in name order, each listed once even when the resource or another extension declares it too. They show in `/details` (`with=gates`), are accepted in `search.gates` at every level of the resource and answered from the policy method (`share($user, $model)`, `authorized_to_share`, renamed in `rest.gates.names`), and the OpenAPI document lists them. A resource that turns its gates off lists none.
-- Forbids: what `gates()` of a resource refuses (a name that is not camelCase, `viewAny`, a built-in ability) and a name listed twice by one extension. `InvalidResourceException` names the extension, its class and the resource when the gates are first read.
+- Forbids: what `gates()` of a resource refuses (a name that is not camelCase, `viewAny`, a built-in ability) and a name listed twice by one extension. `InvalidAuthorizationExtensionException` names the extension, its class and the resource when the gates are first read.
 
 ## Artisan commands shipped by the package
 

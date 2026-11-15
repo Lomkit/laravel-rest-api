@@ -14,7 +14,7 @@ final readonly class GateVocabulary
 
     /**
      * @param  array<mixed>  $declared
-     * @param  array<string, array<mixed>>  $extensions
+     * @param  list<DeclaredGateList>  $extensions
      */
     public static function of(array $declared, string $owner, bool $softDeletes, array $extensions = []): self
     {
@@ -26,12 +26,14 @@ final readonly class GateVocabulary
             }
         }
 
-        foreach ([$owner => $declared, ...$extensions] as $listOwner => $names) {
+        $resource = new DeclaredGateList($declared, static fn (int $index, mixed $name): InvalidResourceException => InvalidResourceException::invalidGate($owner, $index, $name));
+
+        foreach ([$resource, ...$extensions] as $list) {
             $listed = [];
 
-            foreach (array_values($names) as $index => $name) {
+            foreach (array_values($list->names) as $index => $name) {
                 if (! is_string($name) || ! self::declarable($name) || isset($listed[$name])) {
-                    throw InvalidResourceException::invalidGate($listOwner, $index, $name);
+                    throw $list->refuse($index, $name);
                 }
 
                 $listed[$name] = true;

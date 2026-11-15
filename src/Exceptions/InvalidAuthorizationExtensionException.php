@@ -28,4 +28,15 @@ final class InvalidAuthorizationExtensionException extends InvalidExtensionExcep
     {
         return self::about($name, "The [{$name}] extension shortens the cache of the ability [{$ability}] of {$resource} to {$seconds} seconds. Give 1 second or more, or call forget('{$ability}') to keep no decision.");
     }
+
+    public static function invalidGate(string $name, string $class, string $resource, int $index, mixed $gate): self
+    {
+        if (! is_string($gate)) {
+            $type = get_debug_type($gate);
+
+            return self::about($name, "The [{$name}] extension {$class} returns {$type} at index {$index} from gates() for {$resource}. Return the names of policy methods.");
+        }
+
+        return self::about($name, "The [{$name}] extension {$class} declares the gate [{$gate}] at index {$index} for {$resource}. A gate is the camelCase name of a policy method, listed once by each extension, other than viewAny and the built-in gates view, create, update, delete, restore and forceDelete.");
+    }
 }

@@ -2,7 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Unit\Search;
 
+use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
+use Lomkit\Rest\Search\DeclaredGateList;
 use Lomkit\Rest\Search\GateVocabulary;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -12,9 +14,7 @@ class GateVocabularyTest extends TestCase
 {
     private const string OWNER = 'App\Rest\Resources\TicketResource::gates()';
 
-    private const string ACL = 'The [acl] extension Vendor\Acl\AclExtension in gates() for App\Rest\Resources\TicketResource';
-
-    private const string SHARES = 'The [shares] extension Vendor\Shares\SharesExtension in gates() for App\Rest\Resources\TicketResource';
+    private const string RESOURCE = 'App\Rest\Resources\TicketResource';
 
     #[Test]
     public function it_lists_the_built_in_gates_then_the_declared_ones(): void
@@ -97,7 +97,7 @@ class GateVocabularyTest extends TestCase
     #[Test]
     public function it_lists_extension_gates_after_the_resource_gates_once(): void
     {
-        $gates = GateVocabulary::of(['escalate', 'archive'], self::OWNER, false, [self::ACL => ['export', 'archive', 'share'], self::SHARES => ['share', 'escalate', 'publish']]);
+        $gates = GateVocabulary::of(['escalate', 'archive'], self::OWNER, false, [self::extension('acl', ['export', 'archive', 'share']), self::extension('shares', ['share', 'escalate', 'publish'])]);
 
         $this->assertSame(['view', 'create', 'update', 'delete', 'escalate', 'archive', 'export', 'share', 'publish'], $gates->names());
         $this->assertSame('authorized_to_share', $gates->find('share')?->key());
@@ -106,18 +106,48 @@ class GateVocabularyTest extends TestCase
     #[Test]
     public function it_refuses_a_gate_listed_twice_by_one_extension(): void
     {
-        $this->expectExceptionObject(InvalidResourceException::invalidGate(self::ACL, 1, 'share'));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidGate('acl', 'Vendor\Acl\AclExtension', self::RESOURCE, 1, 'share'));
 
-        GateVocabulary::of(['share'], self::OWNER, true, [self::ACL => ['share', 'share']]);
+        GateVocabulary::of(['share'], self::OWNER, true, [self::extension('acl', ['share', 'share'])]);
+    }
+
+    #[Test]
+    public function it_refuses_a_resource_gate_through_the_resource_list_when_extensions_declare_gates(): void
+    {
+        $this->expectExceptionObject(InvalidResourceException::invalidGate(self::OWNER, 0, 'Share'));
+
+        GateVocabulary::of(['Share'], self::OWNER, true, [self::extension('acl', ['Share'])]);
     }
 
     /** @param array<mixed> $declared */
     #[Test]
-    #[DataProvider('invalidDeclarations')]
-    public function it_names_the_extension_of_an_invalid_name(array $declared, string $message): void
+    #[DataProvider('invalidExtensionDeclarations')]
+    public function it_refuses_an_invalid_name_through_the_extension_that_declares_it(array $declared, int $index, mixed $name): void
     {
-        $this->expectExceptionObject(new InvalidResourceException(self::SHARES.$message));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidGate('shares', 'Vendor\Shares\SharesExtension', self::RESOURCE, $index, $name));
 
-        GateVocabulary::of(['escalate'], self::OWNER, true, [self::ACL => ['export'], self::SHARES => $declared]);
+        GateVocabulary::of(['escalate'], self::OWNER, true, [self::extension('acl', ['export']), self::extension('shares', $declared)]);
+    }
+
+    /** @return array<string, array{array<mixed>, int, mixed}> */
+    public static function invalidExtensionDeclarations(): array
+    {
+        return [
+            'a snake case name' => [['escalate', 'reassign_team'], 1, 'reassign_team'],
+            'a capital first letter' => [['Escalate'], 0, 'Escalate'],
+            'viewAny' => [['viewAny'], 0, 'viewAny'],
+            'a built-in gate' => [['escalate', 'forceDelete'], 1, 'forceDelete'],
+            'a repeated name' => [['escalate', 'escalate'], 1, 'escalate'],
+            'null' => [['escalate', null], 1, null],
+            'an integer' => [[7], 0, 7],
+        ];
+    }
+
+    /** @param array<mixed> $names */
+    private static function extension(string $name, array $names): DeclaredGateList
+    {
+        $class = 'Vendor\\'.ucfirst($name).'\\'.ucfirst($name).'Extension';
+
+        return new DeclaredGateList($names, static fn (int $index, mixed $gate): InvalidAuthorizationExtensionException => InvalidAuthorizationExtensionException::invalidGate($name, $class, self::RESOURCE, $index, $gate));
     }
 }

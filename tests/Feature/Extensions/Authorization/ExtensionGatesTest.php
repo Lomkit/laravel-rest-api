@@ -2,7 +2,8 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Authorization;
 
-use Lomkit\Rest\Exceptions\InvalidResourceException;
+use LogicException;
+use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\GatesContext;
 use Lomkit\Rest\Extensions\Extension;
@@ -163,9 +164,26 @@ class ExtensionGatesTest extends HelpdeskTestCase
         FirstGates::$gates = $gates;
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidResourceException::invalidGate('The [acl] extension '.FirstGates::class.' in gates() for '.TicketResource::class, $index, $name));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidGate('acl', FirstGates::class, TicketResource::class, $index, $name));
 
         $this->getJson('/api/tickets?with=gates');
+    }
+
+    #[Test]
+    public function it_refuses_a_misdeclared_gate_with_an_exception_that_names_the_extension(): void
+    {
+        config(['rest.extensions' => ['acl' => FirstGates::class]]);
+        FirstGates::$gates = ['Share'];
+        $definition = $this->contextFor(null)->resource(TicketResource::class)->definition();
+
+        try {
+            $definition->gates();
+            $this->fail('The misdeclared gate was not refused.');
+        } catch (LogicException $exception) {
+            $this->assertInstanceOf(InvalidAuthorizationExtensionException::class, $exception);
+            $this->assertTrue($exception->namesExtension('acl'));
+            $this->assertSame('The [acl] extension '.FirstGates::class.' declares the gate [Share] at index 0 for '.TicketResource::class.'. A gate is the camelCase name of a policy method, listed once by each extension, other than viewAny and the built-in gates view, create, update, delete, restore and forceDelete.', $exception->getMessage());
+        }
     }
 
     /** @return iterable<string, array{list<mixed>, int, mixed}> */
