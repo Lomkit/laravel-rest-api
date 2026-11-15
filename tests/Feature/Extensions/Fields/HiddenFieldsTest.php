@@ -218,8 +218,11 @@ class HiddenFieldsTest extends PackageTestCase
         $user = Rest::search(ProductResource::class)->as(self::user())->payload([])->render();
         $guest = Rest::search(ProductResource::class)->as(null)->payload([])->render();
 
+        $lazy = Rest::search(ProductResource::class)->as(self::user())->payload([])->lazy(2)->all();
+
         $this->assertSame(self::PRICELESS_PRODUCTS, $user['data']);
         $this->assertSame(self::PRODUCTS, $guest['data']);
+        $this->assertSame(self::PRICELESS_PRODUCTS, array_values($lazy));
         $this->assertSame(
             $this->validationErrors(PricelessProductResource::class),
             $this->validationErrors(ProductResource::class),
