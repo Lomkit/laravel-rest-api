@@ -3,21 +3,24 @@
 namespace Lomkit\Rest\Http;
 
 use Closure;
-use Illuminate\Database\ConnectionInterface;
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
 
 final readonly class WriteTransaction
 {
-    /** @param list<RowState> $rows */
+    /**
+     * @param  positive-int  $attempts
+     * @param  list<RowState>  $rows
+     */
     private function __construct(
-        private ConnectionInterface $connection,
+        private Connection $connection,
         private int $attempts,
         private array $rows = [],
     ) {}
 
     public static function of(Resource $resource): self
     {
-        return new self($resource::newModel()->getConnection(), $resource->context()->config()->transactionAttempts);
+        return new self($resource::newModel()->getConnection(), max(1, $resource->context()->config()->transactionAttempts));
     }
 
     /** @param iterable<Model> $rows */
@@ -49,6 +52,12 @@ final readonly class WriteTransaction
 
             return $write();
         }, $this->attempts);
+    }
+
+    /** @param Closure(): void $callback */
+    public function afterCommit(Closure $callback): void
+    {
+        $this->connection->afterCommit($callback);
     }
 
     private function restore(): void

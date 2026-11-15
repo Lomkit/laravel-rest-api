@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\WriteGuard;
+use Lomkit\Rest\Http\WriteObservers;
 use Lomkit\Rest\Http\WriteTransaction;
 
 /** @internal */
@@ -17,11 +18,12 @@ final readonly class ActionWrites
         private ActionFields $fields,
         private WriteTransaction $transaction,
         private ?WriteGuard $guard,
+        private ?WriteObservers $observers,
     ) {}
 
     public static function of(Action $action, ActionFields $fields, Resource $resource): self
     {
-        return new self($action, $fields, WriteTransaction::of($resource), WriteGuard::of($resource));
+        return new self($action, $fields, WriteTransaction::of($resource), WriteGuard::of($resource), WriteObservers::of($resource));
     }
 
     /** @param Closure(): int $run */
@@ -31,11 +33,14 @@ final readonly class ActionWrites
             return $run();
         }
 
-        return $this->transaction->run(function () use ($run): int {
+        $impacted = $this->transaction->run(function () use ($run): int {
             $this->guard?->action($this->action, $this->fields, null);
 
             return $run();
         });
+        $this->observers?->operated($this->transaction, $this->action, $this->fields, $impacted, null);
+
+        return $impacted;
     }
 
     /** @param Collection<array-key, Model> $models */
@@ -75,12 +80,16 @@ final readonly class ActionWrites
             $this->guard?->action($this->action, $this->fields, $rows);
             $write();
         });
+        $this->observers?->operated($this->transaction, $this->action, $this->fields, count($rows), $rows);
     }
 
     /** @param Collection<array-key, Model> $models */
     private function direct(Collection $models): void
     {
-        $this->guard?->action($this->action, $this->fields, array_values($models->all()));
+        $rows = array_values($models->all());
+
+        $this->guard?->action($this->action, $this->fields, $rows);
         $this->action->handle($this->fields, $models);
+        $this->observers?->operated($this->transaction, $this->action, $this->fields, count($rows), $rows);
     }
 }

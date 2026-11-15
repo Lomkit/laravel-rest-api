@@ -50,8 +50,10 @@ final readonly class RowBatch
     {
         $this->resource->definition()->fieldNarrowing();
         $guard = WriteGuard::of($this->resource);
+        $observers = WriteObservers::of($this->resource);
+        $transaction = WriteTransaction::of($this->resource);
 
-        WriteTransaction::of($this->resource)
+        $transaction
             ->over($this->rows)
             ->run(function () use ($before, $write, $after, $written, $guard): void {
                 $guard?->rows(self::endpoint($written), $this->rows);
@@ -64,6 +66,7 @@ final readonly class RowBatch
                 $after($this->rows);
             });
 
+        $observers?->rowsWritten($transaction, self::endpoint($written), $this->rows);
         $this->resource->context()->events()->dispatch($written::of($this->resource, $this->rows));
 
         return $this->rows;

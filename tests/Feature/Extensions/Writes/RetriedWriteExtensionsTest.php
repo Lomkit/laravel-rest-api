@@ -10,9 +10,11 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Mutations\WrittenRow;
 use Lomkit\Rest\Tests\Feature\Deletion\Stubs\SecondaryDocument;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Feature\Transactions\Stubs\Interruptions;
 use Lomkit\Rest\Tests\Feature\Transactions\Stubs\RetriedDocumentController;
@@ -65,7 +67,7 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
         EventLog::reset();
         WriteLog::reset();
         Interruptions::reset([]);
-        config(['rest.extensions' => ['quota' => RecordingGuard::class]]);
+        config(['rest.extensions' => ['quota' => RecordingGuard::class, 'history' => RecordingWriteObserver::class]]);
 
         foreach (['Annual report', 'Roadmap', 'Minutes'] as $title) {
             SecondaryDocument::query()->create(['title' => $title]);
@@ -101,36 +103,38 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
             'mutate' => ['POST', '/retried-documents/mutate', self::MUTATE, 0, [
                 'begin secondary', 'guard mutate update,create', 'rollback secondary',
                 'begin secondary', 'guard mutate update,create', 'commit secondary',
+                'observe mutate update:1,create:4',
             ]],
             'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]], 0, [
                 'begin secondary', 'guard destroy 1,3', 'rollback secondary',
                 'begin secondary', 'guard destroy 1,3', 'commit secondary',
+                'observe destroy 1,3',
             ]],
             'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', $search, 1, [
-                'begin secondary', 'guard operate 1,2', 'commit secondary',
+                'begin secondary', 'guard operate 1,2', 'commit secondary', 'observe operate 1,2 (2)',
                 'begin secondary', 'guard operate 3', 'rollback secondary',
-                'begin secondary', 'guard operate 3', 'commit secondary',
+                'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
             ]],
             'a queued action chunk' => ['POST', '/retried-documents/actions/queued-rename-retried-documents', $search, 1, [
-                'begin secondary', 'guard operate 1,2', 'commit secondary',
+                'begin secondary', 'guard operate 1,2', 'commit secondary', 'observe operate 1,2 (2)',
                 'begin secondary', 'guard operate 3', 'rollback secondary',
-                'begin secondary', 'guard operate 3', 'commit secondary',
+                'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
             ]],
             'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', $search, 1, [
                 'begin secondary', 'guard operate *', 'rollback secondary',
-                'begin secondary', 'guard operate *', 'commit secondary',
+                'begin secondary', 'guard operate *', 'commit secondary', 'observe operate * (3)',
             ]],
             'an action row' => ['POST', '/retried-documents/actions/rename-retried-documents-per-row', $search, 1, [
-                'begin secondary', 'guard operate 1', 'commit secondary',
+                'begin secondary', 'guard operate 1', 'commit secondary', 'observe operate 1 (1)',
                 'begin secondary', 'guard operate 2', 'rollback secondary',
-                'begin secondary', 'guard operate 2', 'commit secondary',
-                'begin secondary', 'guard operate 3', 'commit secondary',
+                'begin secondary', 'guard operate 2', 'commit secondary', 'observe operate 2 (1)',
+                'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
             ]],
             'a queued action row' => ['POST', '/retried-documents/actions/queued-rename-retried-documents-per-row', $search, 1, [
-                'begin secondary', 'guard operate 1', 'commit secondary',
+                'begin secondary', 'guard operate 1', 'commit secondary', 'observe operate 1 (1)',
                 'begin secondary', 'guard operate 2', 'rollback secondary',
-                'begin secondary', 'guard operate 2', 'commit secondary',
-                'begin secondary', 'guard operate 3', 'commit secondary',
+                'begin secondary', 'guard operate 2', 'commit secondary', 'observe operate 2 (1)',
+                'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
             ]],
         ];
     }
@@ -141,7 +145,7 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
      */
     #[Test]
     #[DataProvider('retriedWrites')]
-    public function it_guards_each_attempt_of_a_retried_write(string $method, string $uri, array $payload, int $deadlockAt, array $lines): void
+    public function it_guards_each_attempt_and_notifies_once_after_the_last_commit(string $method, string $uri, array $payload, int $deadlockAt, array $lines): void
     {
         config(['rest.transactions.attempts' => 2]);
         Interruptions::reset([...array_fill(0, $deadlockAt, null), Interruptions::deadlock()]);
@@ -178,6 +182,21 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
         $this->assertNotSame([], self::keys($first->rows));
     }
 
+    #[Test]
+    public function it_notifies_the_rows_written_by_the_last_attempt_only(): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        Interruptions::reset([Interruptions::deadlock()]);
+
+        $this->postJson('/retried-documents/mutate', self::MUTATE)->assertOk();
+
+        $this->assertCount(1, WriteLog::$writes);
+        $this->assertSame([[1, 'Final report'], [4, 'Agenda']], array_map(
+            fn (WrittenRow $row): array => [$row->model->getKey(), $row->model->getAttribute('title')],
+            WriteLog::$writes[0]->written ?? [],
+        ));
+    }
+
     /** @return array<string, array{string, string, array<string, mixed>, int, list<string>, list<string>}> */
     public static function failedWrites(): array
     {
@@ -191,7 +210,7 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
                 'begin secondary', 'guard destroy 1,3', 'rollback secondary',
             ], ['Annual report', 'Roadmap', 'Minutes']],
             'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', $search, 1, [
-                'begin secondary', 'guard operate 1,2', 'commit secondary',
+                'begin secondary', 'guard operate 1,2', 'commit secondary', 'observe operate 1,2 (2)',
                 'begin secondary', 'guard operate 3', 'rollback secondary',
             ], ['Renamed', 'Renamed', 'Minutes']],
             'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', $search, 1, [
@@ -207,7 +226,7 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
      */
     #[Test]
     #[DataProvider('failedWrites')]
-    public function it_answers_the_deadlock_of_the_last_attempt_after_its_guard(string $method, string $uri, array $payload, int $deadlockAt, array $lines, array $titles): void
+    public function it_notifies_nothing_when_the_last_attempt_is_deadlocked(string $method, string $uri, array $payload, int $deadlockAt, array $lines, array $titles): void
     {
         Interruptions::reset([...array_fill(0, $deadlockAt, null), Interruptions::deadlock()]);
 

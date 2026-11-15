@@ -11,6 +11,7 @@ use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\Mutator;
 use Lomkit\Rest\Mutations\OperationEntry;
+use Lomkit\Rest\Mutations\OperationLog;
 use Lomkit\Rest\Mutations\PendingMutation;
 use Lomkit\Rest\Mutations\WriteChecks;
 
@@ -29,17 +30,20 @@ final readonly class MutateResponse implements Responsable
     {
         $gate = ConfirmationGate::of($request, [Endpoint::Mutate->value], ['mutate', 'response']);
         $guard = WriteGuard::of($resource);
-        $operations = WriteTransaction::of($resource)
+        $observers = WriteObservers::of($resource);
+        $transaction = WriteTransaction::of($resource);
+        $log = $transaction
             ->over($request->rows()->loaded())
-            ->run(fn (): array => self::write($request, $resource, $gate, $guard));
+            ->run(fn (): OperationLog => self::write($request, $resource, $gate, $guard, new OperationLog($observers !== null)));
+        $operations = $log->entries();
+        $observers?->mutated($transaction, $operations, $log->written());
         $resource->context()->events()->dispatch(ResourceMutated::of($resource, $operations));
         $block = $request->responseBlock();
 
         return new self($operations, $block === null ? null : WrittenRecords::read($resource, $block, $operations)->rows());
     }
 
-    /** @return list<OperationEntry> */
-    private static function write(MutateRequest $request, Resource $resource, ConfirmationGate $gate, ?WriteGuard $guard): array
+    private static function write(MutateRequest $request, Resource $resource, ConfirmationGate $gate, ?WriteGuard $guard, OperationLog $log): OperationLog
     {
         $nodes = $request->payload();
         $checks = new WriteChecks($request->rows());
@@ -52,11 +56,11 @@ final readonly class MutateResponse implements Responsable
 
         $resource->mutatingAll($nodes);
 
-        $operations = (new Mutator($request->rows(), $checks))->execute($resource, $nodes);
+        $operations = (new Mutator($request->rows(), $checks))->execute($resource, $nodes, $log);
 
         $resource->mutatedAll($operations);
 
-        return $operations;
+        return $log;
     }
 
     #[\Override]
