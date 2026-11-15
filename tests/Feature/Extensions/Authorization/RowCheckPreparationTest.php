@@ -375,6 +375,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     public static function rowChanges(): iterable
     {
         yield 'an attribute' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setAttribute('title', 'Changed')];
+        yield 'an attribute of another type' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setAttribute('team_id', (string) $checks->rows->firstOrFail()->getAttribute('team_id'))];
         yield 'an attribute kept as original' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setAttribute('title', 'Changed')->syncOriginal()];
         yield 'a loaded relation' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setRelation('team', new Team(['name' => 'Other']))];
         yield 'a removed relation' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->unsetRelation('team')];

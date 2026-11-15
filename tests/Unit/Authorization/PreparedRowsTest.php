@@ -2,13 +2,14 @@
 
 namespace Lomkit\Rest\Tests\Unit\Authorization;
 
-use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Authorization\PreparedRows;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
+use Lomkit\Rest\Tests\Unit\Authorization\Stubs\PreparedDocument;
+use Lomkit\Rest\Tests\Unit\Authorization\Stubs\Settings;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -53,20 +54,73 @@ class PreparedRowsTest extends TestCase
         }
     }
 
+    #[Test]
+    public function it_keeps_a_row_whose_object_cast_attribute_is_read_and_stored_again(): void
+    {
+        $checks = $this->checks();
+        $rows = PreparedRows::of($checks->rows);
+        $row = $checks->rows->firstOrFail();
+
+        $settings = $row->getAttribute('settings');
+        $row->getAttribute('meta');
+        $row->getAttributes();
+
+        $rows->ensureUnchanged('acl', $checks);
+        $this->assertInstanceOf(Settings::class, $settings);
+        $this->assertSame(['a' => 1], $settings->values);
+        $this->assertSame('{"a":1}', $row->getAttributes()['settings']);
+    }
+
+    #[Test]
+    public function it_refuses_a_row_whose_object_cast_attribute_changes_in_place(): void
+    {
+        $checks = $this->checks();
+        $rows = PreparedRows::of($checks->rows);
+
+        $settings = $checks->rows->firstOrFail()->getAttribute('settings');
+        $this->assertInstanceOf(Settings::class, $settings);
+        $settings->values['a'] = 2;
+
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', $checks);
+    }
+
+    #[Test]
+    public function it_refuses_a_row_whose_object_cast_attribute_is_replaced(): void
+    {
+        $checks = $this->checks();
+        $rows = PreparedRows::of($checks->rows);
+
+        $checks->rows->firstOrFail()->setAttribute('settings', new Settings(['a' => 2]));
+
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', $checks);
+    }
+
+    /** @return iterable<string, array{mixed}> */
+    public static function equalValues(): iterable
+    {
+        yield 'a numeric string' => ['3'];
+        yield 'a float' => [3.0];
+    }
+
+    #[Test]
+    #[DataProvider('equalValues')]
+    public function it_refuses_a_row_whose_attribute_takes_a_value_of_another_type(mixed $value): void
+    {
+        $checks = $this->checks();
+        $rows = PreparedRows::of($checks->rows);
+
+        $checks->rows->firstOrFail()->setAttribute('team_id', $value);
+
+        $this->assertFalse($checks->rows->firstOrFail()->isDirty());
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', $checks);
+    }
+
     private function checks(): PendingChecks
     {
-        $model = new class extends Model
-        {
-            protected $table = 'documents';
-
-            /** @return array<string, string> */
-            #[\Override]
-            protected function casts(): array
-            {
-                return ['meta' => AsArrayObject::class];
-            }
-        };
-        $row = $model->newFromBuilder(['id' => 1, 'meta' => '{"a": 1}']);
+        $row = (new PreparedDocument)->newFromBuilder(['id' => 1, 'team_id' => 3, 'meta' => '{"a": 1}', 'settings' => '{"a": 1}']);
 
         return new PendingChecks(new TicketResource, 'view', new Collection([$row]), null);
     }
