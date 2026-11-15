@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Fields;
 
+/** @internal */
 enum FieldReduction: string
 {
     case Hide = 'hide';

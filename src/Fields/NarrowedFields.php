@@ -2,11 +2,10 @@
 
 namespace Lomkit\Rest\Fields;
 
+/** @internal */
 final readonly class NarrowedFields
 {
     /**
-     * @internal
-     *
      * @param  list<string>  $hidden
      * @param  list<string>  $readOnly
      * @param  list<string>  $unfilterable
