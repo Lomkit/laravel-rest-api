@@ -42,11 +42,20 @@ class SqlDriverRestrictionTest extends EngineSearchTestCase
     {
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [
             ['field' => 'number', 'operator' => '>', 'value' => 1],
-            ['field' => 'code', 'operator' => 'in', 'value' => ['V-a', 'V-c', 'V-e']],
-            ['field' => 'code', 'operator' => 'not in', 'value' => ['V-e']],
+            ['field' => 'code', 'operator' => 'in', 'value' => ['V-a', 'V-c', 'V-d']],
         ]]);
 
         $response->assertOk()->assertExactJson($this->page([1], 1));
+    }
+
+    #[Test]
+    public function it_keeps_the_client_exclusions_on_the_collection_driver(): void
+    {
+        $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [
+            ['field' => 'code', 'operator' => 'not in', 'value' => ['V-a', 'V-d']],
+        ]]);
+
+        $response->assertOk()->assertExactJson($this->page([5, 1], 2));
     }
 
     #[Test]
