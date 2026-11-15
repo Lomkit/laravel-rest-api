@@ -92,6 +92,7 @@ class RestrictionGuardTest extends PackageTestCase
             'an order in a nested group' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where('first_name', 'Ada')->orderBy('id')), QueryPart::Order],
             'a limit in a nested group' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where('first_name', 'Ada')->limit(1)), QueryPart::Limit],
             'another table in a nested group' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where('first_name', 'Ada')->from('posts')), QueryPart::From],
+            'an eager load two groups down' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where(static fn (Builder $deeper): Builder => $deeper->where('first_name', 'Ada')->with('posts'))), QueryPart::EagerLoad],
             'an order two groups down' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where(static fn (Builder $deeper): Builder => $deeper->where('first_name', 'Ada')->orderBy('id'))), QueryPart::Order],
             'an order in a nested base group' => [static fn (Builder $query): QueryBuilder => $query->getQuery()->where(static fn (QueryBuilder $nested): QueryBuilder => $nested->where('first_name', 'Ada')->orderBy('id')), QueryPart::Order],
             'an after query callback in a nested group' => [static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): QueryBuilder => $nested->where('first_name', 'Ada')->getQuery()->afterQuery(static fn (mixed $rows): mixed => $rows)), QueryPart::AfterCallback],
@@ -102,6 +103,17 @@ class RestrictionGuardTest extends PackageTestCase
     public function it_refuses_a_restriction_that_removes_a_global_scope(): void
     {
         ClausedExtension::$clause = static fn (Builder $query): Builder => $query->withoutGlobalScope(SoftDeletingScope::class);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidQueryExtensionException::restrictionRemovesScopes('claused', RestrictedAuthorResource::class, [SoftDeletingScope::class]));
+
+        $this->postJson('/restricted-authors/search', ['search' => []]);
+    }
+
+    #[Test]
+    public function it_refuses_a_restriction_that_removes_a_global_scope_two_groups_down(): void
+    {
+        ClausedExtension::$clause = static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where(static fn (Builder $deeper): Builder => $deeper->withTrashed()->where('first_name', 'Ada')));
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidQueryExtensionException::restrictionRemovesScopes('claused', RestrictedAuthorResource::class, [SoftDeletingScope::class]));
