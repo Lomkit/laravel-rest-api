@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Routes;
 
 use Closure;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Routing\ResourceRegistrar as IlluminateResourceRegistrar;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Route as RouteFacade;
@@ -334,12 +335,12 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
         $this->assertSame([EnforceExpectsJson::class, self::STAMP], $this->routeNamed('routed-tickets-again.search')->middleware());
     }
 
-    /** @param Closure(): array<array-key, mixed> $entry */
+    /** @param Closure(Container): array<array-key, mixed> $entry */
     #[Test]
     #[DataProvider('invalidEntries')]
     public function it_registers_routes_beside_an_invalid_entry_of_another_kind(Closure $entry): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class, ...$entry()]]);
+        config(['rest.extensions' => ['stamp' => StampRoutes::class, ...$entry($this->app)]]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
 
@@ -347,16 +348,48 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
         $this->assertSame([], ExtensionLog::$built);
     }
 
-    /** @return array<string, array{Closure(): array<array-key, mixed>}> */
+    /** @return array<string, array{Closure(Container): array<array-key, mixed>}> */
     public static function invalidEntries(): array
     {
+        $bound = static function (string $class): Closure {
+            return static function (Container $container) use ($class): array {
+                $container->bind($class);
+
+                return ['broken' => $class];
+            };
+        };
+
         return [
+            'a bound class that is not an extension' => [$bound(stdClass::class)],
+            'a bound class without a kind' => [$bound(KindlessExtension::class)],
+            'a bound missing class' => [$bound('Missing\Extension')],
             'a missing class' => [static fn (): array => ['broken' => 'Missing\Extension']],
             'an unnamed entry' => [static fn (): array => [0 => CountingExtension::class]],
             'not an extension' => [static fn (): array => ['broken' => stdClass::class]],
             'an instance' => [static fn (): array => ['broken' => new stdClass]],
             'an invalid name' => [static fn (): array => ['Bad-Name' => CountingExtension::class]],
             'a class without a kind' => [static fn (): array => ['broken' => KindlessExtension::class]],
+        ];
+    }
+
+    /** @param array<array-key, mixed> $entries */
+    #[Test]
+    #[DataProvider('refusedRouteEntries')]
+    public function it_refuses_at_registration_a_route_extension_that_the_config_refuses(array $entries, InvalidExtensionException $refusal): void
+    {
+        config(['rest.extensions' => ['stamp' => StampRoutes::class, ...$entries]]);
+
+        $this->expectExceptionObject($refusal);
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+    }
+
+    /** @return array<string, array{array<array-key, mixed>, InvalidExtensionException}> */
+    public static function refusedRouteEntries(): array
+    {
+        return [
+            'an invalid name' => [['Bad-Name' => OtherStampRoutes::class], InvalidExtensionException::invalidName('Bad-Name')],
+            'an unnamed entry' => [[0 => OtherStampRoutes::class], InvalidExtensionException::missingName(OtherStampRoutes::class)],
         ];
     }
 

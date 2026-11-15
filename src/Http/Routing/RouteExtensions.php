@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Http\Routing;
 use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
+use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\ExtensionFactory;
 use Lomkit\Rest\Extensions\ExtensionList;
@@ -68,10 +69,17 @@ final class RouteExtensions
      */
     private static function candidates(mixed $configured, array $registered, Container $container): array
     {
+        $configured = is_array($configured) ? $configured : [];
+        $refused = ExtensionList::merge(array_filter($configured, self::addsRouteMiddleware(...)), [])->refused;
+
+        if ($refused !== []) {
+            throw $refused[0];
+        }
+
         $candidates = [];
 
-        foreach (ExtensionList::merge(is_array($configured) ? $configured : [], $registered)->entries as $entry) {
-            if (! $entry->disabled && $entry->class !== null && (is_subclass_of($entry->class, AddsRouteMiddleware::class) || $container->bound($entry->class))) {
+        foreach (ExtensionList::merge($configured, $registered)->entries as $entry) {
+            if (! $entry->disabled && $entry->class !== null && (self::addsRouteMiddleware($entry->class) || $container->bound($entry->class))) {
                 $candidates[$entry->name] = $entry->class;
             }
         }
@@ -92,7 +100,7 @@ final class RouteExtensions
         $built = [];
 
         foreach ($this->candidates as $name => $class) {
-            $extension = $factory->make($name, $class);
+            $extension = self::addsRouteMiddleware($class) ? $factory->make($name, $class) : self::boundOnly($factory, $name, $class);
 
             if ($extension instanceof AddsRouteMiddleware) {
                 $built[$name] = $extension;
@@ -100,6 +108,20 @@ final class RouteExtensions
         }
 
         return $this->built = $built;
+    }
+
+    private static function boundOnly(ExtensionFactory $factory, string $name, string $class): ?Extension
+    {
+        try {
+            return $factory->make($name, $class);
+        } catch (InvalidExtensionException) {
+            return null;
+        }
+    }
+
+    private static function addsRouteMiddleware(mixed $class): bool
+    {
+        return is_string($class) && is_subclass_of($class, AddsRouteMiddleware::class);
     }
 
     /**
