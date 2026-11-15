@@ -27,7 +27,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['mask' => MaskingFields::class])]
+#[WithConfig('rest.extensions', [MaskingFields::class])]
 class HiddenFieldsTest extends PackageTestCase
 {
     use SeedsCatalog;

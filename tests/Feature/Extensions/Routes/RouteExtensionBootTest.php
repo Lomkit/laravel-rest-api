@@ -13,7 +13,7 @@ use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['stamp' => StampRoutes::class, 'broken' => 'Missing\Extension'])]
+#[WithConfig('rest.extensions', [StampRoutes::class, 'Missing\Extension'])]
 class RouteExtensionBootTest extends HelpdeskTestCase
 {
     #[Before]

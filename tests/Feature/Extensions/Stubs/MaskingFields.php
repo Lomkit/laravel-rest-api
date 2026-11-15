@@ -7,8 +7,14 @@ use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\NarrowsFields;
 
-final class MaskingFields extends Extension implements NarrowsFields
+class MaskingFields extends Extension implements NarrowsFields
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'mask';
+    }
+
     /** @var (Closure(FieldsContext): mixed)|null */
     public static ?Closure $narrow = null;
 

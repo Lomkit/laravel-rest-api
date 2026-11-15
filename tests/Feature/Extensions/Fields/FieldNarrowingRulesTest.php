@@ -11,7 +11,9 @@ use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Fields\FieldReduction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFieldsNamedB;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherMaskingFields;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherMaskingFieldsNamedA;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PricelessProductController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RuledProductController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\PricedCategoryController;
@@ -25,9 +27,11 @@ class FieldNarrowingRulesTest extends PackageTestCase
 {
     use SeedsCatalog;
 
-    private const array BOTH = ['mask' => MaskingFields::class, 'other' => OtherMaskingFields::class];
+    private const array BOTH = [MaskingFields::class, OtherMaskingFields::class];
 
-    private const array REVERSED = ['other' => OtherMaskingFields::class, 'mask' => MaskingFields::class];
+    private const array NAME_ORDER = [OtherMaskingFieldsNamedA::class, MaskingFieldsNamedB::class];
+
+    private const array CLASS_ORDER = [MaskingFieldsNamedB::class, OtherMaskingFieldsNamedA::class];
 
     #[\Override]
     protected function fixtures(): array
@@ -42,7 +46,7 @@ class FieldNarrowingRulesTest extends PackageTestCase
 
         MaskingFields::reset();
         OtherMaskingFields::reset();
-        config(['rest.extensions' => ['mask' => MaskingFields::class]]);
+        config(['rest.extensions' => [MaskingFields::class]]);
         $this->seedCatalog();
     }
 
@@ -77,7 +81,7 @@ class FieldNarrowingRulesTest extends PackageTestCase
         ];
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
     public function it_names_the_extension_that_names_an_unknown_field_in_both_orders(array $extensions): void
@@ -88,11 +92,11 @@ class FieldNarrowingRulesTest extends PackageTestCase
 
         $exception = $this->narrowingException();
 
-        $this->assertTrue($exception->namesExtension('other'));
-        $this->assertEquals(InvalidFieldExtensionException::unknownField('other', ProductResource::class, FieldReduction::Unsortable, 'colour'), $exception);
+        $this->assertTrue($exception->namesExtension('a'));
+        $this->assertEquals(InvalidFieldExtensionException::unknownField('a', ProductResource::class, FieldReduction::Unsortable, 'colour'), $exception);
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
     public function it_names_the_first_extension_in_name_order_when_both_are_wrong(array $extensions): void
@@ -103,16 +107,16 @@ class FieldNarrowingRulesTest extends PackageTestCase
 
         $exception = $this->narrowingException();
 
-        $this->assertTrue($exception->namesExtension('mask'));
-        $this->assertSame(InvalidFieldExtensionException::unknownField('mask', ProductResource::class, FieldReduction::Hide, 'colour')->getMessage(), $exception->getMessage());
+        $this->assertTrue($exception->namesExtension('a'));
+        $this->assertSame(InvalidFieldExtensionException::unknownField('a', ProductResource::class, FieldReduction::Hide, 'size')->getMessage(), $exception->getMessage());
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>}> */
     public static function orders(): array
     {
         return [
-            'in name order' => [self::BOTH],
-            'in reverse order' => [self::REVERSED],
+            'in name order' => [self::NAME_ORDER],
+            'in class order' => [self::CLASS_ORDER],
         ];
     }
 
@@ -150,7 +154,7 @@ class FieldNarrowingRulesTest extends PackageTestCase
         ]);
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
     public function it_gives_the_same_result_in_both_extension_orders(array $extensions): void

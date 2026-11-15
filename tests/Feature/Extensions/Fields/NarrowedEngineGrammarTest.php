@@ -34,7 +34,7 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
     {
         parent::setUp();
 
-        config(['scout.driver' => 'collection', 'rest.extensions' => ['mask' => MaskingFields::class]]);
+        config(['scout.driver' => 'collection', 'rest.extensions' => [MaskingFields::class]]);
         MaskingFields::reset();
     }
 
@@ -141,9 +141,9 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
     public function it_keeps_app_and_extension_engine_conditions_on_a_hidden_attribute(): void
     {
         $search = ['text' => ['value' => 'report'], 'instructions' => [['name' => 'priced-up-to', 'fields' => [['name' => 'max', 'value' => 10]]]]];
-        config(['rest.extensions' => ['price' => PriceEngineRestriction::class]]);
+        config(['rest.extensions' => [PriceEngineRestriction::class]]);
         $declared = $this->search('vouchers', $search);
-        config(['rest.extensions' => ['mask' => MaskingFields::class, 'price' => PriceEngineRestriction::class]]);
+        config(['rest.extensions' => [MaskingFields::class, PriceEngineRestriction::class]]);
         $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('price'));
 
         $narrowed = $this->search('vouchers', $search);

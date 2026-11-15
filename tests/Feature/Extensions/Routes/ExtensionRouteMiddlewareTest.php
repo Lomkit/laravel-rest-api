@@ -18,12 +18,15 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Tests\Concerns\CompilesRoutes;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutes;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutesNamedB;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PlainLimits;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampingLimits;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutes;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutesNamedA;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampsRequests;
 use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketController;
 use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketResource;
+use Lomkit\Rest\Tests\Fixtures\Extensions\BadlyNamedExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\KindlessExtension;
@@ -77,7 +80,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_appends_extension_middleware_after_resource_and_endpoint_middleware(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)
             ->middleware('verified')
@@ -101,7 +104,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
         ], $this->catchAllMiddleware());
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
     public function it_adds_middleware_in_name_order_whatever_the_config_order(array $extensions): void
@@ -113,19 +116,19 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
         $this->assertSame([EnforceExpectsJson::class, self::STAMP, StampsRequests::class.':b'], $this->routeNamed('routed-tickets.search')->middleware());
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>}> */
     public static function orders(): array
     {
         return [
-            'in name order' => [['a' => StampRoutes::class, 'b' => OtherStampRoutes::class]],
-            'in reverse order' => [['b' => OtherStampRoutes::class, 'a' => StampRoutes::class]],
+            'in name order' => [[StampRoutesNamedA::class, OtherStampRoutesNamedB::class]],
+            'in class order' => [[OtherStampRoutesNamedB::class, StampRoutesNamedA::class]],
         ];
     }
 
     #[Test]
     public function it_lists_a_middleware_once(): void
     {
-        config(['rest.extensions' => ['a' => StampRoutes::class, 'b' => OtherStampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutesNamedA::class, OtherStampRoutesNamedB::class]]);
         StampRoutes::$middleware = static fn (): array => ['verified', self::STAMP, 'verified'];
         OtherStampRoutes::$middleware = static fn (): array => [self::STAMP, 'verified'];
 
@@ -137,7 +140,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_cannot_remove_middleware(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
         StampRoutes::$middleware = static fn (): array => ['verified'];
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->middleware('auth')->register();
@@ -155,7 +158,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_lets_an_action_exclude_extension_middleware(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
         StampRoutes::$middleware = static fn (): array => ['verified'];
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->register();
@@ -167,7 +170,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_adds_middleware_for_one_endpoint(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
         StampRoutes::$middleware = static fn (RouteMiddlewareContext $context): array => $context->endpoint === Endpoint::Mutate ? [self::STAMP] : [];
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->register();
@@ -185,7 +188,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_passes_the_resource_endpoint_controller_and_route_name(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->names('desk')->register();
 
@@ -205,7 +208,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_passes_the_route_name_with_the_name_of_its_groups(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
 
         RouteFacade::name('api.')->prefix('api')->group(function (): void {
             RouteFacade::name('desk.')->group(function (): void {
@@ -221,7 +224,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_skips_a_resource_the_extension_does_not_apply_to(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
         StampRoutes::$resources = [];
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->register();
@@ -233,7 +236,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_runs_the_extension_middleware_on_a_request(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
         Rest::resource('routed-tickets', RoutedTicketController::class)->register();
 
         $this->actingAs(new GenericUser(['id' => 1]))->postJson('/routed-tickets/search')->assertOk();
@@ -271,7 +274,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_adds_middleware_to_a_search_only_registration(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
 
@@ -281,7 +284,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_builds_the_extension_once_per_registration(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->withBatchProgress()->register();
 
@@ -292,7 +295,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_keeps_the_middleware_of_compiled_routes(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
         Rest::resource('routed-tickets', RoutedTicketController::class)->register();
 
         $this->useCompiledRoutes();
@@ -306,13 +309,13 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_builds_nothing_at_registration_for_other_kinds(): void
     {
-        config(['rest.extensions' => ['counting' => CountingExtension::class, 'acl' => 'Missing\Extension']]);
+        config(['rest.extensions' => [CountingExtension::class, 'Missing\Extension']]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->register();
 
         $this->assertSame([], ExtensionLog::$built);
         $this->assertSame(array_fill_keys(self::CATCH_ALL, [EnforceExpectsJson::class]), $this->catchAllMiddleware());
-        $this->expectExceptionObject(InvalidExtensionException::notAClass('acl', 'Missing\Extension'));
+        $this->expectExceptionObject(InvalidExtensionException::notAClass('Missing\Extension'));
 
         $this->withoutExceptionHandling()->postJson('/routed-tickets/search');
     }
@@ -320,7 +323,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_builds_only_route_extensions_once_for_every_registration(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class, 'counting' => CountingExtension::class]]);
+        config(['rest.extensions' => [StampRoutes::class, CountingExtension::class]]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
         Rest::resource('routed-tickets-again', RoutedTicketController::class)->only('search')->register();
@@ -336,7 +339,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[DataProvider('invalidEntries')]
     public function it_registers_routes_beside_an_invalid_entry_of_another_kind(Closure $entry): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class, ...$entry($this->app)]]);
+        config(['rest.extensions' => [StampRoutes::class, ...$entry($this->app)]]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
 
@@ -351,7 +354,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
             return static function (Container $container) use ($class): array {
                 $container->bind($class);
 
-                return ['broken' => $class];
+                return [$class];
             };
         };
 
@@ -359,12 +362,11 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
             'a bound class that is not an extension' => [$bound(stdClass::class)],
             'a bound class without a kind' => [$bound(KindlessExtension::class)],
             'a bound missing class' => [$bound('Missing\Extension')],
-            'a missing class' => [static fn (): array => ['broken' => 'Missing\Extension']],
-            'an unnamed entry' => [static fn (): array => [0 => CountingExtension::class]],
-            'not an extension' => [static fn (): array => ['broken' => stdClass::class]],
-            'an instance' => [static fn (): array => ['broken' => new stdClass]],
-            'an invalid name' => [static fn (): array => ['Bad-Name' => CountingExtension::class]],
-            'a class without a kind' => [static fn (): array => ['broken' => KindlessExtension::class]],
+            'a missing class' => [static fn (): array => ['Missing\Extension']],
+            'not an extension' => [static fn (): array => [stdClass::class]],
+            'an instance' => [static fn (): array => [new stdClass]],
+            'an invalid name' => [static fn (): array => [BadlyNamedExtension::class]],
+            'a class without a kind' => [static fn (): array => [KindlessExtension::class]],
         ];
     }
 
@@ -373,7 +375,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[DataProvider('refusedRouteEntries')]
     public function it_refuses_at_registration_a_route_extension_that_the_config_refuses(array $entries, InvalidExtensionException $refusal): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class, ...$entries]]);
+        config(['rest.extensions' => [StampRoutes::class, ...$entries]]);
 
         $this->expectExceptionObject($refusal);
 
@@ -392,10 +394,10 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_refuses_on_request_an_invalid_entry_that_the_routes_skip(): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class, 'broken' => 'Missing\Extension']]);
+        config(['rest.extensions' => [StampRoutes::class, 'Missing\Extension']]);
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
 
-        $this->expectExceptionObject(InvalidExtensionException::notAClass('broken', 'Missing\Extension'));
+        $this->expectExceptionObject(InvalidExtensionException::notAClass('Missing\Extension'));
 
         $this->withoutExceptionHandling()->postJson('/routed-tickets/search');
     }
@@ -403,7 +405,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     #[Test]
     public function it_adds_the_middleware_of_a_subclass_bound_in_the_container(): void
     {
-        config(['rest.extensions' => ['plain' => PlainLimits::class]]);
+        config(['rest.extensions' => [PlainLimits::class]]);
         $this->app->bind(PlainLimits::class, StampingLimits::class);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
@@ -414,7 +416,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     /** @param Closure(): array<mixed> $returned */
     private function assertRefused(Closure $returned, string $given): void
     {
-        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+        config(['rest.extensions' => [StampRoutes::class]]);
         StampRoutes::$middleware = $returned;
         $routes = count($this->app['router']->getRoutes()->getRoutes());
 

@@ -6,7 +6,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GuardRoutes;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['guard' => GuardRoutes::class])]
+#[WithConfig('rest.extensions', [GuardRoutes::class])]
 class RouteMiddlewareDocumentTest extends DocumentationTestCase
 {
     #[Test]

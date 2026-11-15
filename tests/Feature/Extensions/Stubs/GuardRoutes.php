@@ -9,6 +9,12 @@ use Lomkit\Rest\Tests\Fixtures\Festival\StageResource;
 
 final class GuardRoutes extends Extension implements AddsRouteMiddleware
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'guard';
+    }
+
     /** @var list<string> */
     public static array $middleware = ['auth'];
 

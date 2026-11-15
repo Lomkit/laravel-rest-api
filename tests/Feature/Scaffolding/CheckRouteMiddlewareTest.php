@@ -34,7 +34,7 @@ final class CheckRouteMiddlewareTest extends ScaffoldingTestCase
     #[Test]
     public function it_counts_extension_authentication_in_rest_check(): void
     {
-        config(['rest.extensions' => ['guard' => GuardRoutes::class]]);
+        config(['rest.extensions' => [GuardRoutes::class]]);
         GuardRoutes::$middleware = ['auth:sanctum'];
         GuardRoutes::$resources = [TripResource::class];
         $this->expose();
@@ -45,14 +45,14 @@ final class CheckRouteMiddlewareTest extends ScaffoldingTestCase
     #[Test]
     public function it_checks_the_routes_beside_an_invalid_entry_of_another_kind(): void
     {
-        config(['rest.extensions' => ['guard' => GuardRoutes::class, 'broken' => 'Missing\\Extension']]);
+        config(['rest.extensions' => [GuardRoutes::class, 'Missing\\Extension']]);
         GuardRoutes::$middleware = ['auth:sanctum'];
         GuardRoutes::$resources = [TripResource::class];
         $this->expose();
 
         $output = $this->check();
 
-        $this->assertStringContainsString(rtrim(InvalidExtensionException::notAClass('broken', 'Missing\\Extension')->getMessage(), '.'), $output);
+        $this->assertStringContainsString(rtrim(InvalidExtensionException::notAClass('Missing\\Extension')->getMessage(), '.'), $output);
         $this->assertStringNotContainsString('is not behind an authentication middleware', $output);
     }
 

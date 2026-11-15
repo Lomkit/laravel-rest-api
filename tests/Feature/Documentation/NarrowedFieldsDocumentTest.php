@@ -10,7 +10,7 @@ use Lomkit\Rest\Tests\Fixtures\Festival\ShowResource;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['mask' => MaskingFields::class])]
+#[WithConfig('rest.extensions', [MaskingFields::class])]
 class NarrowedFieldsDocumentTest extends DocumentationTestCase
 {
     #[\Override]

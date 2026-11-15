@@ -401,13 +401,13 @@ class AugmentedRowsTest extends PackageTestCase
     public function it_refuses_an_alias_that_names_a_hidden_field(): void
     {
         Rest::resource('alias-field-authors', AliasFieldAuthorController::class)->register();
-        config(['rest.extensions' => ['first' => FirstAugmentation::class, 'mask' => MaskingFields::class]]);
+        config(['rest.extensions' => [FirstAugmentation::class, MaskingFields::class]]);
         MaskingFields::reset();
         MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->hide('first__total');
         FirstAugmentation::$augment = static fn (AugmentationContext $context): string => $context->select('total', Post::query()->selectRaw('1'));
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::aliasNamesField('first', 'first__total', AliasFieldAuthorResource::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::aliasNamesField('first', FirstAugmentation::class, 'first__total', AliasFieldAuthorResource::class));
 
         $this->postJson('/alias-field-authors/search', ['search' => []]);
     }

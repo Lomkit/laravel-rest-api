@@ -9,5 +9,11 @@ use Lomkit\Rest\Extensions\Kinds\NarrowsLimits;
 class PlainLimits extends Extension implements NarrowsLimits
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'plain';
+    }
+
+    #[\Override]
     public function narrowLimits(LimitsContext $context): void {}
 }

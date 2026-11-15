@@ -82,7 +82,7 @@ class MorphToDeclarationTest extends MorphTargetsTestCase
     #[Test]
     public function it_refuses_a_target_that_hides_a_field_named_like_the_type_key(): void
     {
-        config(['rest.morph.type_key' => 'name', 'rest.extensions' => ['mask' => MaskingFields::class]]);
+        config(['rest.morph.type_key' => 'name', 'rest.extensions' => [MaskingFields::class]]);
         MaskingFields::reset();
         MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->resource instanceof ShelfResource ? $context->hide('name') : null;
         $this->withoutExceptionHandling();

@@ -7,8 +7,14 @@ use Lomkit\Rest\Extensions\Contexts\RouteMiddlewareContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\AddsRouteMiddleware;
 
-final class StampRoutes extends Extension implements AddsRouteMiddleware
+class StampRoutes extends Extension implements AddsRouteMiddleware
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'stamp';
+    }
+
     /** @var (Closure(RouteMiddlewareContext): list<string>)|null */
     public static ?Closure $middleware = null;
 

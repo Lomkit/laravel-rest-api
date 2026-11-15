@@ -10,6 +10,6 @@ final class OtherStampRoutesProvider extends ServiceProvider
     #[\Override]
     public function register(): void
     {
-        Rest::registerExtension('stamp', OtherStampRoutes::class);
+        Rest::registerExtension(OtherStampRoutes::class);
     }
 }

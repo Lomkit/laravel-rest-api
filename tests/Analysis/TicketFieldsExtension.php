@@ -12,6 +12,12 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 final class TicketFieldsExtension extends Extension implements AddsRouteMiddleware, NarrowsFields
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'ticket_fields';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === TicketDeskResource::class;
