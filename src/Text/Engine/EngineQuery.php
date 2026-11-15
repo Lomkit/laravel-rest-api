@@ -2,26 +2,18 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
-use Illuminate\Database\Eloquent\Model;
-use Laravel\Scout\Builder;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
-use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
+use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use Lomkit\Rest\Text\TextQuery;
 
 final class EngineQuery
 {
-    private const array COMPARISONS = [
-        FilterOperator::Equal,
-        FilterOperator::NotEqual,
-        FilterOperator::LessThan,
-        FilterOperator::GreaterThan,
-        FilterOperator::LessThanOrEqual,
-        FilterOperator::GreaterThanOrEqual,
-    ];
-
     private readonly IndexConditions $conditions;
 
     /** @var list<array{string, SortDirection}> */
@@ -29,6 +21,8 @@ final class EngineQuery
 
     /** @var array<string, mixed> */
     private array $options = [];
+
+    private ?RestrictedPage $restricted = null;
 
     public function __construct(
         private readonly EngineIndex $index,
@@ -39,19 +33,14 @@ final class EngineQuery
             throw InvalidEngineQueryException::trashedUnavailable($index->model->model()::class);
         }
 
-        $this->conditions = new IndexConditions;
+        $this->conditions = new IndexConditions($index->searchedClass());
     }
 
     public function where(string $attribute, FilterOperator|string $operator, mixed $value): static
     {
-        $declared = $this->attribute($attribute);
-        $comparison = $operator instanceof FilterOperator ? $operator : FilterOperator::tryFrom($operator);
+        $declared = $this->index->attributes->declared($attribute);
 
-        if ($comparison === null || ! in_array($comparison, self::COMPARISONS, true) || ! $declared->supports($comparison)) {
-            throw InvalidEngineQueryException::unsupportedOperator($attribute, $operator instanceof FilterOperator ? $operator->value : $operator);
-        }
-
-        $this->conditions->compare($attribute, $comparison, $declared->value($value));
+        $this->conditions->compare($attribute, $declared->comparison($operator), $declared->value($value));
 
         return $this;
     }
@@ -59,7 +48,19 @@ final class EngineQuery
     /** @param array<mixed> $values */
     public function whereIn(string $attribute, array $values): static
     {
-        $this->conditions->include($attribute, $this->members($attribute, FilterOperator::In, $values));
+        return $this->restrictIn($attribute, $values);
+    }
+
+    /**
+     * @internal
+     *
+     * @param  array<mixed>  $values
+     */
+    public function restrictIn(string $attribute, array $values, ?RestrictingExtension $by = null): static
+    {
+        $declared = $this->compared($attribute);
+
+        $this->conditions->include($attribute, $declared->members(FilterOperator::In, $values), $declared->list, $by);
 
         return $this;
     }
@@ -67,7 +68,7 @@ final class EngineQuery
     /** @param array<mixed> $values */
     public function whereNotIn(string $attribute, array $values): static
     {
-        $this->conditions->exclude($attribute, $this->members($attribute, FilterOperator::NotIn, $values));
+        $this->conditions->exclude($attribute, $this->compared($attribute)->members(FilterOperator::NotIn, $values));
 
         return $this;
     }
@@ -90,25 +91,7 @@ final class EngineQuery
     /** @param array<mixed> $options */
     public function options(array $options): static
     {
-        $merged = $this->options;
-
-        foreach ($options as $key => $value) {
-            if (! is_string($key)) {
-                throw InvalidEngineQueryException::invalidOption($key);
-            }
-
-            if (in_array($key, $this->index->profile->ownedOptions(), true)) {
-                throw InvalidEngineQueryException::ownedOption($key);
-            }
-
-            if (array_key_exists($key, $merged) && $merged[$key] !== $value) {
-                throw InvalidEngineQueryException::conflictingOption($key);
-            }
-
-            $merged[$key] = $value;
-        }
-
-        $this->options = $merged;
+        $this->options = EngineOptions::merge($this->options, $options, $this->index->profile->ownedOptions());
 
         return $this;
     }
@@ -121,11 +104,48 @@ final class EngineQuery
             return EnginePage::empty();
         }
 
-        return $this->index->profile->page($this->builder(), $this->index->model, $perPage, $page);
+        $builder = (new EngineBuilder($this->index, $this->text, $this->trashed))->build($this->conditions, $this->orders, $this->options);
+
+        return $this->restricted?->read($builder, $this->index->model, $perPage, $page)
+            ?? $this->index->profile->page($builder, $this->index->model, $perPage, $page);
+    }
+
+    /** @internal */
+    public function matchNothing(): static
+    {
+        $this->conditions->nothing();
+
+        return $this;
+    }
+
+    /** @internal */
+    public function restrictRows(ExtensionRestrictions $rows): bool
+    {
+        if ($this->restricted !== null) {
+            throw InvalidEngineQueryException::repeatedRowRestriction($this->index->searchedClass(), $this->restricted->extensions());
+        }
+
+        if (! $this->index->profile instanceof AppliesRowRestrictions) {
+            return false;
+        }
+
+        $this->restricted = new RestrictedPage($this->index->profile, $rows, $this->index->searchedClass());
+
+        return true;
+    }
+
+    /** @internal */
+    public function profile(): EngineProfile
+    {
+        return $this->index->profile;
     }
 
     public function reachable(): ?int
     {
+        if ($this->conditions->excludesEverything()) {
+            return PHP_INT_MAX;
+        }
+
         return $this->index->profile->reachable($this->index->model);
     }
 
@@ -134,51 +154,14 @@ final class EngineQuery
         return new EnginePaging($this->index->profile);
     }
 
-    private function attribute(string $name): IndexAttribute
+    private function compared(string $attribute): IndexAttribute
     {
-        return $this->index->attributes->find($name) ?? throw InvalidEngineQueryException::undeclaredAttribute($name);
-    }
+        $declared = $this->index->attributes->declared($attribute);
 
-    /**
-     * @param  array<mixed>  $values
-     * @return list<int|float|string|bool>
-     */
-    private function members(string $attribute, FilterOperator $operator, array $values): array
-    {
-        $declared = $this->attribute($attribute);
-
-        if (! $declared->supports($operator)) {
-            throw InvalidEngineQueryException::unsupportedOperator($attribute, $operator->value);
+        if ($declared->list && ! $this->index->profile instanceof MatchesStringLists) {
+            throw InvalidEngineQueryException::unmatchedStringList($this->index->searchedClass(), $attribute, $this->index->profile->name());
         }
 
-        return array_map(fn (mixed $value): int|float|string|bool => $declared->value($value), array_values($values));
-    }
-
-    /** @return Builder<Model> */
-    private function builder(): Builder
-    {
-        $builder = new Builder($this->index->model->model(), implode(' ', $this->text->terms()), null, $this->index->model->softDeletes());
-
-        $this->conditions->applyTo($builder);
-
-        match ($this->trashed) {
-            Trashed::With => $builder->withTrashed(),
-            Trashed::Only => $builder->onlyTrashed(),
-            null => $builder,
-        };
-
-        foreach ($this->orders as [$attribute, $direction]) {
-            $builder->orderBy($attribute, $direction->value);
-        }
-
-        if ($this->options !== []) {
-            $builder->options($this->options);
-        }
-
-        if ($builder::class !== Builder::class || $builder->callback !== null || $builder->queryCallback !== null) {
-            throw InvalidTextSearchException::unexpectedBuilder($builder::class);
-        }
-
-        return $builder;
+        return $declared;
     }
 }

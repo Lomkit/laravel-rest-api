@@ -12,7 +12,7 @@ use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 use Throwable;
 
-final readonly class AlgoliaProfile implements EngineProfile
+final readonly class AlgoliaProfile implements MatchesStringLists
 {
     use PlainLiterals;
 

@@ -2,13 +2,33 @@
 
 namespace Lomkit\Rest\Exceptions;
 
+use Illuminate\Support\Arr;
 use LogicException;
 
 final class InvalidEngineQueryException extends LogicException
 {
+    public static function unmatchedStringList(string $resource, string $attribute, string $engine): self
+    {
+        return new self("The engine query of {$resource} compares the list attribute [{$attribute}], but the engine [{$engine}] compares single values only. Compare lists of strings on an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists, and check \$context->matchesStringLists before comparing the list.");
+    }
+
     public static function undeclaredAttribute(string $attribute): self
     {
-        return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable() or among the attributes of ScoutEngine::perimeter().");
+        return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.");
+    }
+
+    public static function unappliedRowRestriction(string $resource, string $profile, string $engine): self
+    {
+        return new self("The engine profile {$profile} of [{$engine}] implements AppliesRowRestrictions, but its restrictedPage() returned without applying the RowRestriction it received for a text search of {$resource}. Apply it to the SQL query of the page, or do not implement AppliesRowRestrictions so that the extensions restrict the engine with RestrictsEngineQueries.");
+    }
+
+    /** @param non-empty-list<array{string, string}> $extensions */
+    public static function repeatedRowRestriction(string $resource, array $extensions): self
+    {
+        usort($extensions, static fn (array $first, array $second): int => strcmp($first[0], $second[0]));
+        $named = Arr::join(array_map(static fn (array $extension): string => "the [{$extension[0]}] extension {$extension[1]}", $extensions), ', ', ' and ');
+
+        return new self("The engine query of {$resource} already carries the row restrictions of {$named}, and the package passes them once per engine query. Restrict the engine query with where(), whereIn() or whereNotIn() in ScoutEngine::perimeter() or in an instruction instead of restrictRows().");
     }
 
     public static function unsupportedOperator(string $attribute, string $operator): self

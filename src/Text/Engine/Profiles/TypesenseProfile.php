@@ -13,7 +13,7 @@ use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class TypesenseProfile implements EngineProfile
+final readonly class TypesenseProfile implements MatchesStringLists
 {
     public function __construct(private TypesenseEngine $engine) {}
 

@@ -8,10 +8,11 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
+use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class DatabaseProfile implements EngineProfile
+final readonly class DatabaseProfile implements AppliesRowRestrictions, ComparesColumns
 {
     use PlainLiterals;
 
@@ -65,17 +66,34 @@ final readonly class DatabaseProfile implements EngineProfile
     #[\Override]
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
-        $builder->query(fn (EloquentBuilder $query): EloquentBuilder => $query->select($model->keyColumn())->setEagerLoads([]));
+        return $this->read($builder, $model, $perPage, $page, null);
+    }
 
-        $paginator = $this->engine->paginate($builder, $perPage, $page);
-        $keys = array_map(fn (mixed $row): int|string => $row instanceof Model ? $model->keyOf($row) : $model->key($row), $paginator->items());
-
-        return new EnginePage(array_values($keys), $paginator->total());
+    #[\Override]
+    public function restrictedPage(Builder $builder, ScoutModel $model, int $perPage, int $page, RowRestriction $rows): EnginePage
+    {
+        return $this->read($builder, $model, $perPage, $page, $rows);
     }
 
     #[\Override]
     public function reachable(ScoutModel $model): int
     {
         return PHP_INT_MAX;
+    }
+
+    /** @param Builder<Model> $builder */
+    private function read(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows): EnginePage
+    {
+        $builder->query(function (EloquentBuilder $query) use ($model, $rows): EloquentBuilder {
+            $query->select($model->keyColumn())->setEagerLoads([]);
+            $rows?->apply($query);
+
+            return $query;
+        });
+
+        $paginator = $this->engine->paginate($builder, $perPage, $page);
+        $keys = array_map(fn (mixed $row): int|string => $row instanceof Model ? $model->keyOf($row) : $model->key($row), $paginator->items());
+
+        return new EnginePage(array_values($keys), $paginator->total());
     }
 }

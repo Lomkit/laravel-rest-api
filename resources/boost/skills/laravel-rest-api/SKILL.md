@@ -623,7 +623,7 @@ public function text(): ?TextSearch
 - Grammar next to a filled text: filters on `filterable()` attributes, `and` only (`or`, `nested`, relation paths and relation groups are a `422`); `=`, `!=`, `in`, `not in` on every attribute and `>`, `>=`, `<`, `<=` on `Integer` and `Number`, within the field's operators; no `null`, non-empty lists, finite numbers. Sorts on `sortable()` attributes, or `@relevance` alone (`desc` or no direction) for the engine order. `text.mode` is `words` only. Scopes are a `422`. Instructions must implement `AppliesToEngine`. `trashed` needs `SoftDeletes` and `scout.soft_delete = true`. `includes`, `aggregates`, `selects` and `gates` run in SQL on the page rows. A blank text, or one without a letter or digit, runs the normal SQL search.
 - The engine receives the letters and digits of the text, separated by spaces: the engine query syntax has no effect.
 - The page is loaded by key without `perimeterQuery()`, with the model's global scopes and its soft deletes (`search.trashed`): pages are full and `total` exact, except for an indexed row that the database no longer holds or that a global scope drops (left out of `data`, still counted). Includes and aggregates of the page rows apply their own `perimeterQuery()`. Keys follow `getScoutKeyType()` (`int`/`integer` or string): a model whose scout key is a string column declares it. The model's `search()` override, `getScoutModelsByIds()` and `queryScoutModelsByIds()` are not used.
-- Engines: `collection`, `database`, `meilisearch`, `typesense`, `algolia`, `turbopuffer`, `null`, and subclasses of them; another engine class is refused.
+- Engines: `collection`, `database`, `meilisearch`, `typesense`, `algolia`, `turbopuffer`, `null`, and subclasses of them; another engine class is refused unless an extension provides its profile (`ProvidesEngineProfiles`).
   - `collection`, `database`: every operator and sort, exact totals; the `database` engine reads only the scout key column of the rows that match, without the default eager loads of the model.
   - `meilisearch`: exact totals up to the index `pagination.maxTotalHits`; declare `filterableAttributes` (with the perimeter attributes) and `sortableAttributes` in the index settings.
   - `typesense`: `query_by` required in `scout.typesense.model-settings.<class>.search-parameters` (or `typesenseSearchParameters()`); pages of at most 250; at most 3 sorts.
@@ -1572,7 +1572,7 @@ final class TenantExtension extends Extension implements RestrictsQueries
 - Qualify columns with `$context->query->qualifyColumn()`: pivot reads join another table.
 - A restriction may run several times in one request, and again on each attempt of a write transaction: keep it free of side effects.
 - Write where clauses only. Laravel drops a global scope or an `afterQuery()` callback added to the Eloquent builder of a nested group before the check can see it, and neither is applied.
-- A text search through a search engine on a restricted resource throws `InvalidTextSearchException`: leave the resource out with `appliesTo()`, or add the extension class to `rest.disabled_extensions`.
+- Search engines: on the Scout `database` and `collection` drivers, the restriction applies in the SQL of the engine query, with an exact total; the `null` driver returns no row. On every engine, the rows of a page are read again by key through the restriction, so a row changed since indexing is dropped. On another engine, implement `RestrictsEngineQueries` too, or a text search of the resource throws `InvalidTextSearchException` (`rest:check` reports it); its message also offers to leave the resource out with `appliesTo()` or to add the extension class to `rest.disabled_extensions`.
 
 ### Adding to rendered rows (`AugmentsQueries`)
 
@@ -1683,6 +1683,157 @@ final class ArchiveExtension extends Extension implements DeclaresInstructions
 - Guarantees: a static kind. It receives the resource class only, no user, and its instructions are read with those of the resource. The key of each instruction is the extension name, a dot and its `uriKey()` (`arc.with-archived`, `$instruction->publicUriKey()`), in requests, `/details`, search meta and the OpenAPI document. Like any instruction, it runs inside its own where group, AND-ed with the rest of the search. An instance returned for several resources is copied for each.
 - Forbids: a key that another instruction of the resource or of an extension takes, and the entries that `instructions()` of a resource refuses (a class that does not extend `Instruction`, `Instruction::class` itself, an abstract class, a binding that builds another class). Each throws `InvalidQueryExtensionException`, naming the extension (its name and its class) and the resource, and `rest:check` reports it.
 
+### Restricting engine searches (`RestrictsEngineQueries`)
+
+App: `\Vendor\Tenancy\TenantExtension::class` in the `rest.extensions` list.
+
+Package, which registers the class alone with `Rest::registerExtension(TenantExtension::class)`:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\{EngineRestrictionContext, IndexAttributesContext, RestrictionContext};
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\{DeclaresIndexAttributes, RestrictsEngineQueries, RestrictsQueries};
+use Lomkit\Rest\Fields\Integer;
+
+final class TenantExtension extends Extension implements DeclaresIndexAttributes, RestrictsEngineQueries, RestrictsQueries
+{
+    public function __construct(private readonly CurrentTenant $tenant) {}
+
+    #[\Override]
+    public static function name(): string
+    {
+        return 'tenant';
+    }
+
+    #[\Override]
+    public function restrict(RestrictionContext $context): void
+    {
+        if ($context->user === null) {
+            $context->query->whereRaw('0 = 1');
+
+            return;
+        }
+
+        $context->query->where($context->query->qualifyColumn('tenant_id'), $this->tenant->id());
+    }
+
+    #[\Override]
+    public function indexAttributes(IndexAttributesContext $context): array
+    {
+        return [Integer::make('tenant_id')];
+    }
+
+    #[\Override]
+    public function restrictEngine(EngineRestrictionContext $context): void
+    {
+        if ($context->rowsRestrictedInSql) {
+            return;
+        }
+
+        if ($context->user === null) {
+            $context->query->matchNothing();
+
+            return;
+        }
+
+        $context->query->where('tenant_id', '=', $this->tenant->id());
+    }
+}
+```
+
+An app whose `ScoutEngine::perimeter()` already declares `Integer::make('tenant_id')` keeps working with this extension: the same declaration is accepted, and the one of the resource is used. A `Text::make('tenant_id')` there is refused, since the two declarations diverge.
+
+- Guarantees: runs once per engine query, after `ScoutEngine::perimeter()` and before the filters, sorts and instructions of the client, for searches, `Rest::search()` pages and actions on search results, also behind `withoutPerimeter()`. Its conditions are AND-ed with the perimeter, the client and the other extensions, in any extension order: `whereIn()` lists intersect, `whereNotIn()` lists add up, so a client filter cannot bring back a value it excludes. `matchNothing()` returns an empty page without calling the engine, and an action then runs on no row. `$context->user` is the user that the Gate checks (also under `Rest::search()->as($user)`), `null` for a guest.
+- Forbids: anything but `where()`, `whereIn()`, `whereNotIn()` and `matchNothing()`: no `or`, no sort, no engine option. It filters on the `filterable()` and `perimeter()` attributes of the resource and on the attributes that extensions declare (`DeclaresIndexAttributes`); another name, or a condition that the engine query refuses, throws `InvalidEngineExtensionException`, which names the extension (its name and its class), quotes the refusal and keeps it as its previous exception. Every method, `matchNothing()` included, returns the restriction. It never stands for `perimeter()` or `withoutPerimeter()`, which a `ScoutEngine` still requires.
+- With `RestrictsQueries` on the same class: on the Scout `database` and `collection` drivers, the restriction applies in the SQL of the engine query, with an exact total, and `$context->rowsRestrictedInSql` is `true`, so the engine restriction may return at once. It is `false` for an extension that does not implement `RestrictsQueries` itself, even when another extension restricts the rows in SQL. On another engine `restrictEngine()` restricts the search, and the rows of the page are read again by key through the `RestrictsQueries` restrictions (never through `perimeterQuery()`), also for actions on search results and in the worker of a queued action: a row that the index still matches but the restriction now excludes is dropped, so a page can hold fewer rows than its size while the total stays the one of the engine. Make both say the same. A `RestrictsQueries` extension without this kind makes the text searches of the resource throw `InvalidTextSearchException` on any engine whose profile does not apply SQL restrictions; the message names the extension and its class, and offers to add the class to `rest.disabled_extensions`. The `null` driver returns no row and is never refused.
+- `$context->comparesColumns` is `true` when Scout compares each condition with a column of the model table (the `collection` and `database` drivers, or a profile that implements `ComparesColumns`): name only columns there, or return at once when `$context->rowsRestrictedInSql` is `true`.
+- `$context->matchesStringLists` says whether the engine matches lists of strings.
+
+### Declaring index attributes (`DeclaresIndexAttributes`)
+
+App: `\Vendor\Sharing\ReadersExtension::class` in the `rest.extensions` list.
+
+Package, which registers the class alone with `Rest::registerExtension(ReadersExtension::class)`:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\{EngineRestrictionContext, IndexAttributesContext};
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\{DeclaresIndexAttributes, RestrictsEngineQueries};
+use Lomkit\Rest\Text\Engine\StringListAttribute;
+
+final class ReadersExtension extends Extension implements DeclaresIndexAttributes, RestrictsEngineQueries
+{
+    #[\Override]
+    public static function name(): string
+    {
+        return 'readers';
+    }
+
+    #[\Override]
+    public function indexAttributes(IndexAttributesContext $context): array
+    {
+        return $context->matchesStringLists ? [StringListAttribute::make('readers')] : [];
+    }
+
+    #[\Override]
+    public function restrictEngine(EngineRestrictionContext $context): void
+    {
+        $reader = $context->user?->getAuthIdentifier();
+
+        if (! $context->matchesStringLists || $reader === null) {
+            $context->query->matchNothing();
+
+            return;
+        }
+
+        $context->query->whereIn('readers', [(string) $reader]);
+    }
+}
+```
+
+The app indexes the key on the model: `toSearchableArray()` returns `'readers' => ['12', 'group-3']`. On an engine without lists, this example shows no row.
+
+- Guarantees: a static kind. It receives `$context->resource` (a class name) and `$context->matchesStringLists`, no user, and runs once per request and resource. Return fields (`ID`, `Integer`, `Number`, `Boolean`, `Text`, `Enum`) or `StringListAttribute::make('readers')` (`Lomkit\Rest\Text\Engine\StringListAttribute`). The attributes keep their real index name, never prefixed. `restrictEngine()`, `ScoutEngine::perimeter()` and `handleEngine()` of instructions can filter on them; clients never can: they stay out of the client grammar (a filter on one is a `422`), `/details` and the OpenAPI document. Same rules as `filterable()`: name pattern, `__soft_deleted` reserved, field types, no `filterUsing()` or `sortUsing()`, operators of the field and of the engine.
+- Forbids: a name that `filterable()` declares, a name that `perimeter()` or another extension declares with another field type or list marker, and the same name twice in one extension: `Lomkit\Rest\Exceptions\InvalidEngineExtensionException` names both owners, each extension by its name and its class. The same declaration in `perimeter()` or in another extension is accepted: the one of `perimeter()`, else of the first extension by name, is used.
+- The package cannot check that the model indexes these keys: add them to `toSearchableArray()` and to the index settings.
+- Lists of strings: `whereIn('readers', [...])` keeps the rows that share at least one value with the list, `whereNotIn()` the rows that share none (an empty list included). `where()` is refused on a list. Two `whereIn()` lists on one list attribute keep the narrower one when one holds the other, and throw `Lomkit\Rest\Exceptions\ConflictingListsException` otherwise, naming the extensions that set them. An instruction must not set a list on an attribute that an extension restricts: a list from an instruction that neither holds nor is held by the list already kept answers `422` on `search.instructions.N`, since the client chose the instruction. A list can be declared on every engine; comparing it (`whereIn()`, `whereNotIn()`) on an engine whose profile does not implement `MatchesStringLists` throws `InvalidEngineQueryException` (`InvalidEngineExtensionException` when an extension compares it), so check `$context->matchesStringLists` before comparing it. Index schema per engine:
+  - Algolia: `attributesForFaceting` holds `filterOnly(readers)`.
+  - Meilisearch: `filterableAttributes` holds `readers`.
+  - Typesense: a collection field `['name' => 'readers', 'type' => 'string[]']`. `whereNotIn()` sends `readers:!=[...]`, checked with Typesense Server 29.0 and 30.1; check an older server before you rely on it.
+  - Another engine compares single values only: do not compare the list there (and `toSearchableArray()` must not send a list to the `database` engine, which turns every key into a column).
+
+### Providing engine profiles (`ProvidesEngineProfiles`)
+
+App: `\Vendor\OpenSearch\OpenSearchExtension::class` in the `rest.extensions` list.
+
+Package, which registers the class alone with `Rest::registerExtension(OpenSearchExtension::class)`:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\EngineProfileContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\ProvidesEngineProfiles;
+use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+
+final class OpenSearchExtension extends Extension implements ProvidesEngineProfiles
+{
+    #[\Override]
+    public static function name(): string
+    {
+        return 'opensearch';
+    }
+
+    #[\Override]
+    public function engineProfile(EngineProfileContext $context): ?EngineProfile
+    {
+        return $context->engine instanceof OpenSearchEngine ? new OpenSearchProfile($context->engine) : null;
+    }
+}
+```
+
+- Guarantees: a static kind. It receives `$context->resource` and `$context->engine` only, no user; answer without side effects, and `null` for an engine it does not know. The package asks it before its built-in profiles, so it can also replace the profile of a built-in engine. The provided profile goes through the same checks as a built-in one (`ensureUsableBy()`, operators, sorts, page size, window, owned options, string lists).
+- `EngineProfile` has the methods of 3.5. Optional interfaces of `Lomkit\Rest\Text\Engine\Profiles` add capabilities, checked with `instanceof`: `MatchesStringLists` (the engine matches lists of strings), `ComparesColumns` (Scout compares conditions with the columns of the model table) and `AppliesRowRestrictions` (the profile runs SQL). `AppliesRowRestrictions::restrictedPage()` receives a `Lomkit\Rest\Text\Engine\RowRestriction` and applies it to the Eloquent query it runs, so `RestrictsQueries` extensions work on that engine without `RestrictsEngineQueries`. It is only called when such a restriction applies; `page()` serves the other searches. A `restrictedPage()` that returns without calling `apply()` throws `InvalidEngineQueryException`; the package checks the call, not that the page came from the restricted query, so run that query.
+- Forbids: two extensions that provide a profile for one engine: `InvalidEngineExtensionException` names both, by name and class, and the engine class; return `null` from one of them for this engine, or add one class to `rest.disabled_extensions`.
+
 ## Artisan commands shipped by the package
 
 - `rest:resource {Name} --model=Model` — generate a Resource. Without `--model`, the model is guessed from the name (`PostResource` → `App\Models\Post`) when that class exists; otherwise the `$model` line is left out and the command warns.
@@ -1695,7 +1846,7 @@ final class ArchiveExtension extends Extension implements DeclaresInstructions
 - `rest:response {Name}` — scaffold a custom Response class.
 - `rest:policy {Name} --model=Model` — generate a policy that allows every ability in `app/Policies`: `viewAny`, `view`, `create`, `update` and `delete` (plus `restore` and `forceDelete` with `SoftDeletes`) return `true`. Edit it before production. The user parameter is typed with the model of the default guard's user provider. Without `--model`, the model is guessed from the name (`PostPolicy` → `App\Models\Post`). A model that Gate already maps to another policy keeps it: nothing is written, and with `--force` the file is written but Gate still uses the other policy until you register the new one with `Gate::policy()`.
 - `rest:quick-start --model=Post --model=Tag` — for each model, write the resource from its table (as `--generate`), the controller and, when Gate finds no policy, a policy that allows every ability, then append `Rest::resource('posts', PostsController::class)->middleware('auth:sanctum')` to `routes/api.php` once per controller (`auth:<guard>` with `--guard=<guard>`). Related models that are not chosen are skipped. Interactively it asks for the models, and for the guard when an install is needed and `--guard` is not passed, `--install-api` included; with `-n`, `--model` is required, the guard is `sanctum` unless `--guard` is passed, and `--install-api` is required when `routes/api.php` is missing, or when the run adds routes and the package of the guard (Laravel Sanctum or Laravel Passport) is missing. It ends with a check in a fresh process (routes authenticated, a policy found per model) and exits 1 when blocked. Existing files are reported as `kept`, so a rerun changes nothing.
-- `rest:check` — check the resources that the routes reach, and exit 1 on any problem (run it in CI). Without arguments it checks every controller that a route uses; `rest:check PostsController` checks the named controllers. It reports each route without an authentication middleware or with an undefined guard, each controller model without a policy, each action or metric of these controllers, and each instruction of their resources or of a resource their relations reach (an include reads them), extension instructions included, that throws when it is built, and each instruction key that two instructions of a resource take (it builds every one: `declarations ... 4 actions, 2 metrics, 3 instructions built`; each problem names its resource), each resource reached by these controllers, or through their relations, that does not override `perimeterQuery()` (`every row is visible to users who pass viewAny`), and each action on the `Search` or `Resources` target whose `authorizeEach()` returns null, and each relation that accepts `detach` while its foreign key or morph type does not accept null (`... accepts detach on its [team] relation, but tickets.team_id does not accept null`: add `->withoutOperations(MutationOperation::Detach)` or make the column nullable). This check reads the database schema (`Schema::getColumns()`): a relation whose table does not exist yet is listed as skipped (`... [country] ... skipped, no trips table`), and a schema that cannot be read is a problem that names the table and the connection. Mark a resource whose rows are meant for every user who passes `viewAny` (countries, currencies) with `#[\Lomkit\Rest\Attributes\WithoutPerimeter]`: it is listed as such, not as a problem, and a subclass inherits the attribute; a parent resource of the application that overrides `perimeterQuery()` counts for its subclasses. An action that only reads returns `'view'` from `authorizeEach()`. `--json` prints `routes`, `policies`, `problems` (routes and policies), `search`, `declarations` (`actions`, `metrics` and `instructions` built, `problems`), `rows` (`perimeter`, `without_perimeter`, `problems`), `actions` (`checked`, `problems`), `relations` (`detachable`, the other relations that accept `detach`, `skipped`, with their `table`, and `problems`), and `extensions` (`registered`, each with its `name`, `null` for a disabled class, `class`, `origin` and `disabled`, `problems` and `notes`). It also lists the extensions (name, class, origin and disabled state), builds each enabled one and reports each entry it refuses, each pair of classes with one name and each class that cannot be built; the other extensions are still listed and built. A `disabled_extensions` entry that disables nothing is noted, without failing.
+- `rest:check` — check the resources that the routes reach, and exit 1 on any problem (run it in CI). Without arguments it checks every controller that a route uses; `rest:check PostsController` checks the named controllers. It reports each route without an authentication middleware or with an undefined guard, each controller model without a policy, each action or metric of these controllers, and each instruction of their resources or of a resource their relations reach (an include reads them), extension instructions included, that throws when it is built, and each instruction key that two instructions of a resource take (it builds every one: `declarations ... 4 actions, 2 metrics, 3 instructions built`; each problem names its resource), each resource reached by these controllers, or through their relations, that does not override `perimeterQuery()` (`every row is visible to users who pass viewAny`), each resource searched through a search engine (a `ScoutEngine` or another `EngineTextSearch`) that a `RestrictsQueries` extension restricts without `RestrictsEngineQueries`, unless the profile of the engine applies SQL restrictions (the Scout `database`, `collection` and `null` drivers, or a profile that implements `AppliesRowRestrictions`), also when the engine cannot be resolved (this check reads the Scout driver of the environment it runs in: run it in CI with the driver of production, `SCOUT_DRIVER`), and each action on the `Search` or `Resources` target whose `authorizeEach()` returns null, and each relation that accepts `detach` while its foreign key or morph type does not accept null (`... accepts detach on its [team] relation, but tickets.team_id does not accept null`: add `->withoutOperations(MutationOperation::Detach)` or make the column nullable). This check reads the database schema (`Schema::getColumns()`): a relation whose table does not exist yet is listed as skipped (`... [country] ... skipped, no trips table`), and a schema that cannot be read is a problem that names the table and the connection. Mark a resource whose rows are meant for every user who passes `viewAny` (countries, currencies) with `#[\Lomkit\Rest\Attributes\WithoutPerimeter]`: it is listed as such, not as a problem, and a subclass inherits the attribute; a parent resource of the application that overrides `perimeterQuery()` counts for its subclasses. An action that only reads returns `'view'` from `authorizeEach()`. `--json` prints `routes`, `policies`, `problems` (routes and policies), `search`, `declarations` (`actions`, `metrics` and `instructions` built, `problems`), `rows` (`perimeter`, `without_perimeter`, `problems`), `actions` (`checked`, `problems`), `relations` (`detachable`, the other relations that accept `detach`, `skipped`, with their `table`, and `problems`), and `extensions` (`registered`, each with its `name`, `null` for a disabled class, `class`, `origin` and `disabled`, `problems` and `notes`). It also lists the extensions (name, class, origin and disabled state), builds each enabled one and reports each entry it refuses, each pair of classes with one name and each class that cannot be built; the other extensions are still listed and built. A `disabled_extensions` entry that disables nothing is noted, without failing.
 - The generators keep an existing class unless `--force` (`-f`) is passed, and read the published `stubs/rest.<name>.stub` before the package stubs. Stubs published under 2.x generate untyped properties, which are a fatal error in 3.x: delete them, or publish them again with `php artisan stub:publish --force`.
 
 ## Working conventions and gotchas
@@ -1729,7 +1880,7 @@ final class ArchiveExtension extends Extension implements DeclaresInstructions
 - Responses — `src/Http/Response.php` (the envelope, `map()` and `rows()`), `src/Http/MutateResponse.php` (the mutation in one transaction, its `operations` and, with `response`, its `records`, read by `src/Http/WrittenRecords.php`), `src/Http/OperateResponse.php` (`impacted` and the `result` of an action), `src/Http/BatchProgress.php` (the progress of a batch) and `src/Http/Serialization/*`: `RowSerializer` renders the rows of one plan level with `RowFields` (which converts only the returned columns), `GateTable`, `RelationRenderer` and `PivotRenderer`, and `MorphToSerializer` the targets of a `MorphTo` include, type first (both are `RowRenderer`s), and `PageEnvelope` or `PlainEnvelope` (the `Envelope` strategies) wraps them; `src/Pagination/LengthAwarePaginator.php` gives the page keys
 - Writes — `src/Mutations/Mutator.php` (writes the entries of `payload()` in the transaction of `MutateResponse`, reads each row from the `RowSet` that the key check of validation loaded (`src/Mutations/RowSet.php`, one instance per row) and collects the entries of the response in an `OperationLog` of `OperationEntry` objects) and `src/Mutations/RelationWrites.php` (the writes of each Eloquent relation class: `OwnerWrites`, `ChildWrites`, `PivotWrites` with `PivotSet` and its `PivotPlan`, `NoWrites`), checked before the first write by `src/Mutations/WriteChecks.php`; the pivot rows are written by a `src/Contracts/PivotPersister.php` (`persistedBy()` in `src/Concerns/Relations/PersistsPivots.php`), called with a `src/Mutations/PivotWrite.php`: `EloquentPivots` by default, a declared one wrapped in `VerifiedPersister`, which reads the links back with `LinkedKeys`
 - Text search — `src/Text/*` (`TextSearch`; the SQL strategies `Contains` and `FullText` implement `QueryTextSearch`, with the database dialects in `src/Text/Dialects/`; `ScoutEngine` implements `EngineTextSearch`; `ResolvedText`, the text search of a resource for one request, read through `$request->context()->text($resource)`; `TextQuery`, `TextMode`, `TextCapabilities`), applied by `TextClause`, `RelevanceClause` and `TrashedClause` in `src/Query/Clauses/`
-- Search engines — `src/Text/Engine/*` (`EngineQuery`, `IndexAttributes`, `EnginePage`, `ScoutModel`) and one profile per Scout engine in `src/Text/Engine/Profiles/`; engine filters and sorts are validated by `src/Text/Engine/{EngineSearchGrammar,EngineFilterParser}.php`, and actions read their keys through `src/Actions/{EngineTargets,EngineTargetKeys}.php`; `EngineCriteria` and `EngineInstruction` build the engine query from the nodes of `payload()`
+- Search engines — `src/Text/Engine/*` (`EngineQuery`, `IndexAttributes` with `DeclaredAttributes`, `IndexAttributeRules` and `ExtensionAttributes`, `IndexExtensions` (the kind 6 and kind 7 extensions of a text target), `StringListAttribute`, `RowRestriction`, `EnginePage`, `ScoutModel`) and one profile per Scout engine in `src/Text/Engine/Profiles/`; engine filters and sorts are validated by `src/Text/Engine/{EngineSearchGrammar,EngineFilterParser}.php`, and actions read their keys through `src/Actions/{EngineTargets,EngineTargetKeys}.php`; `EngineCriteria` and `EngineInstruction` build the engine query from the nodes of `payload()`
 - Confirmations — `src/Confirmation/` (`Confirmation`, the answer of a hook; `ConfirmationGate`, the check of one request, which signs a `ConfirmationToken`), `src/Concerns/Resource/ConfirmsWrites.php` (the hooks of the writes), `src/Mutations/PendingMutation.php`, `src/Exceptions/ConfirmationRequired.php` (the `428`)
 - Actions / Instructions / Scopes — `src/Actions/{Action,ActionTarget,ActionFields,ActionResponse,RowChecks,Actionable}.php` (`RowChecks`: the `authorizeEach()` checks of an action), `src/Actions/Rows/*` (`ChunkedRows`, `KeyChunks`, `NoRows`: the rows of each target; `CheckedRows`: the rows of a `ChunkedRows` that passed `authorizeEach()`; `RowCap`: `$maxResources`), `src/Actions/BatchOwner.php`, `src/Instructions/{Instruction,InstructionFields,Instructionable,AppliesToEngine}.php`, `src/Scopes/Scope.php`
 - Typed fields and input values — `src/Fields/*` (`Field`, `Concerns/ConfiguresWriting` (`creatable()`, `updatable()`, `writeOnly()`, `inputOnly()`, `fillUsing()`), `Concerns/ConfiguresMessages`, `FieldSet`, `FieldPath`, `InputValues`, `CastValues`, `FieldValues`, `MutationOperation`, `WriteRules`, `Details/FieldDetails`, `Details/ResourceRuleDetails`, `Details/InputFieldDetails`), filter operators and conditions in `src/Fields/Filtering/`, clauses in `src/Query/Clauses/`, built from the nodes of `payload()` with `of()` (filters: `FilterGroupClause`, `FieldConditionClause`, `RelationConditionClause`, `RelationGroupClause`)
@@ -1737,5 +1888,5 @@ final class ArchiveExtension extends Extension implements DeclaresInstructions
 - Validation of the request bodies — the parsers in `src/Validation/{Search,Operate,Mutate}/*` (the search parser with `SearchGrammar`, `SqlSearchGrammar` (with `SortPaths`, the sort names of a level and its relation paths) and `LevelBounds`, the bounds of a level, and `RowKeys`, the keys of a row, read by the `IncludeAlias` and `AggregateAlias` rules), the typed nodes in `src/Search/*` (with the sort nodes `FieldSort`, `RelationSort`, `AggregateSort` and `RelevanceSort`, `AggregateKey`, and `SearchContext`, which `FilterFlattener` builds from the filters as `FlatFilter` entries), `EngineFilterCondition` and `EngineSort` in `src/Text/Engine/`, `src/Actions/OperationNode.php` and `src/Mutations/*` (`MutationNode`, `MutationContext`, `Contextual`, `MutationAwareRule`), and `src/Validation/{ValidationContext,Vocabulary,ParsedRules,PayloadReader,InputSet,CompiledRules,MessageBook}.php`
 - Request limits and resource keys — `src/Validation/{Limits,ListSizes,Depths,Totals,LimitGroup,NodeBudget,Cursor,Violation,Violations,Rejected,KeysGrammar,KeyList,KeyLookup,KeyRead,ExistingKey}.php` and `src/Http/Requests/Traits/ParsesResourceKeys.php` (the `resources` of the deletion requests, whose key query loads their rows; the operate parser reads the `resources` of the actions with the `Resources` target)
 - OpenAPI documentation — `src/Scramble/RestOperations.php` (the Scramble operation transformer: it builds a `DocumentationContext` as a guest for each route of the package and hands the operation to the documenter of its endpoint in `src/Scramble/Endpoints/`, `EndpointDocumenters`) and `src/Scramble/RestDocument.php` (the document transformer: it leaves out the catch-all routes), `ErrorResponses` (the shared error responses) and `ComponentRegistry` (one name per component of the document), `src/Scramble/Components/` (`RecordSchema`, the record of a resource, `PageSchema`, its page and changed rows, `KeySchema`, its key list), `FieldSchema` (the type of a field), `Types/OneOf`, with `Schemas` (the shared object, list, request body and response builders), `Search/FilterSchema` (the filters of a search), `Search/FilterPaths` (the filterable paths of a resource), `Search/FieldFilterSchema` (the condition on one field), `Search/SearchExample` (the request example of a search), `FieldExample` (an example value of a field), `Types/Nothing` (a schema that accepts nothing, for `additionalProperties` and the keys that a body refuses), `Search/SearchSchema` (the body of a search), `Search/IncludeSchema`, `Search/AggregateSchema`, `Search/InputSchema` (scopes and instructions), `Search/TextSearchType` (`search.text`, `search.trashed` and the `@relevance` sort), `Search/EngineTextType` (`search.text` of a `ScoutEngine` resource), `Mutate/MutationSchema` (the body of a mutation), `Mutate/WritableSchema` (the fields that an operation writes), `Mutate/RelationEntrySchema` (the relations of an entry), `Mutate/MutationExample` and `Mutate/RelationExample` (the request example of a mutation), `RuleExample` and `RuleBounds` (an example value that honours the rules of a field), `InputFieldSchema` (an action, instruction or scope field with its rules and default), `Mutate/ResultSchema` (the response of a mutation), `Actions/ActionSchema` (the body of an action), `Actions/ActionExample` (the request example of an action), `Actions/ActionResponseSchema` (the response of an action and the progress of a batch), `Metrics/MetricSchema` (the body and the response of a metric), `DetailsResponseType` (the details response), `DetailsEntryTypes` (its entries) and `DetailsParameter` (its `with` parameter)
-- Extensions — `src/Extensions/` (`Extension`, `Kinds/ExtensionKind`, `RuntimeExtensions` (the registrations of `Rest::registerExtension()`), `ExtensionList` (the config and the registrations by class, with the disabled classes), `NamedExtensions` (the names read from the enabled classes, and the collisions), `ExtensionClass` and `ExtensionName` (the checks made before and after `name()` is read), `ExtensionRegistry` (the extensions of one context and their `appliesTo()` answers, `RestContext::extensions()`, `applicable()`, in name order), `ExtensionFactory` (builds and checks one class)), `src/Exceptions/ExtensionException.php` (the base of every extension exception), `src/Exceptions/InvalidExtensionException.php`, `src/Exceptions/InvalidQueryExtensionException.php`, `src/Console/Check/{ExtensionCheck,ExtensionReport}.php`
+- Extensions — `src/Extensions/` (`Extension`, `Kinds/ExtensionKind`, `RuntimeExtensions` (the registrations of `Rest::registerExtension()`), `ExtensionList` (the config and the registrations by class, with the disabled classes), `NamedExtensions` (the names read from the enabled classes, and the collisions), `ExtensionClass` and `ExtensionName` (the checks made before and after `name()` is read), `ExtensionRegistry` (the extensions of one context and their `appliesTo()` answers, `RestContext::extensions()`, `applicable()`, in name order), `ExtensionFactory` (builds and checks one class)), `src/Exceptions/ExtensionException.php` (the base of every extension exception), `Kinds/{RestrictsEngineQueries,DeclaresIndexAttributes,ProvidesEngineProfiles}`, `Contexts/{EngineRestriction,EngineRestrictionContext,IndexAttributesContext,EngineProfileContext}`, `src/Query/EngineRestrictions.php` (the engine restrictions of a query), `src/Exceptions/InvalidExtensionException.php`, `src/Exceptions/InvalidQueryExtensionException.php`, `src/Exceptions/InvalidEngineExtensionException.php`, `src/Console/Check/{ExtensionCheck,ExtensionReport,EngineReach}.php`
 - Generator stubs — `src/Console/stubs/*.stub`

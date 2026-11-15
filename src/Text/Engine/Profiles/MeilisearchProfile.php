@@ -10,7 +10,7 @@ use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 use Throwable;
 
-final readonly class MeilisearchProfile implements EngineProfile
+final readonly class MeilisearchProfile implements MatchesStringLists
 {
     use PlainLiterals;
 

@@ -1,0 +1,22 @@
+<?php
+
+namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
+
+use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
+
+final class NumberEngineRestriction extends Extension implements RestrictsEngineQueries
+{
+    #[\Override]
+    public static function name(): string
+    {
+        return 'a';
+    }
+
+    #[\Override]
+    public function restrictEngine(EngineRestrictionContext $context): void
+    {
+        $context->query->whereIn('number', [1, 3, 4, 5])->where('price', '<', 20);
+    }
+}

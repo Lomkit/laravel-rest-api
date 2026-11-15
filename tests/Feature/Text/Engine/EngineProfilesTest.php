@@ -17,10 +17,13 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Text\Engine\Profiles\AlgoliaProfile;
+use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\CollectionProfile;
+use Lomkit\Rest\Text\Engine\Profiles\ComparesColumns;
 use Lomkit\Rest\Text\Engine\Profiles\DatabaseProfile;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfiles;
+use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use Lomkit\Rest\Text\Engine\Profiles\MeilisearchProfile;
 use Lomkit\Rest\Text\Engine\Profiles\NullProfile;
 use Lomkit\Rest\Text\Engine\Profiles\TurbopufferProfile;
@@ -64,6 +67,30 @@ class EngineProfilesTest extends EngineTestCase
             'algolia 4' => [FakeAlgolia4Engine::class, AlgoliaProfile::class, 0, ['query', 'filters', 'hitsPerPage', 'page', 'offset', 'length'], true, null, null],
             'turbopuffer' => [FakeTurbopufferEngine::class, TurbopufferProfile::class, 0, ['rank_by', 'filters', 'top_k', 'include_attributes'], false, null, 10000],
             'null' => [NullEngine::class, NullProfile::class, PHP_INT_MAX, [], true, null, null],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('sqlAndLists')]
+    public function it_states_which_engines_apply_sql_restrictions_match_string_lists_and_compare_columns(string $engine, bool $sql, bool $lists, bool $columns): void
+    {
+        $profile = EngineProfiles::for($this->engine($engine), VoucherResource::class);
+
+        $this->assertSame([$sql, $lists, $columns], [$profile instanceof AppliesRowRestrictions, $profile instanceof MatchesStringLists, $profile instanceof ComparesColumns]);
+    }
+
+    /** @return array<string, array{class-string, bool, bool, bool}> */
+    public static function sqlAndLists(): array
+    {
+        return [
+            'collection' => [CollectionEngine::class, true, false, true],
+            'database' => [DatabaseEngine::class, true, false, true],
+            'meilisearch' => [FakeMeilisearchEngine::class, false, true, false],
+            'typesense' => [FakeTypesenseEngine::class, false, true, false],
+            'algolia 3' => [FakeAlgolia3Engine::class, false, true, false],
+            'algolia 4' => [FakeAlgolia4Engine::class, false, true, false],
+            'turbopuffer' => [FakeTurbopufferEngine::class, false, false, false],
+            'null' => [NullEngine::class, true, false, false],
         ];
     }
 

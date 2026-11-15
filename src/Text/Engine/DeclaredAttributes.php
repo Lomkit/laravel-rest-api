@@ -1,0 +1,69 @@
+<?php
+
+namespace Lomkit\Rest\Text\Engine;
+
+use Lomkit\Rest\Exceptions\InvalidTextSearchException;
+use Lomkit\Rest\Fields\Field;
+use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+use Lomkit\Rest\Text\TextTarget;
+
+final readonly class DeclaredAttributes
+{
+    /**
+     * @param  array<mixed>  $declared
+     * @return array<string, IndexAttribute>
+     */
+    public static function of(TextTarget $target, EngineProfile $profile, array $declared, string $declaration, bool $restricted = false): array
+    {
+        $attributes = [];
+        $declarer = IndexDeclarer::resource($target->resource);
+
+        foreach (array_values($declared) as $index => $attribute) {
+            $field = match (true) {
+                $attribute instanceof Field => $attribute->boundTo($target->model),
+                is_string($attribute) => $target->declared->find($attribute) ?? throw InvalidTextSearchException::unknownAttribute($target->resource, $attribute),
+                default => throw InvalidTextSearchException::notAnAttribute($target->resource, $declaration, $index, $attribute),
+            };
+
+            if (isset($attributes[$field->name])) {
+                throw InvalidTextSearchException::duplicateAttribute($target->resource, $field->name);
+            }
+
+            $attributes[$field->name] = IndexAttributeRules::field($restricted && ! $field->isInputOnly() ? (clone $field)->selectable() : $field, $profile, $declarer);
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @param  array<string, IndexAttribute>  $filterable
+     * @param  array<mixed>  $sortable
+     * @return list<string>
+     */
+    public static function sorts(TextTarget $target, EngineProfile $profile, array $filterable, array $sortable): array
+    {
+        $sorts = [];
+
+        foreach (array_values($sortable) as $index => $name) {
+            if (! is_string($name)) {
+                throw InvalidTextSearchException::notAnAttributeName($target->resource, $index, $name);
+            }
+
+            if (! isset($filterable[$name])) {
+                throw InvalidTextSearchException::unsortableAttribute($target->resource, $name);
+            }
+
+            if (in_array($name, $sorts, true)) {
+                throw InvalidTextSearchException::duplicateAttribute($target->resource, $name);
+            }
+
+            $sorts[] = $name;
+        }
+
+        if ($sorts !== [] && $profile->sortKeys() === 0) {
+            throw InvalidTextSearchException::unsortableEngine($target->resource, $profile->name());
+        }
+
+        return $sorts;
+    }
+}

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Exceptions\ConflictingListsException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Http\Resource;
@@ -56,19 +57,18 @@ final readonly class EngineSearch implements SearchSource
             ->authorizer()
             ->ensurePlanned(Check::onClass($this->resource, 'viewAny'));
 
-        $restrictions = ExtensionRestrictions::of($this->resource);
-
-        if ($restrictions !== null) {
-            throw InvalidTextSearchException::restrictedByExtensions($this->resource::class, $restrictions->extensions());
-        }
-
         $query = $this->text->engineQuery($this->search->trashed)
             ?? throw InvalidTextSearchException::notOnEngine($this->resource::class);
 
+        EngineRestrictions::of($this->resource)?->applyTo($query);
         EngineCriteria::of($this->search->filters, $this->search->sorts)->applyTo($query);
 
-        foreach ($this->search->instructions as $instruction) {
-            EngineInstruction::of($instruction)->apply($query);
+        foreach ($this->search->instructions as $index => $instruction) {
+            try {
+                EngineInstruction::of($instruction)->apply($query);
+            } catch (ConflictingListsException $conflict) {
+                throw $conflict->refusal("search.instructions.{$index}");
+            }
         }
 
         return $query;

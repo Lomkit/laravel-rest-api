@@ -46,5 +46,6 @@ return [
     'engine_value' => 'Le champ :attribute contient une valeur que le moteur de recherche ne peut pas comparer.',
     'engine_characters' => 'Le champ :attribute contient des caractères que le moteur de recherche ne peut pas rechercher tels quels.',
     'utf8' => 'Le champ :attribute doit être en UTF-8 valide.',
+    'engine_list_conflict' => 'Le champ :attribute restreint la liste [:list] avec des valeurs qui ne contiennent pas la liste que la recherche garde déjà et n’y sont pas contenues.',
     'details_parts' => 'Le champ :attribute accepte ces valeurs, séparées par des virgules : :values.',
 ];
