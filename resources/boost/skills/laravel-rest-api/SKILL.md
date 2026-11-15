@@ -1805,7 +1805,8 @@ The app indexes the key on the model: `toSearchableArray()` returns `'readers' =
   - Algolia: `attributesForFaceting` holds `filterOnly(readers)`.
   - Meilisearch: `filterableAttributes` holds `readers`.
   - Typesense: a collection field `['name' => 'readers', 'type' => 'string[]']`. `whereNotIn()` sends `readers:!=[...]`, checked with Typesense Server 29.0 and 30.1; check an older server before you rely on it.
-  - The built-in profiles of these three engines implement `MatchesStringLists`; another profile matches lists only when it implements it too (an extension can provide one, see `ProvidesEngineProfiles`). Do not compare a list elsewhere (and `toSearchableArray()` must not send a list to the `database` engine, which turns every key into a column).
+  - Turbopuffer: a `[]string` attribute. A list is matched with `ContainsAny` and excluded with `NotContainsAny`, following the Turbopuffer filter reference: `whereIn()` sends `['readers', 'ContainsAny', [...]]` and `whereNotIn()` `['readers', 'NotContainsAny', [...]]` in the `filters` option, which the package owns; Scout ANDs them with its own filters in the ranked query and in the count, so the total counts the same rows.
+  - The built-in profiles of these four engines implement `MatchesStringLists`; another profile matches lists only when it implements it too (an extension can provide one, see `ProvidesEngineProfiles`). Do not compare a list elsewhere (and `toSearchableArray()` must not send a list to the `database` engine, which turns every key into a column).
 
 ### Providing engine profiles (`ProvidesEngineProfiles`)
 
