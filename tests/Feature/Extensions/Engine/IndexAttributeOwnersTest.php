@@ -47,7 +47,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     #[Test]
     public function it_refuses_an_attribute_that_the_resource_filters(): void
     {
-        $this->declare(['first' => [Integer::make('number')]]);
+        $this->declare([FirstIndexExtension::class => [Integer::make('number')]]);
 
         $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, VoucherResource::class, 'number', ResourceIndexList::Filterable));
 
@@ -57,7 +57,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     #[Test]
     public function it_refuses_an_attribute_that_the_perimeter_declares_with_another_type(): void
     {
-        $this->declare(['first' => [Integer::make('team')]]);
+        $this->declare([FirstIndexExtension::class => [Integer::make('team')]]);
         $text = $this->resource(TeamVoucherResource::class)->text();
         $this->assertInstanceOf(ScoutEngine::class, $text);
 
@@ -96,7 +96,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     #[Test]
     public function it_accepts_an_attribute_that_the_perimeter_declares_the_same_way(): void
     {
-        $this->declare(['first' => [Text::make('team')]]);
+        $this->declare([FirstIndexExtension::class => [Text::make('team')]]);
         $text = $this->resource(TeamVoucherResource::class)->text();
         $this->assertInstanceOf(ScoutEngine::class, $text);
 
@@ -111,7 +111,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     {
         $this->useEngine(new FakeTypesenseEngine);
         config(['scout.typesense.model-settings.'.Voucher::class.'.search-parameters.query_by' => 'title']);
-        $this->declare(['first' => [Text::make('owner_id')], 'second' => [StringListAttribute::make('owner_id')]]);
+        $this->declare([FirstIndexExtension::class => [Text::make('owner_id')], SecondIndexExtension::class => [StringListAttribute::make('owner_id')]]);
 
         $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTakenByExtension('second', SecondIndexExtension::class, VoucherResource::class, 'owner_id', 'first', FirstIndexExtension::class));
 
@@ -130,7 +130,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     #[Test]
     public function it_refuses_an_attribute_declared_twice_by_one_extension(): void
     {
-        $this->declare(['first' => [Integer::make('owner_id'), Integer::make('owner_id')]]);
+        $this->declare([FirstIndexExtension::class => [Integer::make('owner_id'), Integer::make('owner_id')]]);
 
         $this->expectExceptionObject(InvalidEngineExtensionException::repeatedIndexAttribute('first', FirstIndexExtension::class, VoucherResource::class, 'owner_id'));
 
@@ -141,7 +141,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     #[DataProvider('invalidAttributes')]
     public function it_checks_extension_attributes_with_the_rules_of_the_resource(mixed $attribute, InvalidEngineExtensionException $expected): void
     {
-        $this->declare(['first' => [Integer::make('owner_id'), $attribute]]);
+        $this->declare([FirstIndexExtension::class => [Integer::make('owner_id'), $attribute]]);
 
         $this->expectExceptionObject($expected);
 
@@ -183,7 +183,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     #[Test]
     public function it_accepts_a_field_that_the_resource_does_not_declare(): void
     {
-        $this->declare(['first' => [Integer::make('tenant_id')]]);
+        $this->declare([FirstIndexExtension::class => [Integer::make('tenant_id')]]);
 
         $grammar = $this->capabilities($this->open(['number']))->engine;
 
@@ -191,15 +191,11 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
         $this->assertSame(['number'], array_keys($grammar->filters));
     }
 
-    /** @param array<string, list<mixed>> $declared */
+    /** @param array<class-string<DeclaredIndexExtension>, list<mixed>> $declared */
     private function declare(array $declared): void
     {
-        $classes = ['first' => FirstIndexExtension::class, 'second' => SecondIndexExtension::class];
+        DeclaredIndexExtension::$declared = [...DeclaredIndexExtension::$declared, ...$declared];
 
-        foreach ($declared as $name => $attributes) {
-            DeclaredIndexExtension::$declared[$classes[$name]] = $attributes;
-        }
-
-        config(['rest.extensions' => array_values(array_intersect_key($classes, $declared))]);
+        config(['rest.extensions' => array_keys($declared)]);
     }
 }
