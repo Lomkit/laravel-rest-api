@@ -50,18 +50,13 @@ final class ProviderOrderTest extends PackageTestCase
     #[Test]
     public function it_accepts_registrations_whatever_the_provider_order(): void
     {
-        $context = new RestContext(RestRequest::create('/api/products/search', 'POST'), $this->app);
-
-        $this->assertSame(['noting', 'both', 'counting'], array_keys($context->extensions()->all()));
-        $this->assertSame([NotingExtension::class, BothKindsExtension::class, CountingExtension::class], ExtensionLog::$built);
-    }
-
-    #[Test]
-    public function it_keeps_one_store_for_every_provider(): void
-    {
         $store = $this->app->make(RuntimeExtensions::class);
+        $context = new RestContext(RestRequest::create('/api/products/search', 'POST'), $this->app);
 
         $this->assertSame($store, $this->app->make(RuntimeExtensions::class));
         $this->assertSame([NotingExtension::class, BothKindsExtension::class, CountingExtension::class], $store->all());
+
+        $this->assertSame(['noting', 'both', 'counting'], array_keys($context->extensions()->all()));
+        $this->assertSame([NotingExtension::class, BothKindsExtension::class, CountingExtension::class], ExtensionLog::$built);
     }
 }

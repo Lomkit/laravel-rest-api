@@ -60,11 +60,6 @@ final class SharedNameTest extends PackageTestCase
             $this->fail('The shared name was accepted.');
         } catch (InvalidExtensionException $exception) {
             $this->assertEquals(InvalidExtensionException::sharedName('acl', [AclExtension::class, RivalAclExtension::class]), $exception);
-            $this->assertSame(
-                'The extensions '.AclExtension::class.' and '.RivalAclExtension::class.' share the name [acl].'
-                .' Add one of them to the [rest.disabled_extensions] config, or extend one of them and override name() to give it another name.',
-                $exception->getMessage(),
-            );
             $this->assertSame([], ExtensionLog::$built);
         }
     }

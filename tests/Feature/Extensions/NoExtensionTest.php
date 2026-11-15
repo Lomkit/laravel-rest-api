@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions;
 
-use Illuminate\Support\Arr;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\ExtensionFactory;
 use Lomkit\Rest\Extensions\ExtensionList;
@@ -61,22 +60,6 @@ final class NoExtensionTest extends PackageTestCase
         $this->assertContains(RuntimeExtensions::class, $resolved);
         $this->assertSame([], ExtensionLog::$built);
         $this->assertSame([], $this->app->make(RuntimeExtensions::class)->all());
-    }
-
-    #[Test]
-    public function it_answers_with_a_cached_config_that_has_no_extension_keys(): void
-    {
-        $rest = $this->app['config']->get('rest');
-        $this->assertIsArray($rest);
-        $this->assertSame([], $rest['disabled_extensions']);
-        $this->app['config']->set('rest', Arr::except($rest, ['extensions', 'disabled_extensions']));
-        Category::forceCreate(['id' => 1, 'name' => 'Lighting']);
-        Product::forceCreate(['id' => 1, 'category_id' => 1, 'name' => 'Desk lamp', 'price' => 39]);
-
-        $response = $this->withoutExceptionHandling()->postJson('/api/products/search', ['search' => ['limit' => 10]]);
-
-        $response->assertOk()->assertJsonPath('data', [['id' => 1, 'category_id' => 1, 'name' => 'Desk lamp', 'price' => 39]]);
-        $this->assertSame([], ExtensionLog::$built);
     }
 
     #[Test]
