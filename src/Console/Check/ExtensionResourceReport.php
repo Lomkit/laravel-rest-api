@@ -23,6 +23,10 @@ final readonly class ExtensionResourceReport
 
     public function withProblem(string $problem): self
     {
+        if (in_array($problem, $this->problems, true)) {
+            return $this;
+        }
+
         return new self($this->checked, [...$this->problems, $problem]);
     }
 

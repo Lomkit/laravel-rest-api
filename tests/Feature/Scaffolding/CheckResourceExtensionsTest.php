@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource;
@@ -16,10 +17,12 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\ColumnCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\OtherAtlasRowsExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PassingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\TripCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedCheckExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedMetaCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedRowsExtension;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -286,6 +289,68 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
             'problems' => [self::JOURNAL_PROBLEM],
             'restricted' => [],
         ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['instructions' => PageCountMetaExtension::class])]
+    public function it_reports_a_meta_extension_named_like_the_instruction_meta_for_each_reached_resource(): void
+    {
+        $this->expose('trips', TripController::class);
+        $trips = InvalidMetaExtensionException::instructionsName('instructions', PageCountMetaExtension::class, TripResource::class)->getMessage();
+        $countries = InvalidMetaExtensionException::instructionsName('instructions', PageCountMetaExtension::class, CountryResource::class)->getMessage();
+
+        $output = $this->check(1, TripController::class);
+        $report = $this->report(1, TripController::class);
+
+        $this->assertStringEndsWith(
+            "  extension checks ... FAILED\n"
+            .'  ⇂ '.rtrim($trips, '.')."\n"
+            .'  ⇂ '.rtrim($countries, '.')."\n",
+            $output,
+        );
+        $this->assertSame(['checked' => [], 'problems' => [$trips, $countries]], $report['extension_checks']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.gates.key', 'abilities')]
+    #[WithConfig('rest.extensions', ['abilities' => PageCountMetaExtension::class])]
+    public function it_reports_a_meta_extension_named_like_the_gates_key_for_each_reached_resource(): void
+    {
+        $this->expose('trips', TripController::class);
+
+        $report = $this->report(1, TripController::class);
+
+        $this->assertSame(['checked' => [], 'problems' => [
+            InvalidMetaExtensionException::gatesKeyName('abilities', PageCountMetaExtension::class, TripResource::class)->getMessage(),
+            InvalidMetaExtensionException::gatesKeyName('abilities', PageCountMetaExtension::class, CountryResource::class)->getMessage(),
+        ]], $report['extension_checks']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['pages' => PageCountMetaExtension::class])]
+    public function it_passes_a_meta_extension_under_a_free_name(): void
+    {
+        $this->expose('trips', TripController::class);
+
+        $output = $this->check(0, TripController::class);
+        $report = $this->report(0, TripController::class);
+
+        $this->assertStringNotContainsString('extension checks', $output);
+        $this->assertSame(['checked' => [], 'problems' => []], $report['extension_checks']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['plans' => UndecidedMetaCheckExtension::class])]
+    public function it_reports_an_exception_of_applies_to_once_for_an_extension_of_several_checked_kinds(): void
+    {
+        $this->expose('trips', TripController::class);
+
+        $report = $this->report(1, TripController::class);
+
+        $this->assertSame([
+            'checked' => [['extension' => 'plans', 'resource' => CountryResource::class]],
+            'problems' => ['The [plans] extension '.UndecidedMetaCheckExtension::class.' throws while it tells whether it applies to '.TripResource::class.': The plan table is missing.'],
+        ], $report['extension_checks']);
     }
 
     #[Test]
