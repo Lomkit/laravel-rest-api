@@ -19,6 +19,7 @@ use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
 use Lomkit\Rest\Http\Routing\ResourceRegistrar;
+use Lomkit\Rest\Http\Routing\RouteExtensionClasses;
 use Lomkit\Rest\Http\Routing\RouteMiddleware;
 use Lomkit\Rest\Http\Routing\UriSegment;
 use Lomkit\Rest\Search\Run\PendingSearch;
@@ -45,6 +46,7 @@ class Rest
             $controller,
             new RouteMiddleware($this->packageMiddleware()),
             $this->container,
+            RouteExtensionClasses::present($this->config->get('rest.extensions'), $this->container),
         );
     }
 

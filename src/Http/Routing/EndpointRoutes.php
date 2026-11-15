@@ -26,6 +26,7 @@ final readonly class EndpointRoutes
         private RouteMiddleware $middleware,
         private array $endpointMiddleware,
         private Container $container,
+        private bool $routeExtensions,
     ) {}
 
     /**
@@ -37,25 +38,34 @@ final readonly class EndpointRoutes
         $this->checkSoftDeletes($endpoints);
 
         $context = $this->context($endpoints);
-        $definition = $context === null ? null : $context->resource($this->controller::resourceClass())->definition();
+        $definition = null;
+        $extensions = ExtensionMiddleware::none();
+
+        if ($context !== null) {
+            $resource = $this->controller::resourceClass();
+            $definition = self::declares($endpoints) ? $context->resource($resource)->definition() : null;
+            $extensions = $this->routeExtensions ? ExtensionMiddleware::of($context, $resource, $this->controller) : $extensions;
+        }
+
         $definitions = [];
 
         foreach ($endpoints as $endpoint) {
-            array_push($definitions, ...$this->for($endpoint, $definition));
+            array_push($definitions, ...$this->for($endpoint, $definition, $extensions));
         }
 
         return $definitions;
     }
 
     /** @return list<RouteDefinition> */
-    private function for(Endpoint $endpoint, ?ResourceDefinition $definition): array
+    private function for(Endpoint $endpoint, ?ResourceDefinition $definition, ExtensionMiddleware $extensions): array
     {
+        $name = $this->names->for($endpoint);
         $route = new RouteDefinition(
             $endpoint->methods(),
             $endpoint->uri($this->name, $this->verbs),
-            $this->names->for($endpoint),
+            $name,
             $this->controller.'@'.$endpoint->value,
-            $this->middlewareFor($endpoint),
+            $this->middlewareFor($endpoint)->with($extensions->for($endpoint, $name)),
         );
 
         $declarations = $definition === null ? [] : self::declarations($endpoint, $definition);
@@ -91,7 +101,7 @@ final readonly class EndpointRoutes
     /** @param list<Endpoint> $endpoints */
     private function context(array $endpoints): ?RestContext
     {
-        if (! is_subclass_of($this->controller, Controller::class) || ! self::declares($endpoints)) {
+        if (! is_subclass_of($this->controller, Controller::class) || (! $this->routeExtensions && ! self::declares($endpoints))) {
             return null;
         }
 

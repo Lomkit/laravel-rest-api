@@ -27,6 +27,7 @@ final class PendingResourceRegistration
         private readonly string $controller,
         private RouteMiddleware $middleware,
         private readonly Container $container,
+        private readonly bool $routeExtensions = true,
     ) {
         $this->selection = new EndpointSelection;
         $this->names = new RouteNames($name->value);
@@ -123,9 +124,11 @@ final class PendingResourceRegistration
     public function register(): RouteCollection
     {
         $this->settled = true;
-        $this->container->make(RuntimeExtensions::class)->freeze();
+        $registrations = $this->container->make(RuntimeExtensions::class);
+        $registrations->freeze();
+        $routeExtensions = $this->routeExtensions || RouteExtensionClasses::present($registrations->all(), $this->container);
 
-        $routes = new EndpointRoutes($this->name, $this->controller, ResourceVerbs::current(), $this->names, $this->middleware, $this->endpointMiddleware, $this->container);
+        $routes = new EndpointRoutes($this->name, $this->controller, ResourceVerbs::current(), $this->names, $this->middleware, $this->endpointMiddleware, $this->container, $routeExtensions);
 
         return $this->registrar->register($routes->definitions($this->selection->resolve()));
     }
