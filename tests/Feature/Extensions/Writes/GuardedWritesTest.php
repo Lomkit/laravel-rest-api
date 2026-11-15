@@ -399,6 +399,46 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
     }
 
+    /** @return array<string, array{ActionTransaction, string, list<string>}> */
+    public static function handledModes(): array
+    {
+        return [
+            'chunk' => [ActionTransaction::Chunk, 'archive-documents-by-one', [
+                'begin level 2', 'guard operate 1,2', 'handle 1,2', 'sql update documents', 'sql update documents', 'commit level 1', 'observe operate 1,2 (2)',
+            ]],
+            'row' => [ActionTransaction::Row, 'archive-each-document', [
+                'before 1', 'begin level 2', 'guard operate 1', 'row 1', 'sql update documents', 'commit level 1', 'observe operate 1 (1)',
+                'before 2', 'begin level 2', 'guard operate 2', 'row 2', 'sql update documents', 'commit level 1', 'observe operate 2 (1)',
+            ]],
+            'none' => [ActionTransaction::None, 'archive-documents-by-one', [
+                'guard operate 1,2', 'handle 1,2', 'sql update documents', 'sql update documents', 'observe operate 1,2 (2)',
+            ]],
+            'whole' => [ActionTransaction::Whole, 'archive-documents-by-one', [
+                'handle 1,2', 'sql update documents', 'sql update documents',
+            ]],
+        ];
+    }
+
+    /** @param list<string> $lines */
+    #[Test]
+    #[DataProvider('handledModes')]
+    public function it_asks_and_notifies_the_extensions_in_handle_except_for_a_whole_run(ActionTransaction $mode, string $uriKey, array $lines): void
+    {
+        config(['rest.extensions' => ['history' => RecordingWriteObserver::class, 'quota' => RecordingGuard::class]]);
+        $this->seedDocuments(null, null);
+        $request = RestRequest::create('/')->setContainer($this->app);
+        $request->setUserResolver(fn (): ArchiveUser => $this->grace);
+        $resource = $request->context()->resource(WrittenDocumentResource::class);
+        $action = $resource->definition()->action($uriKey);
+        $fields = ActionFields::of($action, InputValues::fromGiven($resource->definition()->inputFields($action), []), 'web', $this->grace);
+        EventLog::listen();
+
+        $mode->handle($action, $fields, WriteTransaction::of($resource), Document::query()->orderBy('id')->get());
+
+        $this->assertSame($lines, $this->writeLines());
+        $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
+    }
+
     #[Test]
     public function it_runs_an_action_that_is_not_bound_to_a_resource_without_extensions(): void
     {
