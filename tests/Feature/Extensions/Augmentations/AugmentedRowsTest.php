@@ -430,7 +430,7 @@ class AugmentedRowsTest extends PackageTestCase
         SecondAugmentation::$augment = static fn (AugmentationContext $context): mixed => $context->with('drafts');
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, ['a' => FirstAugmentationNamedA::class, 'b' => SecondAugmentationNamedB::class]));
+        $this->expectExceptionObject(InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, [['a', FirstAugmentationNamedA::class], ['b', SecondAugmentationNamedB::class]]));
 
         $this->postJson('/path-authors/search', ['search' => []]);
     }
@@ -438,7 +438,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_names_both_extensions_of_a_relation_loaded_twice(): void
     {
-        $exception = InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, ['a' => FirstAugmentationNamedA::class, 'b' => SecondAugmentationNamedB::class]);
+        $exception = InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, [['b', SecondAugmentationNamedB::class], ['a', FirstAugmentationNamedA::class]]);
 
         $this->assertSame('The [a] extension '.FirstAugmentationNamedA::class.' and the [b] extension '.SecondAugmentationNamedB::class.' eager load [drafts] on '.PathAuthorResource::class.' twice. Load it from one extension, once.', $exception->getMessage());
         $this->assertSame([true, false], [$exception->concerns(FirstAugmentationNamedA::class), $exception->concerns(SecondAugmentationNamedB::class)]);

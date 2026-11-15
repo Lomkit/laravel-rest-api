@@ -40,7 +40,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
         config(['scout.driver' => $driver, 'rest.extensions' => [HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['hidden' => HiddenRowsExtension::class]));
+        $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, [['hidden', HiddenRowsExtension::class]]));
 
         $this->search('vouchers', ['text' => ['value' => 'report']]);
     }
@@ -51,7 +51,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
         config(['rest.extensions' => [HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['hidden' => HiddenRowsExtension::class]));
+        $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, [['hidden', HiddenRowsExtension::class]]));
 
         $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
     }
@@ -61,7 +61,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     {
         $this->assertSame(
             'The [half_a] extension '.FirstHalfExtension::class.' and the [half_b] extension '.SecondHalfExtension::class.' restrict the rows of '.VoucherResource::class.', whose text search runs on a search engine that these restrictions do not reach. Leave '.VoucherResource::class.' out of them with appliesTo(), add one of these classes to the [rest.disabled_extensions] config, or remove the text search of '.VoucherResource::class.'.',
-            InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['half_a' => FirstHalfExtension::class, 'half_b' => SecondHalfExtension::class])->getMessage(),
+            InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, [['half_a', FirstHalfExtension::class], ['half_b', SecondHalfExtension::class]])->getMessage(),
         );
     }
 

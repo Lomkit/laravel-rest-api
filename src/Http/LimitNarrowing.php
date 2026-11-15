@@ -42,7 +42,7 @@ final class LimitNarrowing
             unset($narrowing[$resource]);
         }
 
-        return self::narrowed($limits, $requests, $resource::class, array_map(static fn (Extension $extension): string => $extension::class, $extensions));
+        return self::narrowed($limits, $requests, $resource::class, array_map(static fn (string $name, Extension $extension): array => [$name, $extension::class], array_keys($extensions), array_values($extensions)));
     }
 
     public static function appliesTo(Resource $resource): bool
@@ -50,7 +50,7 @@ final class LimitNarrowing
         return $resource->context()->extensions()->applicable($resource::class, NarrowsLimits::class) !== [];
     }
 
-    /** @param non-empty-array<string, string> $names */
+    /** @param non-empty-list<array{string, string}> $names */
     private static function narrowed(ResourceLimits $limits, LimitRequests $requests, string $resource, array $names): ResourceLimits
     {
         $maxTotal = self::smallest($limits->maxTotal, $requests->totalCeiling());

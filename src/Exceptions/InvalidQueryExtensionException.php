@@ -62,7 +62,7 @@ final class InvalidQueryExtensionException extends ExtensionException
         return self::about($class, 'The '.self::extension($name, $class)." eager loads [{$relation}] on {$resource}, past the MorphTo relation [{$morphTo}], whose target models are not known before the rows load. Load [{$morphTo}] alone.");
     }
 
-    /** @param non-empty-array<string, string> $extensions */
+    /** @param non-empty-list<array{string, string}> $extensions */
     public static function relationTaken(string $relation, string $resource, array $extensions): self
     {
         return self::about(self::first($extensions), ucfirst(self::extensions($extensions))." eager load [{$relation}] on {$resource} twice. Load it from one extension, once.");
@@ -88,14 +88,14 @@ final class InvalidQueryExtensionException extends ExtensionException
         return self::about($class, 'The '.self::extension($name, $class)." reads the limits of {$resource} inside narrowLimits(), which computes them. Read \$context->declared instead.");
     }
 
-    /** @param non-empty-array<string, string> $extensions */
+    /** @param non-empty-list<array{string, string}> $extensions */
     public static function noPageSize(string $resource, array $extensions): self
     {
         return self::about(self::first($extensions), ucfirst(self::extensions($extensions))." narrow the page sizes of {$resource} to none. Keep at least one size of its limits() that every allowSizes() lists, at or below every maxSize() and maxTotal() they set.");
     }
 
     /**
-     * @param  non-empty-array<string, string>  $extensions
+     * @param  non-empty-list<array{string, string}>  $extensions
      * @param  list<int>  $allowed
      */
     public static function defaultAboveSizes(string $resource, array $extensions, int $default, array $allowed): self
@@ -106,7 +106,7 @@ final class InvalidQueryExtensionException extends ExtensionException
     }
 
     /**
-     * @param  non-empty-array<string, string>  $extensions
+     * @param  non-empty-list<array{string, string}>  $extensions
      * @param  list<int>  $allowed
      */
     public static function includeLimitAboveSizes(string $resource, array $extensions, int $includeLimit, array $allowed): self
@@ -151,21 +151,28 @@ final class InvalidQueryExtensionException extends ExtensionException
         return "[{$name}] extension {$class}";
     }
 
-    /** @param non-empty-array<string, string> $extensions */
+    /** @param non-empty-list<array{string, string}> $extensions */
     private static function extensions(array $extensions): string
     {
-        $named = [];
-
-        foreach ($extensions as $name => $class) {
-            $named[] = 'the '.self::extension($name, $class);
-        }
+        $named = array_map(static fn (array $extension): string => 'the '.self::extension(...$extension), self::sorted($extensions));
 
         return Arr::join($named, ', ', ' and ');
     }
 
-    /** @param non-empty-array<string, string> $extensions */
+    /** @param non-empty-list<array{string, string}> $extensions */
     private static function first(array $extensions): string
     {
-        return $extensions[array_key_first($extensions)];
+        return self::sorted($extensions)[0][1];
+    }
+
+    /**
+     * @param  non-empty-list<array{string, string}>  $extensions
+     * @return non-empty-list<array{string, string}>
+     */
+    private static function sorted(array $extensions): array
+    {
+        usort($extensions, static fn (array $first, array $second): int => strcmp($first[0], $second[0]));
+
+        return $extensions;
     }
 }

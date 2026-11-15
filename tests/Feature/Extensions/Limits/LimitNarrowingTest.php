@@ -96,7 +96,7 @@ class LimitNarrowingTest extends PackageTestCase
     #[Test]
     public function it_refuses_sizes_all_above_the_default(): void
     {
-        $this->expectExceptionObject(InvalidQueryExtensionException::defaultAboveSizes(CappedBookLimitsResource::class, ['first' => FirstNarrowing::class], 25, [50]));
+        $this->expectExceptionObject(InvalidQueryExtensionException::defaultAboveSizes(CappedBookLimitsResource::class, [['first', FirstNarrowing::class]], 25, [50]));
 
         $this->limits(CappedBookLimitsResource::class, static fn (LimitsContext $context): mixed => $context->allowSizes([50]));
     }
@@ -104,7 +104,7 @@ class LimitNarrowingTest extends PackageTestCase
     #[Test]
     public function it_refuses_an_empty_intersection(): void
     {
-        $this->expectExceptionObject(InvalidQueryExtensionException::noPageSize(BookResource::class, ['first' => FirstNarrowing::class]));
+        $this->expectExceptionObject(InvalidQueryExtensionException::noPageSize(BookResource::class, [['first', FirstNarrowing::class]]));
 
         $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->allowSizes([5]));
     }
@@ -128,7 +128,7 @@ class LimitNarrowingTest extends PackageTestCase
     #[Test]
     public function it_refuses_a_max_total_below_every_size(): void
     {
-        $this->expectExceptionObject(InvalidQueryExtensionException::noPageSize(BookResource::class, ['first' => FirstNarrowing::class]));
+        $this->expectExceptionObject(InvalidQueryExtensionException::noPageSize(BookResource::class, [['first', FirstNarrowing::class]]));
 
         $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->maxTotal(5));
     }
@@ -136,7 +136,7 @@ class LimitNarrowingTest extends PackageTestCase
     #[Test]
     public function it_refuses_an_include_limit_below_every_size(): void
     {
-        $this->expectExceptionObject(InvalidQueryExtensionException::includeLimitAboveSizes(BookResource::class, ['first' => FirstNarrowing::class], 5, [10, 25, 50]));
+        $this->expectExceptionObject(InvalidQueryExtensionException::includeLimitAboveSizes(BookResource::class, [['first', FirstNarrowing::class]], 5, [10, 25, 50]));
 
         $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->includeLimit(5));
     }

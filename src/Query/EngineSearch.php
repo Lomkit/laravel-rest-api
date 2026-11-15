@@ -59,7 +59,7 @@ final readonly class EngineSearch implements SearchSource
         $restrictions = ExtensionRestrictions::of($this->resource);
 
         if ($restrictions !== null) {
-            throw InvalidTextSearchException::restrictedByExtensions($this->resource::class, $restrictions->classes());
+            throw InvalidTextSearchException::restrictedByExtensions($this->resource::class, $restrictions->extensions());
         }
 
         $query = $this->text->engineQuery($this->search->trashed)

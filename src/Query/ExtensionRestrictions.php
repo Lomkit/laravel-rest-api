@@ -43,9 +43,9 @@ final readonly class ExtensionRestrictions
         }
     }
 
-    /** @return non-empty-array<string, string> */
-    public function classes(): array
+    /** @return non-empty-list<array{string, string}> */
+    public function extensions(): array
     {
-        return array_map(static fn (Extension $extension): string => $extension::class, $this->extensions);
+        return array_map(static fn (string $name, Extension $extension): array => [$name, $extension::class], array_keys($this->extensions), array_values($this->extensions));
     }
 }

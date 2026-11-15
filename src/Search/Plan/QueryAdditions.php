@@ -92,7 +92,7 @@ final class QueryAdditions
 
             throw $owner === $extension
                 ? InvalidQueryExtensionException::relationRepeated($extension, $class, $relation, $this->resource::class)
-                : InvalidQueryExtensionException::relationTaken($relation, $this->resource::class, self::sorted([$owner => $ownerClass, $extension => $class]));
+                : InvalidQueryExtensionException::relationTaken($relation, $this->resource::class, [[$owner, $ownerClass], [$extension, $class]]);
         }
 
         $this->loads[$relation] = [$extension, $class, $constraint];
@@ -146,16 +146,5 @@ final class QueryAdditions
         if ($this->sealed) {
             throw InvalidQueryExtensionException::lateAddition($extension, $class, $method, $this->resource::class);
         }
-    }
-
-    /**
-     * @param  non-empty-array<string, string>  $extensions
-     * @return non-empty-array<string, string>
-     */
-    private static function sorted(array $extensions): array
-    {
-        ksort($extensions, SORT_STRING);
-
-        return $extensions;
     }
 }

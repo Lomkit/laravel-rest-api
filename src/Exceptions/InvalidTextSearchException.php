@@ -150,14 +150,10 @@ final class InvalidTextSearchException extends LogicException
         return new self("The text search of the resource [{$resource}] does not run on a search engine.");
     }
 
-    /** @param array<string, string> $extensions */
+    /** @param list<array{string, string}> $extensions */
     public static function restrictedByExtensions(string $resource, array $extensions): self
     {
-        $named = [];
-
-        foreach ($extensions as $name => $class) {
-            $named[] = "the [{$name}] extension {$class}";
-        }
+        $named = array_map(static fn (array $extension): string => "the [{$extension[0]}] extension {$extension[1]}", $extensions);
 
         $restricting = ucfirst(Arr::join($named, ', ', ' and '));
         [$restrict, $one] = count($extensions) > 1 ? ['restrict', 'one of these classes'] : ['restricts', 'this class'];
