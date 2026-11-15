@@ -244,8 +244,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | Extensions add behavior to every resource. Key each extension class
-    | by its name: 1 to 32 lowercase letters, digits or underscores,
-    | starting with a letter. The name prefixes the keys it adds.
+    | by its name: 1 to 32 lowercase letters or digits, starting with a
+    | letter, words joined by single underscores. The name prefixes the
+    | keys it adds.
     |
     | A package can register its extensions with Rest::registerExtension().
     | This list has the last word: false disables an extension of that

@@ -34,7 +34,7 @@ final class InvalidExtensionException extends LogicException
     {
         $length = ExtensionName::MAX_LENGTH;
 
-        return self::about($name, "The extension name [{$name}] is invalid. A name has 1 to {$length} lowercase letters, digits or underscores and starts with a letter, such as [acl]: it prefixes the keys that the extension adds.");
+        return self::about($name, "The extension name [{$name}] is invalid. A name has 1 to {$length} lowercase letters or digits, starts with a letter and joins words with single underscores, such as [acl] or [row_lock]: it prefixes the keys that the extension adds, and two underscores separate it from them.");
     }
 
     /** @param non-empty-list<string> $classes */

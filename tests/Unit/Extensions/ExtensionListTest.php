@@ -172,6 +172,15 @@ final class ExtensionListTest extends TestCase
     }
 
     #[Test]
+    public function it_refuses_a_config_name_with_two_or_a_trailing_underscore(): void
+    {
+        $list = ExtensionList::merge(['acl__x' => NotingExtension::class, 'acl_' => CountingExtension::class, 'row_lock' => false], []);
+
+        $this->assertEquals([new ExtensionEntry('row_lock', null, ExtensionOrigin::Config, true)], $list->entries);
+        $this->assertEquals([InvalidExtensionException::invalidName('acl__x'), InvalidExtensionException::invalidName('acl_')], $list->refused);
+    }
+
+    #[Test]
     public function it_refuses_a_config_name_with_a_trailing_newline(): void
     {
         $this->expectExceptionObject(InvalidExtensionException::invalidName("acl\n"));

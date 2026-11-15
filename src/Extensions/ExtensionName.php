@@ -8,7 +8,7 @@ final readonly class ExtensionName
 {
     public const int MAX_LENGTH = 32;
 
-    private const string PATTERN = '/^[a-z][a-z0-9_]*\z/';
+    private const string PATTERN = '/^[a-z][a-z0-9]*(?:_[a-z0-9]+)*\z/';
 
     public static function ensureValid(string $name): void
     {

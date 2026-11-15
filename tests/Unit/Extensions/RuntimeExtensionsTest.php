@@ -113,6 +113,25 @@ final class RuntimeExtensionsTest extends TestCase
     }
 
     #[Test]
+    public function it_accepts_words_joined_by_single_underscores(): void
+    {
+        $extensions = new RuntimeExtensions;
+
+        $extensions->registerAll(['row_lock_2' => NotingExtension::class, 'a1_b2' => CountingExtension::class]);
+
+        $this->assertSame(['row_lock_2' => [NotingExtension::class], 'a1_b2' => [CountingExtension::class]], $extensions->all());
+    }
+
+    #[Test]
+    public function it_explains_the_name_rule(): void
+    {
+        $this->assertSame(
+            'The extension name [acl__x] is invalid. A name has 1 to 32 lowercase letters or digits, starts with a letter and joins words with single underscores, such as [acl] or [row_lock]: it prefixes the keys that the extension adds, and two underscores separate it from them.',
+            InvalidExtensionException::invalidName('acl__x')->getMessage(),
+        );
+    }
+
+    #[Test]
     public function it_refuses_a_map_entry_without_a_name(): void
     {
         $this->expectExceptionObject(InvalidExtensionException::missingName(NotingExtension::class));
@@ -254,6 +273,9 @@ final class RuntimeExtensionsTest extends TestCase
             'a dot' => ['acl.x'],
             'a trailing newline' => ["acl\n"],
             '33 characters' => [str_repeat('a', 33)],
+            'two underscores' => ['acl__x'],
+            'a trailing underscore' => ['acl_'],
+            'only underscores after a letter' => ['a__'],
         ];
     }
 
