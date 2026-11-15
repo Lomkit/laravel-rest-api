@@ -30,7 +30,8 @@ class RestServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->replaceConfigRecursivelyFrom(__DIR__.'/../config/rest.php', 'rest');
-        $this->app->make(RuntimeExtensions::class);
+        $registrations = $this->app->make(RuntimeExtensions::class);
+        $this->app->booted(static fn () => $registrations->freeze());
     }
 
     public function boot(): void

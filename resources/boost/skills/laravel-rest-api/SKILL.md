@@ -1472,7 +1472,7 @@ public function register(): void
 
 - The name is mandatory: 1 to 32 lowercase letters, digits or underscores, starting with a letter. It prefixes the meta keys, cache keys, SQL aliases and instruction keys of the extension. A config list without names is refused.
 - A second class under a registered name is refused. The same class registered twice under one name is refused too, with a message that asks to remove the second registration.
-- The list is fixed when the package builds its first context: an HTTP request, a queued action, `Rest::search()`, a `Rest::resource()` route, the OpenAPI document or `rest:check`. A later registration is refused, so never register from a deferred provider. In the tests of a package, register through a provider, `defineEnvironment()` or `#[WithConfig('rest.extensions', [...])]`: fixture routes build contexts during the boot of the app.
+- Runtime registrations are fixed once the application has booted, or earlier when the package builds a context during the boot: an HTTP request, a queued action, `Rest::search()`, a `Rest::resource()` route, the OpenAPI document or `rest:check`. A later registration is refused, so never register from a deferred provider; a `booted()` callback depends on the provider order, so register from `register()`. Only these registrations are fixed: each context reads the config again. In the tests of a package, register through a provider, `defineEnvironment()` or `#[DefineEnvironment]` (both run before the boot), or through `#[WithConfig('rest.extensions', [...])]`: a registration from a test body throws.
 - Each refusal throws `Lomkit\Rest\Exceptions\InvalidExtensionException`, which names the extension and the fix.
 
 ### Disabling or replacing

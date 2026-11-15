@@ -239,7 +239,7 @@ final class RuntimeExtensionsTest extends TestCase
         $extensions->freeze();
 
         $this->expectExceptionMessage(
-            'The [noting] extension '.NotingExtension::class.' is registered after the package built its first context or registered its first Rest::resource() route, and the extension list no longer changes then.'
+            'The [noting] extension '.NotingExtension::class.' is registered after the application booted, after the package built its first context or registered its first Rest::resource() route: the runtime extension list no longer changes then.'
             .' Register extensions from the register() method of a service provider, which runs before the routes in any provider order.'
             .' Register from boot() only before every provider that declares Rest::resource() routes in its own boot().',
         );

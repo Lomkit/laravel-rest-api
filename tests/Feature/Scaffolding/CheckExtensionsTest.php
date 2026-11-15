@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
@@ -17,6 +18,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\KindlessExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UnresolvableExtension;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
+use Orchestra\Testbench\Attributes\DefineEnvironment;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
@@ -54,9 +56,9 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
     #[Test]
     #[WithConfig('rest.extensions', ['counting' => CountingExtension::class, 'noting' => false, 'tenant' => false])]
+    #[DefineEnvironment('registerNotingAndBoth')]
     public function it_lists_each_extension_with_its_origin(): void
     {
-        Rest::registerExtensions(['noting' => NotingExtension::class, 'both' => BothKindsExtension::class]);
         $this->expose('trips', TripController::class);
 
         $output = $this->check(0, TripController::class);
@@ -74,9 +76,9 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
     #[Test]
     #[WithConfig('rest.extensions', ['counting' => CountingExtension::class, 'noting' => false, 'tenant' => false])]
+    #[DefineEnvironment('registerNotingAndBoth')]
     public function it_lists_the_extensions_as_json(): void
     {
-        Rest::registerExtensions(['noting' => NotingExtension::class, 'both' => BothKindsExtension::class]);
         $this->expose('trips', TripController::class);
 
         $report = $this->report(0, TripController::class);
@@ -94,9 +96,9 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
     #[Test]
     #[WithConfig('rest.extensions', ['noting' => BothKindsExtension::class])]
+    #[DefineEnvironment('registerNoting')]
     public function it_names_the_runtime_class_that_a_config_entry_replaces(): void
     {
-        Rest::registerExtension('noting', NotingExtension::class);
         $this->expose('trips', TripController::class);
 
         $output = $this->check(0, TripController::class);
@@ -163,9 +165,9 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
     #[Test]
     #[WithConfig('rest.extensions', 'acl')]
+    #[DefineEnvironment('registerNoting')]
     public function it_reports_an_extension_config_that_is_not_a_map(): void
     {
-        Rest::registerExtension('noting', NotingExtension::class);
         $this->expose('trips', TripController::class);
         $problem = 'The [rest.extensions] option must be a map of extension names to class names or false.';
 
@@ -182,9 +184,9 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
     #[Test]
     #[WithConfig('rest.extensions', 'acl')]
+    #[DefineEnvironment('registerNoting')]
     public function it_reports_an_extension_config_that_is_not_a_map_as_json(): void
     {
-        Rest::registerExtension('noting', NotingExtension::class);
         $this->expose('trips', TripController::class);
 
         $report = $this->report(1, TripController::class);
@@ -202,10 +204,9 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
     #[Test]
     #[WithConfig('rest.extensions', ['counting' => CountingExtension::class, 'Bad' => NotingExtension::class, 0 => BothKindsExtension::class])]
+    #[DefineEnvironment('registerNoting')]
     public function it_lists_the_other_extensions_beside_a_refused_config_entry(): void
     {
-        Rest::registerExtension('noting', NotingExtension::class);
-
         $report = $this->report(1, TripController::class);
 
         $this->assertSame([
@@ -247,6 +248,16 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
         ], $report['extensions']);
         $this->assertArrayHasKey('routes', $report);
         $this->assertSame([CountingExtension::class, CountingExtension::class], ExtensionLog::$built);
+    }
+
+    protected function registerNoting(Application $app): void
+    {
+        Rest::registerExtension('noting', NotingExtension::class);
+    }
+
+    protected function registerNotingAndBoth(Application $app): void
+    {
+        Rest::registerExtensions(['noting' => NotingExtension::class, 'both' => BothKindsExtension::class]);
     }
 
     private function expose(string $name, string $controller): void

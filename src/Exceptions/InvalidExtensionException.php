@@ -48,7 +48,7 @@ final class InvalidExtensionException extends LogicException
 
     public static function lateRegistration(string $name, string $class): self
     {
-        return self::about($name, "The [{$name}] extension {$class} is registered after the package built its first context or registered its first Rest::resource() route, and the extension list no longer changes then. Register extensions from the register() method of a service provider, which runs before the routes in any provider order. Register from boot() only before every provider that declares Rest::resource() routes in its own boot().");
+        return self::about($name, "The [{$name}] extension {$class} is registered after the application booted, after the package built its first context or registered its first Rest::resource() route: the runtime extension list no longer changes then. Register extensions from the register() method of a service provider, which runs before the routes in any provider order. Register from boot() only before every provider that declares Rest::resource() routes in its own boot().");
     }
 
     public static function notAClass(string $name, string $entry): self
