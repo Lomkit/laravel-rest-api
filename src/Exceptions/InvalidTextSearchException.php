@@ -75,9 +75,9 @@ final class InvalidTextSearchException extends LogicException
         return new self("The resource [{$resource}] declares a ScoutEngine text search, but its model is indexed by [{$engine}], which extends none of the Scout engines.");
     }
 
-    public static function engineNotAnObject(string $resource, string $engine): self
+    public static function engineNotAnObject(string $resource, string $model, string $engine): self
     {
-        return new self("An engine search of the resource [{$resource}] runs an engine restriction, but searchableUsing() of its model returns [{$engine}] instead of the Scout engine. Return the engine from searchableUsing(), as Laravel\\Scout\\Searchable does.");
+        return new self("An engine search of the resource [{$resource}] runs an engine restriction, but searchableUsing() of its model [{$model}] returns [{$engine}] instead of the Scout engine. Return the engine from searchableUsing(), as Laravel\\Scout\\Searchable does.");
     }
 
     public static function notAnAttribute(string $resource, string $declaration, int $index, mixed $attribute): self

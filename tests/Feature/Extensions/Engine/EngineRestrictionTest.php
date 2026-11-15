@@ -346,7 +346,11 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $profile = new PlainProfile;
         $query = new EngineQuery(new EngineIndex($model, $profile, IndexAttributes::of(TextTarget::of($resource), $profile, ['team'], [], []), VoucherResource::class), new TextQuery('report'));
 
-        $this->expectExceptionObject(InvalidTextSearchException::engineNotAnObject(VoucherResource::class, 'null'));
+        $this->assertSame(
+            'An engine search of the resource ['.VoucherResource::class.'] runs an engine restriction, but searchableUsing() of its model ['.Voucher::class.'] returns [null] instead of the Scout engine. Return the engine from searchableUsing(), as Laravel\\Scout\\Searchable does.',
+            InvalidTextSearchException::engineNotAnObject(VoucherResource::class, Voucher::class, 'null')->getMessage(),
+        );
+        $this->expectExceptionObject(InvalidTextSearchException::engineNotAnObject(VoucherResource::class, $model->model()::class, 'null'));
 
         EngineRestrictions::of($resource)?->applyTo($query);
     }

@@ -142,7 +142,7 @@ final class EngineQuery
     {
         $engine = $this->index->model->engine();
 
-        return is_object($engine) ? $engine : throw InvalidTextSearchException::engineNotAnObject($this->index->searchedClass(), get_debug_type($engine));
+        return is_object($engine) ? $engine : throw InvalidTextSearchException::engineNotAnObject($this->index->searchedClass(), $this->index->model->model()::class, get_debug_type($engine));
     }
 
     /** @internal */
