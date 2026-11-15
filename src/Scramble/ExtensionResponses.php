@@ -9,7 +9,6 @@ use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Exceptions\InvalidDocumentationExtensionException;
 use Lomkit\Rest\Extensions\Contexts\OperationDocumentationContext;
 use Lomkit\Rest\Extensions\Kinds\DocumentsExtension;
-use Throwable;
 
 /** @internal */
 final class ExtensionResponses
@@ -103,11 +102,7 @@ final class ExtensionResponses
     private static function status(mixed $response): int
     {
         if ($response instanceof Reference) {
-            try {
-                $response = $response->resolve();
-            } catch (Throwable) {
-                return 0;
-            }
+            $response = $response->resolve();
         }
 
         return $response instanceof Response ? (int) $response->code : 0;
