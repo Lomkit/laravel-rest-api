@@ -19,10 +19,8 @@ final readonly class Mutator
      * @param  list<MutationNode>  $nodes
      * @return list<OperationEntry>
      */
-    public function execute(Resource $resource, array $nodes): array
+    public function execute(Resource $resource, array $nodes, OperationLog $log = new OperationLog): array
     {
-        $log = new OperationLog;
-
         foreach ($nodes as $node) {
             $this->one($resource, $node, $log);
         }
@@ -37,7 +35,7 @@ final readonly class Mutator
     public function one(Resource $resource, MutationNode $node, OperationLog $log, array $owned = [], ?Closure $linking = null): Model
     {
         $log->begin($node);
-        $model = $log->wrote($this->row($resource, $node, $log, $owned, $node->context()->key, $linking));
+        $model = $log->wrote($this->row($resource, $node, $log, $owned, $node->context()->key, $linking), $resource);
         $log->end();
 
         return $model;
@@ -54,7 +52,7 @@ final readonly class Mutator
 
         $log->begin($node);
         $models = array_map(
-            fn (int|string|null $key): Model => $log->wrote($this->row($resource, $node, $log, $owned, $key, $linking)),
+            fn (int|string|null $key): Model => $log->wrote($this->row($resource, $node, $log, $owned, $key, $linking), $resource),
             $keys
         );
         $log->end();
@@ -67,7 +65,7 @@ final readonly class Mutator
         $log->begin($node);
 
         foreach (is_array($node->key) ? $node->key : [$node->key] as $key) {
-            $model = $log->wrote($this->rows->find($resource, $key));
+            $model = $log->wrote($this->rows->find($resource, $key), $resource);
 
             $resource->performDelete($model);
             $resource

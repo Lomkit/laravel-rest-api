@@ -15,6 +15,7 @@ use Lomkit\Rest\Http\Details\ResourceDetails;
 use Lomkit\Rest\Http\MetricResponse;
 use Lomkit\Rest\Http\MutateResponse;
 use Lomkit\Rest\Http\OperateResponse;
+use Lomkit\Rest\Http\ReadObservers;
 use Lomkit\Rest\Http\Requests\BatchRequest;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\DetailsRequest;
@@ -58,6 +59,7 @@ abstract class Controller
         $details = (new ResourceDetails($resource, $request->selection()))->toArray();
 
         $resource->described($details);
+        ReadObservers::of($resource)?->details($details);
 
         return [
             'data' => $details,
@@ -68,9 +70,10 @@ abstract class Controller
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        return SearchRun::of($resource, $request->payload())
-            ->page()
-            ->response();
+        $page = SearchRun::of($resource, $request->payload())->page();
+        ReadObservers::of($resource)?->searched($page);
+
+        return $page->response();
     }
 
     /** @param LengthAwarePaginator<int, Model>|Collection<int, Model> $rows */

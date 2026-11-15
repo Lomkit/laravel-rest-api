@@ -214,7 +214,7 @@ Override these methods. They take no argument: a list that depends on the user r
 - Endpoint events (one per endpoint moment, typed payload, return `void`): `describing()`, `described(array $details)`, `searching(SearchContext $search)` (also for the search of an action or a metric; throw `ValidationException` for a 422 before any query), `searched(LengthAwarePaginator $page)`, `mutatingAll(array $entries)` (`MutationNode` list) and `mutatedAll(array $operations)` inside the mutate transaction, `operating(Action $action, ActionFields $fields)` and `operated(Action $action, ActionFields $fields, int $impacted)` around the chunks (inside the transaction of `ActionTransaction::Whole`; `respond()` after), `destroyingAll(Collection $models)` / `destroyedAll()` and the `restoring`/`forceDestroying` twins inside the deletion transaction. They run after the entry checks and validation, the events that receive rows after the row checks; a throw inside a transaction rolls it back. Read the request with `$this->request()`.
 - Laravel events (`Lomkit\Rest\Events`, `Event::listen()`, every resource; filter with `$event->resource === TicketResource::class`): `ResourceMutated` (`resource`, `operations` as arrays), `ResourceDestroyed` / `ResourceForceDestroyed` (`resource`, `model` class, `keys`), `ResourceRestored` (`resource`, `models`), `ActionOperated` (`resource`, `action` class, `uriKey`, `fields` values by name, `impacted`, `batch`); `resource` is the class of the resource. Dispatched once per request after the commit (`ShouldDispatchAfterCommit`): never for a rolled-back write or a retried attempt; `ActionOperated` after a run that ends without error (a queued action: in the request, once the jobs are queued). Read-only: refuse a write in the resource events. A listener may implement `ShouldQueue`: the events serialize (`ResourceRestored` reloads its rows in the worker). `KeysOutOfReach` (`resource`, `model`, `endpoint` as an `Endpoint` case, `keys` and their payload `paths` such as `mutate.0.relations.tags.1.key`, at most 50 each with `capped`, `guard`, `user` identifier) is dispatched at once, during validation, when keys of a request are not in the `perimeterQuery()` of their resource (`mutate` entry and relation keys, the `resources` of an action, `destroy`, `restore`, `forceDestroy`, Precognition included): once per resource and request, before the `422`, which it does not change; keys refused for their type or a repeat dispatch nothing.
 
-**Recording each written row**: write the record (a history row, say) from the resource hooks, which run inside the transaction of the endpoint: a throw in a hook or later in the request rolls back the write and the record together, and a deadlock retry (`rest.transactions.attempts`) runs the hooks again after rolling back what the failed attempt wrote. On `mutate`, use `mutated()`: `$entry->attributes` and `$entry->relations` (the nodes of each relation: `operation`, `key`, `pivot`, `relations`) say what the request changed for `$model`, whose row and relations are written by then; read the relation in `mutated()` for the rows now attached. Record a link to a target that is only linked, a moved child and a child `delete` from the entry of the parent row, since they run no hook of their own. On `destroy`, `restore` and `forceDestroy`, use `destroyed()`, `restored()` and `forceDestroyed()`, once per row. In an action, write the records inside `handle()`, in the transaction of its chunk or run (`ActionTransaction::None` opens none). The Laravel events run after the commit: keep them for work outside the database.
+**Recording each written row**: write the record (a history row, say) from the resource hooks, which run inside the transaction of the endpoint: a throw in a hook or later in the request rolls back the write and the record together, and a deadlock retry (`rest.transactions.attempts`) runs the hooks again after rolling back what the failed attempt wrote. On `mutate`, use `mutated()`: `$entry->attributes` and `$entry->relations` (the nodes of each relation: `operation`, `key`, `pivot`, `relations`) say what the request changed for `$model`, whose row and relations are written by then; read the relation in `mutated()` for the rows now attached. Record a link to a target that is only linked, a moved child and a child `delete` from the entry of the parent row, since they run no hook of their own. On `destroy`, `restore` and `forceDestroy`, use `destroyed()`, `restored()` and `forceDestroyed()`, once per row. In an action, write the records inside `handle()`, in the transaction of its chunk or run (`ActionTransaction::None` opens none). The Laravel events run after the commit: keep them for work outside the database. An extension records the writes of every resource with `ObservesWrites`, after the commit (see Extensions).
 
 A model that uses `Laravel\Scout\Searchable` gives its resource no text search by itself: declare `text()` with `ScoutEngine::make()`, see "Search engines" below.
 
@@ -1530,7 +1530,7 @@ final class ArchiveExtension extends Extension implements RestrictsQueries
 - Register the class, never an instance: the container builds each extension once per context (request, queued job, search), at first use, so its constructor can inject services. `registerExtension()` takes a class name, so an instance is a PHP `TypeError`; in `registerExtensions()` or the config, it throws `InvalidExtensionException`. Keep settings in properties; for other settings, register a subclass. Never bind the extension as a singleton: one instance would then serve every context of an Octane or queue worker.
 - `RestrictsQueries` is one of the kinds the extension implements, the interfaces of `Lomkit\Rest\Extensions\Kinds` described below; the constructor injects what their methods use. Each kind method receives one context object of `Lomkit\Rest\Extensions\Contexts`, except `PreparesRowChecks`, which receives the `Lomkit\Rest\Authorization\PendingChecks` of `prepareAuthorization()`, and each kind calls its extensions in name order. Implement at least one kind. An abstract class is refused at registration, or, listed in the config, when a context first reads its extensions; a class with no kind or a binding that builds another class is refused when the extensions are built.
 - `appliesTo()` returns `true` by default. Each context (request, queued job, search) asks it once per resource class and keeps the answer: answer from the resource class and the config, never from the user or the request (use a request kind for that).
-- An exception thrown by an extension reaches the caller.
+- An exception thrown by an extension reaches the caller, except from `ObservesWrites`, which runs after the commit: its exceptions are reported.
 - With no extension registered, nothing is built and nothing is read beyond the config.
 
 ### Restricting queries (`RestrictsQueries`)
@@ -2016,6 +2016,105 @@ final class PlanRoutesExtension extends Extension implements AddsRouteMiddleware
 - Use a named limiter (`throttle:searches`): two unnamed `throttle` middleware count each request twice. Route middleware also runs on Precognition requests.
 - When the routes register (at boot, so on every request and Artisan command without `route:cache`, or once in `route:cache`), the package keeps only the enabled entries whose class implements this kind, or that are bound in the container, once for all `Rest::resource()` calls and without a user. A class of `rest.disabled_extensions` is skipped, by its exact class: a subclass of a disabled class still adds its middleware. A bound entry of another kind is built first, to learn its kind (a binding can resolve to a subclass that adds this kind); its name is read only when the built extension adds route middleware, and an entry that cannot be built is skipped there. The name of any other entry is never read there, so an invalid entry of another kind does not stop the routes, migrations or `rest:check`: the request that needs the extensions refuses it, and `rest:check` reports it. A bound entry whose constructor throws, and a class of this kind that is invalid (abstract, not an extension, an invalid `name()` or one that throws) or that cannot be built, stop the registration. So does a name that two of the kept classes share, with a message that names those classes: add one of them to `rest.disabled_extensions`, or extend one and override `name()`. A name that a kept class shares with a class of another kind is left to the request, whose message names every class that shares it. A `rest.extensions` value that is not a list stops the registration when one of its values is a class of this kind, with the error of the request; any other value that is not a list, in either key, is left to the request and `rest:check`, and disables nothing at registration. Keep the constructors of route extensions and bound extensions light. Without such a class no extension is built when routes register.
 - A changed extension middleware is not detected in a cached route, unlike the middleware of an action: refresh the cache.
+
+### Refusing writes (`GuardsWrites`)
+
+App: `\Vendor\Plans\WriteQuotaExtension::class` in the `rest.extensions` list.
+
+Package, which registers the class alone with `Rest::registerExtension(WriteQuotaExtension::class)`:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\WriteGuardContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\GuardsWrites;
+
+final class WriteQuotaExtension extends Extension implements GuardsWrites
+{
+    #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
+    public function __construct(private readonly WriteQuota $quota) {}
+
+    #[\Override]
+    public function guardWrite(WriteGuardContext $context): void
+    {
+        if ($this->quota->exhausted($context->user)) {
+            $context->refuse('The monthly write quota is reached.', 429);
+        }
+    }
+}
+```
+
+- Guarantees: a request kind, a veto only. It runs at the head of each write transaction, after the entry checks, the row checks and the confirmation: `mutate` (after the checks of its entries, before `mutatingAll()`), `destroy`, `restore` and `forceDestroy` (before `destroyingAll()` and its twins), and each transaction of an action: each chunk and each row with `ActionTransaction::Row` (after `beforeRow()`), in the request or in the queued worker; each chunk of a `Whole` run inside its single transaction, in the request (a `Whole` action is never queued); with `ActionTransaction::None`, before each `handle()`. A chunk is guarded after the `skipUnauthorized()` filter, with the rows that `handle()` receives. `$context->endpoint` is the `Endpoint`, `$context->user` the user (`null` for a guest, the user of the job in a worker), `$context->entries` the `MutationNode` list of a `mutate`, `$context->rows` a list (never `null`) of copies of the stored rows of the transaction (for an action, the rows of the chunk or of the row, `Whole` included), `$context->action` and `$context->fields` those of an action. `refuse($message, $status = 403, $headers = [])` throws `Lomkit\Rest\Exceptions\WriteRefused`: the transaction rolls back and is not run again, nothing is written, no write event is dispatched, and the client gets `{"message": "..."}` with the status and the headers, such as `$context->refuse('The archive is under maintenance.', 503, ['Retry-After' => '600'])` or a `429` with `Retry-After`. The status is `403`, another client error status from `400` to `499` (`423`, `429`), or `503`. `WriteRefused::$extension` holds the extension name and `$reason` holds the text the client receives; its exception message is the package's own, `The [quota] extension refused the write.`, so a text that names a lock is never taken for a deadlock. Extensions run in name order and the first refusal answers. On `mutate`, the extensions are asked once for each resource that the request reaches, the resource of the endpoint first, then the related resources of nested entries in the order of the request: `$context->resource` is that resource, `$context->entries` the nodes of the request that write or link its rows (each with its own `relations`), and `$context->rows` copies of its stored rows, with the rows that a `sync` detaches because its keys leave them out. An extension that applies only to a related resource refuses a nested write too. The link checks of a row that the mutation creates (the `attach` or `detach` ability of a relation, when its parent or its related row is created) need the key of that row, so they run later, when it is written: the guard is asked before them, and its refusal answers before their `403`. It never runs under Precognition, which stops before the controller.
+- Forbids: side effects. A deadlock retry (`rest.transactions.attempts`) runs it again with a new context, so it reads and decides: it writes nothing, counts nothing and calls no service that does. Saving a row: the rows are copies that the package never saves, but `save()` on a copy writes it, inside the transaction. `409`, `422` and `428` throw `Lomkit\Rest\Exceptions\InvalidWriteExtensionException`, which names the extension by its name and its registered class, the resource and the endpoint, and `concerns($class)` tells whether it is about that class: the package answers them with another body (conflicts, validation errors, confirmations), so refuse with `423` or `429`. A status outside 400 to 499 other than `503` throws it too. The rows are copies of the stored rows and can hold the columns of the fields that `NarrowsFields` hides: keep them out of what the extension sends elsewhere.
+- An action that commits each chunk or row keeps the transactions committed before a refusal, as with any failure. With `ActionTransaction::None`, the `handle()` calls that ran before a refusal stay written. With `ActionTransaction::Row`, `beforeRow()` runs before the guard, outside the transaction: a refusal does not undo it. A queued action is guarded in the request for each chunk, with the user of the request, and its jobs are queued only once every chunk passed, after `operated()` (a `BatchableAction` dispatches its batch at the end, as without extensions): a refusal answers the client and queues nothing. Each job is guarded again in the worker, where a refusal fails the job at once, whatever its `$tries` (Laravel does not report it: read `failed_jobs`). With the `sync` driver, a refusal in the job reaches the client; the `deferred` and `background` drivers run the job after the response, so a refusal there fails it as in a worker.
+
+### Observing writes (`ObservesWrites`)
+
+App: `\Vendor\History\WriteHistoryExtension::class` in the `rest.extensions` list.
+
+Package, which registers the class alone with `Rest::registerExtension(WriteHistoryExtension::class)`:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\WriteObservationContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\ObservesWrites;
+
+final class WriteHistoryExtension extends Extension implements ObservesWrites
+{
+    #[\Override]
+    public static function name(): string
+    {
+        return 'history';
+    }
+
+    public function __construct(private readonly HistoryStore $history) {}
+
+    #[\Override]
+    public function observeWrite(WriteObservationContext $context): void
+    {
+        $this->history->record($context->resource::class, $context->endpoint->value, $context->user?->getAuthIdentifier(), $context->operations ?? []);
+    }
+}
+```
+
+- Guarantees: a request kind, a notification only. It runs once after the commit of each write transaction, never for an attempt that a deadlock rolled back and never for a write that fails later in the same transaction. It waits for the transactions of the resource's connection: inside a transaction of your app on that connection it waits for that commit and is dropped on its rollback; a transaction open on another connection does not delay it. When the container's `db.transactions` differs from the connection's transactions manager (an Octane app whose warm list leaves it out), the notification is deferred through `Connection::afterCommit()`, which attaches it to the last pending transaction of that manager, on any connection: a transaction on another connection opened after the app's transaction can then release or keep it. `mutate`: `$context->operations` (the `operations` of the response) and `$context->written`, a `Lomkit\Rest\Mutations\WrittenRow` list, one per written row (`resource`, `entry`, the `MutationNode` with `operation`, `attributes` and `pivot`, and a copy of the `model`). `destroy`, `restore`, `forceDestroy`: `$context->rows`. An action: `$context->action`, `$context->fields`, `$context->impacted` and `$context->rows` of each committed transaction (each chunk, each row; `Whole` once, with `rows` `null`; `None` after each `handle()`), so the chunks committed before a later failure are notified. A queued action notifies nothing in the request: each job notifies in the worker after its commit, with the user of the job. An exception is reported with `report()`, the next extension still runs and the response does not change. Extensions run in name order. On `mutate`, the extensions are notified once for each resource that the request wrote, the resource of the endpoint first: `$context->resource` is that resource, `$context->written` its rows only, and `$context->operations` is the same in each notification. The rows that a `sync` detaches come with the `sync` entry too: their keys are not in its `key`. An extension that applies only to a related resource is notified of a nested write too. With no applicable extension, nothing is scheduled.
+- Forbids: changing what was written. The models are copies that the package never saves, but `save()` on a copy writes it; a write of the extension runs after the commit, outside the transaction of the package. The copies can hold columns that the response does not render, the columns of the fields that `NarrowsFields` hides included: keep them out of what the extension sends elsewhere.
+
+### Observing reads (`ObservesReads`)
+
+App: `\Vendor\Plans\ReadUsageExtension::class` in the `rest.extensions` list.
+
+Package, which registers the class alone with `Rest::registerExtension(ReadUsageExtension::class)`:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\ReadObservationContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\ObservesReads;
+
+final class ReadUsageExtension extends Extension implements ObservesReads
+{
+    #[\Override]
+    public static function name(): string
+    {
+        return 'usage';
+    }
+
+    public function __construct(private readonly UsageMeter $usage) {}
+
+    #[\Override]
+    public function observeRead(ReadObservationContext $context): void
+    {
+        $this->usage->add($context->user, $context->endpoint->value, count($context->rows ?? []));
+    }
+}
+```
+
+- Guarantees: a request kind, read only, after the result is computed. Search (HTTP): `$context->rows` copies of the rows of the page with their includes, `$context->total`, `$context->page`, `$context->perPage`, after `searched()` and the meta; reading a column that the page did not load throws `MissingColumnException`, as in `searched()`. Metric, computed or read from the cache: `$context->metric` and `$context->result`, the result as arrays. `/details`: `$context->details`, the `data` of the response as arrays, after `described()`. `$context->rows` is a list for a search (`[]` for an empty page) and `null` for a metric and `/details`. The context is read-only and the models are copies: a change never reaches the response, and the package never saves them. `appliesTo()` is asked with the resource of the endpoint: the included rows of other resources come with the rows of the page and do not notify the extensions of their resources. Only the HTTP endpoints notify: `Rest::search()` notifies nothing, whether through `page()`, `render()` or `lazy()`, since the code of your app that calls it observes its own calls. Its exceptions reach the caller. Extensions run in name order, each with its own copies.
+- Forbids: writes and slow calls on every read: it runs in the request. The rows can hold columns that the response does not render (`alwaysSelect()`, `AugmentsQueries` columns, and the columns of the fields that `NarrowsFields` hides, loaded for the policies): keep them out of what the extension sends elsewhere.
 
 ## Artisan commands shipped by the package
 

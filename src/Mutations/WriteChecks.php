@@ -33,7 +33,7 @@ final class WriteChecks
 
     public readonly SyncClaims $syncs;
 
-    public function __construct(RowSet $rows)
+    public function __construct(RowSet $rows, public readonly ?ReachedResources $reached = null)
     {
         $this->walked = new WalkedRows($rows);
         $this->pivots = new PivotSet;
@@ -53,9 +53,10 @@ final class WriteChecks
     /** @return list<Model> */
     public function walk(Resource $resource, MutationNode $node, PlannedKeys $keys = new PlannedKeys, bool $moves = false): array
     {
-        $rows = [];
+        $walked = $this->walked->of($resource, $node);
+        $this->reached?->add($resource, $node, $walked);
 
-        foreach ($this->walked->of($resource, $node) as $row) {
+        foreach ($walked as $row) {
             $writes = RelationWrites::ofNode($resource, $row, $node);
             $attributes = $node->attributes ?? [];
             $planned = $keys;
@@ -80,11 +81,9 @@ final class WriteChecks
             foreach ($writes as $write) {
                 $write->check($row, $this);
             }
-
-            $rows[] = $row;
         }
 
-        return $rows;
+        return $walked;
     }
 
     public function row(Resource $resource, mixed $key): ?Model

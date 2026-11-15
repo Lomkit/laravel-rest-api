@@ -3,21 +3,27 @@
 namespace Lomkit\Rest\Http;
 
 use Closure;
-use Illuminate\Database\ConnectionInterface;
+use Illuminate\Container\Container;
+use Illuminate\Database\Connection;
+use Illuminate\Database\DatabaseTransactionRecord;
+use Illuminate\Database\DatabaseTransactionsManager;
 use Illuminate\Database\Eloquent\Model;
 
 final readonly class WriteTransaction
 {
-    /** @param list<RowState> $rows */
+    /**
+     * @param  positive-int  $attempts
+     * @param  list<RowState>  $rows
+     */
     private function __construct(
-        private ConnectionInterface $connection,
+        private Connection $connection,
         private int $attempts,
         private array $rows = [],
     ) {}
 
     public static function of(Resource $resource): self
     {
-        return new self($resource::newModel()->getConnection(), $resource->context()->config()->transactionAttempts);
+        return new self($resource::newModel()->getConnection(), max(1, $resource->context()->config()->transactionAttempts));
     }
 
     /** @param iterable<Model> $rows */
@@ -49,6 +55,36 @@ final readonly class WriteTransaction
 
             return $write();
         }, $this->attempts);
+    }
+
+    /** @param Closure(): void $callback */
+    public function afterCommit(Closure $callback): void
+    {
+        $container = Container::getInstance();
+        $transactions = $container->bound('db.transactions') ? $container->make('db.transactions') : null;
+
+        if (! $transactions instanceof DatabaseTransactionsManager) {
+            $this->connection->afterCommit($callback);
+
+            return;
+        }
+
+        $pending = $transactions->callbackApplicableTransactions()
+            ->last(fn (DatabaseTransactionRecord $record): bool => $record->connection === $this->connection->getName());
+
+        if ($pending !== null) {
+            $pending->addCallback($callback);
+
+            return;
+        }
+
+        if ($this->connection->transactionLevel() > 0) {
+            $this->connection->afterCommit($callback);
+
+            return;
+        }
+
+        $callback();
     }
 
     private function restore(): void

@@ -72,6 +72,22 @@ final class ExtensionRegistry
         return $applicable;
     }
 
+    /**
+     * @internal
+     *
+     * @param  class-string<ExtensionKind>  $kind
+     */
+    public function hasKind(string $kind): bool
+    {
+        foreach ($this->all() as $extension) {
+            if ($extension instanceof $kind) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** @param class-string<Resource> $resource */
     private function applies(string $name, Extension $extension, string $resource): bool
     {

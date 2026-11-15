@@ -1,0 +1,335 @@
+<?php
+
+namespace Lomkit\Rest\Tests\Feature\Extensions\Writes;
+
+use Closure;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Events\TransactionBeginning;
+use Illuminate\Database\Events\TransactionCommitted;
+use Illuminate\Database\Events\TransactionRolledBack;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Schema;
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Mutations\WrittenRow;
+use Lomkit\Rest\Tests\Feature\Deletion\Stubs\SecondaryDocument;
+use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
+use Lomkit\Rest\Tests\Feature\Transactions\Stubs\Interruptions;
+use Lomkit\Rest\Tests\Feature\Transactions\Stubs\RetriedDocumentController;
+use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
+use Lomkit\Rest\Tests\PackageTestCase;
+use Orchestra\Testbench\Attributes\WithConfig;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
+
+#[WithConfig('app.debug', false)]
+final class RetriedWriteExtensionsTest extends PackageTestCase
+{
+    private const array MUTATE = ['mutate' => [
+        ['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Final report']],
+        ['operation' => 'create', 'attributes' => ['title' => 'Agenda']],
+    ]];
+
+    private const array DESTROYED = ['data' => [['id' => 1, 'title' => 'Annual report'], ['id' => 3, 'title' => 'Minutes']], 'meta' => []];
+
+    private const array IMPACTED = ['data' => ['impacted' => 3, 'result' => null]];
+
+    #[\Override]
+    protected function defineEnvironment($app): void
+    {
+        $default = $app['config']->get('database.default');
+
+        $app['config']->set('database.connections.secondary', [
+            ...$app['config']->get("database.connections.{$default}"),
+            'prefix' => 'secondary_',
+        ]);
+    }
+
+    #[\Override]
+    protected function defineRoutes($router): void
+    {
+        Rest::resource('retried-documents', RetriedDocumentController::class);
+    }
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Schema::connection('secondary')->create('documents', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('parent_id')->nullable();
+            $table->string('title');
+            $table->timestamps();
+        });
+        $this->beforeApplicationDestroyed(function (): void {
+            Schema::connection('secondary')->dropIfExists('documents');
+        });
+        ExtensionLog::reset();
+        EventLog::reset();
+        WriteLog::reset();
+        Interruptions::reset([]);
+        config(['rest.extensions' => [RecordingGuard::class, RecordingWriteObserver::class]]);
+
+        foreach (['Annual report', 'Roadmap', 'Minutes'] as $title) {
+            SecondaryDocument::query()->create(['title' => $title]);
+        }
+
+        Event::listen([TransactionBeginning::class, TransactionCommitted::class, TransactionRolledBack::class], function (object $event): void {
+            $verb = match ($event::class) {
+                TransactionBeginning::class => 'begin',
+                TransactionCommitted::class => 'commit',
+                default => 'rollback',
+            };
+
+            EventLog::$lines[] = "{$verb} {$event->connectionName}";
+        });
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        ExtensionLog::reset();
+        EventLog::reset();
+        WriteLog::reset();
+
+        parent::tearDown();
+    }
+
+    /** @return array<string, array{string, string, array<string, mixed>, int, list<string>, Closure(?int): array<string, mixed>}> */
+    public static function retriedWrites(): array
+    {
+        $search = ['search' => []];
+
+        return [
+            'mutate' => ['POST', '/retried-documents/mutate', self::MUTATE, 0, [
+                'begin secondary', 'guard mutate update,create', 'rollback secondary',
+                'begin secondary', 'guard mutate update,create', 'commit secondary',
+                'observe mutate update:1,create:#',
+            ], fn (int $agenda): array => self::operations($agenda)],
+            'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]], 0, [
+                'begin secondary', 'guard destroy 1,3', 'rollback secondary',
+                'begin secondary', 'guard destroy 1,3', 'commit secondary',
+                'observe destroy 1,3',
+            ], fn (): array => self::DESTROYED],
+            'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', $search, 1, [
+                'begin secondary', 'guard operate 1,2', 'commit secondary', 'observe operate 1,2 (2)',
+                'begin secondary', 'guard operate 3', 'rollback secondary',
+                'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
+            ], fn (): array => self::IMPACTED],
+            'a queued action chunk' => ['POST', '/retried-documents/actions/queued-rename-retried-documents', $search, 1, [
+                'guard operate 1,2', 'guard operate 3',
+                'begin secondary', 'guard operate 1,2', 'commit secondary', 'observe operate 1,2 (2)',
+                'begin secondary', 'guard operate 3', 'rollback secondary',
+                'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
+            ], fn (): array => self::IMPACTED],
+            'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', $search, 1, [
+                'begin secondary', 'guard operate 1,2', 'guard operate 3', 'rollback secondary',
+                'begin secondary', 'guard operate 1,2', 'guard operate 3', 'commit secondary', 'observe operate * (3)',
+            ], fn (): array => self::IMPACTED],
+            'an action row' => ['POST', '/retried-documents/actions/rename-retried-documents-per-row', $search, 1, [
+                'begin secondary', 'guard operate 1', 'commit secondary', 'observe operate 1 (1)',
+                'begin secondary', 'guard operate 2', 'rollback secondary',
+                'begin secondary', 'guard operate 2', 'commit secondary', 'observe operate 2 (1)',
+                'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
+            ], fn (): array => self::IMPACTED],
+            'a queued action row' => ['POST', '/retried-documents/actions/queued-rename-retried-documents-per-row', $search, 1, [
+                'guard operate 1,2', 'guard operate 3',
+                'begin secondary', 'guard operate 1', 'commit secondary', 'observe operate 1 (1)',
+                'begin secondary', 'guard operate 2', 'rollback secondary',
+                'begin secondary', 'guard operate 2', 'commit secondary', 'observe operate 2 (1)',
+                'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
+            ], fn (): array => self::IMPACTED],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  list<string>  $lines
+     * @param  Closure(?int): array<string, mixed>  $answer
+     */
+    #[Test]
+    #[DataProvider('retriedWrites')]
+    public function it_guards_each_attempt_and_notifies_once_after_the_last_commit(string $method, string $uri, array $payload, int $deadlockAt, array $lines, Closure $answer): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        Interruptions::reset([...array_fill(0, $deadlockAt, null), Interruptions::deadlock()]);
+
+        $response = $this->json($method, $uri, $payload)->assertOk();
+
+        $agenda = self::agenda();
+        $response->assertExactJson($answer($agenda));
+        $this->assertSame(str_replace('#', (string) $agenda, $lines), EventLog::$lines);
+    }
+
+    /** @return array<string, array{string, string, array<string, mixed>, Closure(?int): array<string, mixed>}> */
+    public static function rebuiltWrites(): array
+    {
+        return [
+            'mutate' => ['POST', '/retried-documents/mutate', self::MUTATE, fn (int $agenda): array => self::operations($agenda)],
+            'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]], fn (): array => self::DESTROYED],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  Closure(?int): array<string, mixed>  $answer
+     */
+    #[Test]
+    #[DataProvider('rebuiltWrites')]
+    public function it_rebuilds_the_context_of_each_attempt(string $method, string $uri, array $payload, Closure $answer): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        Interruptions::reset([Interruptions::deadlock()]);
+
+        $this->json($method, $uri, $payload)->assertOk()->assertExactJson($answer(self::agenda()));
+
+        [$first, $second] = WriteLog::$guards;
+        $this->assertCount(2, WriteLog::$guards);
+        $this->assertNotSame($first, $second);
+        $this->assertNotSame($first->rows[0] ?? null, $second->rows[0] ?? null);
+        $this->assertSame(self::keys($first->rows), self::keys($second->rows));
+        $this->assertNotSame([], self::keys($first->rows));
+    }
+
+    #[Test]
+    public function it_notifies_the_rows_written_by_the_last_attempt_only(): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        Interruptions::reset([Interruptions::deadlock()]);
+
+        $response = $this->postJson('/retried-documents/mutate', self::MUTATE)->assertOk();
+
+        $agenda = self::agenda();
+        $response->assertExactJson(self::operations($agenda));
+        $this->assertCount(1, WriteLog::$writes);
+        $this->assertSame([[1, 'Final report'], [$agenda, 'Agenda']], array_map(
+            fn (WrittenRow $row): array => [$row->model->getKey(), $row->model->getAttribute('title')],
+            WriteLog::$writes[0]->written ?? [],
+        ));
+    }
+
+    /** @return array<string, array{string, string, array<string, mixed>, int, list<string>, list<string>}> */
+    public static function failedWrites(): array
+    {
+        $search = ['search' => []];
+
+        return [
+            'mutate' => ['POST', '/retried-documents/mutate', self::MUTATE, 0, [
+                'begin secondary', 'guard mutate update,create', 'rollback secondary',
+            ], ['Annual report', 'Roadmap', 'Minutes']],
+            'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]], 0, [
+                'begin secondary', 'guard destroy 1,3', 'rollback secondary',
+            ], ['Annual report', 'Roadmap', 'Minutes']],
+            'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', $search, 1, [
+                'begin secondary', 'guard operate 1,2', 'commit secondary', 'observe operate 1,2 (2)',
+                'begin secondary', 'guard operate 3', 'rollback secondary',
+            ], ['Renamed', 'Renamed', 'Minutes']],
+            'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', $search, 1, [
+                'begin secondary', 'guard operate 1,2', 'guard operate 3', 'rollback secondary',
+            ], ['Annual report', 'Roadmap', 'Minutes']],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  list<string>  $lines
+     * @param  list<string>  $titles
+     */
+    #[Test]
+    #[DataProvider('failedWrites')]
+    public function it_notifies_nothing_when_the_last_attempt_is_deadlocked(string $method, string $uri, array $payload, int $deadlockAt, array $lines, array $titles): void
+    {
+        Interruptions::reset([...array_fill(0, $deadlockAt, null), Interruptions::deadlock()]);
+
+        $this->json($method, $uri, $payload)->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
+
+        $this->assertSame($lines, EventLog::$lines);
+        $this->assertSame($titles, SecondaryDocument::query()
+            ->orderBy('id')
+            ->pluck('title')
+            ->all());
+    }
+
+    #[Test]
+    public function it_runs_a_refusal_whose_text_names_a_lock_once(): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        WriteLog::$refuseAt = 1;
+        WriteLog::$refusal = 'The database is locked for the night.';
+        WriteLog::$status = 423;
+
+        $this->deleteJson('/retried-documents', ['resources' => [1, 3]])
+            ->assertStatus(423)
+            ->assertExactJson(['message' => 'The database is locked for the night.']);
+
+        $this->assertSame(['begin secondary', 'guard destroy 1,3', 'rollback secondary'], EventLog::$lines);
+        $this->assertCount(1, WriteLog::$guards);
+        $this->assertSame(['Annual report', 'Roadmap', 'Minutes'], SecondaryDocument::query()->orderBy('id')->pluck('title')->all());
+    }
+
+    #[Test]
+    public function it_answers_the_refusal_of_a_job_run_by_the_sync_queue(): void
+    {
+        WriteLog::$refuseAt = 3;
+
+        $this->postJson('/retried-documents/actions/queued-rename-retried-documents', ['search' => []])
+            ->assertStatus(429)
+            ->assertExactJson(['message' => 'The monthly quota is reached.']);
+
+        $this->assertSame(['guard operate 1,2', 'guard operate 3', 'begin secondary', 'guard operate 1,2', 'rollback secondary'], EventLog::$lines);
+        $this->assertSame(['Annual report', 'Roadmap', 'Minutes'], SecondaryDocument::query()->orderBy('id')->pluck('title')->all());
+    }
+
+    #[Test]
+    public function it_notifies_a_write_while_another_connection_has_a_transaction_open(): void
+    {
+        DB::connection()->beginTransaction();
+
+        $this->deleteJson('/retried-documents', ['resources' => [1, 3]])->assertOk()->assertExactJson(self::DESTROYED);
+
+        $this->assertCount(1, WriteLog::$writes);
+        DB::connection()->rollBack();
+        $this->assertCount(1, WriteLog::$writes);
+        $this->assertSame(['Roadmap'], SecondaryDocument::query()->pluck('title')->all());
+    }
+
+    #[Test]
+    public function it_waits_for_a_transaction_of_the_app_on_the_connection_of_the_resource(): void
+    {
+        DB::connection('secondary')->beginTransaction();
+
+        $this->deleteJson('/retried-documents', ['resources' => [1, 3]])->assertOk()->assertExactJson(self::DESTROYED);
+
+        $this->assertSame([], WriteLog::$writes);
+        DB::connection('secondary')->commit();
+        $this->assertCount(1, WriteLog::$writes);
+        $this->assertSame(['Roadmap'], SecondaryDocument::query()->pluck('title')->all());
+    }
+
+    /** @return array{operations: list<array{operation: string, key: int}>} */
+    private static function operations(int $agenda): array
+    {
+        return ['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => $agenda]]];
+    }
+
+    private static function agenda(): ?int
+    {
+        return SecondaryDocument::query()
+            ->where('title', 'Agenda')
+            ->value('id');
+    }
+
+    /**
+     * @param  list<Model>  $rows
+     * @return list<mixed>
+     */
+    private static function keys(array $rows): array
+    {
+        return array_map(fn (Model $row): mixed => $row->getKey(), $rows);
+    }
+}
