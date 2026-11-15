@@ -2,19 +2,15 @@
 
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
-use Lomkit\Rest\Tests\Fixtures\Festival\ProgramExtension;
 use Lomkit\Rest\Tests\Fixtures\Festival\ShowResource;
-use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['program' => ProgramExtension::class])]
 class InstanceSnapshotTest extends DocumentationTestCase
 {
     #[\Override]
     protected function setUp(): void
     {
         ShowResource::$instances = true;
-        ProgramExtension::$instances = true;
 
         parent::setUp();
     }
@@ -23,7 +19,6 @@ class InstanceSnapshotTest extends DocumentationTestCase
     protected function tearDown(): void
     {
         ShowResource::$instances = false;
-        ProgramExtension::$instances = false;
 
         parent::tearDown();
     }

@@ -8698,8 +8698,7 @@
                                         "uriKey": {
                                             "type": "string",
                                             "enum": [
-                                                "only-featured",
-                                                "program.only-headliners"
+                                                "only-featured"
                                             ]
                                         },
                                         "fields": {
@@ -12234,16 +12233,12 @@
                 "discriminator": {
                     "propertyName": "name",
                     "mapping": {
-                        "only-featured": "#/components/schemas/ShowInstructionOnlyFeatured",
-                        "program.only-headliners": "#/components/schemas/ShowInstructionProgram.onlyHeadliners"
+                        "only-featured": "#/components/schemas/ShowInstructionOnlyFeatured"
                     }
                 },
                 "oneOf": [
                     {
                         "$ref": "#/components/schemas/ShowInstructionOnlyFeatured"
-                    },
-                    {
-                        "$ref": "#/components/schemas/ShowInstructionProgram.onlyHeadliners"
                     }
                 ],
                 "title": "ShowInstruction"
@@ -12313,50 +12308,6 @@
                 ],
                 "additionalProperties": false,
                 "title": "ShowInstructionOnlyFeatured"
-            },
-            "ShowInstructionProgram.onlyHeadliners": {
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "const": "program.only-headliners"
-                    },
-                    "alias": {
-                        "type": "string",
-                        "description": "The key of this entry among the instructions of the search, in place of the instruction name. It lets a search send one instruction several times.",
-                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-                        "maxLength": 255
-                    },
-                    "fields": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "name": {
-                                    "type": "string",
-                                    "const": "min_seats"
-                                },
-                                "value": {
-                                    "type": [
-                                        "integer",
-                                        "null"
-                                    ],
-                                    "description": "Rules: nullable, integer"
-                                }
-                            },
-                            "required": [
-                                "name"
-                            ],
-                            "additionalProperties": false
-                        },
-                        "maxItems": 100
-                    }
-                },
-                "required": [
-                    "name"
-                ],
-                "additionalProperties": false,
-                "title": "ShowInstructionProgram.onlyHeadliners"
             },
             "ShowMetricSearch": {
                 "type": "object",
@@ -12590,10 +12541,6 @@
                     },
                     "total": {
                         "type": "integer"
-                    },
-                    "total_capped": {
-                        "type": "boolean",
-                        "description": "True when more rows match than the resource counts: total is then a lower bound"
                     },
                     "meta": {
                         "type": "object",
