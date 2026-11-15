@@ -2,7 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 
-final class RegionSearchMetaNamedArea extends RegionSearchMeta
+final class RegionMetaNamedArea extends RegionMeta
 {
     #[\Override]
     public static function name(): string

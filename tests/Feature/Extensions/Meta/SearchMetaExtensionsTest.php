@@ -27,12 +27,12 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaStatus;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\NotFiniteValue;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaSearchMeta;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaSearchMetaNamedGates;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionSearchMeta;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionSearchMetaNamedArea;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaMetaNamedGates;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionMetaNamedArea;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamSearchMeta;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueSearchMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueMeta;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedAbilities;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedInstructions;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
@@ -78,7 +78,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         Rest::resource('meta-tickets', MetaTicketController::class)->register();
         $this->lead = new GenericUser(['id' => TicketPolicy::LEAD]);
         $this->actingAs($this->lead);
-        config(['rest.extensions' => [QuotaSearchMeta::class, RegionSearchMeta::class]]);
+        config(['rest.extensions' => [QuotaMeta::class, RegionMeta::class]]);
     }
 
     #[Test]
@@ -124,8 +124,8 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $quota = '"quota":{"remaining":98,"titles":["Printer jam","Printer toner"],"user":1}';
 
         return [
-            'area, a later class, first by name' => [[QuotaSearchMeta::class, RegionSearchMetaNamedArea::class], '"meta":{"count":2,"area":{},'.$quota.'}'],
-            'area first in the config' => [[RegionSearchMetaNamedArea::class, QuotaSearchMeta::class], '"meta":{"count":2,"area":{},'.$quota.'}'],
+            'area, a later class, first by name' => [[QuotaMeta::class, RegionMetaNamedArea::class], '"meta":{"count":2,"area":{},'.$quota.'}'],
+            'area first in the config' => [[RegionMetaNamedArea::class, QuotaMeta::class], '"meta":{"count":2,"area":{},'.$quota.'}'],
         ];
     }
 
@@ -147,8 +147,8 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         MetaLog::$searchMeta = ['quota' => 1];
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidMetaExtensionException::keyTaken('quota', QuotaSearchMeta::class, MetaTicketResource::class, 'searchMeta'));
-        $this->expectExceptionMessage('The resource ['.MetaTicketResource::class.'] returns the key [quota] from searchMeta(), which holds the meta that the [quota] extension '.QuotaSearchMeta::class.' adds. Rename the key in searchMeta() of the resource, or give the extension another name: return it from '.QuotaSearchMeta::class.'::name(), or list a subclass of '.QuotaSearchMeta::class.' that overrides name() in the [rest.extensions] config and '.QuotaSearchMeta::class.' in the [rest.disabled_extensions] config.');
+        $this->expectExceptionObject(InvalidMetaExtensionException::keyTaken('quota', QuotaMeta::class, MetaTicketResource::class, 'searchMeta'));
+        $this->expectExceptionMessage('The resource ['.MetaTicketResource::class.'] returns the key [quota] from searchMeta(), which holds the meta that the [quota] extension '.QuotaMeta::class.' adds. Rename the key in searchMeta() of the resource, or give the extension another name: return it from '.QuotaMeta::class.'::name(), or list a subclass of '.QuotaMeta::class.' that overrides name() in the [rest.extensions] config and '.QuotaMeta::class.' in the [rest.disabled_extensions] config.');
 
         try {
             $this->postJson('/meta-tickets/search', self::SEARCH);
@@ -160,7 +160,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     /** @return array<string, array{class-string, string|null, string}> */
     public static function packageKeys(): array
     {
-        $gates = QuotaSearchMetaNamedGates::class;
+        $gates = QuotaMetaNamedGates::class;
         $instructions = PageCountMetaExtensionNamedInstructions::class;
         $abilities = PageCountMetaExtensionNamedAbilities::class;
         $resource = MetaTicketResource::class;
@@ -193,7 +193,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_accepts_an_extension_named_gates_when_the_gates_key_is_another(): void
     {
-        config(['rest.gates.key' => 'abilities', 'rest.extensions' => [QuotaSearchMetaNamedGates::class]]);
+        config(['rest.gates.key' => 'abilities', 'rest.extensions' => [QuotaMetaNamedGates::class]]);
 
         $response = $this->postJson('/meta-tickets/search', self::SEARCH);
 
@@ -239,10 +239,10 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_model_a_resource_or_a_value_that_json_cannot_encode(Closure $value, string $path, string $type): void
     {
         MetaLog::$value = $value();
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueMeta::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $path, $type));
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueMeta::class, MetaTicketResource::class, 'searchMeta', $path, $type));
 
         $this->postJson('/meta-tickets/search', self::SEARCH);
     }
@@ -263,7 +263,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_renders_a_value_that_holds_no_model_and_no_resource(Closure $value, string $json): void
     {
         MetaLog::$value = $value();
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueMeta::class]]);
 
         $content = (string) $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->getContent();
 
@@ -273,12 +273,12 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_names_the_registered_class_of_a_meta_extension_bound_to_a_subclass(): void
     {
-        $bound = new class extends ValueSearchMeta {};
-        $this->app->bind(ValueSearchMeta::class, static fn (): ValueSearchMeta => $bound);
+        $bound = new class extends ValueMeta {};
+        $this->app->bind(ValueMeta::class, static fn (): ValueMeta => $bound);
         MetaLog::$value = new ArrayObject;
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueMeta::class]]);
         $this->withoutExceptionHandling();
-        $expected = InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value', ArrayObject::class)->getMessage();
+        $expected = InvalidMetaExtensionException::notEncodable('value', ValueMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value', ArrayObject::class)->getMessage();
         $exception = null;
 
         try {
@@ -287,7 +287,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
             $exception = $caught;
         }
 
-        $this->assertSame([$expected, true, false], [$exception?->getMessage(), $exception?->concerns(ValueSearchMeta::class), $exception?->concerns($bound::class)]);
+        $this->assertSame([$expected, true, false], [$exception?->getMessage(), $exception?->concerns(ValueMeta::class), $exception?->concerns($bound::class)]);
     }
 
     #[Test]
@@ -335,10 +335,10 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_value_that_json_refuses_naming_the_extension(mixed $value, string $reason): void
     {
         MetaLog::$value = $value;
-        config(['rest.extensions' => [ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueMeta::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $reason));
+        $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueMeta::class, MetaTicketResource::class, 'searchMeta', $reason));
 
         $this->postJson('/meta-tickets/search', self::SEARCH);
     }
@@ -359,7 +359,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_copies_of_the_rows_to_each_extension(): void
     {
-        config(['rest.extensions' => [ChangingSearchMeta::class, QuotaSearchMeta::class]]);
+        config(['rest.extensions' => [ChangingSearchMeta::class, QuotaMeta::class]]);
 
         $response = $this->postJson('/meta-tickets/search', self::SEARCH);
 

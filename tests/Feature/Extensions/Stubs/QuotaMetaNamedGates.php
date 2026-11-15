@@ -2,11 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 
-final class RegionDetailsMetaNamedArea extends RegionDetailsMeta
+final class QuotaMetaNamedGates extends QuotaMeta
 {
     #[\Override]
     public static function name(): string
     {
-        return 'area';
+        return 'gates';
     }
 }
