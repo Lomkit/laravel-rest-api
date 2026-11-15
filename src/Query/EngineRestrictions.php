@@ -9,6 +9,7 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Text\Engine\EngineQuery;
+use Lomkit\Rest\Text\Engine\RestrictingExtension;
 
 /** @internal */
 final readonly class EngineRestrictions
@@ -36,9 +37,9 @@ final readonly class EngineRestrictions
 
     public function applyTo(EngineQuery $query): void
     {
-        $restrictedInSql = $this->rows !== null && $query->restrictRows($this->rows);
+        $inSql = $this->rows !== null && $query->restrictRows($this->rows) ? $this->rows : null;
 
-        if ($this->rows !== null && ! $restrictedInSql) {
+        if ($this->rows !== null && $inSql === null) {
             $this->ensureReached($query);
         }
 
@@ -46,14 +47,13 @@ final readonly class EngineRestrictions
             return;
         }
 
-        $restriction = new EngineRestriction($query);
         $user = $this->resource->context()->actingUser()->user;
         $lists = $query->profile()->matchesStringLists();
 
         foreach ($this->engine as $name => $extension) {
-            $sql = $restrictedInSql && $this->rows?->restricts($name) === true;
+            $restriction = new EngineRestriction($query, new RestrictingExtension($name, $extension::class));
 
-            $extension->restrictEngine(new EngineRestrictionContext($restriction, $this->resource, $user, $lists, $sql));
+            $extension->restrictEngine(new EngineRestrictionContext($restriction, $this->resource, $user, $lists, $inSql?->restricts($name) === true));
         }
     }
 

@@ -172,7 +172,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
         config(['rest.extensions' => ['guestless' => GuestlessExtension::class, 'skipping' => SkippingForeignEngineProfiles::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidEngineQueryException::unappliedRowRestriction(ForeignEngine::class));
+        $this->expectExceptionObject(InvalidEngineQueryException::unappliedRowRestriction(VoucherResource::class, ForeignProfile::class, ForeignEngine::class));
 
         $this->search('vouchers', ['text' => ['value' => 'report']]);
     }
@@ -181,8 +181,8 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_names_the_profile_that_skips_the_restrictions(): void
     {
         $this->assertSame(
-            'The engine profile of ['.ForeignEngine::class.'] answers true to appliesRowRestrictions(), but its page() returned without applying the RowRestriction it received. Apply it to the SQL query of the page, or answer false so that the extensions restrict the engine with RestrictsEngineQueries.',
-            InvalidEngineQueryException::unappliedRowRestriction(ForeignEngine::class)->getMessage(),
+            'The engine profile '.ForeignProfile::class.' of ['.ForeignEngine::class.'] answers true to appliesRowRestrictions(), but its page() returned without applying the RowRestriction it received for a text search of '.VoucherResource::class.'. Apply it to the SQL query of the page, or answer false so that the extensions restrict the engine with RestrictsEngineQueries.',
+            InvalidEngineQueryException::unappliedRowRestriction(VoucherResource::class, ForeignProfile::class, ForeignEngine::class)->getMessage(),
         );
     }
 }

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Exceptions;
 
 use LogicException;
+use Lomkit\Rest\Text\Engine\RestrictingExtension;
 
 final class InvalidEngineQueryException extends LogicException
 {
@@ -11,19 +12,24 @@ final class InvalidEngineQueryException extends LogicException
         return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.");
     }
 
-    public static function unappliedRowRestriction(string $engine): self
+    public static function unappliedRowRestriction(string $resource, string $profile, string $engine): self
     {
-        return new self("The engine profile of [{$engine}] answers true to appliesRowRestrictions(), but its page() returned without applying the RowRestriction it received. Apply it to the SQL query of the page, or answer false so that the extensions restrict the engine with RestrictsEngineQueries.");
+        return new self("The engine profile {$profile} of [{$engine}] answers true to appliesRowRestrictions(), but its page() returned without applying the RowRestriction it received for a text search of {$resource}. Apply it to the SQL query of the page, or answer false so that the extensions restrict the engine with RestrictsEngineQueries.");
     }
 
-    public static function repeatedRowRestriction(): self
+    /** @param list<string> $extensions */
+    public static function repeatedRowRestriction(string $resource, array $extensions): self
     {
-        return new self('The engine query already carries the row restrictions of the extensions. Restrict the engine query with where(), whereIn() or whereNotIn() instead.');
+        $names = implode(', ', $extensions);
+
+        return new self("The engine query of {$resource} already carries the row restrictions of the extensions [{$names}], and the package passes them once per engine query. Restrict the engine query with where(), whereIn() or whereNotIn() in ScoutEngine::perimeter() or in an instruction instead of restrictRows().");
     }
 
-    public static function conflictingListMemberships(string $attribute): self
+    public static function conflictingListMemberships(string $resource, string $attribute, ?RestrictingExtension $first, ?RestrictingExtension $second): self
     {
-        return new self("The engine query keeps the rows whose list attribute [{$attribute}] shares a value with each of two lists, and neither list holds the other. The engine matches one list per attribute: restrict [{$attribute}] with one list, or with lists that hold one another.");
+        $sources = $first === null && $second === null ? 'ScoutEngine::perimeter() or instructions' : self::listSource($first).' and '.self::listSource($second);
+
+        return new self("The engine query of {$resource} keeps the rows whose list attribute [{$attribute}] shares a value with each of two lists, set by {$sources}, and neither list holds the other. The engine matches one list per attribute: restrict [{$attribute}] with one list, or with lists that hold one another.");
     }
 
     public static function unsupportedOperator(string $attribute, string $operator): self
@@ -88,5 +94,10 @@ final class InvalidEngineQueryException extends LogicException
     public static function beyondWindow(int $window): self
     {
         return new self("The search engine does not paginate beyond the first {$window} results.");
+    }
+
+    private static function listSource(?RestrictingExtension $source): string
+    {
+        return $source === null ? 'ScoutEngine::perimeter() or an instruction' : "the [{$source->name}] extension {$source->class}";
     }
 }

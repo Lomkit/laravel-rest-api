@@ -315,9 +315,18 @@ class EngineRestrictionTest extends EngineSearchTestCase
         config(['scout.driver' => 'database', 'rest.extensions' => ['hidden' => HiddenRowsExtension::class, 'rr' => RowReplacingExtension::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidEngineQueryException::repeatedRowRestriction());
+        $this->expectExceptionObject(InvalidEngineQueryException::repeatedRowRestriction(VoucherResource::class, ['hidden']));
 
         $this->search('vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'rr.replace-rows']]]);
+    }
+
+    #[Test]
+    public function it_names_the_resource_and_the_extensions_of_a_repeated_row_restriction(): void
+    {
+        $this->assertSame(
+            'The engine query of '.VoucherResource::class.' already carries the row restrictions of the extensions [hidden, red], and the package passes them once per engine query. Restrict the engine query with where(), whereIn() or whereNotIn() in ScoutEngine::perimeter() or in an instruction instead of restrictRows().',
+            InvalidEngineQueryException::repeatedRowRestriction(VoucherResource::class, ['hidden', 'red'])->getMessage(),
+        );
     }
 
     #[Test]

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherResource;
 use Lomkit\Rest\Text\Engine\IndexConditions;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -18,7 +19,7 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_matches_nothing_once_asked(): void
     {
-        $conditions = new IndexConditions;
+        $conditions = new IndexConditions(ReaderVoucherResource::class);
         $conditions->include('number', [1, 2]);
 
         $this->assertFalse($conditions->matchesNothing());
@@ -33,7 +34,7 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_still_intersects_the_lists_of_a_single_valued_attribute(): void
     {
-        $conditions = new IndexConditions;
+        $conditions = new IndexConditions(ReaderVoucherResource::class);
         $conditions->include('number', [1, 2, 3]);
         $conditions->include('number', [3, 2, 4]);
         $conditions->exclude('team', ['blue']);
@@ -51,10 +52,10 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_keeps_the_narrower_list_of_a_list_attribute_in_any_order(): void
     {
-        $narrowed = new IndexConditions;
+        $narrowed = new IndexConditions(ReaderVoucherResource::class);
         $narrowed->include('readers', ['ann', 'bob'], true);
         $narrowed->include('readers', ['ann'], true);
-        $widened = new IndexConditions;
+        $widened = new IndexConditions(ReaderVoucherResource::class);
         $widened->include('readers', ['ann'], true);
         $widened->include('readers', ['bob', 'ann'], true);
 
@@ -67,10 +68,10 @@ class IndexConditionsTest extends TestCase
     #[DataProvider('overlappingLists')]
     public function it_refuses_two_lists_of_a_list_attribute_that_neither_holds(array $lists): void
     {
-        $conditions = new IndexConditions;
+        $conditions = new IndexConditions(ReaderVoucherResource::class);
         $conditions->include('readers', $lists[0], true);
 
-        $this->expectExceptionObject(InvalidEngineQueryException::conflictingListMemberships('readers'));
+        $this->expectExceptionObject(InvalidEngineQueryException::conflictingListMemberships(ReaderVoucherResource::class, 'readers', null, null));
 
         $conditions->include('readers', $lists[1], true);
     }
@@ -87,7 +88,7 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_keeps_an_empty_list_attribute_matching_nothing(): void
     {
-        $conditions = new IndexConditions;
+        $conditions = new IndexConditions(ReaderVoucherResource::class);
         $conditions->include('readers', ['ann'], true);
         $conditions->include('readers', [], true);
 
@@ -97,7 +98,7 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_adds_up_the_excluded_values_of_a_list_attribute(): void
     {
-        $conditions = new IndexConditions;
+        $conditions = new IndexConditions(ReaderVoucherResource::class);
         $conditions->exclude('readers', ['ann']);
         $conditions->exclude('readers', ['bob', 'ann']);
 

@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Instructions\AppliesToEngine;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Instructions\InstructionFields;
+use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Text\Engine\EngineQuery;
-use Lomkit\Rest\Text\Engine\RowRestriction;
 
 final class RowReplacingInstruction extends Instruction implements AppliesToEngine
 {
@@ -23,10 +23,10 @@ final class RowReplacingInstruction extends Instruction implements AppliesToEngi
     #[\Override]
     public function handleEngine(InstructionFields $fields, EngineQuery $query): void
     {
-        $query->restrictRows(new class implements RowRestriction
-        {
-            #[\Override]
-            public function apply(Builder $query): void {}
-        });
+        $rows = ExtensionRestrictions::of($this->resource);
+
+        if ($rows !== null) {
+            $query->restrictRows($rows);
+        }
     }
 }

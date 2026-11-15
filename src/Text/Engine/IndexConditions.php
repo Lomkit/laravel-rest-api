@@ -18,7 +18,12 @@ final class IndexConditions
     /** @var array<string, list<int|float|string|bool>> */
     private array $exclusions = [];
 
+    /** @var array<string, ?RestrictingExtension> */
+    private array $sources = [];
+
     private bool $nothing = false;
+
+    public function __construct(private readonly string $resource) {}
 
     public function compare(string $attribute, FilterOperator $operator, int|float|string|bool $value): void
     {
@@ -26,15 +31,28 @@ final class IndexConditions
     }
 
     /** @param list<int|float|string|bool> $values */
-    public function include(string $attribute, array $values, bool $list = false): void
+    public function include(string $attribute, array $values, bool $list = false, ?RestrictingExtension $by = null): void
     {
         $current = $this->memberships[$attribute] ?? null;
 
-        $this->memberships[$attribute] = match (true) {
-            $current === null => self::unique($values),
-            $list => self::narrower($attribute, $current, self::unique($values)),
-            default => array_values(array_filter($current, fn (int|float|string|bool $value): bool => in_array($value, $values, true))),
-        };
+        if ($current !== null && ! $list) {
+            $this->memberships[$attribute] = array_values(array_filter($current, fn (int|float|string|bool $value): bool => in_array($value, $values, true)));
+
+            return;
+        }
+
+        $values = self::unique($values);
+
+        if ($current !== null && self::holds($values, $current)) {
+            return;
+        }
+
+        if ($current !== null && ! self::holds($current, $values)) {
+            throw InvalidEngineQueryException::conflictingListMemberships($this->resource, $attribute, $this->sources[$attribute] ?? null, $by);
+        }
+
+        $this->memberships[$attribute] = $values;
+        $this->sources[$attribute] = $by;
     }
 
     /** @param list<int|float|string|bool> $values */
@@ -76,20 +94,6 @@ final class IndexConditions
         foreach ($this->exclusions as $attribute => $values) {
             $builder->whereNotIn($attribute, $values);
         }
-    }
-
-    /**
-     * @param  list<int|float|string|bool>  $current
-     * @param  list<int|float|string|bool>  $values
-     * @return list<int|float|string|bool>
-     */
-    private static function narrower(string $attribute, array $current, array $values): array
-    {
-        return match (true) {
-            self::holds($values, $current) => $current,
-            self::holds($current, $values) => $values,
-            default => throw InvalidEngineQueryException::conflictingListMemberships($attribute),
-        };
     }
 
     /**

@@ -14,6 +14,7 @@ use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AdaptiveReadersExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeAlgolia3Engine;
@@ -27,6 +28,7 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherResource;
 use Lomkit\Rest\Text\Engine\EngineQuery;
+use Lomkit\Rest\Text\Engine\RestrictingExtension;
 use Lomkit\Rest\Text\ScoutEngine;
 use Lomkit\Rest\Text\TextCapabilities;
 use Lomkit\Rest\Text\TextQuery;
@@ -140,9 +142,33 @@ class StringListAttributesTest extends EngineSearchTestCase
         $this->useEngine(new FakeTypesenseEngine);
         $query = $this->engineQuery()->whereIn('readers', ['ann', 'bob']);
 
-        $this->expectExceptionObject(InvalidEngineQueryException::conflictingListMemberships('readers'));
+        $this->expectExceptionObject(InvalidEngineQueryException::conflictingListMemberships(ReaderVoucherResource::class, 'readers', null, null));
 
         $query->whereIn('readers', ['ann', 'cid']);
+    }
+
+    #[Test]
+    public function it_names_the_two_extensions_whose_lists_neither_holds(): void
+    {
+        $this->useEngine(new FakeTypesenseEngine);
+        config(['rest.extensions' => ['readers' => ReadersExtension::class, 'groups' => ReaderGroupsExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+        $this->withoutExceptionHandling();
+        $exception = InvalidEngineQueryException::conflictingListMemberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('groups', ReaderGroupsExtension::class), new RestrictingExtension('readers', ReadersExtension::class));
+
+        $this->assertSame('The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [groups] extension '.ReaderGroupsExtension::class.' and the [readers] extension '.ReadersExtension::class.', and neither list holds the other. The engine matches one list per attribute: restrict [readers] with one list, or with lists that hold one another.', $exception->getMessage());
+        $this->expectExceptionObject($exception);
+
+        $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
+    }
+
+    #[Test]
+    public function it_names_the_perimeter_or_an_instruction_beside_an_extension(): void
+    {
+        $this->assertSame(
+            'The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [readers] extension '.ReadersExtension::class.' and ScoutEngine::perimeter() or an instruction, and neither list holds the other. The engine matches one list per attribute: restrict [readers] with one list, or with lists that hold one another.',
+            InvalidEngineQueryException::conflictingListMemberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('readers', ReadersExtension::class), null)->getMessage(),
+        );
     }
 
     #[Test]

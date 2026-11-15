@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Text\Engine;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\TextQuery;
@@ -19,7 +20,7 @@ final class EngineQuery
     /** @var array<string, mixed> */
     private array $options = [];
 
-    private ?RowRestriction $rows = null;
+    private ?ExtensionRestrictions $rows = null;
 
     public function __construct(
         private readonly EngineIndex $index,
@@ -30,7 +31,7 @@ final class EngineQuery
             throw InvalidEngineQueryException::trashedUnavailable($index->model->model()::class);
         }
 
-        $this->conditions = new IndexConditions;
+        $this->conditions = new IndexConditions($index->resource);
     }
 
     public function where(string $attribute, FilterOperator|string $operator, mixed $value): static
@@ -45,9 +46,19 @@ final class EngineQuery
     /** @param array<mixed> $values */
     public function whereIn(string $attribute, array $values): static
     {
+        return $this->restrictIn($attribute, $values);
+    }
+
+    /**
+     * @internal
+     *
+     * @param  array<mixed>  $values
+     */
+    public function restrictIn(string $attribute, array $values, ?RestrictingExtension $by = null): static
+    {
         $declared = $this->index->attributes->declared($attribute);
 
-        $this->conditions->include($attribute, $declared->members(FilterOperator::In, $values), $declared->list);
+        $this->conditions->include($attribute, $declared->members(FilterOperator::In, $values), $declared->list, $by);
 
         return $this;
     }
@@ -96,7 +107,7 @@ final class EngineQuery
         $result = $this->index->profile->page($builder, $this->index->model, $perPage, $page, $rows);
 
         if ($rows !== null && ! $rows->applied()) {
-            throw InvalidEngineQueryException::unappliedRowRestriction($this->index->profile->name());
+            throw InvalidEngineQueryException::unappliedRowRestriction($this->index->resource, $this->index->profile::class, $this->index->profile->name());
         }
 
         return $result;
@@ -111,10 +122,10 @@ final class EngineQuery
     }
 
     /** @internal */
-    public function restrictRows(RowRestriction $rows): bool
+    public function restrictRows(ExtensionRestrictions $rows): bool
     {
         if ($this->rows !== null) {
-            throw InvalidEngineQueryException::repeatedRowRestriction();
+            throw InvalidEngineQueryException::repeatedRowRestriction($this->index->resource, $this->rows->names());
         }
 
         if (! $this->index->profile->appliesRowRestrictions()) {
