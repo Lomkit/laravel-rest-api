@@ -127,6 +127,7 @@ class QuickStartCommandTest extends ScaffoldingTestCase
                         'App\Rest\Resources\PostResource does not override perimeterQuery(): every row is visible to users who pass viewAny. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when every row is meant for these users.',
                         'App\Rest\Resources\TagResource does not override perimeterQuery(): every row is visible to users who pass viewAny. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when every row is meant for these users.',
                     ],
+                    'restricted' => [],
                 ];
         });
     }

@@ -123,6 +123,7 @@ class CheckCommandTest extends ScaffoldingTestCase
                     'perimeter' => [],
                     'without_perimeter' => [BookResource::class, LabelResource::class, LoanResource::class, ShelfResource::class],
                     'problems' => [],
+                    'restricted' => [],
                 ],
                 'actions' => ['checked' => [], 'problems' => []],
                 'relations' => [
@@ -139,6 +140,7 @@ class CheckCommandTest extends ScaffoldingTestCase
                     'problems' => [],
                 ],
                 'extensions' => ['registered' => [], 'problems' => [], 'notes' => []],
+                'extension_checks' => ['checked' => [], 'problems' => []],
             ],
             json_decode($output->fetch(), true),
         );

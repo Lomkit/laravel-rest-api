@@ -13,6 +13,7 @@ final readonly class PerimeterReport
      * @param  list<string>  $rowProblems
      * @param  list<array{resource: string, action: string, ability: string}>  $checkedActions
      * @param  list<string>  $actionProblems
+     * @param  list<array{resource: string, extensions: list<string>}>  $restricted
      */
     public function __construct(
         private array $perimeter = [],
@@ -20,33 +21,42 @@ final readonly class PerimeterReport
         private array $rowProblems = [],
         private array $checkedActions = [],
         private array $actionProblems = [],
+        private array $restricted = [],
     ) {}
 
     public function withPerimeter(string $resource): self
     {
-        return new self([...$this->perimeter, $resource], $this->withoutPerimeter, $this->rowProblems, $this->checkedActions, $this->actionProblems);
+        return new self([...$this->perimeter, $resource], $this->withoutPerimeter, $this->rowProblems, $this->checkedActions, $this->actionProblems, $this->restricted);
     }
 
     public function withoutPerimeter(string $resource): self
     {
-        return new self($this->perimeter, [...$this->withoutPerimeter, $resource], $this->rowProblems, $this->checkedActions, $this->actionProblems);
+        return new self($this->perimeter, [...$this->withoutPerimeter, $resource], $this->rowProblems, $this->checkedActions, $this->actionProblems, $this->restricted);
     }
 
     public function withRowProblem(string $problem): self
     {
-        return new self($this->perimeter, $this->withoutPerimeter, [...$this->rowProblems, $problem], $this->checkedActions, $this->actionProblems);
+        return new self($this->perimeter, $this->withoutPerimeter, [...$this->rowProblems, $problem], $this->checkedActions, $this->actionProblems, $this->restricted);
     }
 
     public function withCheckedAction(string $resource, string $action, string $ability): self
     {
         $checked = [...$this->checkedActions, ['resource' => $resource, 'action' => $action, 'ability' => $ability]];
 
-        return new self($this->perimeter, $this->withoutPerimeter, $this->rowProblems, $checked, $this->actionProblems);
+        return new self($this->perimeter, $this->withoutPerimeter, $this->rowProblems, $checked, $this->actionProblems, $this->restricted);
     }
 
     public function withActionProblem(string $problem): self
     {
-        return new self($this->perimeter, $this->withoutPerimeter, $this->rowProblems, $this->checkedActions, [...$this->actionProblems, $problem]);
+        return new self($this->perimeter, $this->withoutPerimeter, $this->rowProblems, $this->checkedActions, [...$this->actionProblems, $problem], $this->restricted);
+    }
+
+    /** @param list<string> $extensions */
+    public function withRestriction(string $resource, array $extensions): self
+    {
+        $restricted = [...$this->restricted, ['resource' => $resource, 'extensions' => $extensions]];
+
+        return new self($this->perimeter, $this->withoutPerimeter, $this->rowProblems, $this->checkedActions, $this->actionProblems, $restricted);
     }
 
     public function passed(): bool
@@ -54,11 +64,11 @@ final readonly class PerimeterReport
         return $this->rowProblems === [] && $this->actionProblems === [];
     }
 
-    /** @return array{rows: array{perimeter: list<string>, without_perimeter: list<string>, problems: list<string>}, actions: array{checked: list<array{resource: string, action: string, ability: string}>, problems: list<string>}} */
+    /** @return array{rows: array{perimeter: list<string>, without_perimeter: list<string>, problems: list<string>, restricted: list<array{resource: string, extensions: list<string>}>}, actions: array{checked: list<array{resource: string, action: string, ability: string}>, problems: list<string>}} */
     public function toArray(): array
     {
         return [
-            'rows' => ['perimeter' => $this->perimeter, 'without_perimeter' => $this->withoutPerimeter, 'problems' => $this->rowProblems],
+            'rows' => ['perimeter' => $this->perimeter, 'without_perimeter' => $this->withoutPerimeter, 'problems' => $this->rowProblems, 'restricted' => $this->restricted],
             'actions' => ['checked' => $this->checkedActions, 'problems' => $this->actionProblems],
         ];
     }
@@ -69,6 +79,10 @@ final readonly class PerimeterReport
 
         foreach ($this->withoutPerimeter as $resource) {
             $components->twoColumnDetail($resource, '#[WithoutPerimeter]');
+        }
+
+        foreach ($this->restricted as $entry) {
+            $components->twoColumnDetail($entry['resource'], 'restricted by '.implode(', ', $entry['extensions']));
         }
 
         self::section($components, 'actions', $this->actionsSummary(), $this->actionProblems);
@@ -92,7 +106,9 @@ final readonly class PerimeterReport
         $count = count($this->perimeter);
         $summary = "{$count} ".Str::plural('resource', $count).' with a perimeter';
 
-        return $this->withoutPerimeter === [] ? $summary : $summary.', '.count($this->withoutPerimeter).' marked #[WithoutPerimeter]';
+        $summary = $this->withoutPerimeter === [] ? $summary : $summary.', '.count($this->withoutPerimeter).' marked #[WithoutPerimeter]';
+
+        return $this->restricted === [] ? $summary : $summary.', '.count($this->restricted).' restricted by extensions';
     }
 
     private function actionsSummary(): string

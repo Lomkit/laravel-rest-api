@@ -10,4 +10,9 @@ final class InvalidDocumentationException extends LogicException
     {
         return new self("The OpenAPI {$type} component [{$name}] of [{$owner}] is already defined differently by [{$other}]. Give one of them another name.");
     }
+
+    public static function componentChanged(string $type, string $name, string $owner): self
+    {
+        return new self("The OpenAPI {$type} component [{$name}] of [{$owner}] changed after it was registered. Pass a new object for each body instead of changing one that is already registered.");
+    }
 }

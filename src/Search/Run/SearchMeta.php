@@ -40,12 +40,13 @@ final readonly class SearchMeta
         }
 
         $instructions = $this->instructions();
+        $added = ExtensionSearchMeta::of($this->resource, $context, $page, $meta);
 
-        if ($instructions === []) {
-            return $meta;
+        if ($instructions !== []) {
+            $meta = [...$meta, self::INSTRUCTIONS => (object) $instructions];
         }
 
-        return [...$meta, self::INSTRUCTIONS => (object) $instructions];
+        return $meta + $added;
     }
 
     /** @return array<string, stdClass> */

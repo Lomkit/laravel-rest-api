@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Scramble;
 use Dedoc\Scramble\Support\Generator\Operation;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
-use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
@@ -17,8 +16,8 @@ use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Relations\SyncMeaning;
 use Lomkit\Rest\Scopes\Scope;
+use Lomkit\Rest\Scramble\Components\MetaSchema;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
-use Lomkit\Rest\Support\Overrides;
 use Lomkit\Rest\Text\TextMode;
 
 final class DetailsResponseType
@@ -51,21 +50,8 @@ final class DetailsResponseType
             'gates' => Schemas::list((new StringType)->enum($resource->isGatingEnabled() ? $definition->gates()->names() : []), 'With gates: the abilities that search.gates accepts, the built-in ones first, then those that the resource declares; empty when the resource turns its gates off'),
             'confirmations' => self::confirmations($resource),
             'authorizations' => self::authorizations(),
-            'meta' => self::meta($resource),
+            'meta' => MetaSchema::details($resource),
         ], ['actions', 'metrics', 'instructions', 'scopes', 'relations', 'rules', 'text', 'gates', 'confirmations', 'authorizations']);
-    }
-
-    private static function meta(Resource $resource): ObjectType
-    {
-        if (! Overrides::method($resource, 'detailsMeta', Resource::class)) {
-            return Schemas::closed([], description: 'Empty: the resource adds no keys with detailsMeta()');
-        }
-
-        $meta = new ObjectType;
-        $meta->additionalProperties(new MixedType);
-        $meta->setDescription('The keys that detailsMeta() of the resource returns for the user of the request');
-
-        return $meta;
     }
 
     private static function confirmations(Resource $resource): ObjectType

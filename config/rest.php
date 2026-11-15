@@ -270,7 +270,8 @@ return [
     | compared: a subclass stays enabled. To replace a package extension,
     | list a subclass of it above and the package class here; the
     | subclass keeps its name. Two enabled classes with one name are
-    | refused until one of them is listed here.
+    | refused until one of them is listed here, or one of them is
+    | extended with another name().
     |
     */
 

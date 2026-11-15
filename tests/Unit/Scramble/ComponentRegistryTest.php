@@ -42,6 +42,46 @@ class ComponentRegistryTest extends TestCase
     }
 
     #[Test]
+    public function it_refuses_the_same_content_under_a_taken_name_with_another_status(): void
+    {
+        $registry = new ComponentRegistry(new Components);
+        $registry->response('quota.Refused', Response::make(429)->setDescription('Refused'), 'App\Docs\First');
+
+        $this->expectExceptionObject(new InvalidDocumentationException(
+            'The OpenAPI response component [quota.Refused] of [App\Docs\Second] is already defined differently by [App\Docs\First]. Give one of them another name.',
+        ));
+
+        $registry->response('quota.Refused', Response::make(423)->setDescription('Refused'), 'App\Docs\Second');
+    }
+
+    #[Test]
+    public function it_checks_only_the_watched_responses_for_a_change(): void
+    {
+        $components = new Components;
+        $registry = new ComponentRegistry($components);
+        $registry->response('RestNotFound', Response::make(404)->setDescription('Not found'), 'Lomkit\Rest\Scramble\ErrorResponses');
+        $registry->response('quota.Exceeded', Response::make(429)->setDescription('Exceeded'), 'App\Rest\QuotaExtension', watched: true);
+        $components->responses['RestNotFound']->setDescription('Missing');
+
+        $registry->ensureResponsesUnchanged();
+
+        $this->assertSame('Missing', $components->responses['RestNotFound']->description);
+    }
+
+    #[Test]
+    public function it_refuses_a_watched_response_changed_after_it_is_registered(): void
+    {
+        $components = new Components;
+        $registry = new ComponentRegistry($components);
+        $registry->response('quota.Exceeded', Response::make(429)->setDescription('Exceeded'), 'App\Rest\QuotaExtension', watched: true);
+        $components->responses['quota.Exceeded']->setDescription('Changed');
+
+        $this->expectExceptionObject(InvalidDocumentationException::componentChanged('response', 'quota.Exceeded', 'App\Rest\QuotaExtension'));
+
+        $registry->ensureResponsesUnchanged();
+    }
+
+    #[Test]
     public function it_builds_a_schema_component_once_for_its_owner(): void
     {
         $components = new Components;

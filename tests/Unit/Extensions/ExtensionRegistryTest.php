@@ -22,6 +22,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\KindlessExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotesResources;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ProductsOnlyExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\ShelvesExtension;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
@@ -157,6 +158,35 @@ final class ExtensionRegistryTest extends TestCase
         $this->assertSame([
             ProductsOnlyExtension::class.' '.ProductResource::class,
             ProductsOnlyExtension::class.' '.CategoryResource::class,
+            ProductsOnlyExtension::class.' '.ProductResource::class,
+            ProductsOnlyExtension::class.' '.CategoryResource::class,
+        ], ExtensionLog::$asked);
+    }
+
+    #[Test]
+    public function it_gives_every_extension_of_one_kind_in_name_order_without_asking_applies_to(): void
+    {
+        $registry = ExtensionRegistry::of([], [], [ProductsOnlyExtension::class, CountingExtension::class, ShelvesExtension::class, BothKindsExtension::class], new IlluminateContainer);
+
+        $this->assertSame(['aisles', 'both', 'products'], array_keys($registry->ofKind(NotesResources::class)));
+        $this->assertSame([], ExtensionLog::$asked);
+    }
+
+    #[Test]
+    public function it_shares_the_answer_of_applies_to_between_one_extension_and_the_kind_list(): void
+    {
+        $registry = ExtensionRegistry::of([], [], [ProductsOnlyExtension::class], new IlluminateContainer);
+
+        $answers = [
+            $registry->appliesTo('products', ProductResource::class),
+            $registry->appliesTo('products', CategoryResource::class),
+            $registry->appliesTo('missing', ProductResource::class),
+            array_keys($registry->applicable(ProductResource::class, NotesResources::class)),
+            array_keys($registry->applicable(CategoryResource::class, NotesResources::class)),
+        ];
+
+        $this->assertSame([true, false, false, ['products'], []], $answers);
+        $this->assertSame([
             ProductsOnlyExtension::class.' '.ProductResource::class,
             ProductsOnlyExtension::class.' '.CategoryResource::class,
         ], ExtensionLog::$asked);
