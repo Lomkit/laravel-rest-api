@@ -10,12 +10,10 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
 use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Events\ActionOperated;
-use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\WrittenRow;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\ArchiveUser;
-use Lomkit\Rest\Tests\Feature\Deletion\Concerns\SeedsDocuments;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ArchiveDocumentsByOne;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ArchiveEachDocument;
@@ -27,11 +25,8 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FailingWriteObserverNamedArchive;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ModeChangingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrittenDocumentController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrittenDocumentResource;
-use Lomkit\Rest\Tests\Fixtures\Archive\Archive;
 use Lomkit\Rest\Tests\Fixtures\Archive\Document;
-use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
@@ -44,53 +39,20 @@ use RuntimeException;
 #[WithConfig('app.debug', false)]
 final class ObservedWritesTest extends PackageTestCase
 {
-    use SeedsDocuments;
-
-    private const string TRASHED = '2026-01-01 00:00:00';
-
-    private const array MUTATE = ['mutate' => [
-        ['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Annual summary']],
-        ['operation' => 'create', 'attributes' => ['title' => 'Minutes']],
-    ]];
-
-    private const array DOCUMENTS = ['data' => [
-        ['id' => 1, 'title' => 'Annual report', 'archived' => false],
-        ['id' => 2, 'title' => 'Budget', 'archived' => false],
-    ], 'meta' => []];
-
-    private const array IMPACTED = ['data' => ['impacted' => 2, 'result' => null]];
-
-    private ArchiveUser $grace;
-
-    #[\Override]
-    protected function fixtures(): array
-    {
-        return [new Archive];
-    }
+    use WritesDocuments;
 
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
-        config(['rest.extensions' => [RecordingWriteObserver::class]]);
-        Rest::resource('written-documents', WrittenDocumentController::class)
-            ->withSoftDeletes()
-            ->register();
-        ArchiveUser::create(['id' => 1, 'name' => 'Ada', 'email' => 'ada@example.com', 'password' => 'secret']);
-        $this->grace = ArchiveUser::create(['id' => 2, 'name' => 'Grace', 'email' => 'grace@example.com', 'password' => 'secret']);
-        $this->actingAs($this->grace);
+        $this->registerWrittenDocuments(RecordingWriteObserver::class);
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
+        $this->resetWriteLogs();
 
         parent::tearDown();
     }
@@ -128,16 +90,6 @@ final class ObservedWritesTest extends PackageTestCase
         $this->assertNull($context->action);
         $this->assertNull($context->fields);
         $this->assertNull($context->impacted);
-    }
-
-    /** @return array<string, array{string, string, ?string, Endpoint, list<string>}> */
-    public static function rowBatches(): array
-    {
-        return [
-            'destroy' => ['DELETE', '/written-documents', null, Endpoint::Destroy, ['destroyingAll 1,2', 'sql update documents', 'sql update documents', 'destroyedAll 1,2']],
-            'restore' => ['POST', '/written-documents/restore', self::TRASHED, Endpoint::Restore, ['restoringAll 1,2', 'sql update documents', 'sql update documents', 'restoredAll 1,2']],
-            'force destroy' => ['DELETE', '/written-documents/force', self::TRASHED, Endpoint::ForceDestroy, ['forceDestroyingAll 1,2', 'sql delete documents', 'sql delete documents', 'forceDestroyedAll 1,2']],
-        ];
     }
 
     /** @param list<string> $writes */
@@ -312,35 +264,53 @@ final class ObservedWritesTest extends PackageTestCase
         $this->assertSame([[1, 'Annual summary', false], [2, 'Budget', false], [$minutes, 'Minutes', false]], $this->documents());
     }
 
-    #[Test]
-    public function it_waits_for_the_commit_of_an_application_transaction(): void
+    /** @return array<string, array{bool, bool, int, list<string>, Closure(?int): list<array{int, string, bool}>}> */
+    public static function applicationTransactions(): array
     {
-        $titles = [];
-        WriteLog::$observing = function () use (&$titles): void {
-            $titles[] = Document::query()->findOrFail(1)->title;
-        };
-        $this->seedDocuments(null, null);
-        DB::beginTransaction();
+        $written = static fn (int $minutes): array => [[1, 'Annual summary', false], [2, 'Budget', false], [$minutes, 'Minutes', false]];
+        $untouched = static fn (): array => [[1, 'Annual report', false], [2, 'Budget', false]];
 
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::operations($this->minutes()));
-
-        $this->assertSame([], WriteLog::$writes);
-        DB::commit();
-        $this->assertCount(1, WriteLog::$writes);
-        $this->assertSame(['Annual summary'], $titles);
+        return [
+            'a commit' => [false, true, 1, ['Annual summary'], $written],
+            'a rollback' => [false, false, 0, [], $untouched],
+            'a commit with another transactions manager' => [true, true, 1, ['Annual summary'], $written],
+            'a rollback with another transactions manager' => [true, false, 0, [], $untouched],
+        ];
     }
 
+    /**
+     * @param  list<string>  $titles
+     * @param  Closure(?int): list<array{int, string, bool}>  $documents
+     */
     #[Test]
-    public function it_drops_the_notification_when_the_application_transaction_rolls_back(): void
+    #[DataProvider('applicationTransactions')]
+    public function it_waits_for_the_end_of_an_application_transaction(bool $otherManager, bool $commits, int $notified, array $titles, Closure $documents): void
     {
+        $observed = [];
+        WriteLog::$observing = function () use (&$observed): void {
+            $observed[] = Document::query()->findOrFail(1)->title;
+        };
         $this->seedDocuments(null, null);
+
+        if ($otherManager) {
+            $this->app->instance('db.transactions', new DatabaseTransactionsManager);
+        }
+
         DB::beginTransaction();
 
         $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::operations($this->minutes()));
-        DB::rollBack();
 
         $this->assertSame([], WriteLog::$writes);
-        $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
+
+        if ($commits) {
+            DB::commit();
+        } else {
+            DB::rollBack();
+        }
+
+        $this->assertCount($notified, WriteLog::$writes);
+        $this->assertSame($titles, $observed);
+        $this->assertSame($documents($this->minutes()), $this->documents());
     }
 
     #[Test]
@@ -359,34 +329,6 @@ final class ObservedWritesTest extends PackageTestCase
             'operated atomic-archive-documents 2',
             'commit level 1', 'observe operate * (2)',
         ], $this->writeLines());
-    }
-
-    #[Test]
-    public function it_waits_for_the_application_commit_when_the_container_holds_another_transactions_manager(): void
-    {
-        $this->seedDocuments(null, null);
-        $this->app->instance('db.transactions', new DatabaseTransactionsManager);
-        DB::beginTransaction();
-
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::operations($this->minutes()));
-
-        $this->assertCount(0, WriteLog::$writes);
-        DB::commit();
-        $this->assertCount(1, WriteLog::$writes);
-    }
-
-    #[Test]
-    public function it_drops_the_notification_on_a_rollback_when_the_container_holds_another_transactions_manager(): void
-    {
-        $this->seedDocuments(null, null);
-        $this->app->instance('db.transactions', new DatabaseTransactionsManager);
-        DB::beginTransaction();
-
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::operations($this->minutes()));
-        DB::rollBack();
-
-        $this->assertCount(0, WriteLog::$writes);
-        $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
     }
 
     /** @return array<string, array{string, string, array<string, mixed>, int, Closure(?int): array<string, mixed>}> */
@@ -492,38 +434,9 @@ final class ObservedWritesTest extends PackageTestCase
         }
     }
 
-    /** @return array{operations: list<array{operation: string, key: int}>} */
-    private static function operations(int $minutes): array
-    {
-        return ['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => $minutes]]];
-    }
-
-    private function minutes(): ?int
-    {
-        return Document::withTrashed()
-            ->where('title', 'Minutes')
-            ->value('id');
-    }
-
-    /** @return list<string> */
-    private function writeLines(): array
-    {
-        return array_values(array_filter(EventLog::$lines, fn (string $line): bool => ! str_starts_with($line, 'sql select')));
-    }
-
     /** @return list<string> */
     private function observedLines(): array
     {
         return array_values(array_filter(EventLog::$lines, fn (string $line): bool => str_starts_with($line, 'observe')));
-    }
-
-    /** @return list<array{int, string, bool}> */
-    private function documents(): array
-    {
-        return Document::withTrashed()
-            ->orderBy('id')
-            ->get()
-            ->map(fn (Document $document): array => [$document->id, $document->title, $document->archived])
-            ->all();
     }
 }

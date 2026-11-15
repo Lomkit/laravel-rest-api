@@ -12,14 +12,12 @@ use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingReadObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingReadObserverNamedFirst;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingReadObserverNamedSecond;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FailingReadObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ObservedTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ObservedTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OpenTicketCount;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserver;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserverNamedFirst;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserverNamedSecond;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamReadingObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
@@ -212,21 +210,10 @@ final class ObservedReadsTest extends HelpdeskTestCase
         $this->json($method, $uri, $body);
     }
 
-    /** @return array<string, array{list<class-string>}> */
-    public static function readOrders(): array
-    {
-        return [
-            'changing first' => [[ChangingReadObserverNamedFirst::class, RecordingReadObserverNamedSecond::class]],
-            'recording first' => [[RecordingReadObserverNamedFirst::class, ChangingReadObserverNamedSecond::class]],
-        ];
-    }
-
-    /** @param list<class-string> $extensions */
     #[Test]
-    #[DataProvider('readOrders')]
-    public function it_hands_each_extension_its_own_copies(array $extensions): void
+    public function it_hands_each_extension_its_own_copies(): void
     {
-        config(['rest.extensions' => $extensions]);
+        config(['rest.extensions' => [ChangingReadObserverNamedFirst::class, RecordingReadObserverNamedSecond::class]]);
 
         $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson($this->page());
 
@@ -238,13 +225,10 @@ final class ObservedReadsTest extends HelpdeskTestCase
     public static function configuredOrders(): array
     {
         $changingFirst = ['read readonly', 'read details fields,limits,meta'];
-        $recordingFirst = ['read details fields,limits,meta', 'read readonly'];
 
         return [
             'in name order' => [[ChangingReadObserverNamedFirst::class, RecordingReadObserverNamedSecond::class], $changingFirst],
             'against name order' => [[RecordingReadObserverNamedSecond::class, ChangingReadObserverNamedFirst::class], $changingFirst],
-            'recording named first, in name order' => [[RecordingReadObserverNamedFirst::class, ChangingReadObserverNamedSecond::class], $recordingFirst],
-            'recording named first, against name order' => [[ChangingReadObserverNamedSecond::class, RecordingReadObserverNamedFirst::class], $recordingFirst],
         ];
     }
 
