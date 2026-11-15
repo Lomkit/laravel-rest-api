@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions;
 
+use Illuminate\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
@@ -12,6 +13,7 @@ use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\ConfiguredExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountsResources;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
@@ -119,6 +121,26 @@ final class ExtensionRegistrationTest extends PackageTestCase
         $this->assertSame([], $resolved);
         $this->assertSame([], ExtensionLog::$built);
         $this->assertSame([], ExtensionLog::$asked);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['configured' => ConfiguredExtension::class])]
+    #[WithConfig(ConfiguredExtension::RESOURCES, [ProductResource::class])]
+    public function it_reads_the_config_of_each_application_in_applies_to(): void
+    {
+        $other = clone $this->app;
+        $other->instance('config', new ConfigRepository([...$this->app->make('config')->all(), 'extension_fixtures' => ['applies_to' => []]]));
+
+        $first = $this->context()->extensions()->applicable(ProductResource::class, NotesResources::class);
+        $second = (new RestContext(RestRequest::create('/api/products/search', 'POST'), $other))->extensions()->applicable(ProductResource::class, NotesResources::class);
+
+        $this->assertSame(['configured'], array_keys($first));
+        $this->assertSame([], $second);
+        $this->assertSame([ConfiguredExtension::class, ConfiguredExtension::class], ExtensionLog::$built);
+        $this->assertSame([
+            ConfiguredExtension::class.' '.ProductResource::class,
+            ConfiguredExtension::class.' '.ProductResource::class,
+        ], ExtensionLog::$asked);
     }
 
     #[Test]

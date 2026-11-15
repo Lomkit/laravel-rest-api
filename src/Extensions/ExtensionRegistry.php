@@ -11,6 +11,9 @@ final class ExtensionRegistry
     /** @var array<string, Extension>|null */
     private ?array $built = null;
 
+    /** @var array<string, array<class-string<Resource>, bool>> */
+    private array $answers = [];
+
     /** @param array<string, string> $classes */
     private function __construct(
         private readonly array $classes,
@@ -57,12 +60,18 @@ final class ExtensionRegistry
         $applicable = [];
 
         foreach ($this->all() as $name => $extension) {
-            if ($extension instanceof $kind && Applicability::of($extension, $resource)) {
+            if ($extension instanceof $kind && $this->applies($name, $extension, $resource)) {
                 $applicable[$name] = $extension;
             }
         }
 
         return $applicable;
+    }
+
+    /** @param class-string<Resource> $resource */
+    private function applies(string $name, Extension $extension, string $resource): bool
+    {
+        return $this->answers[$name][$resource] ??= $extension->appliesTo($resource);
     }
 
     /** @return array<string, Extension> */

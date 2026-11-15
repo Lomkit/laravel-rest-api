@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Extensions;
 
-use Lomkit\Rest\Extensions\Applicability;
-
 final class ExtensionLog
 {
     /** @var list<string> */
@@ -16,6 +14,5 @@ final class ExtensionLog
     {
         self::$built = [];
         self::$asked = [];
-        Applicability::flush();
     }
 }

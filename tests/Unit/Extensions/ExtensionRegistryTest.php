@@ -106,7 +106,21 @@ final class ExtensionRegistryTest extends TestCase
     }
 
     #[Test]
-    public function it_asks_applies_to_once_per_class_and_resource_in_the_process(): void
+    public function it_asks_applies_to_once_per_resource_in_one_registry(): void
+    {
+        $registry = ExtensionRegistry::of([], ['products' => ProductsOnlyExtension::class], new IlluminateContainer);
+        $registry->applicable(ProductResource::class, NotesResources::class);
+        $registry->applicable(ProductResource::class, NotesResources::class);
+        $registry->applicable(CategoryResource::class, NotesResources::class);
+
+        $this->assertSame([
+            ProductsOnlyExtension::class.' '.ProductResource::class,
+            ProductsOnlyExtension::class.' '.CategoryResource::class,
+        ], ExtensionLog::$asked);
+    }
+
+    #[Test]
+    public function it_asks_applies_to_again_in_another_registry(): void
     {
         foreach ([new IlluminateContainer, new IlluminateContainer] as $container) {
             $registry = ExtensionRegistry::of([], ['products' => ProductsOnlyExtension::class], $container);
@@ -117,6 +131,8 @@ final class ExtensionRegistryTest extends TestCase
 
         $this->assertSame([ProductsOnlyExtension::class, ProductsOnlyExtension::class], ExtensionLog::$built);
         $this->assertSame([
+            ProductsOnlyExtension::class.' '.ProductResource::class,
+            ProductsOnlyExtension::class.' '.CategoryResource::class,
             ProductsOnlyExtension::class.' '.ProductResource::class,
             ProductsOnlyExtension::class.' '.CategoryResource::class,
         ], ExtensionLog::$asked);
