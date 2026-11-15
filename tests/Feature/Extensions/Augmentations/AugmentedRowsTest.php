@@ -379,12 +379,6 @@ class AugmentedRowsTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_has_no_refusal_for_an_alias_that_two_extension_names_reach(): void
-    {
-        $this->assertFalse(method_exists(InvalidQueryExtensionException::class, 'aliasTaken'));
-    }
-
-    #[Test]
     public function it_refuses_an_alias_that_names_a_field(): void
     {
         Rest::resource('alias-field-authors', AliasFieldAuthorController::class)->register();

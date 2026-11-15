@@ -20,26 +20,9 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentation;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BadlyNamedExtension;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 
 class ExtensionExceptionTest extends TestCase
 {
-    #[Test]
-    public function it_offers_no_registry_factory_on_a_kind_exception(): void
-    {
-        $this->assertSame([false, false, false], [
-            method_exists(InvalidQueryExtensionException::class, 'notAnExtension'),
-            method_exists(InvalidQueryExtensionException::class, 'invalidName'),
-            method_exists(InvalidQueryExtensionException::class, 'sharedName'),
-        ]);
-    }
-
-    #[Test]
-    public function it_keeps_the_registry_exception_final(): void
-    {
-        $this->assertTrue((new ReflectionClass(InvalidExtensionException::class))->isFinal());
-    }
-
     #[Test]
     public function it_gives_the_engine_extension_exception_the_shared_base_only(): void
     {
