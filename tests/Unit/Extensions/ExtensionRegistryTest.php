@@ -38,7 +38,6 @@ final class ExtensionRegistryTest extends TestCase
 
         $registry = ExtensionRegistry::of([], [], $container);
 
-        $this->assertTrue($registry->isEmpty());
         $this->assertSame([], $registry->all());
         $this->assertSame([], $registry->applicable(ProductResource::class, NotesResources::class));
         $this->assertSame([], ExtensionLog::$built);
@@ -53,7 +52,6 @@ final class ExtensionRegistryTest extends TestCase
 
         $registry = ExtensionRegistry::of(['noting' => false], ['noting' => [NotingExtension::class]], $container);
 
-        $this->assertTrue($registry->isEmpty());
         $this->assertSame([], $registry->all());
         $this->assertSame([], $registry->applicable(ProductResource::class, NotesResources::class));
         $this->assertSame([], ExtensionLog::$built);
@@ -64,7 +62,6 @@ final class ExtensionRegistryTest extends TestCase
     {
         $registry = ExtensionRegistry::of([], ['noting' => [NotingExtension::class]], new IlluminateContainer);
 
-        $this->assertFalse($registry->isEmpty());
         $this->assertSame([], ExtensionLog::$built);
     }
 

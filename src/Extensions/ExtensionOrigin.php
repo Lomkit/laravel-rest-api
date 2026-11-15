@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Extensions;
 
+/** @internal */
 enum ExtensionOrigin: string
 {
     case Config = 'config';

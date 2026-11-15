@@ -13,6 +13,7 @@ use Lomkit\Rest\Extensions\ExtensionList;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Throwable;
 
+/** @internal */
 final readonly class ExtensionCheck
 {
     public function __construct(private Container $container) {}

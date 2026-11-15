@@ -7,6 +7,7 @@ use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\Kinds\ExtensionKind;
 use ReflectionClass;
 
+/** @internal */
 final readonly class ExtensionFactory
 {
     public function __construct(private Container $container) {}

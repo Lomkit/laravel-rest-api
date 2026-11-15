@@ -116,7 +116,6 @@ final class ExtensionRegistrationTest extends PackageTestCase
 
         $registry = $context->extensions();
 
-        $this->assertTrue($registry->isEmpty());
         $this->assertSame([], $registry->all());
         $this->assertSame([], $registry->applicable(ProductResource::class, NotesResources::class));
         $this->assertSame([], $resolved);

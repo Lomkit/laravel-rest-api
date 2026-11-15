@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Extensions;
 
+/** @internal */
 final readonly class ExtensionEntry
 {
     /** @param list<string> $runtime */

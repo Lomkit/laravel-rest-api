@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Extensions;
 
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 
+/** @internal */
 final readonly class ExtensionList
 {
     /**

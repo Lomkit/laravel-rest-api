@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Lomkit\Rest\Extensions\ExtensionEntry;
 use Lomkit\Rest\Extensions\ExtensionOrigin;
 
+/** @internal */
 final readonly class ExtensionReport
 {
     private const string DISABLED = 'disabled';

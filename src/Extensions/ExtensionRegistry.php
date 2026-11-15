@@ -33,11 +33,6 @@ final class ExtensionRegistry
         return new self(ExtensionList::merge($configured, $registered)->enabled(), $container);
     }
 
-    public function isEmpty(): bool
-    {
-        return $this->classes === [];
-    }
-
     /** @return array<string, Extension> */
     public function all(): array
     {
