@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Exceptions;
 
 use Lomkit\Rest\Fields\FieldReduction;
 
-final class InvalidFieldExtensionException extends InvalidExtensionException
+final class InvalidFieldExtensionException extends ExtensionException
 {
     public static function unknownField(string $name, string $resource, FieldReduction $reduction, string $field): self
     {

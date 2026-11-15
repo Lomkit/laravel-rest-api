@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Exceptions;
 
 use Lomkit\Rest\Http\Routing\Endpoint;
 
-final class InvalidRouteExtensionException extends InvalidExtensionException
+final class InvalidRouteExtensionException extends ExtensionException
 {
     public static function invalidMiddleware(string $name, string $class, string $resource, Endpoint $endpoint, string $given): self
     {
