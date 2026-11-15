@@ -7,6 +7,7 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Event;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
@@ -371,6 +372,38 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     }
 
     #[Test]
+    public function it_resolves_no_user_for_the_cached_abilities_without_a_context_extension(): void
+    {
+        $resolutions = 0;
+        $definition = $this->countingContext($resolutions)->resource(CachedTicketResource::class)->definition();
+
+        for ($read = 0; $read < 50; $read++) {
+            $definition->cachedAbilities()->seconds('view');
+            $definition->cacheContext();
+        }
+
+        $this->assertSame(0, $resolutions);
+    }
+
+    /** @param list<string> $abilities */
+    #[Test]
+    #[DataProvider('checkedAbilities')]
+    public function it_resolves_the_user_as_often_for_a_batch_of_many_checks_as_for_one(array $abilities): void
+    {
+        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('rules', 'v1');
+
+        $this->assertSame($this->resolutionsFor(['view']), $this->resolutionsFor($abilities));
+    }
+
+    /** @return iterable<string, array{list<string>}> */
+    public static function checkedAbilities(): iterable
+    {
+        yield 'one ability' => [['update']];
+        yield 'three abilities' => [['view', 'update', 'delete']];
+    }
+
+    #[Test]
     public function it_keeps_the_cache_context_while_the_user_stays(): void
     {
         config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
@@ -383,6 +416,37 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
         $definition->cacheContext();
 
         $this->assertCount(1, FirstCacheContext::$contexts);
+    }
+
+    /** @param list<string> $abilities */
+    private function resolutionsFor(array $abilities): int
+    {
+        $resolutions = 0;
+        $context = $this->countingContext($resolutions);
+        $resource = $context->resource(CachedTicketResource::class);
+        $checks = [];
+
+        foreach ($abilities as $ability) {
+            foreach (Ticket::query()->orderBy('id')->get()->all() as $ticket) {
+                $checks[] = new Check($resource, $ability, $ticket);
+            }
+        }
+
+        $context->authorizer()->inspectAll($checks);
+
+        return $resolutions;
+    }
+
+    private function countingContext(int &$resolutions): RestContext
+    {
+        $request = RestRequest::create('/api/cached-tickets/search', 'POST');
+        $request->setUserResolver(static function () use (&$resolutions): Authenticatable {
+            $resolutions++;
+
+            return new GenericUser(['id' => 1, 'current_team_id' => 3]);
+        });
+
+        return new RestContext($request, $this->app ?? $this->fail('No application.'));
     }
 
     private function contextFollowing(?Authenticatable &$user): RestContext

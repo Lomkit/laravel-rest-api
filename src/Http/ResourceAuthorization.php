@@ -22,6 +22,8 @@ final class ResourceAuthorization
 
     private ?ActingUser $actingUser = null;
 
+    private ?bool $followsUser = null;
+
     public function __construct(private readonly Resource $resource) {}
 
     public function gates(): GateVocabulary
@@ -45,6 +47,10 @@ final class ResourceAuthorization
 
     private function follow(): void
     {
+        if (! ($this->followsUser ??= ExtensionCacheContext::appliesTo($this->resource))) {
+            return;
+        }
+
         $acting = $this->resource->context()->actingUser();
 
         if ($this->actingUser !== null && $this->actingUser->sameAs($acting)) {

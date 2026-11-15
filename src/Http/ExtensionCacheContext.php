@@ -9,6 +9,11 @@ use Lomkit\Rest\Extensions\Kinds\ContributesCacheContext;
 /** @internal */
 final readonly class ExtensionCacheContext
 {
+    public static function appliesTo(Resource $resource): bool
+    {
+        return $resource->context()->extensions()->applicable($resource::class, ContributesCacheContext::class) !== [];
+    }
+
     public static function of(Resource $resource): CacheContributions
     {
         $contributions = new CacheContributions($resource::class);
