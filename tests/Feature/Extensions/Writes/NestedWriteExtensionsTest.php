@@ -263,7 +263,7 @@ final class NestedWriteExtensionsTest extends PackageTestCase
         return array_map(fn (WriteGuardContext $context): array => [
             class_basename($context->resource),
             array_map(fn (MutationNode $node): string => $node->operation->value.' '.implode(',', (array) $node->key), $context->entries ?? []),
-            array_map(fn (Model $row): array => [$row->getKey(), self::label($row)], $context->rows ?? []),
+            array_map(fn (Model $row): array => [$row->getKey(), self::label($row)], $context->rows),
         ], WriteLog::$guards);
     }
 

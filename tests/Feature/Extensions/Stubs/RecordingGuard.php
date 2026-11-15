@@ -28,6 +28,6 @@ final class RecordingGuard extends Extension implements GuardsWrites
             return implode(',', array_map(fn (MutationNode $entry): string => $entry->operation->value, $context->entries));
         }
 
-        return $context->rows === [] || $context->rows === null ? '-' : implode(',', array_map(fn (Model $row): string => (string) $row->getKey(), $context->rows));
+        return $context->rows === [] ? '-' : implode(',', array_map(fn (Model $row): string => (string) $row->getKey(), $context->rows));
     }
 }

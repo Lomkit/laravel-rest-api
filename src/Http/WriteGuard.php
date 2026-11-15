@@ -51,9 +51,9 @@ final readonly class WriteGuard
 
     /**
      * @param  list<MutationNode>|null  $entries
-     * @param  list<Model>|null  $rows
+     * @param  list<Model>  $rows
      */
-    private function check(Resource $resource, Endpoint $endpoint, ?array $entries, ?array $rows, ?Action $action = null, ?ActionFields $fields = null): void
+    private function check(Resource $resource, Endpoint $endpoint, ?array $entries, array $rows, ?Action $action = null, ?ActionFields $fields = null): void
     {
         $context = $this->resource->context();
         $extensions = $context->extensions()->applicable($resource::class, GuardsWrites::class);
@@ -66,8 +66,7 @@ final readonly class WriteGuard
         $user = $context->actingUser()->user;
 
         foreach ($extensions as $name => $extension) {
-            $copies = $rows === null ? null : RowCopies::of($rows);
-            $extension->guardWrite(new WriteGuardContext($name, $extension::class, $resource, $endpoint, $user, $entries, $copies, $action === null ? null : clone $action, $fields));
+            $extension->guardWrite(new WriteGuardContext($name, $extension::class, $resource, $endpoint, $user, $entries, RowCopies::of($rows), $action === null ? null : clone $action, $fields));
         }
     }
 }

@@ -12,7 +12,7 @@ final class FrozenRowGuard extends Extension implements GuardsWrites
     #[\Override]
     public function guardWrite(WriteGuardContext $context): void
     {
-        $keys = array_map(fn (Model $row): mixed => $row->getKey(), $context->rows ?? []);
+        $keys = array_map(fn (Model $row): mixed => $row->getKey(), $context->rows);
 
         if (array_intersect($keys, WriteLog::$frozen) !== []) {
             $context->refuse('The document is frozen.', 423);

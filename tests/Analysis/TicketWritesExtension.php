@@ -30,7 +30,7 @@ final class TicketWritesExtension extends Extension implements GuardsWrites, Obs
     public function guardWrite(WriteGuardContext $context): void
     {
         $creates = array_filter($context->entries ?? [], fn (MutationNode $entry): bool => $entry->operation === MutationOperation::Create);
-        $frozen = array_filter($context->rows ?? [], fn (Model $row): bool => $row->getAttribute('status') === TicketStatus::Closed->value);
+        $frozen = array_filter($context->rows, fn (Model $row): bool => $row->getAttribute('status') === TicketStatus::Closed->value);
 
         if ($context->user === null || ($creates !== [] && $context->endpoint === Endpoint::Mutate)) {
             $context->refuse('Tickets are frozen.', 423);

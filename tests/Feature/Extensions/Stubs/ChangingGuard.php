@@ -13,7 +13,7 @@ final class ChangingGuard extends Extension implements GuardsWrites
     {
         WriteLog::$guards[] = $context;
 
-        foreach ($context->rows ?? [] as $row) {
+        foreach ($context->rows as $row) {
             $row->setAttribute('title', 'Changed');
         }
     }

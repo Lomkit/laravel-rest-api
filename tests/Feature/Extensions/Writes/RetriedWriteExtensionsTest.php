@@ -323,11 +323,11 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
     }
 
     /**
-     * @param  list<Model>|null  $rows
+     * @param  list<Model>  $rows
      * @return list<mixed>
      */
-    private static function keys(?array $rows): array
+    private static function keys(array $rows): array
     {
-        return array_map(fn (Model $row): mixed => $row->getKey(), $rows ?? []);
+        return array_map(fn (Model $row): mixed => $row->getKey(), $rows);
     }
 }

@@ -219,7 +219,7 @@ final class GuardedWritesTest extends PackageTestCase
             ->assertExactJson(self::IMPACTED);
 
         $this->assertSame($lines, $this->writeLines());
-        $this->assertSame($rows, array_map(fn ($context): array => array_map(fn (Model $row): mixed => $row->getKey(), $context->rows ?? []), WriteLog::$guards));
+        $this->assertSame($rows, array_map(fn ($context): array => array_map(fn (Model $row): mixed => $row->getKey(), $context->rows), WriteLog::$guards));
 
         foreach (WriteLog::$guards as $context) {
             $this->assertSame(Endpoint::Operate, $context->endpoint);
@@ -640,7 +640,7 @@ final class GuardedWritesTest extends PackageTestCase
         $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
 
         $this->assertCount(4, WriteLog::$guards);
-        $this->assertSame([[1], [2], [1], [2]], array_map(fn ($context): array => array_map(fn (Model $row): mixed => $row->getKey(), $context->rows ?? []), WriteLog::$guards));
+        $this->assertSame([[1], [2], [1], [2]], array_map(fn ($context): array => array_map(fn (Model $row): mixed => $row->getKey(), $context->rows), WriteLog::$guards));
 
         foreach (WriteLog::$guards as $context) {
             $this->assertSame(Endpoint::Operate, $context->endpoint);
@@ -802,7 +802,7 @@ final class GuardedWritesTest extends PackageTestCase
     /** @return list<list<mixed>> */
     private function guardedKeys(): array
     {
-        return array_map(fn ($context): array => array_map(fn (Model $row): mixed => $row->getKey(), $context->rows ?? []), WriteLog::$guards);
+        return array_map(fn ($context): array => array_map(fn (Model $row): mixed => $row->getKey(), $context->rows), WriteLog::$guards);
     }
 
     /** @return list<string> */
@@ -818,12 +818,12 @@ final class GuardedWritesTest extends PackageTestCase
     }
 
     /**
-     * @param  list<Model>|null  $rows
+     * @param  list<Model>  $rows
      * @return list<array{mixed, mixed}>
      */
-    private function keysAndTitles(?array $rows): array
+    private function keysAndTitles(array $rows): array
     {
-        return array_map(fn (Model $row): array => [$row->getKey(), $row->getAttribute('title')], $rows ?? []);
+        return array_map(fn (Model $row): array => [$row->getKey(), $row->getAttribute('title')], $rows);
     }
 
     /** @return list<array{int, string, bool}> */

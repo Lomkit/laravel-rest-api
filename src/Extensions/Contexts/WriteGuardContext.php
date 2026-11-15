@@ -23,7 +23,7 @@ final readonly class WriteGuardContext
      *
      * @param  class-string<Extension>  $class
      * @param  list<MutationNode>|null  $entries
-     * @param  list<Model>|null  $rows
+     * @param  list<Model>  $rows
      */
     public function __construct(
         private string $extension,
@@ -32,7 +32,7 @@ final readonly class WriteGuardContext
         public Endpoint $endpoint,
         public ?Authenticatable $user,
         public ?array $entries = null,
-        public ?array $rows = null,
+        public array $rows = [],
         public ?Action $action = null,
         public ?ActionFields $fields = null,
     ) {}

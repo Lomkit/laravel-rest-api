@@ -19,7 +19,7 @@ final class HeldShelfGuard extends Extension implements GuardsWrites
     #[\Override]
     public function guardWrite(WriteGuardContext $context): void
     {
-        $keys = array_map(fn (Model $row): mixed => $row->getKey(), $context->rows ?? []);
+        $keys = array_map(fn (Model $row): mixed => $row->getKey(), $context->rows);
 
         if (in_array(101, $keys, true)) {
             $context->refuse('The shelf is on hold.', 423);
