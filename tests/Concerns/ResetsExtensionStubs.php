@@ -10,6 +10,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstCacheContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstNarrowing;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherMaskingFields;
@@ -22,6 +23,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RowCheckLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondCacheContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondNarrowing;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SqlForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampsRequests;
@@ -62,5 +64,7 @@ trait ResetsExtensionStubs
         ReadersExtension::$groups = null;
         SqlForeignEngineProfiles::$skipsRows = false;
         RegionStageMeta::$named = null;
+        FirstResponses::reset();
+        SecondResponses::reset();
     }
 }
