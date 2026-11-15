@@ -83,32 +83,32 @@ class FieldNarrowingRulesTest extends PackageTestCase
 
     /** @param list<class-string> $extensions */
     #[Test]
-    #[DataProvider('orders')]
-    public function it_names_the_extension_that_names_an_unknown_field_in_both_orders(array $extensions): void
+    #[DataProvider('unknownFieldOrders')]
+    public function it_names_the_first_extension_in_name_order_that_names_an_unknown_field(array $extensions, string $hiddenByB, FieldReduction $reduction, string $field): void
     {
         config(['rest.extensions' => $extensions]);
-        MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->hide('price');
-        OtherMaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->unsortable('colour');
+        MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->hide($hiddenByB);
+        OtherMaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->{$reduction->value}($field);
 
         $exception = $this->narrowingException();
 
-        $this->assertSame([true, false], [$exception->concerns(OtherMaskingFieldsNamedA::class), $exception->concerns('a')]);
-        $this->assertEquals(InvalidFieldExtensionException::unknownField('a', OtherMaskingFieldsNamedA::class, ProductResource::class, FieldReduction::Unsortable, 'colour'), $exception);
+        $this->assertSame([true, false, false], [
+            $exception->concerns(OtherMaskingFieldsNamedA::class),
+            $exception->concerns(MaskingFieldsNamedB::class),
+            $exception->concerns('a'),
+        ]);
+        $this->assertEquals(InvalidFieldExtensionException::unknownField('a', OtherMaskingFieldsNamedA::class, ProductResource::class, $reduction, $field), $exception);
     }
 
-    /** @param list<class-string> $extensions */
-    #[Test]
-    #[DataProvider('orders')]
-    public function it_names_the_first_extension_in_name_order_when_both_are_wrong(array $extensions): void
+    /** @return array<string, array{list<class-string>, string, FieldReduction, string}> */
+    public static function unknownFieldOrders(): array
     {
-        config(['rest.extensions' => $extensions]);
-        MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->hide('colour');
-        OtherMaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->hide('size');
-
-        $exception = $this->narrowingException();
-
-        $this->assertSame([true, false], [$exception->concerns(OtherMaskingFieldsNamedA::class), $exception->concerns(MaskingFieldsNamedB::class)]);
-        $this->assertSame(InvalidFieldExtensionException::unknownField('a', OtherMaskingFieldsNamedA::class, ProductResource::class, FieldReduction::Hide, 'size')->getMessage(), $exception->getMessage());
+        return [
+            'one wrong, in name order' => [self::NAME_ORDER, 'price', FieldReduction::Unsortable, 'colour'],
+            'one wrong, in class order' => [self::CLASS_ORDER, 'price', FieldReduction::Unsortable, 'colour'],
+            'both wrong, in name order' => [self::NAME_ORDER, 'colour', FieldReduction::Hide, 'size'],
+            'both wrong, in class order' => [self::CLASS_ORDER, 'colour', FieldReduction::Hide, 'size'],
+        ];
     }
 
     /** @return array<string, array{list<class-string>}> */
@@ -130,19 +130,6 @@ class FieldNarrowingRulesTest extends PackageTestCase
         $exception = $this->narrowingException();
 
         $this->assertSame(InvalidFieldExtensionException::unknownField('mask', MaskingFields::class, ProductResource::class, FieldReduction::Hide, 'colour')->getMessage(), $exception->getMessage());
-        $this->assertSame([true, false], [$exception->concerns(MaskingFields::class), $exception->concerns($bound::class)]);
-    }
-
-    #[Test]
-    public function it_names_the_registered_class_of_a_field_extension_that_reads_the_fields_it_narrows(): void
-    {
-        $bound = new class extends MaskingFields {};
-        $this->app->bind(MaskingFields::class, static fn (): MaskingFields => $bound);
-        MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->resource->definition()->fields();
-
-        $exception = $this->narrowingException();
-
-        $this->assertStringStartsWith('The [mask] extension '.MaskingFields::class.' reads the fields', $exception->getMessage());
         $this->assertSame([true, false], [$exception->concerns(MaskingFields::class), $exception->concerns($bound::class)]);
     }
 
@@ -258,22 +245,22 @@ class FieldNarrowingRulesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_names_the_extension_that_reads_the_fields_it_narrows(): void
+    public function it_names_the_registered_class_of_the_extension_that_reads_the_fields_it_narrows(): void
     {
         config(['rest.extensions' => self::BOTH]);
+        $bound = new class extends OtherMaskingFields {};
+        $this->app->bind(OtherMaskingFields::class, static fn (): OtherMaskingFields => $bound);
         MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->hide('price');
         OtherMaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->resource->definition()->fields();
 
-        try {
-            $this->withoutExceptionHandling()->actingAs(self::user())->postJson('/api/products/search', ['search' => []]);
-        } catch (InvalidFieldExtensionException $exception) {
-            $this->assertStringStartsWith('The [other] extension '.OtherMaskingFields::class.' reads the fields or the text search of '.ProductResource::class, $exception->getMessage());
-            $this->assertSame([true, false], [$exception->concerns(OtherMaskingFields::class), $exception->concerns(MaskingFields::class)]);
+        $exception = $this->narrowingException();
 
-            return;
-        }
-
-        $this->fail('The search passed although an extension read the fields it narrows.');
+        $this->assertSame(InvalidFieldExtensionException::readsNarrowedFields('other', OtherMaskingFields::class, ProductResource::class)->getMessage(), $exception->getMessage());
+        $this->assertSame([true, false, false], [
+            $exception->concerns(OtherMaskingFields::class),
+            $exception->concerns($bound::class),
+            $exception->concerns(MaskingFields::class),
+        ]);
     }
 
     /** @return array<string, array{string}> */

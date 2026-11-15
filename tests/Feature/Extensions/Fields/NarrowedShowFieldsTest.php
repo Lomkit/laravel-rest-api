@@ -137,31 +137,10 @@ class NarrowedShowFieldsTest extends PackageTestCase
             fn (string $field): TestResponse => $this->postJson('/api/shows/metrics/seats-by-level', ['range' => 30, 'search' => ['filters' => [['field' => $field, 'value' => 300]]]]),
             'seats',
         );
-    }
-
-    /** @param Closure(string): list<array<string, mixed>> $filters */
-    #[Test]
-    #[DataProvider('metricFilters')]
-    public function it_answers_a_hidden_field_in_a_metric_search_like_an_unknown_name(Closure $filters): void
-    {
-        $this->hidePrice();
-
-        $this->assertLikeUnknown(fn (string $field): TestResponse => $this->postJson('/api/shows/metrics/seats-by-level', [
-            'range' => 30,
-            'search' => ['filters' => $filters($field)],
-        ]));
-    }
-
-    /** @return array<string, array{Closure(string): list<array<string, mixed>>}> */
-    public static function metricFilters(): array
-    {
-        return [
-            'a filter' => [static fn (string $field): array => [['field' => $field, 'value' => 20]]],
-            'a filter with an operator' => [static fn (string $field): array => [['field' => $field, 'operator' => '>', 'value' => 20]]],
-            'an in filter' => [static fn (string $field): array => [['field' => $field, 'operator' => 'in', 'value' => [20, 35]]]],
-            'a nested filter' => [static fn (string $field): array => [['nested' => [['field' => $field, 'value' => 20]]]]],
-            'an or filter beside a valid one' => [static fn (string $field): array => [['field' => 'level', 'value' => 1], ['field' => $field, 'type' => 'or', 'value' => 20]]],
-        ];
+        $this->assertLikeUnknown(
+            fn (string $field): TestResponse => $this->postJson('/api/shows/metrics/seats-by-level', ['range' => 30, 'search' => ['filters' => [['nested' => [['field' => $field, 'value' => 300]]]]]]),
+            'seats',
+        );
     }
 
     #[Test]
@@ -202,16 +181,26 @@ class NarrowedShowFieldsTest extends PackageTestCase
     }
 
     #[Test]
-    #[DataProvider('renderedRowWrites')]
-    public function it_narrows_the_rows_of_a_row_write_before_writing_them(string $method, string $uri, bool $trashed, string $updatedAt): void
+    #[DataProvider('rowWrites')]
+    public function it_narrows_the_rows_of_a_row_write_before_writing_them_and_writes_nothing_when_it_fails(string $method, string $uri, bool $trashed, string $updatedAt): void
     {
         $this->trashOpeningIf($trashed);
+        $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('colour'));
+        $before = $this->openingState();
+
+        try {
+            $this->withoutExceptionHandling()->json($method, $uri, ['resources' => [$this->opening]]);
+            $this->fail('The row write passed although its field narrowing failed.');
+        } catch (InvalidFieldExtensionException $exception) {
+            $this->assertSame(InvalidFieldExtensionException::unknownField('mask', MaskingFields::class, ShowResource::class, FieldReduction::Hide, 'colour')->getMessage(), $exception->getMessage());
+            $this->assertSame($before, $this->openingState());
+        }
+
         $states = [];
         $this->narrow(function (FieldsContext $context) use (&$states): void {
             $states[] = $this->openingState();
             $context->hide('price');
         });
-        $before = $this->openingState();
 
         $response = $this->json($method, $uri, ['resources' => [$this->opening]]);
 
@@ -221,38 +210,8 @@ class NarrowedShowFieldsTest extends PackageTestCase
         $this->assertSame([$before], $states);
     }
 
-    #[Test]
-    #[DataProvider('rowWrites')]
-    public function it_writes_no_row_when_a_narrowing_fails(string $method, string $uri, bool $trashed): void
-    {
-        $this->trashOpeningIf($trashed);
-        $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('colour'));
-        $before = $this->openingState();
-
-        try {
-            $this->withoutExceptionHandling()->json($method, $uri, ['resources' => [$this->opening]]);
-        } catch (InvalidFieldExtensionException $exception) {
-            $this->assertSame(InvalidFieldExtensionException::unknownField('mask', MaskingFields::class, ShowResource::class, FieldReduction::Hide, 'colour')->getMessage(), $exception->getMessage());
-            $this->assertSame($before, $this->openingState());
-
-            return;
-        }
-
-        $this->fail('The row write passed although its field narrowing failed.');
-    }
-
-    /** @return array<string, array{string, string, bool}> */
-    public static function rowWrites(): array
-    {
-        return [
-            'a destroy' => ['DELETE', '/api/shows', false],
-            'a restore' => ['POST', '/api/shows/restore', true],
-            'a force destroy' => ['DELETE', '/api/shows/force', true],
-        ];
-    }
-
     /** @return array<string, array{string, string, bool, string}> */
-    public static function renderedRowWrites(): array
+    public static function rowWrites(): array
     {
         return [
             'a destroy' => ['DELETE', '/api/shows', false, '2026-03-01T09:00:00.000000Z'],

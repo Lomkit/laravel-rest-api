@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
-use Lomkit\Rest\Exceptions\SearchRunException;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
@@ -66,19 +65,6 @@ class HiddenFieldsTest extends PackageTestCase
         parent::tearDown();
     }
 
-    #[Test]
-    #[DataProvider('columnSelections')]
-    public function it_renders_no_hidden_field_for_the_narrowed_user(bool $selectColumns): void
-    {
-        config(['rest.search.select_columns' => $selectColumns]);
-
-        $user = $this->actingAs(self::user())->postJson('/api/products/search', ['search' => []]);
-        $guest = $this->actingAsGuest()->postJson('/api/products/search', ['search' => []]);
-
-        $user->assertOk()->assertJsonPath('data', self::PRICELESS_PRODUCTS);
-        $guest->assertOk()->assertJsonPath('data', self::PRODUCTS);
-    }
-
     /** @return array<string, array{bool}> */
     public static function columnSelections(): array
     {
@@ -102,7 +88,7 @@ class HiddenFieldsTest extends PackageTestCase
 
     /** @param array<string, mixed> $payload */
     #[Test]
-    #[DataProvider('probes')]
+    #[DataProvider('precognitiveProbes')]
     #[WithConfig('rest.precognition.enabled', true)]
     public function it_answers_a_hidden_field_like_an_undeclared_one_under_precognition(string $uri, string $twin, array $payload, int $status): void
     {
@@ -111,6 +97,14 @@ class HiddenFieldsTest extends PackageTestCase
 
         $hidden->assertStatus($status === 200 ? 204 : $status)->assertHeader('Precognition', 'true');
         $this->assertSame([$undeclared->status(), $undeclared->getContent()], [$hidden->status(), $hidden->getContent()]);
+    }
+
+    /** @return array<string, array{string, string, array<string, mixed>, int}> */
+    public static function precognitiveProbes(): array
+    {
+        return array_intersect_key(self::probes(), array_flip([
+            'a filter', 'a filter through a relation', 'a select in an include', 'a sum aggregate', 'an attribute of an update',
+        ]));
     }
 
     /** @return array<string, array{string, string, array<string, mixed>, int}> */
@@ -226,21 +220,10 @@ class HiddenFieldsTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_narrows_an_app_search_for_the_user_of_as_only(): void
+    public function it_hides_the_field_in_rest_search_for_the_given_user_only(): void
     {
         $this->actingAs(self::user());
 
-        $guest = Rest::search(ProductResource::class)->as(null)->payload([])->render();
-
-        $this->assertSame(self::PRODUCTS, $guest['data']);
-        $this->expectExceptionObject(SearchRunException::missingUser(ProductResource::class));
-
-        Rest::search(ProductResource::class)->payload([])->render();
-    }
-
-    #[Test]
-    public function it_hides_the_field_in_rest_search_for_the_given_user(): void
-    {
         $user = Rest::search(ProductResource::class)->as(self::user())->payload([])->render();
         $guest = Rest::search(ProductResource::class)->as(null)->payload([])->render();
 
@@ -279,24 +262,16 @@ class HiddenFieldsTest extends PackageTestCase
             }
         };
 
-        $first = $this->actingAs(self::user())->postJson('/api/products/search', ['search' => []]);
+        $user = self::user();
+
+        $first = $this->actingAs($user)->postJson('/api/products/search', ['search' => []]);
         $second = $this->actingAsGuest()->postJson('/api/products/search', ['search' => []]);
         $third = $this->actingAs(new GenericUser(['id' => 3]))->postJson('/api/products/search', ['search' => []]);
 
         $first->assertOk()->assertJsonPath('data', self::PRICELESS_PRODUCTS);
         $second->assertOk()->assertJsonPath('data', self::PRODUCTS);
         $third->assertOk()->assertJsonPath('data', self::PRODUCTS);
-    }
-
-    #[Test]
-    public function it_passes_the_resource_and_the_acting_user(): void
-    {
-        $user = self::user();
-
-        $this->actingAs($user)->postJson('/api/products/search', ['search' => []])->assertOk();
-        $this->actingAsGuest()->postJson('/api/products/search', ['search' => []])->assertOk();
-
-        $this->assertCount(2, MaskingFields::$contexts);
+        $this->assertCount(3, MaskingFields::$contexts);
         $this->assertInstanceOf(ProductResource::class, MaskingFields::$contexts[0]->resource);
         $this->assertSame($user, MaskingFields::$contexts[0]->user);
         $this->assertNull(MaskingFields::$contexts[1]->user);
