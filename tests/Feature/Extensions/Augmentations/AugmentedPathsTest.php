@@ -15,7 +15,7 @@ use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['flag' => FlagExtension::class])]
+#[WithConfig('rest.extensions', [FlagExtension::class])]
 class AugmentedPathsTest extends PackageTestCase
 {
     use CapturesQueries;

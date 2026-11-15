@@ -12,6 +12,12 @@ final class ArchiveInstructionsExtension extends Extension implements DeclaresIn
     private static ?MarkedInstruction $shared = null;
 
     #[\Override]
+    public static function name(): string
+    {
+        return 'arc';
+    }
+
+    #[\Override]
     public function instructions(InstructionsContext $context): array
     {
         $shared = self::$shared ??= new MarkedInstruction;

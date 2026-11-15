@@ -28,6 +28,12 @@ final class HiddenRowsExtension extends Extension implements RestrictsQueries
     ];
 
     #[\Override]
+    public static function name(): string
+    {
+        return 'hidden';
+    }
+
+    #[\Override]
     public function restrict(RestrictionContext $context): void
     {
         RestrictionLog::$seen[] = class_basename($context->resource).' '.self::identify($context->user?->getAuthIdentifier());

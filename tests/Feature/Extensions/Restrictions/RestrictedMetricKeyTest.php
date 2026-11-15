@@ -32,7 +32,7 @@ class RestrictedMetricKeyTest extends SalesTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['team' => ConfiguredTeamExtension::class])]
+    #[WithConfig('rest.extensions', [ConfiguredTeamExtension::class])]
     public function it_keeps_a_user_result_of_each_restriction_apart(): void
     {
         $contents = [];
@@ -51,7 +51,7 @@ class RestrictedMetricKeyTest extends SalesTestCase
     public function it_keeps_the_key_of_a_metric_that_no_restriction_reaches(): void
     {
         $this->actingAs(new GenericUser(['id' => 1]))->postJson('/metric-orders/metrics/order-count')->assertOk();
-        config(['rest.extensions' => ['elsewhere' => ElsewhereRestriction::class]]);
+        config(['rest.extensions' => [ElsewhereRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 1]))->postJson('/metric-orders/metrics/order-count')->assertOk();
 
         $this->assertCount(2, $this->keys);

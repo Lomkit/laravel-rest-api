@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 
 final class ConfiguredTeamExtension extends Extension implements RestrictsQueries
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'team';
+    }
+
     public function __construct(private readonly Repository $config) {}
 
     #[\Override]

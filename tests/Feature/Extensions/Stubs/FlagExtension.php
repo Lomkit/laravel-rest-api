@@ -12,6 +12,12 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 final class FlagExtension extends Extension implements AugmentsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'flag';
+    }
+
+    #[\Override]
     public function augment(AugmentationContext $context): void
     {
         AugmentationLog::$gates[] = class_basename($context->resource).' ['.implode(', ', $context->gates).']';

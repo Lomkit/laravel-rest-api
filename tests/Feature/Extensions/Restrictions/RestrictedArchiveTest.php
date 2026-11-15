@@ -18,7 +18,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['hidden' => HiddenRowsExtension::class])]
+#[WithConfig('rest.extensions', [HiddenRowsExtension::class])]
 class RestrictedArchiveTest extends PackageTestCase
 {
     use AssertsExactErrors;

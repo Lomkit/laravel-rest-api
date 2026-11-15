@@ -19,6 +19,12 @@ final class TicketQueryExtension extends Extension implements AugmentsQueries, D
     public array $aliases = [];
 
     #[\Override]
+    public static function name(): string
+    {
+        return 'tickets';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === TicketDeskResource::class;

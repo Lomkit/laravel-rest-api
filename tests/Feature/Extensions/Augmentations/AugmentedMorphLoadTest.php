@@ -13,7 +13,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['first' => FirstAugmentation::class])]
+#[WithConfig('rest.extensions', [FirstAugmentation::class])]
 class AugmentedMorphLoadTest extends MorphTargetsTestCase
 {
     use CapturesQueries;

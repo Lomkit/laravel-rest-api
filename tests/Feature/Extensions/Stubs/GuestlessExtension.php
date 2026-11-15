@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 final class GuestlessExtension extends Extension implements RestrictsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'guestless';
+    }
+
+    #[\Override]
     public function restrict(RestrictionContext $context): void
     {
         if ($context->user === null) {

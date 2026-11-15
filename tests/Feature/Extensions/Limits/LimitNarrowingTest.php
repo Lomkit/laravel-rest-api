@@ -157,7 +157,7 @@ class LimitNarrowingTest extends PackageTestCase
         SecondNarrowing::$narrow = static function (LimitsContext $context) use (&$seen): void {
             $seen[] = ['second', ...self::values($context->declared)];
         };
-        config(['rest.extensions' => ['first' => FirstNarrowing::class, 'second' => SecondNarrowing::class]]);
+        config(['rest.extensions' => [FirstNarrowing::class, SecondNarrowing::class]]);
 
         $this->context()->resource(CappedBookLimitsResource::class)->definition()->limits();
 
@@ -175,7 +175,7 @@ class LimitNarrowingTest extends PackageTestCase
         $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->resource->definition()->limits());
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
     public function it_gives_the_same_limits_in_any_extension_order(array $extensions): void
@@ -196,12 +196,12 @@ class LimitNarrowingTest extends PackageTestCase
         $this->assertSame([[1, 10], 10, 1, 40], self::values($limits));
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>}> */
     public static function orders(): array
     {
         return [
-            'in name order' => [['first' => FirstNarrowing::class, 'second' => SecondNarrowing::class]],
-            'in reverse order' => [['second' => SecondNarrowing::class, 'first' => FirstNarrowing::class]],
+            'in name order' => [[FirstNarrowing::class, SecondNarrowing::class]],
+            'in reverse order' => [[SecondNarrowing::class, FirstNarrowing::class]],
         ];
     }
 
@@ -210,7 +210,7 @@ class LimitNarrowingTest extends PackageTestCase
     {
         if ($narrow !== null) {
             FirstNarrowing::$narrow = $narrow;
-            config(['rest.extensions' => ['first' => FirstNarrowing::class]]);
+            config(['rest.extensions' => [FirstNarrowing::class]]);
         }
 
         return $this->context()->resource($resource)->definition()->limits();

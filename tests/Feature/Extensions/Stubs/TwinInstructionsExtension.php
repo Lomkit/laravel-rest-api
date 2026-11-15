@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\DeclaresInstructions;
 final class TwinInstructionsExtension extends Extension implements DeclaresInstructions
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'arc';
+    }
+
+    #[\Override]
     public function instructions(InstructionsContext $context): array
     {
         return [WithArchivedInstruction::class, WithArchivedInstruction::make()];

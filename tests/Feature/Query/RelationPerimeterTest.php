@@ -92,7 +92,7 @@ class RelationPerimeterTest extends PackageTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['hidden' => HiddenRowsExtension::class])]
+    #[WithConfig('rest.extensions', [HiddenRowsExtension::class])]
     public function it_applies_the_restrictions_after_an_overridden_perimeter(): void
     {
         $this->seedPopularPost();

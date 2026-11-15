@@ -8,7 +8,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstNarrowing;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['plan' => FirstNarrowing::class])]
+#[WithConfig('rest.extensions', [FirstNarrowing::class])]
 class NarrowedLimitsDocumentTest extends DocumentationTestCase
 {
     /** @var list<?int> */

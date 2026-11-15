@@ -8,7 +8,7 @@ use Lomkit\Rest\Tests\Fixtures\Festival\ProgramExtension;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['program' => ProgramExtension::class])]
+#[WithConfig('rest.extensions', [ProgramExtension::class])]
 class ExtensionContractTest extends DocumentationTestCase
 {
     #[\Override]

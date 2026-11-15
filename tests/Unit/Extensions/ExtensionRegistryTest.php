@@ -114,9 +114,9 @@ final class ExtensionRegistryTest extends TestCase
     #[Test]
     public function it_gives_config_extensions_in_name_order(): void
     {
-        $registry = ExtensionRegistry::of(['zeta' => NotingExtension::class, 'alpha' => BothKindsExtension::class], [], new IlluminateContainer);
+        $registry = ExtensionRegistry::of([NotingExtension::class, BothKindsExtension::class], [], [], new IlluminateContainer);
 
-        $this->assertSame(['alpha', 'zeta'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
+        $this->assertSame(['both', 'noting'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
         $this->assertSame([NotingExtension::class, BothKindsExtension::class], ExtensionLog::$built);
     }
 

@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 final class OtherTeamsExtension extends Extension implements RestrictsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'teams';
+    }
+
+    #[\Override]
     public function restrict(RestrictionContext $context): void
     {
         $context->query->where($context->query->qualifyColumn('team_id'), '!=', $context->user?->getAuthIdentifier() ?? 0);

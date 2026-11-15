@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 final class WideningExtension extends Extension implements RestrictsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'wide';
+    }
+
+    #[\Override]
     public function restrict(RestrictionContext $context): void
     {
         $context->query->orWhere($context->query->qualifyColumn('last_name'), '!=', 'Concealed');

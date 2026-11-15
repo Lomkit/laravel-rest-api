@@ -35,7 +35,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     #[DataProvider('drivers')]
     public function it_refuses_a_text_search_through_an_engine_that_a_restriction_does_not_reach(string $driver): void
     {
-        config(['scout.driver' => $driver, 'rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        config(['scout.driver' => $driver, 'rest.extensions' => [HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['hidden']));
@@ -46,7 +46,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     #[Test]
     public function it_refuses_an_action_on_the_results_of_such_a_search(): void
     {
-        config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        config(['rest.extensions' => [HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['hidden']));
@@ -66,7 +66,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     #[Test]
     public function it_still_searches_without_text_on_a_restricted_resource(): void
     {
-        config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        config(['rest.extensions' => [HiddenRowsExtension::class]]);
 
         $response = $this->search('vouchers', ['filters' => [['field' => 'title', 'value' => 'Budget']]]);
 
@@ -77,7 +77,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     #[Test]
     public function it_still_searches_text_with_an_extension_of_another_kind(): void
     {
-        config(['rest.extensions' => ['noting' => NotingExtension::class]]);
+        config(['rest.extensions' => [NotingExtension::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 

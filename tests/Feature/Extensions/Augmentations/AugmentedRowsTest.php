@@ -18,9 +18,15 @@ use Lomkit\Rest\Tests\Concerns\CapturesQueries;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentationLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DoubleUnderscoreAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentation;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentationNamedA;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentationNamedB;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FlagExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LongNamedAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentation;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentationNamedA;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentationNamedB;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathAuthorController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathAuthorResource;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathPostController;
@@ -75,7 +81,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_adds_columns_subqueries_and_eager_loads_to_the_rendered_rows(): void
     {
-        config(['rest.extensions' => ['flag' => FlagExtension::class]]);
+        config(['rest.extensions' => [FlagExtension::class]]);
         $this->captureQueries();
 
         $this->postJson('/path-authors/search', ['search' => ['selects' => [['field' => 'first_name']]]])->assertOk();
@@ -94,7 +100,7 @@ class AugmentedRowsTest extends PackageTestCase
     {
         config(['rest.search.select_columns' => $columns]);
         $plain = $this->postJson('/path-authors/search', ['search' => $search])->assertOk()->getContent();
-        config(['rest.extensions' => ['flag' => FlagExtension::class]]);
+        config(['rest.extensions' => [FlagExtension::class]]);
 
         $augmented = $this->postJson('/path-authors/search', ['search' => $search])->assertOk()->getContent();
 
@@ -117,7 +123,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_gives_the_gate_the_rows_that_carry_the_added_columns(): void
     {
-        config(['rest.extensions' => ['flag' => FlagExtension::class]]);
+        config(['rest.extensions' => [FlagExtension::class]]);
         $seen = [];
         Gate::before(function (?Authenticatable $user, string $ability, array $arguments) use (&$seen): ?bool {
             $row = $arguments[0] ?? null;
@@ -145,7 +151,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_gives_the_rendered_row_gates_of_each_level(): void
     {
-        config(['rest.extensions' => ['flag' => FlagExtension::class]]);
+        config(['rest.extensions' => [FlagExtension::class]]);
 
         $this->postJson('/path-authors/search', ['search' => [
             'gates' => ['create', 'update'],
@@ -158,7 +164,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_keeps_the_include_on_a_relation_name_clash(): void
     {
-        config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
+        config(['rest.extensions' => [FirstAugmentation::class]]);
         FirstAugmentation::$augment = static function (AugmentationContext $context): void {
             if ($context->resource instanceof PathAuthorResource) {
                 $context->with('posts');
@@ -175,7 +181,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_loads_a_relation_that_the_client_includes_by_alias_only(): void
     {
-        config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
+        config(['rest.extensions' => [FirstAugmentation::class]]);
         FirstAugmentation::$augment = static function (AugmentationContext $context): void {
             if ($context->resource instanceof PathAuthorResource) {
                 $context->with('posts');
@@ -206,7 +212,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[DataProvider('lateCalls')]
     public function it_refuses_an_addition_after_the_augmentation(Closure $call, string $method): void
     {
-        config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
+        config(['rest.extensions' => [FirstAugmentation::class]]);
         $kept = null;
         FirstAugmentation::$augment = static function (AugmentationContext $context) use (&$kept): void {
             $kept = $context;
@@ -232,7 +238,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_refuses_a_column_added_while_a_relation_loads(): void
     {
-        config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
+        config(['rest.extensions' => [FirstAugmentation::class]]);
         FirstAugmentation::$augment = static function (AugmentationContext $context): void {
             if ($context->resource instanceof PathAuthorResource) {
                 $context->with('posts', static function () use ($context): void {
@@ -247,7 +253,7 @@ class AugmentedRowsTest extends PackageTestCase
         $this->postJson('/path-authors/search', ['search' => []]);
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
     public function it_keeps_a_parent_constraint_of_a_nested_load_in_any_order(array $extensions): void
@@ -270,19 +276,19 @@ class AugmentedRowsTest extends PackageTestCase
         $this->assertSame([['select * from posts where posts.author_id in (1, 2) and title = ?', ['Notes']]], $this->readsOf('posts'));
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>}> */
     public static function orders(): array
     {
         return [
-            'the constraint first' => [['a' => FirstAugmentation::class, 'b' => SecondAugmentation::class]],
-            'the nested load first' => [['a' => SecondAugmentation::class, 'b' => FirstAugmentation::class]],
+            'the constraint first' => [[FirstAugmentationNamedA::class, SecondAugmentationNamedB::class]],
+            'the nested load first' => [[SecondAugmentationNamedA::class, FirstAugmentationNamedB::class]],
         ];
     }
 
     #[Test]
     public function it_selects_the_parent_keys_of_an_eager_load(): void
     {
-        config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
+        config(['rest.extensions' => [FirstAugmentation::class]]);
         FirstAugmentation::$augment = static function (AugmentationContext $context): void {
             $context->with('author');
         };
@@ -320,7 +326,7 @@ class AugmentedRowsTest extends PackageTestCase
     public function it_refuses_an_alias_too_long_with_its_prefix(): void
     {
         $name = str_repeat('n', 32);
-        config(['rest.extensions' => [$name => FirstAugmentation::class]]);
+        config(['rest.extensions' => [LongNamedAugmentation::class]]);
         FirstAugmentation::$augment = static function (AugmentationContext $context): void {
             AugmentationLog::$aliases[] = $context->select(str_repeat('a', 29), static function (Builder $query): void {
                 $query->selectRaw('1');
@@ -355,16 +361,16 @@ class AugmentedRowsTest extends PackageTestCase
         $exception = InvalidQueryExtensionException::aliasRepeated('first', 'first__total', PathAuthorResource::class);
 
         $this->assertSame('The [first] extension selects [first__total] twice in the rows of '.PathAuthorResource::class.'. Give each select() its own alias.', $exception->getMessage());
-        $this->assertTrue($exception->namesExtension('first'));
+        $this->assertTrue($exception->concerns('first'));
     }
 
     #[Test]
     public function it_refuses_an_extension_name_that_would_reach_the_alias_of_another(): void
     {
-        config(['rest.extensions' => ['a__b' => FirstAugmentation::class, 'a' => SecondAugmentation::class]]);
+        config(['rest.extensions' => [DoubleUnderscoreAugmentation::class, SecondAugmentationNamedA::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidExtensionException::invalidName('a__b'));
+        $this->expectExceptionObject(InvalidExtensionException::invalidName(DoubleUnderscoreAugmentation::class, 'a__b'));
 
         $this->postJson('/path-authors/search', ['search' => []]);
     }
@@ -379,7 +385,7 @@ class AugmentedRowsTest extends PackageTestCase
     public function it_refuses_an_alias_that_names_a_field(): void
     {
         Rest::resource('alias-field-authors', AliasFieldAuthorController::class)->register();
-        config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
+        config(['rest.extensions' => [FirstAugmentation::class]]);
         FirstAugmentation::$augment = static fn (AugmentationContext $context): string => $context->select('total', Post::query()->selectRaw('1'));
         $this->withoutExceptionHandling();
 
@@ -419,7 +425,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[Test]
     public function it_refuses_a_relation_loaded_twice(): void
     {
-        config(['rest.extensions' => ['b' => SecondAugmentation::class, 'a' => FirstAugmentation::class]]);
+        config(['rest.extensions' => [SecondAugmentationNamedB::class, FirstAugmentationNamedA::class]]);
         FirstAugmentation::$augment = static fn (AugmentationContext $context): mixed => $context->with('drafts');
         SecondAugmentation::$augment = static fn (AugmentationContext $context): mixed => $context->with('drafts');
         $this->withoutExceptionHandling();
@@ -447,7 +453,7 @@ class AugmentedRowsTest extends PackageTestCase
         $exception = InvalidQueryExtensionException::relationRepeated('first', 'drafts', PathAuthorResource::class);
 
         $this->assertSame('The [first] extension eager loads [drafts] on '.PathAuthorResource::class.' twice. Call with() once for each relation.', $exception->getMessage());
-        $this->assertTrue($exception->namesExtension('first'));
+        $this->assertTrue($exception->concerns('first'));
     }
 
     /** @param Closure(EloquentBuilder<Author>): mixed $change */
@@ -469,7 +475,7 @@ class AugmentedRowsTest extends PackageTestCase
         ];
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('pairs')]
     public function it_gives_the_same_rows_and_sql_in_any_extension_order(array $extensions): void
@@ -494,12 +500,12 @@ class AugmentedRowsTest extends PackageTestCase
         ]], $this->readsOf('authors'));
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>}> */
     public static function pairs(): array
     {
         return [
-            'in name order' => [['a' => FirstAugmentation::class, 'b' => SecondAugmentation::class]],
-            'in reverse order' => [['b' => SecondAugmentation::class, 'a' => FirstAugmentation::class]],
+            'in name order' => [[FirstAugmentationNamedA::class, SecondAugmentationNamedB::class]],
+            'in reverse order' => [[SecondAugmentationNamedB::class, FirstAugmentationNamedA::class]],
         ];
     }
 
@@ -516,7 +522,7 @@ class AugmentedRowsTest extends PackageTestCase
 
     private function expectRefusal(Closure $augment, InvalidQueryExtensionException $exception): void
     {
-        config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
+        config(['rest.extensions' => [FirstAugmentation::class]]);
         FirstAugmentation::$augment = $augment;
         $this->withoutExceptionHandling();
 

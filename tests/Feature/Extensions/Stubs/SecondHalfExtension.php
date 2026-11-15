@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 final class SecondHalfExtension extends Extension implements RestrictsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'half_b';
+    }
+
+    #[\Override]
     public function restrict(RestrictionContext $context): void
     {
         $context->query->where($context->query->qualifyColumn('id'), '!=', 3);

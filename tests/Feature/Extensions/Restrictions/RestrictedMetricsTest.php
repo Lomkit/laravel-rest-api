@@ -14,7 +14,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
 #[WithConfig('cache.serializable_classes', false)]
-#[WithConfig('rest.extensions', ['teams' => OtherTeamsExtension::class])]
+#[WithConfig('rest.extensions', [OtherTeamsExtension::class])]
 class RestrictedMetricsTest extends SalesTestCase
 {
     #[\Override]

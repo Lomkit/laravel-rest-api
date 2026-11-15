@@ -13,6 +13,12 @@ final class ProgramExtension extends Extension implements DeclaresInstructions, 
     public static bool $instances = false;
 
     #[\Override]
+    public static function name(): string
+    {
+        return 'program';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === ShowResource::class;

@@ -73,7 +73,7 @@ class RestrictionGroupsTest extends PackageTestCase
     #[Test]
     public function it_keeps_an_or_where_of_a_restriction_inside_its_group(): void
     {
-        config(['rest.extensions' => ['wide' => WideningExtension::class]]);
+        config(['rest.extensions' => [WideningExtension::class]]);
         $this->captureQueries();
 
         $response = $this->postJson('/path-authors/search', ['search' => ['selects' => [['field' => 'id']]]]);
@@ -85,7 +85,7 @@ class RestrictionGroupsTest extends PackageTestCase
     #[Test]
     public function it_passes_a_guest_as_null(): void
     {
-        config(['rest.extensions' => ['guestless' => GuestlessExtension::class]]);
+        config(['rest.extensions' => [GuestlessExtension::class]]);
 
         $guest = $this->postJson('/restricted-authors/search', ['search' => ['selects' => [['field' => 'id']]]]);
         $user = $this->actingAs(new GenericUser(['id' => 1]))->postJson('/restricted-authors/search', ['search' => ['selects' => [['field' => 'id']]]]);
@@ -97,7 +97,7 @@ class RestrictionGroupsTest extends PackageTestCase
     #[Test]
     public function it_passes_the_acting_user_as_is(): void
     {
-        config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        config(['rest.extensions' => [HiddenRowsExtension::class]]);
         $requester = new GenericUser(['id' => 5]);
         $searcher = new GenericUser(['id' => 6]);
 
@@ -112,14 +112,14 @@ class RestrictionGroupsTest extends PackageTestCase
     #[Test]
     public function it_restricts_a_resource_marked_without_perimeter(): void
     {
-        config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        config(['rest.extensions' => [HiddenRowsExtension::class]]);
 
         $response = $this->postJson('/api/books/search', ['search' => []]);
 
         $response->assertOk()->assertJsonPath('data.*.id', [3, 1]);
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
     public function it_gives_the_same_rows_and_sql_in_any_extension_order(array $extensions): void
@@ -133,19 +133,19 @@ class RestrictionGroupsTest extends PackageTestCase
         $this->assertSame([[sprintf(self::ROOT, '((authors.id != ?) and (authors.id != ?)) and '), [1, 3]]], $this->readsOf('authors'));
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>}> */
     public static function orders(): array
     {
         return [
-            'in name order' => [['half_a' => FirstHalfExtension::class, 'half_b' => SecondHalfExtension::class]],
-            'in reverse order' => [['half_b' => SecondHalfExtension::class, 'half_a' => FirstHalfExtension::class]],
+            'in name order' => [[FirstHalfExtension::class, SecondHalfExtension::class]],
+            'in reverse order' => [[SecondHalfExtension::class, FirstHalfExtension::class]],
         ];
     }
 
     #[Test]
     public function it_adds_no_group_for_an_extension_of_another_kind(): void
     {
-        config(['rest.extensions' => ['noting' => NotingExtension::class]]);
+        config(['rest.extensions' => [NotingExtension::class]]);
         $this->captureQueries();
 
         $this->postJson('/restricted-authors/search', ['search' => ['selects' => [['field' => 'id']]]])->assertOk();
@@ -157,7 +157,7 @@ class RestrictionGroupsTest extends PackageTestCase
     #[Test]
     public function it_accepts_a_restriction_through_another_table(): void
     {
-        config(['rest.extensions' => ['claused' => ClausedExtension::class]]);
+        config(['rest.extensions' => [ClausedExtension::class]]);
         ClausedExtension::$clause = static fn (Builder $query): Builder => $query->whereHas('posts', static fn (Builder $posts): Builder => $posts->where('title', 'Notes'));
 
         $response = $this->postJson('/restricted-authors/search', ['search' => ['selects' => [['field' => 'id']]]]);

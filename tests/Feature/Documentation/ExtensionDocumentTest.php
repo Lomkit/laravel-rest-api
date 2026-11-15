@@ -7,7 +7,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['program' => ProgramExtension::class])]
+#[WithConfig('rest.extensions', [ProgramExtension::class])]
 class ExtensionDocumentTest extends DocumentationTestCase
 {
     private const string INSTRUCTION = '{"type":"object","properties":{"name":{"type":"string","const":"program.only-headliners"},"alias":{"type":"string","description":"The key of this entry among the instructions of the search, in place of the instruction name. It lets a search send one instruction several times.","pattern":"^[A-Za-z_][A-Za-z0-9_]*$","maxLength":255},"fields":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","const":"min_seats"},"value":{"type":["integer","null"],"description":"Rules: nullable, integer"}},"required":["name"],"additionalProperties":false},"maxItems":100}},"required":["name"],"additionalProperties":false,"title":"ShowInstructionProgram.onlyHeadliners"}';

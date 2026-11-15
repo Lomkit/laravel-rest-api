@@ -13,6 +13,12 @@ final class FirstNarrowing extends Extension implements NarrowsLimits
     public static ?Closure $narrow = null;
 
     #[\Override]
+    public static function name(): string
+    {
+        return 'first';
+    }
+
+    #[\Override]
     public function narrowLimits(LimitsContext $context): void
     {
         if (self::$narrow !== null) {

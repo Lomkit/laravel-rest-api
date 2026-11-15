@@ -18,7 +18,9 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CollidingAuthorController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CollidingAuthorResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MarkedInstruction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MarkedInstructionsExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OneMarkedInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TwinInstructionsExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TwoMarkedInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WithArchivedInstruction;
 use Lomkit\Rest\Tests\Fixtures\Extensions\FailingExtension;
 use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorController;
@@ -49,7 +51,7 @@ class ExtensionInstructionsTest extends PackageTestCase
     {
         parent::setUp();
 
-        config(['rest.extensions' => ['arc' => ArchiveInstructionsExtension::class]]);
+        config(['rest.extensions' => [ArchiveInstructionsExtension::class]]);
         DB::table('authors')->insert([
             ['id' => 1, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'api_token' => 'token-1'],
             ['id' => 2, 'first_name' => 'Grace', 'last_name' => 'Hopper', 'api_token' => 'token-2'],
@@ -116,7 +118,7 @@ class ExtensionInstructionsTest extends PackageTestCase
     #[Test]
     public function it_refuses_two_instructions_of_one_extension_with_one_key(): void
     {
-        config(['rest.extensions' => ['arc' => TwinInstructionsExtension::class]]);
+        config(['rest.extensions' => [TwinInstructionsExtension::class]]);
 
         $this->expectExceptionObject(InvalidQueryExtensionException::instructionTaken('arc.with-archived', AuthorResource::class, ['arc', 'arc']));
 
@@ -151,7 +153,7 @@ class ExtensionInstructionsTest extends PackageTestCase
     public function it_gives_each_extension_its_own_copy_of_a_shared_instance(): void
     {
         $this->app?->singleton(MarkedInstruction::class);
-        config(['rest.extensions' => ['one' => MarkedInstructionsExtension::class, 'two' => MarkedInstructionsExtension::class]]);
+        config(['rest.extensions' => [OneMarkedInstructionsExtension::class, TwoMarkedInstructionsExtension::class]]);
 
         $response = $this->getJson('/api/posts?with=instructions');
 
@@ -159,7 +161,7 @@ class ExtensionInstructionsTest extends PackageTestCase
         $this->assertSame('marked', $this->app?->make(MarkedInstruction::class)->publicUriKey());
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
     public function it_lists_the_instructions_in_the_same_order_whatever_the_extension_order(array $extensions): void
@@ -171,12 +173,12 @@ class ExtensionInstructionsTest extends PackageTestCase
         $response->assertOk()->assertJsonPath('data.instructions.*.uriKey', ['highlight-posts', 'in-status', 'arc.marked', 'zed.marked']);
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>}> */
     public static function orders(): array
     {
         return [
-            'in name order' => [['arc' => ArchiveInstructionsExtension::class, 'zed' => MarkedInstructionsExtension::class]],
-            'in reverse order' => [['zed' => MarkedInstructionsExtension::class, 'arc' => ArchiveInstructionsExtension::class]],
+            'in name order' => [[ArchiveInstructionsExtension::class, MarkedInstructionsExtension::class]],
+            'in reverse order' => [[MarkedInstructionsExtension::class, ArchiveInstructionsExtension::class]],
         ];
     }
 
@@ -193,7 +195,7 @@ class ExtensionInstructionsTest extends PackageTestCase
     #[DataProvider('brokenEntries')]
     public function it_names_the_extension_of_an_entry_that_cannot_be_built(string $entry, InvalidQueryExtensionException $exception): void
     {
-        config(['rest.extensions' => ['arc' => BrokenInstructionsExtension::class]]);
+        config(['rest.extensions' => [BrokenInstructionsExtension::class]]);
         BrokenInstructionsExtension::$entry = $entry;
 
         $this->expectExceptionObject($exception);
@@ -205,20 +207,20 @@ class ExtensionInstructionsTest extends PackageTestCase
     public static function brokenEntries(): array
     {
         return [
-            'a class that is no instruction' => [AuthorResource::class, InvalidQueryExtensionException::instructionNotAnInstruction('arc', AuthorResource::class, AuthorResource::class)],
-            'the base instruction' => [Instruction::class, InvalidQueryExtensionException::instructionBaseListed('arc', AuthorResource::class)],
-            'an abstract instruction' => [AbstractInstruction::class, InvalidQueryExtensionException::instructionNotInstantiable('arc', AuthorResource::class, AbstractInstruction::class)],
+            'a class that is no instruction' => [AuthorResource::class, InvalidQueryExtensionException::instructionNotAnInstruction('broken', AuthorResource::class, AuthorResource::class)],
+            'the base instruction' => [Instruction::class, InvalidQueryExtensionException::instructionBaseListed('broken', AuthorResource::class)],
+            'an abstract instruction' => [AbstractInstruction::class, InvalidQueryExtensionException::instructionNotInstantiable('broken', AuthorResource::class, AbstractInstruction::class)],
         ];
     }
 
     #[Test]
     public function it_names_the_extension_of_an_instruction_bound_to_another_class(): void
     {
-        config(['rest.extensions' => ['arc' => BrokenInstructionsExtension::class]]);
+        config(['rest.extensions' => [BrokenInstructionsExtension::class]]);
         BrokenInstructionsExtension::$entry = MarkedInstruction::class;
         $this->app?->bind(MarkedInstruction::class, InStatus::class);
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::instructionForeignBinding('arc', AuthorResource::class, MarkedInstruction::class, InStatus::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::instructionForeignBinding('broken', AuthorResource::class, MarkedInstruction::class, InStatus::class));
 
         $this->context()->resource(AuthorResource::class)->definition()->instructions();
     }
@@ -228,7 +230,7 @@ class ExtensionInstructionsTest extends PackageTestCase
     {
         Rest::resource('colliding-authors', CollidingAuthorController::class)->register();
         BrokenInstructionsExtension::$entry = AbstractInstruction::class;
-        config(['rest.extensions' => ['arc' => ArchiveInstructionsExtension::class, 'broken' => BrokenInstructionsExtension::class]]);
+        config(['rest.extensions' => [ArchiveInstructionsExtension::class, BrokenInstructionsExtension::class]]);
 
         Artisan::call('rest:check', ['controllers' => [CollidingAuthorController::class, AuthorController::class], '--json' => true], $output = new BufferedOutput);
         $report = json_decode($output->fetch(), true);
@@ -259,7 +261,7 @@ class ExtensionInstructionsTest extends PackageTestCase
     public function it_leaves_an_extension_that_cannot_be_built_to_the_extensions_report_of_rest_check(): void
     {
         Rest::resource('colliding-authors', CollidingAuthorController::class)->register();
-        config(['rest.extensions' => ['failing' => FailingExtension::class]]);
+        config(['rest.extensions' => [FailingExtension::class]]);
 
         Artisan::call('rest:check', ['controllers' => [CollidingAuthorController::class], '--json' => true], $output = new BufferedOutput);
         $report = json_decode($output->fetch(), true);

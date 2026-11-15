@@ -18,7 +18,7 @@ use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['plan' => FirstNarrowing::class])]
+#[WithConfig('rest.extensions', [FirstNarrowing::class])]
 class NarrowedLimitsTest extends PackageTestCase
 {
     use AssertsExactErrors;

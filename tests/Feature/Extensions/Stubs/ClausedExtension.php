@@ -15,6 +15,12 @@ final class ClausedExtension extends Extension implements RestrictsQueries
     public static ?Closure $clause = null;
 
     #[\Override]
+    public static function name(): string
+    {
+        return 'claused';
+    }
+
+    #[\Override]
     public function restrict(RestrictionContext $context): void
     {
         if (self::$clause !== null) {

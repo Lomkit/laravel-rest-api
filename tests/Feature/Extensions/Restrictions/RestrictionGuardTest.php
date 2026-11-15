@@ -21,7 +21,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['claused' => ClausedExtension::class])]
+#[WithConfig('rest.extensions', [ClausedExtension::class])]
 class RestrictionGuardTest extends PackageTestCase
 {
     #[\Override]
@@ -127,6 +127,6 @@ class RestrictionGuardTest extends PackageTestCase
         $exception = InvalidQueryExtensionException::restrictionClause('claused', RestrictedAuthorResource::class, QueryPart::Join);
 
         $this->assertSame('The [claused] extension adds a join to the restriction of '.RestrictedAuthorResource::class.', which holds only where clauses. Restrict through another table with whereHas() or whereExists().', $exception->getMessage());
-        $this->assertTrue($exception->namesExtension('claused'));
+        $this->assertTrue($exception->concerns('claused'));
     }
 }

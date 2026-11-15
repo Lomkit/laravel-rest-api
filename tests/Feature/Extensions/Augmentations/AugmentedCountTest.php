@@ -19,7 +19,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['loans' => CopiesExtension::class])]
+#[WithConfig('rest.extensions', [CopiesExtension::class])]
 class AugmentedCountTest extends PackageTestCase
 {
     private const string GROUPED = 'from books inner join loans on loans.book_id = books.id group by books.id having count(loans.id) >= 2';
@@ -129,7 +129,7 @@ class AugmentedCountTest extends PackageTestCase
     #[Test]
     public function it_counts_nothing_more_when_no_extension_applies(): void
     {
-        config(['rest.extensions' => ['noting' => NotingExtension::class]]);
+        config(['rest.extensions' => [NotingExtension::class]]);
         DB::enableQueryLog();
 
         $this->postJson('/api/books/search', ['search' => ['selects' => [['field' => 'id']], 'limit' => 10]])->assertOk();

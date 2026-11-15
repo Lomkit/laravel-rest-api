@@ -13,7 +13,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
 #[Group('scout')]
-#[WithConfig('rest.extensions', ['first' => FirstAugmentation::class])]
+#[WithConfig('rest.extensions', [FirstAugmentation::class])]
 class AugmentedEngineRowsTest extends EngineSearchTestCase
 {
     #[\Override]

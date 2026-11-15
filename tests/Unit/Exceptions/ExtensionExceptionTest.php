@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Unit\Exceptions;
 use Lomkit\Rest\Exceptions\ExtensionException;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
+use Lomkit\Rest\Tests\Fixtures\Extensions\BadlyNamedExtension;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -31,14 +32,14 @@ class ExtensionExceptionTest extends TestCase
     public function it_names_the_extension_of_every_extension_exception(): void
     {
         $query = InvalidQueryExtensionException::invalidColumn('first', 'a b', 'App\Rest\PostResource');
-        $registry = InvalidExtensionException::invalidName('Bad');
+        $registry = InvalidExtensionException::invalidName(BadlyNamedExtension::class, 'Acl');
 
         $this->assertSame([true, true, true, true, false], [
             is_a($query, ExtensionException::class),
             is_a($registry, ExtensionException::class),
-            $query->namesExtension('first'),
-            $registry->namesExtension('Bad'),
-            $query->namesExtension('second'),
+            $query->concerns('first'),
+            $registry->concerns(BadlyNamedExtension::class),
+            $query->concerns('second'),
         ]);
     }
 }

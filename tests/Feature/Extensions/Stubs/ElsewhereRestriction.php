@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 final class ElsewhereRestriction extends Extension implements RestrictsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'elsewhere';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return false;

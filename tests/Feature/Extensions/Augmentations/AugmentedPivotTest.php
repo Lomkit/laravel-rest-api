@@ -14,7 +14,7 @@ use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['first' => FirstAugmentation::class])]
+#[WithConfig('rest.extensions', [FirstAugmentation::class])]
 class AugmentedPivotTest extends PackageTestCase
 {
     #[\Override]
