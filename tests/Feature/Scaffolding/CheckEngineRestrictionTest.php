@@ -98,7 +98,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
         [$exitCode, $rows] = $this->rows();
 
         $this->assertSame(1, $exitCode);
-        $this->assertSame([CheckedVoucherResource::class.': the [red] extension '.RedRowsExtension::class.' restricts its rows in SQL but does not implement RestrictsEngineQueries, and rest:check cannot resolve the text search or the Scout engine of the resource (Driver [missing] not supported.). A text search of '.CheckedVoucherResource::class.' is refused on an engine that does not apply SQL restrictions.'], $rows['problems']);
+        $this->assertSame(['The [red] extension '.RedRowsExtension::class.' restricts the rows of '.CheckedVoucherResource::class.' in SQL but does not implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries, and the text search or the Scout engine of '.CheckedVoucherResource::class.' cannot be resolved (Driver [missing] not supported.). A text search of '.CheckedVoucherResource::class.' is refused on an engine that does not apply SQL restrictions. Implement RestrictsEngineQueries in '.RedRowsExtension::class.' to restrict the engine search too, index the model with the Scout database driver, or leave '.CheckedVoucherResource::class.' out of the extension with appliesTo().'], $rows['problems']);
     }
 
     #[Test]
@@ -135,7 +135,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
 
         $this->assertSame(1, $exitCode);
         $this->assertSame(
-            [RouteBoundVoucherResource::class.': the [red] extension '.RedRowsExtension::class.' restricts its rows in SQL but does not implement RestrictsEngineQueries, and rest:check cannot resolve the text search or the Scout engine of the resource (text() needs the request route). A text search of '.RouteBoundVoucherResource::class.' is refused on an engine that does not apply SQL restrictions.'],
+            ['The [red] extension '.RedRowsExtension::class.' restricts the rows of '.RouteBoundVoucherResource::class.' in SQL but does not implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries, and the text search or the Scout engine of '.RouteBoundVoucherResource::class.' cannot be resolved (text() needs the request route). A text search of '.RouteBoundVoucherResource::class.' is refused on an engine that does not apply SQL restrictions. Implement RestrictsEngineQueries in '.RedRowsExtension::class.' to restrict the engine search too, index the model with the Scout database driver, or leave '.RouteBoundVoucherResource::class.' out of the extension with appliesTo().'],
             json_decode($output->fetch(), true)['rows']['problems'],
         );
     }

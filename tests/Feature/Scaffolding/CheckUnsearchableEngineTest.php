@@ -40,13 +40,13 @@ final class CheckUnsearchableEngineTest extends ScaffoldingTestCase
     {
         Route::prefix('api')->group(fn () => Rest::resource('indexed-books', IndexedBookController::class)->middleware('auth:sanctum')->register());
         config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
-        $reason = InvalidTextSearchException::unsearchableModel(IndexedBookResource::class, Book::class)->getMessage();
+        $reason = InvalidTextSearchException::unsearchableModel(IndexedBookResource::class, Book::class);
 
         $exitCode = Artisan::call('rest:check', ['controllers' => [IndexedBookController::class], '--json' => true], $output = new BufferedOutput);
 
         $this->assertSame(1, $exitCode);
         $this->assertSame(
-            [IndexedBookResource::class.': the [hidden] extension '.HiddenRowsExtension::class." restricts its rows in SQL but does not implement RestrictsEngineQueries, and rest:check cannot resolve the text search or the Scout engine of the resource ({$reason}). A text search of ".IndexedBookResource::class.' is refused on an engine that does not apply SQL restrictions.'],
+            ['The [hidden] extension '.HiddenRowsExtension::class.' restricts the rows of '.IndexedBookResource::class.' in SQL but does not implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries, and the text search or the Scout engine of '.IndexedBookResource::class." cannot be resolved ({$reason->getMessage()}). A text search of ".IndexedBookResource::class.' is refused on an engine that does not apply SQL restrictions. Implement RestrictsEngineQueries in '.HiddenRowsExtension::class.' to restrict the engine search too, index the model with the Scout database driver, or leave '.IndexedBookResource::class.' out of the extension with appliesTo().'],
             json_decode($output->fetch(), true)['rows']['problems'],
         );
     }

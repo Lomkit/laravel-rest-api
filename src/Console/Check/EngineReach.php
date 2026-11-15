@@ -39,7 +39,7 @@ final class EngineReach
 
             $profile = EngineProfiles::forTarget(TextTarget::of($resource));
         } catch (Throwable $exception) {
-            return $resource::class.": the [{$name}] extension {$class} restricts its rows in SQL but does not implement RestrictsEngineQueries, and rest:check cannot resolve the text search or the Scout engine of the resource ({$exception->getMessage()}). A text search of ".$resource::class.' is refused on an engine that does not apply SQL restrictions.';
+            return InvalidTextSearchException::unresolvedEngine($resource::class, $name, $class, $exception)->getMessage();
         }
 
         return $profile->appliesRowRestrictions() ? null : InvalidTextSearchException::unrestrictedEngine($resource::class, $name, $class, $profile->name())->getMessage();
