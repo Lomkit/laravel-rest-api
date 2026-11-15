@@ -60,7 +60,7 @@ final class DecisionPreparation
         $this->prepared = [];
     }
 
-    private function prepares(Resource $resource): bool
+    public function prepares(Resource $resource): bool
     {
         return self::hooked($resource) || $this->extensionsOf($resource) !== [];
     }
