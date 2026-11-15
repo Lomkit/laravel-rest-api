@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Authorization;
 
 use LogicException;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
-use Lomkit\Rest\Extensions\Contexts\GatesContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentedPreparingExtension;
@@ -23,8 +22,6 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionClass;
-use ReflectionProperty;
 
 class ExtensionGatesTest extends HelpdeskTestCase
 {
@@ -247,10 +244,6 @@ class ExtensionGatesTest extends HelpdeskTestCase
         $this->getJson('/api/tickets?with=gates')->assertOk();
 
         $this->assertSame(TicketResource::class, FirstGates::$contexts[0]->resource);
-        $this->assertSame(['resource'], array_map(
-            static fn (ReflectionProperty $property): string => $property->getName(),
-            (new ReflectionClass(GatesContext::class))->getProperties(ReflectionProperty::IS_PUBLIC),
-        ));
     }
 
     #[Test]

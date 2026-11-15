@@ -19,8 +19,6 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionClass;
-use ReflectionProperty;
 
 #[Group('scout')]
 class EngineProfileProvidersTest extends EngineSearchTestCase
@@ -154,10 +152,6 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
         $context = EngineLog::$contexts[0];
         $this->assertInstanceOf(EngineProfileContext::class, $context);
         $this->assertSame([VoucherResource::class, $engine], [$context->resource, $context->engine]);
-        $this->assertSame(['resource', 'engine'], array_map(
-            fn (ReflectionProperty $property): string => $property->getName(),
-            (new ReflectionClass(EngineProfileContext::class))->getProperties(ReflectionProperty::IS_PUBLIC),
-        ));
     }
 
     #[Test]

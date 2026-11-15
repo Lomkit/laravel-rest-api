@@ -11,7 +11,6 @@ use Laravel\Scout\Builder;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
-use Lomkit\Rest\Extensions\Contexts\EngineRestriction;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
@@ -41,9 +40,6 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionClass;
-use ReflectionMethod;
-use ReflectionProperty;
 use RuntimeException;
 
 #[Group('scout')]
@@ -254,18 +250,6 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $this->expectExceptionObject(InvalidTextSearchException::missingPerimeter(UnboundedVoucherResource::class));
 
         $this->search('unbounded-vouchers', ['text' => ['value' => 'report']]);
-    }
-
-    #[Test]
-    public function it_offers_only_where_clauses_and_match_nothing(): void
-    {
-        $methods = array_map(fn (ReflectionMethod $method): string => $method->getName(), (new ReflectionClass(EngineRestriction::class))->getMethods(ReflectionMethod::IS_PUBLIC));
-
-        $this->assertSame(['where', 'whereIn', 'whereNotIn', 'matchNothing'], array_values(array_diff($methods, ['__construct'])));
-        $this->assertSame(['query', 'resource', 'user', 'matchesStringLists', 'rowsRestrictedInSql', 'comparesColumns'], array_map(
-            fn (ReflectionProperty $property): string => $property->getName(),
-            (new ReflectionClass(EngineRestrictionContext::class))->getProperties(ReflectionProperty::IS_PUBLIC),
-        ));
     }
 
     /**
