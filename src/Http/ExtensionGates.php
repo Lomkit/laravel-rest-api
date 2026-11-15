@@ -13,7 +13,8 @@ final readonly class ExtensionGates
     /** @return list<DeclaredGateList> */
     public static function of(Resource $resource): array
     {
-        $extensions = $resource->context()->extensions()->applicable($resource::class, DeclaresGates::class);
+        $registry = $resource->context()->extensions();
+        $extensions = $registry->applicable($resource::class, DeclaresGates::class);
 
         if ($extensions === []) {
             return [];
@@ -23,9 +24,10 @@ final readonly class ExtensionGates
         $declared = [];
 
         foreach ($extensions as $name => $extension) {
+            $class = $registry->classOf($name);
             $declared[] = new DeclaredGateList(
                 $extension->gates($context),
-                static fn (int $index, mixed $gate): InvalidAuthorizationExtensionException => InvalidAuthorizationExtensionException::invalidGate($name, $extension::class, $resource::class, $index, $gate),
+                static fn (int $index, mixed $gate): InvalidAuthorizationExtensionException => InvalidAuthorizationExtensionException::invalidGate($name, $class, $resource::class, $index, $gate),
             );
         }
 

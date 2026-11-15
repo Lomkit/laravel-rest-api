@@ -292,19 +292,19 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     {
         yield 'a key with a dot' => [
             static fn (CacheContributionContext $context) => $context->put('tenant.id', 1),
-            InvalidAuthorizationExtensionException::invalidContextKey('acl', CachedTicketResource::class, 'tenant.id'),
+            InvalidAuthorizationExtensionException::invalidContextKey('acl', FirstCacheContext::class, CachedTicketResource::class, 'tenant.id'),
         ];
         yield 'a key of 65 characters' => [
             static fn (CacheContributionContext $context) => $context->put(str_repeat('a', 65), 1),
-            InvalidAuthorizationExtensionException::invalidContextKey('acl', CachedTicketResource::class, str_repeat('a', 65)),
+            InvalidAuthorizationExtensionException::invalidContextKey('acl', FirstCacheContext::class, CachedTicketResource::class, str_repeat('a', 65)),
         ];
         yield 'a float that is not finite' => [
             static fn (CacheContributionContext $context) => $context->put('weight', INF),
-            InvalidAuthorizationExtensionException::invalidContextValue('acl', CachedTicketResource::class, 'weight'),
+            InvalidAuthorizationExtensionException::invalidContextValue('acl', FirstCacheContext::class, CachedTicketResource::class, 'weight'),
         ];
         yield 'a duration of zero' => [
             static fn (CacheContributionContext $context) => $context->shorten('update', 0),
-            InvalidAuthorizationExtensionException::invalidCacheDuration('acl', CachedTicketResource::class, 'update', 0),
+            InvalidAuthorizationExtensionException::invalidCacheDuration('acl', FirstCacheContext::class, CachedTicketResource::class, 'update', 0),
         ];
     }
 
@@ -315,9 +315,46 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('rules', 'v1');
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::contextKeyTaken('acl', DottedContextTicketResource::class, 'acl.rules'));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::contextKeyTaken('acl', FirstCacheContext::class, DottedContextTicketResource::class, 'acl.rules'));
 
         $this->postJson('/dotted-context-tickets/search', self::SEARCH);
+    }
+
+    /**
+     * @param  Closure(CacheContributionContext): void  $contribute
+     * @param  Closure(): InvalidAuthorizationExtensionException  $expected
+     */
+    #[Test]
+    #[DataProvider('refusedContributions')]
+    public function it_names_the_registered_class_of_a_cache_context_extension_bound_to_a_subclass(string $uri, Closure $contribute, Closure $expected): void
+    {
+        config(['rest.extensions' => [FirstCacheContext::class]]);
+        $this->app?->bind(FirstCacheContext::class, static fn (): FirstCacheContext => new class extends FirstCacheContext {});
+        FirstCacheContext::$contribute = $contribute;
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->postJson($uri, self::SEARCH);
+            $this->fail('The contribution was accepted.');
+        } catch (InvalidAuthorizationExtensionException $exception) {
+            $this->assertSame($expected()->getMessage(), $exception->getMessage());
+            $this->assertTrue($exception->concerns(FirstCacheContext::class));
+        }
+    }
+
+    /** @return iterable<string, array{string, Closure(CacheContributionContext): void, Closure(): InvalidAuthorizationExtensionException}> */
+    public static function refusedContributions(): iterable
+    {
+        yield 'a duration of zero' => [
+            '/api/cached-tickets/search',
+            static fn (CacheContributionContext $context) => $context->shorten('update', 0),
+            static fn (): InvalidAuthorizationExtensionException => InvalidAuthorizationExtensionException::invalidCacheDuration('acl', FirstCacheContext::class, CachedTicketResource::class, 'update', 0),
+        ];
+        yield 'a key that the resource returns' => [
+            '/dotted-context-tickets/search',
+            static fn (CacheContributionContext $context) => $context->put('rules', 'v1'),
+            static fn (): InvalidAuthorizationExtensionException => InvalidAuthorizationExtensionException::contextKeyTaken('acl', FirstCacheContext::class, DottedContextTicketResource::class, 'acl.rules'),
+        ];
     }
 
     #[Test]

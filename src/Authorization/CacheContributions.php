@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Authorization;
 
+use Illuminate\Support\Str;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Http\Resource;
 
@@ -21,26 +22,30 @@ final class CacheContributions
     /** @var array<string, true> */
     private array $forgotten = [];
 
+    /** @var array<string, string> */
+    private array $classes = [];
+
     /** @param class-string<Resource> $resource */
     public function __construct(private readonly string $resource) {}
 
-    public function put(string $extension, string $key, int|float|string|bool|null $value): void
+    public function put(string $name, string $class, string $key, int|float|string|bool|null $value): void
     {
         if (preg_match(self::KEY, $key) !== 1) {
-            throw InvalidAuthorizationExtensionException::invalidContextKey($extension, $this->resource, $key);
+            throw InvalidAuthorizationExtensionException::invalidContextKey($name, $class, $this->resource, $key);
         }
 
         if (is_float($value) && ! is_finite($value)) {
-            throw InvalidAuthorizationExtensionException::invalidContextValue($extension, $this->resource, $key);
+            throw InvalidAuthorizationExtensionException::invalidContextValue($name, $class, $this->resource, $key);
         }
 
-        $this->items[$extension.self::SEPARATOR.$key] = $value;
+        $this->items[$name.self::SEPARATOR.$key] = $value;
+        $this->classes[$name] = $class;
     }
 
-    public function shorten(string $extension, string $ability, int $seconds): void
+    public function shorten(string $name, string $class, string $ability, int $seconds): void
     {
         if ($seconds < 1) {
-            throw InvalidAuthorizationExtensionException::invalidCacheDuration($extension, $this->resource, $ability, $seconds);
+            throw InvalidAuthorizationExtensionException::invalidCacheDuration($name, $class, $this->resource, $ability, $seconds);
         }
 
         $this->shortened[$ability] = min($this->shortened[$ability] ?? $seconds, $seconds);
@@ -55,6 +60,13 @@ final class CacheContributions
     public function items(): array
     {
         return $this->items;
+    }
+
+    public function keyTaken(string $item): InvalidAuthorizationExtensionException
+    {
+        $name = Str::before($item, self::SEPARATOR);
+
+        return InvalidAuthorizationExtensionException::contextKeyTaken($name, $this->classes[$name], $this->resource, $item);
     }
 
     /**

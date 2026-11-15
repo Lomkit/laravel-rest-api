@@ -123,7 +123,7 @@ class CachedAbilitiesTest extends TestCase
     public function it_shortens_and_forgets_with_the_contributions(): void
     {
         $contributions = new CacheContributions(TicketResource::class);
-        $contributions->shorten('acl', 'viewAny', 30);
+        $contributions->shorten('acl', 'Vendor\Acl\AccessControlExtension', 'viewAny', 30);
         $contributions->forget('view');
 
         $abilities = self::abilities(['viewAny' => 300, 'view' => 60, 'update' => 120], self::RESOURCE, static fn (): CacheContext => CacheContext::of(['team' => 7], self::RESOURCE), $contributions);

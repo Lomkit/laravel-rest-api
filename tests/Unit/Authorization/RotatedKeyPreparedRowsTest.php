@@ -24,6 +24,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('app.previous_keys', ['base64:ZmVkY2JhOTg3NjU0MzIxMGZlZGNiYTk4NzY1NDMyMTA='])]
 class RotatedKeyPreparedRowsTest extends TestCase
 {
+    private const string EXTENSION = 'Vendor\Acl\AccessControlExtension';
+
     private const string PREVIOUS_KEY = 'ZmVkY2JhOTg3NjU0MzIxMGZlZGNiYTk4NzY1NDMyMTA=';
 
     /** @param class-string<Model> $document */
@@ -36,7 +38,7 @@ class RotatedKeyPreparedRowsTest extends TestCase
 
         $secret = $this->secret($checks);
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertSame(['a' => 1], $secret->toArray());
     }
 
@@ -51,7 +53,7 @@ class RotatedKeyPreparedRowsTest extends TestCase
 
         $secret = $this->secret($checks);
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertSame(['a' => 1], $secret->toArray());
     }
 
@@ -66,7 +68,7 @@ class RotatedKeyPreparedRowsTest extends TestCase
 
         $secret = $this->secret($checks);
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertSame(['a' => 1], $secret->toArray());
     }
 
@@ -80,8 +82,8 @@ class RotatedKeyPreparedRowsTest extends TestCase
 
         $this->secret($checks)['a'] = 2;
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     /** @param class-string<Model> $document */
@@ -94,8 +96,8 @@ class RotatedKeyPreparedRowsTest extends TestCase
 
         $checks->rows->firstOrFail()->setAttribute('secret', ['a' => '1']);
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     /** @return iterable<string, array{class-string<Model>}> */

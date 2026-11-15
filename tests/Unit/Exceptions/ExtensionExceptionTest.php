@@ -50,13 +50,14 @@ class ExtensionExceptionTest extends TestCase
     #[Test]
     public function it_gives_the_authorization_extension_exception_the_shared_base_only(): void
     {
-        $exception = InvalidAuthorizationExtensionException::changedRows('acl', 'App\Rest\PostResource', 'view');
+        $exception = InvalidAuthorizationExtensionException::changedRows('acl', 'App\Rest\AclExtension', 'App\Rest\PostResource', 'view');
 
-        $this->assertSame([true, false, false, true], [
+        $this->assertSame([true, false, false, true, false], [
             is_a($exception, ExtensionException::class),
             is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidAuthorizationExtensionException::class, 'missingName'),
-            $exception->namesExtension('acl'),
+            method_exists(InvalidAuthorizationExtensionException::class, 'notAClass'),
+            $exception->concerns('App\Rest\AclExtension'),
+            $exception->concerns('acl'),
         ]);
     }
 

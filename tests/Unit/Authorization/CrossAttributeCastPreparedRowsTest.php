@@ -16,6 +16,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 class CrossAttributeCastPreparedRowsTest extends TestCase
 {
+    private const string EXTENSION = 'Vendor\Acl\AccessControlExtension';
+
     #[\Override]
     protected function setUp(): void
     {
@@ -32,7 +34,7 @@ class CrossAttributeCastPreparedRowsTest extends TestCase
 
         $label = $this->label($checks);
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertSame(['code' => 'A', 'owner' => 'Ada'], $label->all());
     }
 
@@ -45,9 +47,9 @@ class CrossAttributeCastPreparedRowsTest extends TestCase
 
         $label->put('code', 'B');
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     private function checks(): PendingChecks

@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Authorization;
 
-use Illuminate\Support\Str;
-use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 
 /** @internal */
@@ -12,11 +10,8 @@ final readonly class CacheContext
     /** @param array<array-key, int|float|string|bool|null> $values */
     private function __construct(public array $values) {}
 
-    /**
-     * @param  array<mixed>  $declared
-     * @param  array<string, int|float|string|bool|null>  $items
-     */
-    public static function of(array $declared, string $resource, array $items = []): self
+    /** @param array<mixed> $declared */
+    public static function of(array $declared, string $resource, ?CacheContributions $contributions = null): self
     {
         $values = [];
 
@@ -28,17 +23,30 @@ final readonly class CacheContext
             $values[$key] = $value;
         }
 
-        foreach ($items as $key => $value) {
-            if (array_key_exists($key, $values)) {
-                throw InvalidAuthorizationExtensionException::contextKeyTaken(Str::before($key, CacheContributions::SEPARATOR), $resource, $key);
-            }
-
-            $values[$key] = $value;
+        if ($contributions !== null) {
+            $values = self::withItems($values, $contributions);
         }
 
         ksort($values, SORT_STRING);
 
         return new self($values);
+    }
+
+    /**
+     * @param  array<array-key, int|float|string|bool|null>  $values
+     * @return array<array-key, int|float|string|bool|null>
+     */
+    private static function withItems(array $values, CacheContributions $contributions): array
+    {
+        foreach ($contributions->items() as $key => $value) {
+            if (array_key_exists($key, $values)) {
+                throw $contributions->keyTaken($key);
+            }
+
+            $values[$key] = $value;
+        }
+
+        return $values;
     }
 
     public function isEmpty(): bool

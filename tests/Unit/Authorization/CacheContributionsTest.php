@@ -12,6 +12,12 @@ use PHPUnit\Framework\TestCase;
 
 class CacheContributionsTest extends TestCase
 {
+    private const string ACL = 'Vendor\Acl\AccessControlExtension';
+
+    private const string TENANT = 'Vendor\Tenancy\TenantExtension';
+
+    private const string FLAGS = 'Vendor\Flags\FlagExtension';
+
     private const array DECLARED = ['viewAny' => 300, 'view' => 60, 'update' => 120];
 
     #[Test]
@@ -19,11 +25,11 @@ class CacheContributionsTest extends TestCase
     {
         $contributions = new CacheContributions(TicketResource::class);
 
-        $contributions->put('tenant', 'id', 7);
-        $contributions->put('acl', 'rules', 'v1');
-        $contributions->put('acl', 'weight', 1.5);
-        $contributions->put('flags', 'beta', false);
-        $contributions->put('flags', 'region', null);
+        $contributions->put('tenant', self::TENANT, 'id', 7);
+        $contributions->put('acl', self::ACL, 'rules', 'v1');
+        $contributions->put('acl', self::ACL, 'weight', 1.5);
+        $contributions->put('flags', self::FLAGS, 'beta', false);
+        $contributions->put('flags', self::FLAGS, 'region', null);
 
         $this->assertSame(['tenant.id' => 7, 'acl.rules' => 'v1', 'acl.weight' => 1.5, 'flags.beta' => false, 'flags.region' => null], $contributions->items());
     }
@@ -33,8 +39,8 @@ class CacheContributionsTest extends TestCase
     {
         $contributions = new CacheContributions(TicketResource::class);
 
-        $contributions->put('acl', 'rules', 'v1');
-        $contributions->put('acl', 'rules', 'v2');
+        $contributions->put('acl', self::ACL, 'rules', 'v1');
+        $contributions->put('acl', self::ACL, 'rules', 'v2');
 
         $this->assertSame(['acl.rules' => 'v2'], $contributions->items());
     }
@@ -44,9 +50,9 @@ class CacheContributionsTest extends TestCase
     {
         $contributions = new CacheContributions(TicketResource::class);
 
-        $contributions->shorten('acl', 'viewAny', 120);
-        $contributions->shorten('tenant', 'viewAny', 30);
-        $contributions->shorten('acl', 'update', 90);
+        $contributions->shorten('acl', self::ACL, 'viewAny', 120);
+        $contributions->shorten('tenant', self::TENANT, 'viewAny', 30);
+        $contributions->shorten('acl', self::ACL, 'update', 90);
 
         $this->assertSame(['viewAny' => 30, 'view' => 60, 'update' => 90], $contributions->narrow(self::DECLARED));
     }
@@ -56,7 +62,7 @@ class CacheContributionsTest extends TestCase
     {
         $contributions = new CacheContributions(TicketResource::class);
 
-        $contributions->shorten('acl', 'view', 3600);
+        $contributions->shorten('acl', self::ACL, 'view', 3600);
 
         $this->assertSame(self::DECLARED, $contributions->narrow(self::DECLARED));
     }
@@ -66,9 +72,9 @@ class CacheContributionsTest extends TestCase
     {
         $contributions = new CacheContributions(TicketResource::class);
 
-        $contributions->shorten('acl', 'view', 10);
+        $contributions->shorten('acl', self::ACL, 'view', 10);
         $contributions->forget('view');
-        $contributions->shorten('tenant', 'view', 5);
+        $contributions->shorten('tenant', self::TENANT, 'view', 5);
 
         $this->assertSame(['viewAny' => 300, 'update' => 120], $contributions->narrow(self::DECLARED));
     }
@@ -78,7 +84,7 @@ class CacheContributionsTest extends TestCase
     {
         $contributions = new CacheContributions(TicketResource::class);
 
-        $contributions->shorten('acl', 'escalate', 30);
+        $contributions->shorten('acl', self::ACL, 'escalate', 30);
         $contributions->forget('share');
 
         $this->assertSame(self::DECLARED, $contributions->narrow(self::DECLARED));
@@ -107,12 +113,12 @@ class CacheContributionsTest extends TestCase
     {
         $calls = [
             'a' => static function (CacheContributions $contributions): void {
-                $contributions->shorten('acl', 'viewAny', 120);
-                $contributions->put('acl', 'rules', 'v1');
+                $contributions->shorten('acl', self::ACL, 'viewAny', 120);
+                $contributions->put('acl', self::ACL, 'rules', 'v1');
             },
             'b' => static function (CacheContributions $contributions): void {
-                $contributions->shorten('tenant', 'viewAny', 30);
-                $contributions->put('tenant', 'id', 7);
+                $contributions->shorten('tenant', self::TENANT, 'viewAny', 30);
+                $contributions->put('tenant', self::TENANT, 'id', 7);
             },
             'c' => static function (CacheContributions $contributions): void {
                 $contributions->forget('view');
@@ -128,9 +134,9 @@ class CacheContributionsTest extends TestCase
     #[DataProvider('invalidKeys')]
     public function it_refuses_an_invalid_key(string $key): void
     {
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidContextKey('acl', TicketResource::class, $key));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidContextKey('acl', self::ACL, TicketResource::class, $key));
 
-        (new CacheContributions(TicketResource::class))->put('acl', $key, 1);
+        (new CacheContributions(TicketResource::class))->put('acl', self::ACL, $key, 1);
     }
 
     /** @return iterable<string, array{string}> */
@@ -149,7 +155,7 @@ class CacheContributionsTest extends TestCase
     {
         $contributions = new CacheContributions(TicketResource::class);
 
-        $contributions->put('acl', str_repeat('a', 64), 1);
+        $contributions->put('acl', self::ACL, str_repeat('a', 64), 1);
 
         $this->assertSame(['acl.'.str_repeat('a', 64) => 1], $contributions->items());
     }
@@ -158,9 +164,9 @@ class CacheContributionsTest extends TestCase
     #[DataProvider('infiniteFloats')]
     public function it_refuses_a_float_that_is_not_finite(float $value): void
     {
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidContextValue('acl', TicketResource::class, 'weight'));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidContextValue('acl', self::ACL, TicketResource::class, 'weight'));
 
-        (new CacheContributions(TicketResource::class))->put('acl', 'weight', $value);
+        (new CacheContributions(TicketResource::class))->put('acl', self::ACL, 'weight', $value);
     }
 
     /** @return iterable<string, array{float}> */
@@ -174,20 +180,20 @@ class CacheContributionsTest extends TestCase
     #[Test]
     public function it_refuses_a_duration_below_one_second(): void
     {
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidCacheDuration('acl', TicketResource::class, 'view', 0));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::invalidCacheDuration('acl', self::ACL, TicketResource::class, 'view', 0));
 
-        (new CacheContributions(TicketResource::class))->shorten('acl', 'view', 0);
+        (new CacheContributions(TicketResource::class))->shorten('acl', self::ACL, 'view', 0);
     }
 
     #[Test]
     public function it_names_the_extension_in_each_refusal(): void
     {
         try {
-            (new CacheContributions(TicketResource::class))->shorten('acl', 'view', -5);
+            (new CacheContributions(TicketResource::class))->shorten('acl', self::ACL, 'view', -5);
             $this->fail('The duration was not refused.');
         } catch (InvalidAuthorizationExtensionException $exception) {
-            $this->assertTrue($exception->namesExtension('acl'));
-            $this->assertSame('The [acl] extension shortens the cache of the ability [view] of '.TicketResource::class." to -5 seconds. Give 1 second or more, or call forget('view') to keep no decision.", $exception->getMessage());
+            $this->assertSame([true, false], [$exception->concerns(self::ACL), $exception->concerns('acl')]);
+            $this->assertSame('The [acl] extension '.self::ACL.' shortens the cache of the ability [view] of '.TicketResource::class." to -5 seconds. Give 1 second or more, or call forget('view') to keep no decision.", $exception->getMessage());
         }
     }
 }

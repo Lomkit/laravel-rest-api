@@ -18,7 +18,7 @@ final class DecisionPreparation
     /** @var array<class-string<Resource>, bool> */
     private static array $hooked = [];
 
-    /** @var array<class-string<Resource>, array<string, Extension&PreparesRowChecks>> */
+    /** @var array<class-string<Resource>, array<string, array{class-string<Extension>, Extension&PreparesRowChecks}>> */
     private array $extensions = [];
 
     /** @var array<string, true> */
@@ -81,21 +81,33 @@ final class DecisionPreparation
             $checks->resource->prepareAuthorization($checks);
         }
 
-        foreach ($extensions as $name => $extension) {
+        foreach ($extensions as $name => [$class, $extension]) {
             $rows = PreparedRows::of($checks->rows, $names);
             $extension->prepareRowChecks($checks);
-            $rows->ensureUnchanged($name, $checks);
+            $rows->ensureUnchanged($name, $class, $checks);
         }
     }
 
-    /** @return array<string, Extension&PreparesRowChecks> */
+    /** @return array<string, array{class-string<Extension>, Extension&PreparesRowChecks}> */
     private function extensionsOf(Resource $resource): array
     {
         if ($this->registry === null) {
             return [];
         }
 
-        return $this->extensions[$resource::class] ??= ($this->registry)()->applicable($resource::class, PreparesRowChecks::class);
+        return $this->extensions[$resource::class] ??= self::applicable(($this->registry)(), $resource);
+    }
+
+    /** @return array<string, array{class-string<Extension>, Extension&PreparesRowChecks}> */
+    private static function applicable(ExtensionRegistry $registry, Resource $resource): array
+    {
+        $extensions = [];
+
+        foreach ($registry->applicable($resource::class, PreparesRowChecks::class) as $name => $extension) {
+            $extensions[$name] = [$registry->classOf($name), $extension];
+        }
+
+        return $extensions;
     }
 
     private static function hooked(Resource $resource): bool

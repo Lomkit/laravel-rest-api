@@ -184,8 +184,25 @@ class ExtensionGatesTest extends HelpdeskTestCase
             $this->fail('The misdeclared gate was not refused.');
         } catch (LogicException $exception) {
             $this->assertInstanceOf(InvalidAuthorizationExtensionException::class, $exception);
-            $this->assertTrue($exception->namesExtension('acl'));
+            $this->assertSame([true, false], [$exception->concerns(FirstGates::class), $exception->concerns('acl')]);
             $this->assertSame('The [acl] extension '.FirstGates::class.' declares the gate [Share] at index 0 for '.TicketResource::class.'. A gate is the camelCase name of a policy method, listed once by each extension, other than viewAny and the built-in gates view, create, update, delete, restore and forceDelete.', $exception->getMessage());
+        }
+    }
+
+    #[Test]
+    public function it_names_the_registered_class_of_a_gate_extension_bound_to_a_subclass(): void
+    {
+        config(['rest.extensions' => [FirstGates::class]]);
+        $this->app?->bind(FirstGates::class, static fn (): FirstGates => new class extends FirstGates {});
+        FirstGates::$gates = ['Share'];
+        $definition = $this->contextFor(null)->resource(TicketResource::class)->definition();
+
+        try {
+            $definition->gates();
+            $this->fail('The misdeclared gate was not refused.');
+        } catch (InvalidAuthorizationExtensionException $exception) {
+            $this->assertSame(InvalidAuthorizationExtensionException::invalidGate('acl', FirstGates::class, TicketResource::class, 0, 'Share')->getMessage(), $exception->getMessage());
+            $this->assertTrue($exception->concerns(FirstGates::class));
         }
     }
 

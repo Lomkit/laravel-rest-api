@@ -17,6 +17,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('app.key', 'base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=')]
 class EncryptedPreparedRowsTest extends TestCase
 {
+    private const string EXTENSION = 'Vendor\Acl\AccessControlExtension';
+
     #[Test]
     public function it_keeps_a_row_whose_encrypted_cast_attribute_is_read(): void
     {
@@ -25,7 +27,7 @@ class EncryptedPreparedRowsTest extends TestCase
 
         $secret = $checks->rows->firstOrFail()->getAttribute('secret');
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertSame(['a' => 1], $secret->getArrayCopy());
     }
 
@@ -38,7 +40,7 @@ class EncryptedPreparedRowsTest extends TestCase
 
         $checks->rows->firstOrFail()->getAttribute('secret');
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertSame(['a' => 1], $checks->rows->firstOrFail()->getAttribute('secret')->getArrayCopy());
     }
 
@@ -51,7 +53,7 @@ class EncryptedPreparedRowsTest extends TestCase
 
         $rows = PreparedRows::of($checks->rows, $start);
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertSame(['a' => 1], $checks->rows->firstOrFail()->getAttribute('secret')->getArrayCopy());
     }
 
@@ -63,8 +65,8 @@ class EncryptedPreparedRowsTest extends TestCase
 
         $checks->rows->firstOrFail()->getAttribute('secret')['a'] = 2;
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     #[Test]
@@ -77,8 +79,8 @@ class EncryptedPreparedRowsTest extends TestCase
 
         $checks->rows->firstOrFail()->getAttribute('secret')['b'] = 2;
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     private function checks(): PendingChecks

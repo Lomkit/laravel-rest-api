@@ -42,7 +42,7 @@ final class ResourceAuthorization
     {
         $this->follow();
 
-        return $this->cacheContext ??= CacheContext::of($this->resource->authorizationCacheContext(), $this->resource::class, $this->contributions()->items());
+        return $this->cacheContext ??= CacheContext::of($this->resource->authorizationCacheContext(), $this->resource::class, $this->contributions());
     }
 
     private function follow(): void

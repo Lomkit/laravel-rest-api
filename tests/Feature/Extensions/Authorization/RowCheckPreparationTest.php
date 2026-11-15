@@ -349,6 +349,26 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $this->assertSame(['id', 'team_id', 'title', 'status', 'gates'], array_keys($response->json('data.0')));
     }
 
+    #[Test]
+    public function it_names_the_registered_class_of_a_preparing_extension_bound_to_a_subclass(): void
+    {
+        config(['rest.extensions' => [PreparingExtension::class]]);
+        $this->app?->bind(PreparingExtension::class, static fn (): PreparingExtension => new class extends PreparingExtension {});
+        $this->seedTickets();
+        PreparingExtension::$prepare = static function (PendingChecks $checks): void {
+            $checks->rows->firstOrFail()->setAttribute('title', 'Changed');
+        };
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->postJson('/api/tickets/search', ['search' => ['gates' => ['update'], 'sorts' => [['field' => 'id']]]]);
+            $this->fail('The changed row was accepted.');
+        } catch (InvalidAuthorizationExtensionException $exception) {
+            $this->assertSame(InvalidAuthorizationExtensionException::changedRows('prep', PreparingExtension::class, TicketResource::class, 'update')->getMessage(), $exception->getMessage());
+            $this->assertTrue($exception->concerns(PreparingExtension::class));
+        }
+    }
+
     /** @param Closure(PendingChecks): mixed $change */
     #[Test]
     #[DataProvider('rowChanges')]
@@ -361,7 +381,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         };
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', TicketResource::class, 'update'));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', PreparingExtension::class, TicketResource::class, 'update'));
 
         try {
             $this->postJson('/api/tickets/search', ['search' => ['gates' => ['update'], 'includes' => [['relation' => 'team']], 'sorts' => [['field' => 'id']]]]);
@@ -410,7 +430,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         };
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', TicketResource::class, 'update'));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', PreparingExtension::class, TicketResource::class, 'update'));
 
         try {
             $this->postJson('/api/tickets/search', ['search' => [
@@ -462,7 +482,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         };
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', TicketResource::class, 'delete'));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', PreparingExtension::class, TicketResource::class, 'delete'));
 
         try {
             $this->actingAs(new GenericUser(['id' => TicketPolicy::LEAD]))->deleteJson('/api/tickets', ['resources' => [$jam->id, $reset->id]]);
@@ -557,7 +577,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         };
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('b', TicketResource::class, 'update'));
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('b', LatePreparingExtension::class, TicketResource::class, 'update'));
 
         $this->postJson('/api/tickets/search', ['search' => ['gates' => ['update'], 'includes' => [['relation' => 'team']], 'sorts' => [['field' => 'id']]]]);
     }

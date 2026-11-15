@@ -21,17 +21,17 @@ final readonly class PreparedRows
         ));
     }
 
-    public function ensureUnchanged(string $extension, PendingChecks $checks): void
+    public function ensureUnchanged(string $name, string $class, PendingChecks $checks): void
     {
         $rows = array_values($checks->rows->all());
 
         if (count($rows) !== count($this->states)) {
-            throw InvalidAuthorizationExtensionException::changedRows($extension, $checks->resource::class, $checks->ability);
+            throw InvalidAuthorizationExtensionException::changedRows($name, $class, $checks->resource::class, $checks->ability);
         }
 
         foreach ($rows as $index => $row) {
             if (! $this->states[$index]->keeps($row)) {
-                throw InvalidAuthorizationExtensionException::changedRows($extension, $checks->resource::class, $checks->ability);
+                throw InvalidAuthorizationExtensionException::changedRows($name, $class, $checks->resource::class, $checks->ability);
             }
         }
     }

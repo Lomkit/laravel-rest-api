@@ -10,7 +10,8 @@ final readonly class CacheContributionContext
 {
     /** @internal */
     public function __construct(
-        private string $extension,
+        private string $name,
+        private string $class,
         public Resource $resource,
         public ?Authenticatable $user,
         private CacheContributions $contributions,
@@ -18,12 +19,12 @@ final readonly class CacheContributionContext
 
     public function put(string $key, int|float|string|bool|null $value): void
     {
-        $this->contributions->put($this->extension, $key, $value);
+        $this->contributions->put($this->name, $this->class, $key, $value);
     }
 
     public function shorten(string $ability, int $seconds): void
     {
-        $this->contributions->shorten($this->extension, $ability, $seconds);
+        $this->contributions->shorten($this->name, $this->class, $ability, $seconds);
     }
 
     public function forget(string $ability): void

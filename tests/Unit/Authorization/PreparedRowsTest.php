@@ -18,6 +18,8 @@ use PHPUnit\Framework\TestCase;
 
 class PreparedRowsTest extends TestCase
 {
+    private const string EXTENSION = 'Vendor\Acl\AccessControlExtension';
+
     /** @param Closure(Model): mixed $change */
     #[Test]
     #[DataProvider('settingChanges')]
@@ -28,8 +30,8 @@ class PreparedRowsTest extends TestCase
 
         $change($checks->rows->firstOrFail());
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     /** @return iterable<string, array{Closure(Model): mixed}> */
@@ -61,8 +63,8 @@ class PreparedRowsTest extends TestCase
 
         $change($row);
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     /** @return iterable<string, array{Closure(Model): mixed}> */
@@ -90,7 +92,7 @@ class PreparedRowsTest extends TestCase
         $row->getRelation('links')->firstOrFail()->setRelation('team', $this->related(6));
         $row->getRelation('links')->firstOrFail()->setRelation('owner', $this->related(7));
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertSame(6, $row->getRelation('links')->firstOrFail()->getRelation('team')->getKey());
     }
 
@@ -106,7 +108,7 @@ class PreparedRowsTest extends TestCase
 
         $child->getRelation('parent');
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertSame($row, $child->getRelation('parent'));
     }
 
@@ -118,7 +120,7 @@ class PreparedRowsTest extends TestCase
 
         $meta = $checks->rows->firstOrFail()->getAttribute('meta');
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertSame(['a' => 1], $meta->getArrayCopy());
     }
 
@@ -130,8 +132,8 @@ class PreparedRowsTest extends TestCase
 
         $checks->rows->firstOrFail()->getAttribute('meta')['a'] = 2;
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     #[Test]
@@ -142,10 +144,11 @@ class PreparedRowsTest extends TestCase
         $checks->rows->firstOrFail()->setAttribute('id', 2);
 
         try {
-            $rows->ensureUnchanged('acl', $checks);
+            $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
             $this->fail('The change was not refused.');
         } catch (InvalidAuthorizationExtensionException $exception) {
-            $this->assertTrue($exception->namesExtension('acl'));
+            $this->assertSame([true, false], [$exception->concerns(self::EXTENSION), $exception->concerns('acl')]);
+            $this->assertSame('The [acl] extension '.self::EXTENSION.' changed the rows that it prepares for the ability [view] of '.TicketResource::class.': an attribute, a relation loaded before the preparation or its models, the exists flag, table, connection, key name, casts or timestamps of a row, or the list of rows. The rows are the rendered models: read what the policies need into a store of the extension, keyed by user and row key, and leave the rows as they are.', $exception->getMessage());
         }
     }
 
@@ -160,7 +163,7 @@ class PreparedRowsTest extends TestCase
         $row->getAttribute('meta');
         $row->getAttributes();
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertInstanceOf(Settings::class, $settings);
         $this->assertSame(['a' => 1], $settings->values);
         $this->assertSame('{"a":1}', $row->getAttributes()['settings']);
@@ -176,8 +179,8 @@ class PreparedRowsTest extends TestCase
         $this->assertInstanceOf(Settings::class, $settings);
         $settings->values['a'] = 2;
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     #[Test]
@@ -188,8 +191,8 @@ class PreparedRowsTest extends TestCase
 
         $checks->rows->firstOrFail()->setAttribute('settings', new Settings(['a' => 2]));
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     /** @return iterable<string, array{mixed}> */
@@ -209,8 +212,8 @@ class PreparedRowsTest extends TestCase
         $checks->rows->firstOrFail()->setAttribute('team_id', $value);
 
         $this->assertFalse($checks->rows->firstOrFail()->isDirty());
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     #[Test]
@@ -224,7 +227,7 @@ class PreparedRowsTest extends TestCase
         $rows = PreparedRows::of($checks->rows, $start);
         $row->setRelation('tags', new Collection);
 
-        $rows->ensureUnchanged('acl', $checks);
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
         $this->assertTrue($row->relationLoaded('tags'));
     }
 
@@ -240,8 +243,8 @@ class PreparedRowsTest extends TestCase
         $rows = PreparedRows::of($checks->rows, $start);
         $row->setRelation('team', new PreparedDocument);
 
-        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
-        $rows->ensureUnchanged('acl', $checks);
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
     }
 
     private function checks(): PendingChecks

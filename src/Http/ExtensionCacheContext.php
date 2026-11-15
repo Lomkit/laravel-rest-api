@@ -17,7 +17,8 @@ final readonly class ExtensionCacheContext
     public static function of(Resource $resource): CacheContributions
     {
         $contributions = new CacheContributions($resource::class);
-        $extensions = $resource->context()->extensions()->applicable($resource::class, ContributesCacheContext::class);
+        $registry = $resource->context()->extensions();
+        $extensions = $registry->applicable($resource::class, ContributesCacheContext::class);
 
         if ($extensions === []) {
             return $contributions;
@@ -26,7 +27,7 @@ final readonly class ExtensionCacheContext
         $user = $resource->context()->actingUser()->user;
 
         foreach ($extensions as $name => $extension) {
-            $extension->contributeCacheContext(new CacheContributionContext($name, $resource, $user, $contributions));
+            $extension->contributeCacheContext(new CacheContributionContext($name, $registry->classOf($name), $resource, $user, $contributions));
         }
 
         return $contributions;
