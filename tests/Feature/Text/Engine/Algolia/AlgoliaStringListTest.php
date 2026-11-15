@@ -23,6 +23,7 @@ class AlgoliaStringListTest extends AlgoliaTestCase
 
         EngineLog::reset();
         ReadersExtension::$excludes = false;
+        ReadersExtension::$groups = null;
         config(['rest.extensions' => ['readers' => ReadersExtension::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
     }
@@ -32,6 +33,7 @@ class AlgoliaStringListTest extends AlgoliaTestCase
     {
         EngineLog::reset();
         ReadersExtension::$excludes = false;
+        ReadersExtension::$groups = null;
 
         parent::tearDown();
     }
@@ -44,11 +46,13 @@ class AlgoliaStringListTest extends AlgoliaTestCase
         Route::prefix('api')->group(fn () => Rest::resource('reader-vouchers', ReaderVoucherController::class)->withSoftDeletes());
     }
 
+    /** @param list<string>|null $groups */
     #[Test]
     #[DataProvider('filters')]
-    public function it_sends_a_list_attribute_as_a_facet_filter(bool $excludes, string $filters): void
+    public function it_sends_a_list_attribute_as_a_facet_filter(?array $groups, bool $excludes, string $filters): void
     {
         ReadersExtension::$excludes = $excludes;
+        ReadersExtension::$groups = $groups;
         $this->hits(['V-a'], 1);
 
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
@@ -57,12 +61,14 @@ class AlgoliaStringListTest extends AlgoliaTestCase
         $this->assertSame([['POST', "/1/indexes/{$this->index}/query", ['query' => 'report', 'filters' => $filters, 'hitsPerPage' => 50, 'page' => 0]]], $this->algolia->sent('POST', "/1/indexes/{$this->index}/query"));
     }
 
-    /** @return array<string, array{bool, string}> */
+    /** @return array<string, array{list<string>|null, bool, string}> */
     public static function filters(): array
     {
         return [
-            'the rows that share a reader' => [false, "__soft_deleted:'0' AND (readers:'ann')"],
-            'the rows that share no reader' => [true, "__soft_deleted:'0' AND NOT readers:'ann'"],
+            'the rows that share a reader' => [null, false, "__soft_deleted:'0' AND (readers:'ann')"],
+            'the rows that share no reader' => [null, true, "__soft_deleted:'0' AND NOT readers:'ann'"],
+            'the rows that share one of two groups' => [['ann', 'cid'], false, "__soft_deleted:'0' AND (readers:'ann' OR readers:'cid')"],
+            'the rows that share none of two groups' => [['ann', 'cid'], true, "__soft_deleted:'0' AND NOT readers:'ann' AND NOT readers:'cid'"],
         ];
     }
 }

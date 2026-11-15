@@ -14,6 +14,9 @@ final class ReadersExtension extends Extension implements DeclaresIndexAttribute
 {
     public static bool $excludes = false;
 
+    /** @var list<string>|null */
+    public static ?array $groups = null;
+
     #[\Override]
     public function appliesTo(string $resource): bool
     {
@@ -41,11 +44,11 @@ final class ReadersExtension extends Extension implements DeclaresIndexAttribute
         }
 
         if (self::$excludes) {
-            $context->query->whereNotIn('readers', [$reader]);
+            $context->query->whereNotIn('readers', self::$groups ?? [$reader]);
 
             return;
         }
 
-        $context->query->whereIn('readers', [$reader]);
+        $context->query->whereIn('readers', self::$groups ?? [$reader]);
     }
 }

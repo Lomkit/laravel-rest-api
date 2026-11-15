@@ -46,6 +46,7 @@ class StringListAttributesTest extends EngineSearchTestCase
 
         EngineLog::reset();
         ReadersExtension::$excludes = false;
+        ReadersExtension::$groups = null;
         Route::prefix('api')->group(fn () => Rest::resource('reader-vouchers', ReaderVoucherController::class)->register());
         config([
             'rest.extensions' => ['readers' => ReadersExtension::class],
@@ -58,6 +59,7 @@ class StringListAttributesTest extends EngineSearchTestCase
     {
         EngineLog::reset();
         ReadersExtension::$excludes = false;
+        ReadersExtension::$groups = null;
 
         parent::tearDown();
     }
@@ -183,6 +185,21 @@ class StringListAttributesTest extends EngineSearchTestCase
         $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
 
         $this->assertSame(['readers:=[`ann`]', 'readers:!=[`ann`]'], $engine->filters);
+    }
+
+    #[Test]
+    public function it_sends_a_string_list_of_two_values_to_typesense(): void
+    {
+        $engine = new FilterCapturingTypesenseEngine;
+        $this->useEngine($engine);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+        ReadersExtension::$groups = ['ann', 'cid'];
+
+        $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
+        ReadersExtension::$excludes = true;
+        $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
+
+        $this->assertSame(['readers:=[`ann`, `cid`]', 'readers:!=[`ann`, `cid`]'], $engine->filters);
     }
 
     #[Test]
