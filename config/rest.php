@@ -251,9 +251,9 @@ return [
     | A package can register its extensions with Rest::registerExtension().
     | This list has the last word: false disables an extension of that
     | name, and another class replaces it. It is read again for each
-    | request, while runtime registrations are fixed once the application
-    | has booted. Run php artisan rest:check to list the extensions with
-    | their origin.
+    | context (a request, a queued action, Rest::search()), while runtime
+    | registrations are fixed once the application has booted. Run php
+    | artisan rest:check to list the extensions with their origin.
     |
     */
 
