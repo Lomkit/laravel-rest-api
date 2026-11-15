@@ -4,14 +4,13 @@ namespace Lomkit\Rest\Http;
 
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Extensions\Contexts\ReadObservationContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\ObservesReads;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Search\Plan\Columns\StrictColumns;
+use Lomkit\Rest\Search\Run\SearchedPage;
 
 /** @internal */
 final readonly class ReadObservers
@@ -35,11 +34,12 @@ final readonly class ReadObservers
         return new self($resource, $extensions);
     }
 
-    /** @param LengthAwarePaginator<int, Model> $page */
-    public function searched(LengthAwarePaginator $page, StrictColumns $strict): void
+    public function searched(SearchedPage $page): void
     {
-        $strict->run(fn () => $this->notify(fn (?Authenticatable $user): ReadObservationContext => new ReadObservationContext(
-            $this->resource, Endpoint::Search, $user, RowCopies::of($page->items()), $page->total(), $page->currentPage(), $page->perPage(),
+        $rows = $page->rows;
+
+        StrictColumns::of($page->plan)->run(fn () => $this->notify(fn (?Authenticatable $user): ReadObservationContext => new ReadObservationContext(
+            $this->resource, Endpoint::Search, $user, RowCopies::of($rows->items()), $rows->total(), $rows->currentPage(), $rows->perPage(),
         )));
     }
 

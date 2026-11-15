@@ -99,33 +99,28 @@ final class ObservedReadsTest extends HelpdeskTestCase
         $this->assertNull($context->details);
     }
 
-    /** @return array<string, array{string}> */
+    /** @return array<string, array{string, bool}> */
     public static function programmaticSearches(): array
     {
         return [
-            'page' => ['page'],
-            'render' => ['render'],
+            'page' => ['page', true],
+            'render' => ['render', true],
+            'lazy' => ['lazy', false],
         ];
     }
 
     #[Test]
     #[DataProvider('programmaticSearches')]
-    public function it_notifies_rest_search_page_and_render(string $method): void
+    public function it_notifies_no_read_observer_of_rest_search(string $method, bool $paged): void
     {
-        $other = new GenericUser(['id' => 7]);
+        $result = Rest::search(ObservedTicketResource::class)->as(new GenericUser(['id' => 7]))->payload(self::SEARCH['search'])->{$method}();
 
-        Rest::search(ObservedTicketResource::class)->as($other)->payload(self::SEARCH['search'])->{$method}();
+        if ($method === 'lazy') {
+            $this->assertSame([$this->ids['Printer jam'], $this->ids['Printer toner']], array_column($result->all(), 'id'));
+        }
 
-        $this->assertSame(['searching', "searched {$this->ids['Printer jam']},{$this->ids['Printer toner']} of 2", "read search {$this->ids['Printer jam']} Printer jam,{$this->ids['Printer toner']} Printer toner of 2"], EventLog::$lines);
-        $this->assertSame($other, WriteLog::$reads[0]->user);
-    }
-
-    #[Test]
-    public function it_does_not_notify_a_lazy_search(): void
-    {
-        $rows = Rest::search(ObservedTicketResource::class)->as($this->lead)->payload(self::SEARCH['search'])->lazy()->all();
-
-        $this->assertSame([$this->ids['Printer jam'], $this->ids['Printer toner']], array_column($rows, 'id'));
+        $searched = "searched {$this->ids['Printer jam']},{$this->ids['Printer toner']} of 2";
+        $this->assertSame($paged ? ['searching', $searched] : ['searching'], EventLog::$lines);
         $this->assertSame([], WriteLog::$reads);
     }
 
@@ -182,19 +177,6 @@ final class ObservedReadsTest extends HelpdeskTestCase
         $this->assertSame($plain, $changed);
         $this->assertSame($readonly ? ['read readonly'] : [], array_values(array_filter(EventLog::$lines, fn (string $line): bool => str_starts_with($line, 'read'))));
         $this->assertSame(['Billing', 'Support'], Team::query()->orderBy('id')->pluck('name')->all());
-    }
-
-    #[Test]
-    public function it_keeps_the_rows_of_rest_search_page(): void
-    {
-        config(['rest.extensions' => ['reads' => ChangingReadObserver::class]]);
-
-        $page = Rest::search(ObservedTicketResource::class)->as($this->lead)->payload(self::SEARCH['search'])->page();
-
-        $this->assertSame([[$this->ids['Printer jam'], 'Printer jam', 'Billing'], [$this->ids['Printer toner'], 'Printer toner', 'Billing']], array_map(
-            fn (Model $row): array => [$row->getKey(), $row->getAttribute('title'), $row->getRelation('team')?->getAttribute('name')],
-            $page->items(),
-        ));
     }
 
     /** @param array<string, mixed> $body */

@@ -70,9 +70,10 @@ abstract class Controller
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        return SearchRun::of($resource, $request->payload())
-            ->page()
-            ->response();
+        $page = SearchRun::of($resource, $request->payload())->page();
+        ReadObservers::of($resource)?->searched($page);
+
+        return $page->response();
     }
 
     /** @param LengthAwarePaginator<int, Model>|Collection<int, Model> $rows */
