@@ -604,48 +604,80 @@ final class GuardedWritesTest extends PackageTestCase
 
     #[Test]
     #[WithConfig('queue.default', 'database')]
-    public function it_guards_a_queued_action_in_the_worker(): void
+    public function it_guards_a_queued_action_in_the_request_and_in_the_worker(): void
     {
         $this->seedDocuments(null, null);
 
         $this->postJson('/written-documents/actions/queued-archive-documents-by-one', ['search' => []])
             ->assertOk()
             ->assertExactJson(self::IMPACTED);
-        $this->assertSame([], WriteLog::$guards);
+        $this->assertCount(2, WriteLog::$guards);
+        $this->assertSame([$this->grace, $this->grace], array_map(fn ($context): mixed => $context->user, WriteLog::$guards));
         $this->assertDatabaseCount('jobs', 2);
         $this->app['auth']->forgetGuards();
         $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
         $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
 
-        $this->assertCount(2, WriteLog::$guards);
-        $this->assertSame([[1], [2]], array_map(fn ($context): array => array_map(fn (Model $row): mixed => $row->getKey(), $context->rows ?? []), WriteLog::$guards));
+        $this->assertCount(4, WriteLog::$guards);
+        $this->assertSame([[1], [2], [1], [2]], array_map(fn ($context): array => array_map(fn (Model $row): mixed => $row->getKey(), $context->rows ?? []), WriteLog::$guards));
 
         foreach (WriteLog::$guards as $context) {
             $this->assertSame(Endpoint::Operate, $context->endpoint);
             $this->assertInstanceOf(ArchiveUser::class, $context->user);
             $this->assertSame(2, $context->user->getAuthIdentifier());
-            $this->assertNotSame($this->grace, $context->user);
         }
 
+        $this->assertNotSame($this->grace, WriteLog::$guards[2]->user);
+        $this->assertNotSame($this->grace, WriteLog::$guards[3]->user);
         $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
     }
 
     #[Test]
     #[WithConfig('queue.default', 'database')]
-    public function it_fails_the_job_of_a_refused_queued_action(): void
+    public function it_refuses_a_queued_action_in_the_request_before_queueing(): void
     {
-        config(['rest.extensions' => ['quota' => QuotaGuard::class]]);
+        WriteLog::$refuseAt = 1;
+        $this->seedDocuments(null, null);
+
+        $this->postJson('/written-documents/actions/queued-archive-documents-by-one', ['search' => []])
+            ->assertStatus(429)
+            ->assertExactJson(['message' => 'The monthly quota is reached.']);
+
+        $this->assertDatabaseCount('jobs', 0);
+        $this->assertCount(1, WriteLog::$guards);
+        $this->assertSame($this->grace, WriteLog::$guards[0]->user);
+        $this->assertSame([[1, 'Annual report']], $this->keysAndTitles(WriteLog::$guards[0]->rows));
+        $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
+    }
+
+    /** @return array<string, array{string}> */
+    public static function queuedActions(): array
+    {
+        return [
+            'one try' => ['queued-archive-documents-by-one'],
+            'three tries' => ['retried-queued-archive-documents'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('queuedActions')]
+    #[WithConfig('queue.default', 'database')]
+    public function it_fails_a_refused_job_without_a_retry(string $uriKey): void
+    {
+        config(['rest.extensions' => ['frozen' => FrozenRowGuard::class], 'queue.failed.database' => config('database.default')]);
         $failures = [];
         Event::listen(JobFailed::class, function (JobFailed $event) use (&$failures): void {
             $failures[] = [$event->exception::class, $event->exception->getMessage(), $event->exception instanceof WriteRefused ? $event->exception->reason : null];
         });
         $this->seedDocuments(null, null);
 
-        $this->postJson('/written-documents/actions/queued-archive-documents-by-one', ['search' => []])->assertOk()->assertExactJson(self::IMPACTED);
+        $this->postJson("/written-documents/actions/{$uriKey}", ['search' => []])->assertOk()->assertExactJson(self::IMPACTED);
+        WriteLog::$frozen = [1];
         $this->app['auth']->forgetGuards();
         $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
 
-        $this->assertSame([[WriteRefused::class, 'The [quota] extension refused the write.', 'The monthly quota is reached.']], $failures);
+        $this->assertSame([[WriteRefused::class, 'The [frozen] extension refused the write.', 'The document is frozen.']], $failures);
+        $this->assertDatabaseCount('failed_jobs', 1);
         $this->assertDatabaseCount('jobs', 1);
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
     }

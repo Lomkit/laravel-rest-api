@@ -93,6 +93,7 @@ final readonly class ActionRunner
             return;
         }
 
+        $this->writes->queued($models);
         $job = QueuedAction::of($this->action, $this->given, QueuedRows::of($models->all(), $this->trashed, $this->perimeter), $this->user);
 
         if ($this->batch !== null) {

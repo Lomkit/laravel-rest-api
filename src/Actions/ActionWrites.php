@@ -50,6 +50,12 @@ final readonly class ActionWrites
     }
 
     /** @param Collection<array-key, Model> $models */
+    public function queued(Collection $models): void
+    {
+        $this->guard?->action($this->action, $this->fields, array_values($models->all()));
+    }
+
+    /** @param Collection<array-key, Model> $models */
     public function handle(Collection $models): void
     {
         if ($this->mode === ActionTransaction::Row) {

@@ -24,6 +24,7 @@ final class WrittenDocumentResource extends DocumentResource
             DirectArchiveDocuments::make()->withoutTransaction(),
             ArchiveEachDocument::make()->transactionPerRow(),
             QueuedArchiveDocumentsByOne::make(),
+            RetriedQueuedArchiveDocuments::make(),
             FailingArchiveDocuments::make(),
             ConfirmedArchiveDocuments::make(),
         ];

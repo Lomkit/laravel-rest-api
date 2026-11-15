@@ -9,9 +9,11 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Queue\Middleware\SkipIfBatchCancelled;
 use Lomkit\Rest\Authorization\UserReference;
 use Lomkit\Rest\Exceptions\QueuedActionException;
+use Lomkit\Rest\Exceptions\WriteRefused;
 use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -66,6 +68,8 @@ final class QueuedAction implements ShouldQueue
 
         try {
             $this->run($container, $this->user->resolve($auth));
+        } catch (WriteRefused $refused) {
+            $this->refused($refused);
         } finally {
             $auth->shouldUse($guard);
         }
@@ -106,6 +110,15 @@ final class QueuedAction implements ShouldQueue
         $fields = ActionFields::of($action, $inputs, $this->user->guard, $user);
 
         ActionWrites::of($action, $fields, $resource)->handle($models);
+    }
+
+    private function refused(WriteRefused $refused): void
+    {
+        if ($this->job === null || $this->job instanceof SyncJob) {
+            throw $refused;
+        }
+
+        $this->fail($refused);
     }
 
     private function declared(Resource $resource): Action

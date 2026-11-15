@@ -122,8 +122,8 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
                 'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
             ], fn (): array => self::IMPACTED],
             'a queued action chunk' => ['POST', '/retried-documents/actions/queued-rename-retried-documents', $search, 1, [
-                'begin secondary', 'guard operate 1,2', 'commit secondary', 'observe operate 1,2 (2)',
-                'begin secondary', 'guard operate 3', 'rollback secondary',
+                'guard operate 1,2', 'begin secondary', 'guard operate 1,2', 'commit secondary', 'observe operate 1,2 (2)',
+                'guard operate 3', 'begin secondary', 'guard operate 3', 'rollback secondary',
                 'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
             ], fn (): array => self::IMPACTED],
             'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', $search, 1, [
@@ -137,10 +137,10 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
                 'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
             ], fn (): array => self::IMPACTED],
             'a queued action row' => ['POST', '/retried-documents/actions/queued-rename-retried-documents-per-row', $search, 1, [
-                'begin secondary', 'guard operate 1', 'commit secondary', 'observe operate 1 (1)',
+                'guard operate 1,2', 'begin secondary', 'guard operate 1', 'commit secondary', 'observe operate 1 (1)',
                 'begin secondary', 'guard operate 2', 'rollback secondary',
                 'begin secondary', 'guard operate 2', 'commit secondary', 'observe operate 2 (1)',
-                'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
+                'guard operate 3', 'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
             ], fn (): array => self::IMPACTED],
         ];
     }
@@ -267,6 +267,19 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
 
         $this->assertSame(['begin secondary', 'guard destroy 1,3', 'rollback secondary'], EventLog::$lines);
         $this->assertCount(1, WriteLog::$guards);
+        $this->assertSame(['Annual report', 'Roadmap', 'Minutes'], SecondaryDocument::query()->orderBy('id')->pluck('title')->all());
+    }
+
+    #[Test]
+    public function it_answers_the_refusal_of_a_job_run_by_the_sync_queue(): void
+    {
+        WriteLog::$refuseAt = 2;
+
+        $this->postJson('/retried-documents/actions/queued-rename-retried-documents', ['search' => []])
+            ->assertStatus(429)
+            ->assertExactJson(['message' => 'The monthly quota is reached.']);
+
+        $this->assertSame(['guard operate 1,2', 'begin secondary', 'guard operate 1,2', 'rollback secondary'], EventLog::$lines);
         $this->assertSame(['Annual report', 'Roadmap', 'Minutes'], SecondaryDocument::query()->orderBy('id')->pluck('title')->all());
     }
 
