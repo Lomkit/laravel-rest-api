@@ -402,6 +402,66 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $this->assertSame([['Printer jam', 'Billing'], ['Password reset', 'Support'], ['Printer toner', 'Billing'], ['Laptop setup', 'Support']], $read);
     }
 
+    /** @param array<string, class-string<Extension>> $extensions */
+    #[Test]
+    #[DataProvider('configOrders')]
+    public function it_lets_two_extensions_load_the_same_relation(array $extensions): void
+    {
+        config(['rest.extensions' => $extensions]);
+        $this->seedTickets();
+        $loads = static function (PendingChecks $checks): void {
+            $checks->rows->load('tags');
+        };
+        PreparingExtension::$prepare = $loads;
+        SecondPreparingExtension::$prepare = $loads;
+        $payload = ['search' => ['gates' => ['update'], 'includes' => [['relation' => 'team']], 'sorts' => [['field' => 'id']]]];
+
+        $this->postJson('/api/tickets/search', $payload)->assertOk()->assertJsonPath('data.*.gates.authorized_to_update.allowed', [true, false, true, false]);
+
+        $this->assertCount(1, PreparingExtension::$received);
+        $this->assertCount(1, SecondPreparingExtension::$received);
+        $this->assertTrue(PreparingExtension::$received[0]->rows->every(fn (Model $row): bool => $row->relationLoaded('tags')));
+    }
+
+    #[Test]
+    public function it_lets_an_extension_load_a_relation_that_the_hook_loaded(): void
+    {
+        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        $rows = array_values($this->seedTickets());
+        $loads = static function (PendingChecks $checks): void {
+            $checks->rows->load('tags');
+        };
+        PreparedTicketResource::$prepare = $loads;
+        PreparingExtension::$prepare = $loads;
+
+        $this->postJson('/prepared-tickets/search', ['search' => ['gates' => ['update'], 'sorts' => [['field' => 'id']]]])->assertOk();
+
+        $this->assertSame([
+            'viewAny',
+            'prepare update '.$this->keys(...$rows).' for guest',
+            'ext first update '.$this->keys(...$rows).' for guest',
+            ...$this->calls('update', ...$rows),
+        ], $this->tickets->calls);
+    }
+
+    #[Test]
+    public function it_refuses_the_second_extension_that_replaces_a_relation_loaded_before_the_preparation(): void
+    {
+        config(['rest.extensions' => ['a' => SecondPreparingExtension::class, 'b' => PreparingExtension::class]]);
+        $this->seedTickets();
+        SecondPreparingExtension::$prepare = static function (PendingChecks $checks): void {
+            $checks->rows->load('tags');
+        };
+        PreparingExtension::$prepare = static function (PendingChecks $checks): void {
+            $checks->rows->load('team');
+        };
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('b', TicketResource::class, 'update'));
+
+        $this->postJson('/api/tickets/search', ['search' => ['gates' => ['update'], 'includes' => [['relation' => 'team']], 'sorts' => [['field' => 'id']]]]);
+    }
+
     /**
      * @param  list<string>  $abilities
      * @return list<string>

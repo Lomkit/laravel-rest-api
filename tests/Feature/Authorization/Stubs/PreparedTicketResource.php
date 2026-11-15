@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Authorization\Stubs;
 
+use Closure;
 use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Fields\Integer;
@@ -16,6 +17,9 @@ class PreparedTicketResource extends TicketResource
     /** @var list<PendingChecks> */
     public static array $received = [];
 
+    /** @var (Closure(PendingChecks): void)|null */
+    public static ?Closure $prepare = null;
+
     #[\Override]
     public function prepareAuthorization(PendingChecks $checks): void
     {
@@ -23,6 +27,10 @@ class PreparedTicketResource extends TicketResource
         $user = $checks->user?->getAuthIdentifier() ?? 'guest';
 
         app(TicketPolicy::class)->calls[] = 'prepare '.$checks->ability.' '.implode(',', $checks->rows->modelKeys()).' for '.$user;
+
+        if (self::$prepare !== null) {
+            (self::$prepare)($checks);
+        }
     }
 
     #[\Override]

@@ -118,6 +118,37 @@ class PreparedRowsTest extends TestCase
         $rows->ensureUnchanged('acl', $checks);
     }
 
+    #[Test]
+    public function it_lets_an_extension_replace_a_relation_that_the_preparation_loaded(): void
+    {
+        $checks = $this->checks();
+        $row = $checks->rows->firstOrFail();
+        $start = PreparedRows::of($checks->rows);
+        $row->setRelation('tags', new Collection);
+
+        $rows = PreparedRows::of($checks->rows, $start);
+        $row->setRelation('tags', new Collection);
+
+        $rows->ensureUnchanged('acl', $checks);
+        $this->assertTrue($row->relationLoaded('tags'));
+    }
+
+    #[Test]
+    public function it_refuses_an_extension_that_replaces_a_relation_loaded_before_the_preparation(): void
+    {
+        $checks = $this->checks();
+        $row = $checks->rows->firstOrFail();
+        $row->setRelation('team', null);
+        $start = PreparedRows::of($checks->rows);
+        $row->setRelation('tags', new Collection);
+
+        $rows = PreparedRows::of($checks->rows, $start);
+        $row->setRelation('team', new PreparedDocument);
+
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', $checks);
+    }
+
     private function checks(): PendingChecks
     {
         $row = (new PreparedDocument)->newFromBuilder(['id' => 1, 'team_id' => 3, 'meta' => '{"a": 1}', 'settings' => '{"a": 1}']);

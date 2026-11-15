@@ -67,12 +67,15 @@ final class DecisionPreparation
 
     private function hand(PendingChecks $checks): void
     {
+        $extensions = $this->extensionsOf($checks->resource);
+        $start = $extensions === [] ? null : PreparedRows::of($checks->rows);
+
         if (self::hooked($checks->resource)) {
             $checks->resource->prepareAuthorization($checks);
         }
 
-        foreach ($this->extensionsOf($checks->resource) as $name => $extension) {
-            $rows = PreparedRows::of($checks->rows);
+        foreach ($extensions as $name => $extension) {
+            $rows = PreparedRows::of($checks->rows, $start);
             $extension->prepareRowChecks($checks);
             $rows->ensureUnchanged($name, $checks);
         }

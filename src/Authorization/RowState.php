@@ -22,9 +22,20 @@ final readonly class RowState
         private array $relations,
     ) {}
 
-    public static function of(Model $row): self
+    public static function of(Model $row, ?self $start = null): self
     {
-        return new self($row, $row->getRawOriginal(), self::stored($row, self::castKeys($row)), $row->getRelations());
+        $relations = $row->getRelations();
+
+        if ($start !== null) {
+            $relations = array_intersect_key($relations, $start->relations);
+        }
+
+        return new self($row, $row->getRawOriginal(), self::stored($row, self::castKeys($row)), $relations);
+    }
+
+    public function row(): Model
+    {
+        return $this->row;
     }
 
     public function keeps(Model $row): bool
