@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions\Routes;
 
 use Illuminate\Routing\Route;
+use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
@@ -10,11 +11,13 @@ use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\BadlyNamedStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutesNamedB;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RoutedStampNamedLimits;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampNamedLimits;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutesNamedA;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampsRequests;
 use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketController;
+use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RenamableExtension;
 use PHPUnit\Framework\Attributes\After;
@@ -33,6 +36,7 @@ final class RouteExtensionNamesTest extends HelpdeskTestCase
         StampRoutes::reset();
         OtherStampRoutes::reset();
         ExtensionLog::reset();
+        RoutedStampNamedLimits::$built = 0;
     }
 
     #[Test]
@@ -103,14 +107,102 @@ final class RouteExtensionNamesTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_refuses_a_name_that_a_route_class_shares_with_a_bound_class(): void
+    public function it_refuses_a_name_that_a_route_class_shares_with_a_class_bound_to_a_route_subclass(): void
     {
         config(['rest.extensions' => [StampRoutes::class, StampNamedLimits::class]]);
-        $this->app->bind(StampNamedLimits::class);
+        $this->app->bind(StampNamedLimits::class, RoutedStampNamedLimits::class);
 
         $this->expectExceptionObject(new InvalidExtensionException('The extensions '.StampRoutes::class.' and '.StampNamedLimits::class.' share the name [stamp]. Add one of them to the [rest.disabled_extensions] config, or extend one of them and override name() to give it another name.'));
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+    }
+
+    #[Test]
+    public function it_leaves_a_name_shared_with_a_bound_class_of_another_kind_to_the_request(): void
+    {
+        config(['rest.extensions' => [StampRoutes::class, StampNamedLimits::class]]);
+        $this->app->bind(StampNamedLimits::class);
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+
+        $this->assertSame([EnforceExpectsJson::class, self::STAMP], $this->search()->middleware());
+        $this->expectExceptionObject(InvalidExtensionException::sharedName('stamp', [StampRoutes::class, StampNamedLimits::class]));
+
+        $this->withoutExceptionHandling()->postJson('/routed-tickets/search');
+    }
+
+    #[Test]
+    public function it_reads_no_name_of_a_bound_entry_of_another_kind(): void
+    {
+        config(['rest.extensions' => [StampRoutes::class, RenamableExtension::class]]);
+        $this->app->bind(RenamableExtension::class);
+        RenamableExtension::$given = 'Not a name';
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+
+        $this->assertSame([EnforceExpectsJson::class, self::STAMP], $this->search()->middleware());
+        $this->assertSame([], ExtensionLog::$named);
+    }
+
+    #[Test]
+    public function it_reads_the_name_of_a_bound_entry_that_adds_route_middleware(): void
+    {
+        config(['rest.extensions' => [StampNamedLimits::class]]);
+        $this->app->bind(StampNamedLimits::class, RoutedStampNamedLimits::class);
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+
+        $this->assertSame([EnforceExpectsJson::class, StampsRequests::class.':bound'], $this->search()->middleware());
+        $this->assertSame(1, RoutedStampNamedLimits::$built);
+    }
+
+    #[Test]
+    public function it_builds_no_disabled_bound_class(): void
+    {
+        config(['rest.extensions' => [StampRoutes::class, StampNamedLimits::class], 'rest.disabled_extensions' => [StampNamedLimits::class]]);
+        $this->app->bind(StampNamedLimits::class, RoutedStampNamedLimits::class);
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+
+        $this->assertSame([EnforceExpectsJson::class, self::STAMP], $this->search()->middleware());
+        $this->assertSame(0, RoutedStampNamedLimits::$built);
+    }
+
+    #[Test]
+    public function it_refuses_a_map_config_when_routes_register(): void
+    {
+        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+
+        $this->expectExceptionObject(InvalidConfigException::mustBe('rest.extensions', 'a list of extension class names'));
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+    }
+
+    #[Test]
+    public function it_disables_nothing_with_a_disabled_config_that_is_not_a_list(): void
+    {
+        config(['rest.extensions' => [StampRoutes::class], 'rest.disabled_extensions' => ['stamp' => StampRoutes::class]]);
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+
+        $this->assertSame([EnforceExpectsJson::class, self::STAMP], $this->search()->middleware());
+        $this->expectExceptionObject(InvalidConfigException::mustBe('rest.disabled_extensions', 'a list of extension class names'));
+
+        $this->withoutExceptionHandling()->postJson('/routed-tickets/search');
+    }
+
+    #[Test]
+    public function it_registers_routes_beside_an_extension_config_of_another_kind_that_is_not_a_list(): void
+    {
+        config(['rest.extensions' => ['counting' => CountingExtension::class, 'stamp' => 'Missing\Extension']]);
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+
+        $this->assertSame([EnforceExpectsJson::class], $this->search()->middleware());
+        $this->assertSame([], ExtensionLog::$built);
+        $this->expectExceptionObject(InvalidConfigException::mustBe('rest.extensions', 'a list of extension class names'));
+
+        $this->withoutExceptionHandling()->postJson('/routed-tickets/search');
     }
 
     #[Test]
