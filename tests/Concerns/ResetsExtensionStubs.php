@@ -30,6 +30,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SqlForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampsRequests;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainProfile;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
@@ -70,5 +71,6 @@ trait ResetsExtensionStubs
         ChangingReadObserver::$named = null;
         FirstResponses::reset();
         SecondResponses::reset();
+        PlainProfile::reset();
     }
 }

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Text\Engine;
 
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
+use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\ExtensionRestrictions;
@@ -134,6 +135,14 @@ final class EngineQuery
         $this->restricted = new RestrictedPage($this->index->profile, $rows, $this->index->searchedClass());
 
         return true;
+    }
+
+    /** @internal */
+    public function engine(): object
+    {
+        $engine = $this->index->model->engine();
+
+        return is_object($engine) ? $engine : throw InvalidTextSearchException::engineNotAnObject($this->index->searchedClass(), get_debug_type($engine));
     }
 
     /** @internal */

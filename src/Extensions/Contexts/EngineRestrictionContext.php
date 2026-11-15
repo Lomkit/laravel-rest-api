@@ -15,5 +15,6 @@ final readonly class EngineRestrictionContext
         public bool $matchesStringLists,
         public bool $rowsRestrictedInSql,
         public bool $comparesColumns,
+        public object $engine,
     ) {}
 }

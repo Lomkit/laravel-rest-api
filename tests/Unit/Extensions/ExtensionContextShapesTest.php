@@ -37,7 +37,7 @@ final class ExtensionContextShapesTest extends TestCase
             'a gate declaration' => [GatesContext::class, ['resource']],
             'an index attribute declaration' => [IndexAttributesContext::class, ['resource', 'matchesStringLists']],
             'an engine profile provider' => [EngineProfileContext::class, ['resource', 'engine']],
-            'an engine restriction' => [EngineRestrictionContext::class, ['query', 'resource', 'user', 'matchesStringLists', 'rowsRestrictedInSql', 'comparesColumns']],
+            'an engine restriction' => [EngineRestrictionContext::class, ['query', 'resource', 'user', 'matchesStringLists', 'rowsRestrictedInSql', 'comparesColumns', 'engine']],
         ];
     }
 
