@@ -5,10 +5,12 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 use Lomkit\Rest\Exceptions\InvalidDocumentationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Extensions\Applicability;
+use Lomkit\Rest\Extensions\Kinds\AddsDetailsMeta;
 use Lomkit\Rest\Extensions\Kinds\AddsSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaStageMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionStageMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SchemaOnlyMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SearchOnlyMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharedSchemaMeta;
 use Lomkit\Rest\Tests\Fixtures\Festival\StageResource;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -126,6 +128,16 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
         config(['rest.extensions' => ['schema' => SchemaOnlyMeta::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationExtensionException::metaWithoutKind('schema', SchemaOnlyMeta::class, StageResource::class, AddsSearchMeta::class));
+
+        $this->document();
+    }
+
+    #[Test]
+    public function it_refuses_a_details_meta_schema_of_an_extension_that_adds_only_search_meta(): void
+    {
+        config(['rest.extensions' => ['search' => SearchOnlyMeta::class], 'app.debug' => false]);
+
+        $this->expectExceptionObject(InvalidDocumentationExtensionException::metaWithoutKind('search', SearchOnlyMeta::class, StageResource::class, AddsDetailsMeta::class));
 
         $this->document();
     }
