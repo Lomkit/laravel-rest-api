@@ -1533,9 +1533,9 @@ final class ArchiveExtension extends Extension implements RestrictsQueries
 
 ### Restricting queries (`RestrictsQueries`)
 
-App: `'tenant' => \Vendor\Tenancy\TenantExtension::class` in `rest.extensions`.
+App: `\Vendor\Tenancy\TenantExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(TenantExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\RestrictionContext;
@@ -1545,6 +1545,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 final class TenantExtension extends Extension implements RestrictsQueries
 {
     public function __construct(private readonly CurrentTenant $tenant) {}
+
+    #[\Override]
+    public static function name(): string
+    {
+        return 'tenant';
+    }
 
     #[\Override]
     public function restrict(RestrictionContext $context): void
@@ -1561,18 +1567,18 @@ final class TenantExtension extends Extension implements RestrictsQueries
 ```
 
 - Guarantees: `$context->query` is the Eloquent builder of the extension's own where group. The group comes after `perimeterQuery()`, inside its own parentheses, and is AND-ed with the perimeter and with the other extensions: an `orWhere()` in it cannot widen the rows. It reaches every path of the perimeter: searches and includes (through a pivot too), relation filters, sorts and aggregates, metrics and the key of their cache in both scopes, the key lookups of `mutate`, `destroy`, `restore`, `forceDestroy` and actions, the rows of queued actions, child syncs, attached pivot rows, the records read after a write and the write gates of rendered rows. It also applies to `#[WithoutPerimeter]` resources. `$context->resource` is the restricted resource, the related one on a relation path. An override of `Relation::applyPerimeter()` cannot skip it: every relation path calls the final `Relation::constrainToPerimeter()`, which runs `applyPerimeter()` inside its own group and adds the restrictions after it; a custom relation picks the restricted resource with the protected `perimeterResource(Model $model)`.
-- Forbids: anything but where clauses. A join, order, limit, offset, select, distinct, lock, group, having, union, eager load, `from()`, `beforeQuery()` or `afterQuery()` callback, global scope added with `withGlobalScope()` or removed global scope (`withTrashed()`, `withoutGlobalScope()`) throws `Lomkit\Rest\Exceptions\InvalidQueryExtensionException`, which names the extension and the resource. The check reads the nested `where(fn ($query) => ...)` groups too, at every depth. Reach another table with `whereHas()` or `whereExists()`.
+- Forbids: anything but where clauses. A join, order, limit, offset, select, distinct, lock, group, having, union, eager load, `from()`, `beforeQuery()` or `afterQuery()` callback, global scope added with `withGlobalScope()` or removed global scope (`withTrashed()`, `withoutGlobalScope()`) throws `Lomkit\Rest\Exceptions\InvalidQueryExtensionException`, which names the extension (its name and its class) and the resource. The check reads the nested `where(fn ($query) => ...)` groups too, at every depth. Reach another table with `whereHas()` or `whereExists()`.
 - `$context->user` is the user of the request, `null` for a guest: decide the rows of a guest yourself (`0 = 1` hides them all).
 - Qualify columns with `$context->query->qualifyColumn()`: pivot reads join another table.
 - A restriction may run several times in one request, and again on each attempt of a write transaction: keep it free of side effects.
 - Write where clauses only. Laravel drops a global scope or an `afterQuery()` callback added to the Eloquent builder of a nested group before the check can see it, and neither is applied.
-- A text search through a search engine on a restricted resource throws `InvalidTextSearchException`: leave the resource out with `appliesTo()`, or disable the extension with `'name' => false` in `rest.extensions`.
+- A text search through a search engine on a restricted resource throws `InvalidTextSearchException`: leave the resource out with `appliesTo()`, or add the extension class to `rest.disabled_extensions`.
 
 ### Adding to rendered rows (`AugmentsQueries`)
 
-App: `'locks' => \Vendor\Locks\LockColumnsExtension::class` in `rest.extensions`.
+App: `\Vendor\Locks\LockColumnsExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(LockColumnsExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
@@ -1581,6 +1587,12 @@ use Lomkit\Rest\Extensions\Kinds\AugmentsQueries;
 
 final class LockColumnsExtension extends Extension implements AugmentsQueries
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'locks';
+    }
+
     #[\Override]
     public function appliesTo(string $resource): bool
     {
@@ -1611,9 +1623,9 @@ final class LockColumnsExtension extends Extension implements AugmentsQueries
 
 ### Narrowing limits (`NarrowsLimits`)
 
-App: `'quota' => \Vendor\Plans\PlanLimitsExtension::class` in `rest.extensions`.
+App: `\Vendor\Plans\PlanLimitsExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(PlanLimitsExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\LimitsContext;
@@ -1622,6 +1634,12 @@ use Lomkit\Rest\Extensions\Kinds\NarrowsLimits;
 
 final class PlanLimitsExtension extends Extension implements NarrowsLimits
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
     #[\Override]
     public function narrowLimits(LimitsContext $context): void
     {
@@ -1633,13 +1651,13 @@ final class PlanLimitsExtension extends Extension implements NarrowsLimits
 ```
 
 - Guarantees: never upward, in any extension order. `allowSizes()` intersects the sizes of `limits()`; `maxSize()` and `maxTotal()` drop the larger sizes; `maxTotal()` and `includeLimit()` take the minimum with the resource. The default page size becomes the largest size left at or below `$defaultLimit`, and the include limit the largest size left at or below the narrowed include limit. Validation, paging, includes and `/details` use the limits of the current user (`$context->user`). `$context->declared` holds the limits that the resource declares (`allowed`, `defaultLimit`, `includeLimit`, `maxTotal`), before any extension. The OpenAPI document shows the declared limits: it never calls `narrowLimits()`, and `total_capped` is optional on the pages of a resource that an extension may cap.
-- Forbids: a value below 1, and a narrowing that leaves no size, no size at or below `$defaultLimit` or none at or below the include limit. Each throws `InvalidQueryExtensionException`, naming the extensions and the resource. Reading `definition()->limits()` of the resource inside `narrowLimits()`, which computes them, throws it too: read `$context->declared`.
+- Forbids: a value below 1, and a narrowing that leaves no size, no size at or below `$defaultLimit` or none at or below the include limit. Each throws `InvalidQueryExtensionException`, naming each extension by its name and its class, and the resource. Reading `definition()->limits()` of the resource inside `narrowLimits()`, which computes them, throws it too: read `$context->declared`.
 
 ### Declaring instructions (`DeclaresInstructions`)
 
-App: `'arc' => \Vendor\Archive\ArchiveExtension::class` in `rest.extensions`.
+App: `\Vendor\Archive\ArchiveExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(ArchiveExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\InstructionsContext;
@@ -1649,6 +1667,12 @@ use Lomkit\Rest\Extensions\Kinds\DeclaresInstructions;
 final class ArchiveExtension extends Extension implements DeclaresInstructions
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'arc';
+    }
+
+    #[\Override]
     public function instructions(InstructionsContext $context): array
     {
         return is_subclass_of($context->resource, ArchivableResource::class) ? [WithArchivedInstruction::class] : [];
@@ -1657,7 +1681,7 @@ final class ArchiveExtension extends Extension implements DeclaresInstructions
 ```
 
 - Guarantees: a static kind. It receives the resource class only, no user, and its instructions are read with those of the resource. The key of each instruction is the extension name, a dot and its `uriKey()` (`arc.with-archived`, `$instruction->publicUriKey()`), in requests, `/details`, search meta and the OpenAPI document. Like any instruction, it runs inside its own where group, AND-ed with the rest of the search. An instance returned for several resources is copied for each.
-- Forbids: a key that another instruction of the resource or of an extension takes, and the entries that `instructions()` of a resource refuses (a class that does not extend `Instruction`, `Instruction::class` itself, an abstract class, a binding that builds another class). Each throws `InvalidQueryExtensionException`, naming the extension and the resource, and `rest:check` reports it.
+- Forbids: a key that another instruction of the resource or of an extension takes, and the entries that `instructions()` of a resource refuses (a class that does not extend `Instruction`, `Instruction::class` itself, an abstract class, a binding that builds another class). Each throws `InvalidQueryExtensionException`, naming the extension (its name and its class) and the resource, and `rest:check` reports it.
 
 ## Artisan commands shipped by the package
 
