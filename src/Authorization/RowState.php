@@ -70,7 +70,40 @@ final readonly class RowState
             $read->getAttribute($key);
         }
 
-        return self::stored($row, $keys) === $read->getAttributes();
+        return self::sameStorage($row, $keys, self::stored($row, $keys), $read->getAttributes());
+    }
+
+    /**
+     * @param  list<string>  $castKeys
+     * @param  array<string, mixed>  $now
+     * @param  array<string, mixed>  $before
+     */
+    private static function sameStorage(Model $row, array $castKeys, array $now, array $before): bool
+    {
+        if ($now === $before) {
+            return true;
+        }
+
+        if (array_diff_key($now, $before) !== [] || array_diff_key($before, $now) !== []) {
+            return false;
+        }
+
+        foreach ($now as $key => $value) {
+            if ($value !== $before[$key] && (! in_array($key, $castKeys, true) || ! self::equivalent($row, $key, $value, $before[$key]))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function equivalent(Model $row, string $key, mixed $now, mixed $before): bool
+    {
+        $probe = (clone $row)->setRawAttributes([]);
+        $probe->setRawAttributes([$key => $before], true);
+        $probe->setRawAttributes([$key => $now]);
+
+        return $probe->originalIsEquivalent($key);
     }
 
     /**
