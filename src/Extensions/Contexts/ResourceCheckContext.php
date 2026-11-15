@@ -10,11 +10,10 @@ final readonly class ResourceCheckContext
     /**
      * @internal
      *
-     * @param  class-string<Resource>  $resource
      * @param  Closure(string): void  $report
      */
     public function __construct(
-        public string $resource,
+        public Resource $resource,
         private Closure $report,
     ) {}
 

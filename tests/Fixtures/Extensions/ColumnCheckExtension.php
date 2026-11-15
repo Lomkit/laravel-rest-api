@@ -18,9 +18,9 @@ class ColumnCheckExtension extends Extension implements ChecksResources
     #[\Override]
     public function checkResource(ResourceCheckContext $context): void
     {
-        ExtensionLog::$checked[] = $context->resource;
+        ExtensionLog::$checked[] = $context->resource::class;
 
-        if ($context->resource === TripResource::class) {
+        if ($context->resource instanceof TripResource) {
             $context->problem('the trips table has no tenant_id column.');
         }
     }

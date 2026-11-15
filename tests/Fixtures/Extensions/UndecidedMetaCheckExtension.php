@@ -37,6 +37,6 @@ final class UndecidedMetaCheckExtension extends Extension implements AddsSearchM
     #[\Override]
     public function checkResource(ResourceCheckContext $context): void
     {
-        ExtensionLog::$checked[] = $context->resource;
+        ExtensionLog::$checked[] = $context->resource::class;
     }
 }

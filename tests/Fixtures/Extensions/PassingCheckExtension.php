@@ -17,6 +17,6 @@ final class PassingCheckExtension extends Extension implements ChecksResources
     #[\Override]
     public function checkResource(ResourceCheckContext $context): void
     {
-        ExtensionLog::$checked[] = $context->resource;
+        ExtensionLog::$checked[] = $context->resource::class;
     }
 }
