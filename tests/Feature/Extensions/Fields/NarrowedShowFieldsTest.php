@@ -58,7 +58,7 @@ class NarrowedShowFieldsTest extends PackageTestCase
     {
         $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('updated_at'));
 
-        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension hides [updated_at], the row version of '.ShowResource::class.': versioned() reads it on each update and returns it in a 409. Call readOnly(), unfilterable() or unsortable() on it instead, or turn versioned() off.'));
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' hides [updated_at], the row version of '.ShowResource::class.': versioned() reads it on each update and returns it in a 409. Call readOnly(), unfilterable() or unsortable() on it instead, or turn versioned() off.'));
 
         $this->withoutExceptionHandling()->postJson('/api/shows/search', ['search' => []]);
     }
@@ -85,7 +85,7 @@ class NarrowedShowFieldsTest extends PackageTestCase
     {
         $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('title'));
 
-        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension hides [title], a searchable() field of '.ShowResource::class.': its text search would still match the value. Remove searchable() from the field or keep it visible.'));
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' hides [title], a searchable() field of '.ShowResource::class.': its text search would still match the value. Remove searchable() from the field or keep it visible.'));
 
         $this->withoutExceptionHandling()->postJson('/api/shows/search', ['search' => []]);
     }
@@ -232,7 +232,7 @@ class NarrowedShowFieldsTest extends PackageTestCase
         try {
             $this->withoutExceptionHandling()->json($method, $uri, ['resources' => [$this->opening]]);
         } catch (InvalidFieldExtensionException $exception) {
-            $this->assertSame(InvalidFieldExtensionException::unknownField('mask', ShowResource::class, FieldReduction::Hide, 'colour')->getMessage(), $exception->getMessage());
+            $this->assertSame(InvalidFieldExtensionException::unknownField('mask', MaskingFields::class, ShowResource::class, FieldReduction::Hide, 'colour')->getMessage(), $exception->getMessage());
             $this->assertSame($before, $this->openingState());
 
             return;

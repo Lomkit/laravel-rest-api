@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Http;
 
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\ExtensionRegistry;
 use Lomkit\Rest\Extensions\Kinds\NarrowsFields;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\NarrowedFields;
@@ -11,11 +12,13 @@ use Lomkit\Rest\Fields\NarrowedFields;
 /** @internal */
 final class FieldNarrowing
 {
-    private string $running = '';
+    /** @var array{string, string} */
+    private array $running = ['', ''];
 
     /** @param array<string, Extension&NarrowsFields> $extensions */
     private function __construct(
         private readonly Resource $resource,
+        private readonly ExtensionRegistry $registry,
         private readonly array $extensions,
     ) {}
 
@@ -27,16 +30,18 @@ final class FieldNarrowing
             return null;
         }
 
-        $extensions = $context->extensions()->applicable($resource::class, NarrowsFields::class);
+        $registry = $context->extensions();
+        $extensions = $registry->applicable($resource::class, NarrowsFields::class);
 
         if ($extensions === []) {
             return null;
         }
 
-        return new self($resource, $extensions);
+        return new self($resource, $registry, $extensions);
     }
 
-    public function running(): string
+    /** @return array{string, string} */
+    public function running(): array
     {
         return $this->running;
     }
@@ -47,8 +52,9 @@ final class FieldNarrowing
         $user = $this->resource->context()->actingUser()->user;
 
         foreach ($this->extensions as $name => $extension) {
-            $this->running = $name;
-            $extension->narrowFields(new FieldsContext($name, $this->resource, $user, $requests));
+            $class = $this->registry->classOf($name);
+            $this->running = [$name, $class];
+            $extension->narrowFields(new FieldsContext($name, $class, $this->resource, $user, $requests));
         }
 
         return $requests->narrowed();

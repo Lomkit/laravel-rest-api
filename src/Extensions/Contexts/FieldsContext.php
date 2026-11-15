@@ -12,6 +12,7 @@ final readonly class FieldsContext
     /** @internal */
     public function __construct(
         private string $extension,
+        private string $class,
         public Resource $resource,
         public ?Authenticatable $user,
         private FieldRequests $requests,
@@ -46,7 +47,7 @@ final readonly class FieldsContext
     private function reduce(FieldReduction $reduction, array $fields): void
     {
         foreach ($fields as $field) {
-            $this->requests->add($this->extension, $reduction, $field);
+            $this->requests->add($this->extension, $this->class, $reduction, $field);
         }
     }
 }

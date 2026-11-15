@@ -68,13 +68,14 @@ class ExtensionExceptionTest extends TestCase
     #[Test]
     public function it_gives_the_field_extension_exception_the_shared_base_only(): void
     {
-        $exception = InvalidFieldExtensionException::unknownField('mask', 'App\Rest\PostResource', FieldReduction::Hide, 'salary');
+        $exception = InvalidFieldExtensionException::unknownField('mask', 'App\Rest\MaskExtension', 'App\Rest\PostResource', FieldReduction::Hide, 'salary');
 
-        $this->assertSame([true, false, false, true], [
+        $this->assertSame([true, false, false, true, false], [
             is_a($exception, ExtensionException::class),
             is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidFieldExtensionException::class, 'missingName'),
-            $exception->namesExtension('mask'),
+            method_exists(InvalidFieldExtensionException::class, 'notAClass'),
+            $exception->concerns('App\Rest\MaskExtension'),
+            $exception->concerns('mask'),
         ]);
     }
 
@@ -83,11 +84,12 @@ class ExtensionExceptionTest extends TestCase
     {
         $exception = InvalidRouteExtensionException::invalidMiddleware('plans', 'App\Rest\PlanRoutes', 'App\Rest\PostResource', Endpoint::Search, 'an empty string');
 
-        $this->assertSame([true, false, false, true], [
+        $this->assertSame([true, false, false, true, false], [
             is_a($exception, ExtensionException::class),
             is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidRouteExtensionException::class, 'missingName'),
-            $exception->namesExtension('plans'),
+            method_exists(InvalidRouteExtensionException::class, 'notAClass'),
+            $exception->concerns('App\Rest\PlanRoutes'),
+            $exception->concerns('plans'),
         ]);
     }
 

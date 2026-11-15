@@ -48,7 +48,7 @@ final class RouteExtensions
 
         $resource = $controller::resourceClass();
 
-        return ExtensionMiddleware::of($this->applicable[$resource] ??= $this->applicableTo($resource), $resource, $controller);
+        return ExtensionMiddleware::of($this->applicable[$resource] ??= $this->applicableTo($resource), $this->candidates, $resource, $controller);
     }
 
     /** @return array<string, string> */

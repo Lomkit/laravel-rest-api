@@ -111,7 +111,7 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
     {
         $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('team'));
 
-        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension hides [team], an attribute that ScoutEngine::perimeter() of '.TeamVoucherResource::class.' reads for every user. Keep it visible: clients cannot filter or sort on a perimeter attribute anyway.'));
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' hides [team], an attribute that ScoutEngine::perimeter() of '.TeamVoucherResource::class.' reads for every user. Keep it visible: clients cannot filter or sort on a perimeter attribute anyway.'));
 
         $this->withoutExceptionHandling()->search('team-vouchers', ['text' => ['value' => 'report']]);
     }
@@ -163,7 +163,7 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
     {
         $this->narrow(static fn (FieldsContext $context): mixed => $context->resource->definition()->text());
 
-        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension reads the fields or the text search of '.VoucherResource::class.' while the NarrowsFields extensions narrow them. Read the declared names with FieldsContext::declares() instead.'));
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' reads the fields or the text search of '.VoucherResource::class.' while the NarrowsFields extensions narrow them. Read the declared names with FieldsContext::declares() instead.'));
 
         $this->withoutExceptionHandling()->search('vouchers', ['text' => ['value' => 'report']]);
     }

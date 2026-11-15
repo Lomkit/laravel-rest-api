@@ -65,7 +65,7 @@ class FieldNarrowingRulesTest extends PackageTestCase
     {
         MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->{$method}('name', 'colour');
 
-        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension calls '.$method."('colour') on ".ProductResource::class.', whose fields() declares no field [colour]. Name a field that fields() returns; FieldsContext::declares() tells whether it does.'));
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' calls '.$method."('colour') on ".ProductResource::class.', whose fields() declares no field [colour]. Name a field that fields() returns; FieldsContext::declares() tells whether it does.'));
 
         $this->withoutExceptionHandling()->actingAs(self::user())->postJson('/api/products/search', ['search' => []]);
     }
@@ -92,8 +92,8 @@ class FieldNarrowingRulesTest extends PackageTestCase
 
         $exception = $this->narrowingException();
 
-        $this->assertTrue($exception->namesExtension('a'));
-        $this->assertEquals(InvalidFieldExtensionException::unknownField('a', ProductResource::class, FieldReduction::Unsortable, 'colour'), $exception);
+        $this->assertSame([true, false], [$exception->concerns(OtherMaskingFieldsNamedA::class), $exception->concerns('a')]);
+        $this->assertEquals(InvalidFieldExtensionException::unknownField('a', OtherMaskingFieldsNamedA::class, ProductResource::class, FieldReduction::Unsortable, 'colour'), $exception);
     }
 
     /** @param list<class-string> $extensions */
@@ -107,8 +107,8 @@ class FieldNarrowingRulesTest extends PackageTestCase
 
         $exception = $this->narrowingException();
 
-        $this->assertTrue($exception->namesExtension('a'));
-        $this->assertSame(InvalidFieldExtensionException::unknownField('a', ProductResource::class, FieldReduction::Hide, 'size')->getMessage(), $exception->getMessage());
+        $this->assertSame([true, false], [$exception->concerns(OtherMaskingFieldsNamedA::class), $exception->concerns(MaskingFieldsNamedB::class)]);
+        $this->assertSame(InvalidFieldExtensionException::unknownField('a', OtherMaskingFieldsNamedA::class, ProductResource::class, FieldReduction::Hide, 'size')->getMessage(), $exception->getMessage());
     }
 
     /** @return array<string, array{list<class-string>}> */
@@ -121,11 +121,37 @@ class FieldNarrowingRulesTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_names_the_registered_class_of_a_field_extension_bound_to_a_subclass(): void
+    {
+        $bound = new class extends MaskingFields {};
+        $this->app->bind(MaskingFields::class, static fn (): MaskingFields => $bound);
+        MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->hide('colour');
+
+        $exception = $this->narrowingException();
+
+        $this->assertSame(InvalidFieldExtensionException::unknownField('mask', MaskingFields::class, ProductResource::class, FieldReduction::Hide, 'colour')->getMessage(), $exception->getMessage());
+        $this->assertSame([true, false], [$exception->concerns(MaskingFields::class), $exception->concerns($bound::class)]);
+    }
+
+    #[Test]
+    public function it_names_the_registered_class_of_a_field_extension_that_reads_the_fields_it_narrows(): void
+    {
+        $bound = new class extends MaskingFields {};
+        $this->app->bind(MaskingFields::class, static fn (): MaskingFields => $bound);
+        MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->resource->definition()->fields();
+
+        $exception = $this->narrowingException();
+
+        $this->assertStringStartsWith('The [mask] extension '.MaskingFields::class.' reads the fields', $exception->getMessage());
+        $this->assertSame([true, false], [$exception->concerns(MaskingFields::class), $exception->concerns($bound::class)]);
+    }
+
+    #[Test]
     public function it_refuses_to_hide_the_model_key(): void
     {
         MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->hide('id');
 
-        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension hides [id], the key of the model of '.ProductResource::class.': writes, actions and their responses name rows by it. Call readOnly(), unfilterable() or unsortable() on it instead.'));
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' hides [id], the key of the model of '.ProductResource::class.': writes, actions and their responses name rows by it. Call readOnly(), unfilterable() or unsortable() on it instead.'));
 
         $this->withoutExceptionHandling()->actingAs(self::user())->postJson('/api/products/search', ['search' => []]);
     }
@@ -226,7 +252,7 @@ class FieldNarrowingRulesTest extends PackageTestCase
     {
         MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->resource->definition()->{$read}();
 
-        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension reads the fields or the text search of '.ProductResource::class.' while the NarrowsFields extensions narrow them. Read the declared names with FieldsContext::declares() instead.'));
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' reads the fields or the text search of '.ProductResource::class.' while the NarrowsFields extensions narrow them. Read the declared names with FieldsContext::declares() instead.'));
 
         $this->withoutExceptionHandling()->actingAs(self::user())->postJson('/api/products/search', ['search' => []]);
     }
@@ -241,9 +267,8 @@ class FieldNarrowingRulesTest extends PackageTestCase
         try {
             $this->withoutExceptionHandling()->actingAs(self::user())->postJson('/api/products/search', ['search' => []]);
         } catch (InvalidFieldExtensionException $exception) {
-            $this->assertStringStartsWith('The [other] extension reads the fields or the text search of '.ProductResource::class, $exception->getMessage());
-            $this->assertTrue($exception->namesExtension('other'));
-            $this->assertFalse($exception->namesExtension('mask'));
+            $this->assertStringStartsWith('The [other] extension '.OtherMaskingFields::class.' reads the fields or the text search of '.ProductResource::class, $exception->getMessage());
+            $this->assertSame([true, false], [$exception->concerns(OtherMaskingFields::class), $exception->concerns(MaskingFields::class)]);
 
             return;
         }

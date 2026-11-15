@@ -425,6 +425,23 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
         $this->assertSame([EnforceExpectsJson::class, StampsRequests::class.':bound'], $this->routeNamed('routed-tickets.search')->middleware());
     }
 
+    #[Test]
+    public function it_names_the_registered_class_of_a_route_extension_bound_to_a_subclass(): void
+    {
+        config(['rest.extensions' => [StampRoutes::class]]);
+        $bound = new class extends StampRoutes {};
+        $this->app->bind(StampRoutes::class, static fn (): StampRoutes => $bound);
+        StampRoutes::$middleware = static fn (): array => [0];
+
+        try {
+            Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+            $this->fail('The registration passed.');
+        } catch (InvalidRouteExtensionException $exception) {
+            $this->assertSame('The [stamp] extension '.StampRoutes::class.' returns int in routeMiddleware() for the search routes of '.RoutedTicketResource::class.". Return a list of middleware names as non-empty strings, such as 'throttle:quota' or QuotaMiddleware::class: route:cache stores each middleware as text.", $exception->getMessage());
+            $this->assertSame([true, false], [$exception->concerns(StampRoutes::class), $exception->concerns($bound::class)]);
+        }
+    }
+
     /** @param Closure(): array<mixed> $returned */
     private function assertRefused(Closure $returned, string $given): void
     {
@@ -437,7 +454,7 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
             $this->fail('The registration passed.');
         } catch (InvalidRouteExtensionException $exception) {
             $this->assertSame('The [stamp] extension '.StampRoutes::class.' returns '.$given.' in routeMiddleware() for the details routes of '.RoutedTicketResource::class.". Return a list of middleware names as non-empty strings, such as 'throttle:quota' or QuotaMiddleware::class: route:cache stores each middleware as text.", $exception->getMessage());
-            $this->assertTrue($exception->namesExtension('stamp'));
+            $this->assertSame([true, false], [$exception->concerns(StampRoutes::class), $exception->concerns('stamp')]);
         }
 
         $this->assertCount($routes, $this->app['router']->getRoutes()->getRoutes());

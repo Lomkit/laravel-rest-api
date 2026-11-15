@@ -50,7 +50,9 @@ final class ResourceFields
         }
 
         if ($this->narrowing !== null) {
-            throw InvalidFieldExtensionException::readsNarrowedFields($this->narrowing->running(), $this->resource::class);
+            [$name, $class] = $this->narrowing->running();
+
+            throw InvalidFieldExtensionException::readsNarrowedFields($name, $class, $this->resource::class);
         }
 
         $narrowing = FieldNarrowing::of($this->resource);

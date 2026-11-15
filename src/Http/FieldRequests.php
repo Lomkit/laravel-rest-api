@@ -33,13 +33,13 @@ final class FieldRequests
         return $this->declared->has($field);
     }
 
-    public function add(string $extension, FieldReduction $reduction, string $field): void
+    public function add(string $extension, string $class, FieldReduction $reduction, string $field): void
     {
         $declared = $this->declared->find($field)
-            ?? throw InvalidFieldExtensionException::unknownField($extension, $this->resource::class, $reduction, $field);
+            ?? throw InvalidFieldExtensionException::unknownField($extension, $class, $this->resource::class, $reduction, $field);
 
         if ($reduction === FieldReduction::Hide) {
-            $this->ensureHideable($extension, $declared);
+            $this->ensureHideable($extension, $class, $declared);
         }
 
         $listed = $this->names[$reduction->value] ?? [];
@@ -59,26 +59,26 @@ final class FieldRequests
         );
     }
 
-    private function ensureHideable(string $extension, Field $field): void
+    private function ensureHideable(string $extension, string $class, Field $field): void
     {
         $resource = $this->resource::class;
 
         if ($field->name === $this->version) {
-            throw InvalidFieldExtensionException::hidesVersion($extension, $resource, $field->name);
+            throw InvalidFieldExtensionException::hidesVersion($extension, $class, $resource, $field->name);
         }
 
         if ($field->name === $this->key) {
-            throw InvalidFieldExtensionException::hidesKey($extension, $resource, $field->name);
+            throw InvalidFieldExtensionException::hidesKey($extension, $class, $resource, $field->name);
         }
 
         $text = $this->text();
 
         if ($text instanceof QueryTextSearch && $field->isSearchable()) {
-            throw InvalidFieldExtensionException::hidesSearchable($extension, $resource, $field->name);
+            throw InvalidFieldExtensionException::hidesSearchable($extension, $class, $resource, $field->name);
         }
 
         if ($text instanceof ScoutEngine && in_array($field->name, $text->perimeterNames(), true)) {
-            throw InvalidFieldExtensionException::hidesPerimeterAttribute($extension, $resource, $field->name);
+            throw InvalidFieldExtensionException::hidesPerimeterAttribute($extension, $class, $resource, $field->name);
         }
     }
 
