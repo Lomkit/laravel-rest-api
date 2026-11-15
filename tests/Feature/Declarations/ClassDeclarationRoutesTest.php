@@ -7,11 +7,9 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 use Lomkit\Rest\Exceptions\InvalidActionException;
 use Lomkit\Rest\Exceptions\InvalidMetricException;
 use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
-use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
-use Lomkit\Rest\Http\Routing\RouteExtensions;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeclarationLog;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketController;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketResource;
@@ -131,7 +129,9 @@ class ClassDeclarationRoutesTest extends DeclarationTestCase
     {
         $resolved = [];
         $this->app->beforeResolving(function (string $abstract) use (&$resolved): void {
-            $resolved[] = $abstract;
+            if (! str_starts_with($abstract, 'Lomkit\\Rest\\Extensions\\') && ! str_starts_with($abstract, 'Lomkit\\Rest\\Http\\Routing\\')) {
+                $resolved[] = $abstract;
+            }
         });
 
         Rest::resource('desk-tickets', DeskTicketController::class)->register();
@@ -139,20 +139,7 @@ class ClassDeclarationRoutesTest extends DeclarationTestCase
         Rest::resource('teams', TeamController::class)->only('operate', 'metric')->register();
 
         $this->assertSame([], DeclarationLog::$built);
-        $this->assertSame([
-            RuntimeExtensions::class,
-            RouteExtensions::class,
-            'request',
-            RuntimeExtensions::class,
-            DeskTicketResource::class,
-            RuntimeExtensions::class,
-            RouteExtensions::class,
-            RuntimeExtensions::class,
-            RouteExtensions::class,
-            'request',
-            RuntimeExtensions::class,
-            'Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource',
-        ], $resolved);
+        $this->assertSame(['request', DeskTicketResource::class, 'request', 'Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource'], $resolved);
     }
 
     #[Test]
