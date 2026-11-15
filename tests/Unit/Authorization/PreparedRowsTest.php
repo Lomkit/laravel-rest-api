@@ -49,6 +49,28 @@ class PreparedRowsTest extends TestCase
         }];
     }
 
+    /** @param Closure(PendingChecks): mixed $change */
+    #[Test]
+    #[DataProvider('listChanges')]
+    public function it_refuses_a_change_to_the_list_of_rows_or_to_a_row_kept_as_original(Closure $change): void
+    {
+        $checks = $this->checks();
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
+
+        $change($checks);
+
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', self::EXTENSION, TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', self::EXTENSION, $checks);
+    }
+
+    /** @return iterable<string, array{Closure(PendingChecks): mixed}> */
+    public static function listChanges(): iterable
+    {
+        yield 'an attribute kept as original' => [static fn (PendingChecks $checks): Model => $checks->rows->firstOrFail()->setAttribute('team_id', 4)->syncOriginal()];
+        yield 'the list of rows' => [static fn (PendingChecks $checks): ?Model => $checks->rows->pop()];
+        yield 'a row of the list' => [static fn (PendingChecks $checks): Collection => $checks->rows->put(0, new PreparedDocument)];
+    }
+
     /** @param Closure(Model): mixed $change */
     #[Test]
     #[DataProvider('relatedChanges')]
