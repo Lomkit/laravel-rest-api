@@ -3,13 +3,10 @@
 namespace Lomkit\Rest\Authorization;
 
 use Illuminate\Database\Eloquent\Model;
-use ReflectionProperty;
 
 /** @internal */
 final readonly class RowState
 {
-    private const array CAST_CACHES = ['classCastCache', 'attributeCastCache'];
-
     /**
      * @param  list<mixed>  $settings
      * @param  array<string, mixed>  $original
@@ -25,7 +22,7 @@ final readonly class RowState
 
     public static function of(Model $row, ?self $start = null): self
     {
-        $attributes = self::stored($row, self::castKeys($row));
+        $attributes = self::stored($row, CastedAttributes::keys($row));
 
         return new self($row, self::settings($row), $row->getRawOriginal(), $attributes, LoadedRelations::of($row, $start?->relations));
     }
@@ -52,7 +49,7 @@ final readonly class RowState
 
     private function keepsAttributes(Model $row): bool
     {
-        $keys = self::castKeys($row);
+        $keys = CastedAttributes::keys($row);
 
         if ($keys === []) {
             return $row->getAttributes() === $this->attributes;
@@ -84,21 +81,12 @@ final readonly class RowState
         }
 
         foreach ($now as $key => $value) {
-            if ($value !== $before[$key] && (! in_array($key, $castKeys, true) || ! self::equivalent($row, $key, $value, $before[$key]))) {
+            if ($value !== $before[$key] && (! in_array($key, $castKeys, true) || ! CastedAttributes::equivalent($row, $key, $value, $before[$key]))) {
                 return false;
             }
         }
 
         return true;
-    }
-
-    private static function equivalent(Model $row, string $key, mixed $now, mixed $before): bool
-    {
-        $probe = (clone $row)->setRawAttributes([]);
-        $probe->setRawAttributes([$key => $before], true);
-        $probe->setRawAttributes([$key => $now]);
-
-        return $probe->originalIsEquivalent($key);
     }
 
     /**
@@ -108,21 +96,5 @@ final readonly class RowState
     private static function stored(Model $row, array $castKeys): array
     {
         return $castKeys === [] ? $row->getAttributes() : (clone $row)->getAttributes();
-    }
-
-    /** @return list<string> */
-    private static function castKeys(Model $row): array
-    {
-        $keys = [];
-
-        foreach (self::CAST_CACHES as $cache) {
-            $values = (new ReflectionProperty(Model::class, $cache))->getValue($row);
-
-            if (is_array($values)) {
-                array_push($keys, ...array_map(strval(...), array_keys($values)));
-            }
-        }
-
-        return array_values(array_unique($keys));
     }
 }
