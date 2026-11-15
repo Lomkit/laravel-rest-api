@@ -13,7 +13,6 @@ use Lomkit\Rest\Http\InstructionList;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Metrics\Metric;
-use Throwable;
 
 final readonly class DeclarationCheck
 {
@@ -31,7 +30,7 @@ final readonly class DeclarationCheck
             $report = self::build($resource, $declarations->metrics(), $report, fn (DeclarationReport $report): DeclarationReport => $report->withMetric());
         }
 
-        $extensions = self::extensionsBuild($context);
+        $extensions = BuiltExtensions::in($context);
 
         foreach ((new ReachedResources($context))->from($resources) as $resource) {
             $report = self::buildInstructions($resource, $this->instructions($context->resource($resource), $extensions), $report);
@@ -47,17 +46,6 @@ final readonly class DeclarationCheck
         }
 
         return new InstructionList($resource->instructions(), static fn (): array => [], $resource, $this->container);
-    }
-
-    private static function extensionsBuild(RestContext $context): bool
-    {
-        try {
-            $context->extensions()->all();
-        } catch (Throwable) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
