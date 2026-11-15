@@ -7,6 +7,11 @@ use Lomkit\Rest\Text\Engine\RestrictingExtension;
 
 final class InvalidEngineQueryException extends LogicException
 {
+    public static function unmatchedStringList(string $resource, string $attribute, string $engine): self
+    {
+        return new self("The engine query of {$resource} compares the list attribute [{$attribute}], but the engine [{$engine}] compares single values only. Compare lists of strings on an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists, and check \$context->matchesStringLists before comparing the list.");
+    }
+
     public static function undeclaredAttribute(string $attribute): self
     {
         return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.");

@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Text\Engine;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
-use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use Lomkit\Rest\Text\TextTarget;
 
 final readonly class ExtensionAttributes
@@ -25,10 +24,6 @@ final readonly class ExtensionAttributes
             $own = [];
 
             foreach (array_values($declared) as $index => $entry) {
-                if ($entry instanceof StringListAttribute && ! $profile instanceof MatchesStringLists) {
-                    throw InvalidEngineExtensionException::unsupportedStringList($name, $class, $target->resource, $entry->name, $profile->name());
-                }
-
                 $attribute = self::attribute($target, $profile, $declarer, $entry) ?? throw InvalidEngineExtensionException::notAnIndexAttribute($name, $class, $target->resource, $index, get_debug_type($entry));
                 $attributeName = $attribute->field->name;
 

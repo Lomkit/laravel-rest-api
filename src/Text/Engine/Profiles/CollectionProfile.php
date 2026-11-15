@@ -10,7 +10,7 @@ use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class CollectionProfile implements AppliesRowRestrictions
+final readonly class CollectionProfile implements AppliesRowRestrictions, ComparesColumns
 {
     use PlainLiterals;
 

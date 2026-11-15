@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Engines\NullEngine;
-use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
@@ -89,13 +88,45 @@ class StringListAttributesTest extends EngineSearchTestCase
 
     #[Test]
     #[DataProvider('scalarEngines')]
-    public function it_refuses_a_string_list_on_engines_that_compare_single_values(string $engine): void
+    public function it_declares_a_string_list_on_every_engine(string $engine): void
     {
         $this->useEngine($this->engine($engine));
 
-        $this->expectExceptionObject(InvalidEngineExtensionException::unsupportedStringList('readers', ReadersExtension::class, ReaderVoucherResource::class, 'readers', $engine));
+        $grammar = $this->capabilities()->engine;
 
-        $this->capabilities();
+        $this->assertNotNull($grammar);
+        $this->assertArrayNotHasKey('readers', $grammar->filters);
+    }
+
+    #[Test]
+    #[DataProvider('scalarEngines')]
+    public function it_refuses_to_compare_a_string_list_on_engines_that_compare_single_values(string $engine): void
+    {
+        $this->useEngine($this->engine($engine));
+        $query = $this->engineQuery();
+
+        $refusals = [];
+
+        foreach (['whereIn', 'whereNotIn'] as $method) {
+            try {
+                $query->{$method}('readers', ['ann']);
+            } catch (InvalidEngineQueryException $exception) {
+                $refusals[] = $exception->getMessage();
+            }
+        }
+
+        $expected = InvalidEngineQueryException::unmatchedStringList(ReaderVoucherResource::class, 'readers', $engine)->getMessage();
+        $this->assertSame([$expected, $expected], $refusals);
+    }
+
+    #[Test]
+    public function it_searches_with_a_declared_list_that_is_not_compared(): void
+    {
+        config(['scout.driver' => 'collection']);
+
+        $response = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
+
+        $response->assertOk()->assertExactJson($this->page([], 0));
     }
 
     /** @return array<string, array{class-string}> */
@@ -113,8 +144,8 @@ class StringListAttributesTest extends EngineSearchTestCase
     public function it_names_the_list_the_engine_and_where_lists_match(): void
     {
         $this->assertSame(
-            'The [readers] extension '.ReadersExtension::class.' declares for '.ReaderVoucherResource::class.' the list attribute [readers], but the engine ['.CollectionEngine::class.'] compares single values only. Match lists of strings on Algolia, Meilisearch or Typesense, or declare a single-valued attribute.',
-            InvalidEngineExtensionException::unsupportedStringList('readers', ReadersExtension::class, ReaderVoucherResource::class, 'readers', CollectionEngine::class)->getMessage(),
+            'The engine query of '.ReaderVoucherResource::class.' compares the list attribute [readers], but the engine ['.CollectionEngine::class.'] compares single values only. Compare lists of strings on an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists, and check $context->matchesStringLists before comparing the list.',
+            InvalidEngineQueryException::unmatchedStringList(ReaderVoucherResource::class, 'readers', CollectionEngine::class)->getMessage(),
         );
     }
 
@@ -218,7 +249,7 @@ class StringListAttributesTest extends EngineSearchTestCase
         if ($matches) {
             $restricted = EngineLog::$contexts[1];
             $this->assertInstanceOf(EngineRestrictionContext::class, $restricted);
-            $this->assertTrue($restricted->matchesStringLists);
+            $this->assertSame([true, false], [$restricted->matchesStringLists, $restricted->comparesColumns]);
         }
     }
 

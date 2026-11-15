@@ -270,7 +270,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $methods = array_map(fn (ReflectionMethod $method): string => $method->getName(), (new ReflectionClass(EngineRestriction::class))->getMethods(ReflectionMethod::IS_PUBLIC));
 
         $this->assertSame(['where', 'whereIn', 'whereNotIn', 'matchNothing'], array_values(array_diff($methods, ['__construct'])));
-        $this->assertSame(['query', 'resource', 'user', 'matchesStringLists', 'rowsRestrictedInSql'], array_map(
+        $this->assertSame(['query', 'resource', 'user', 'matchesStringLists', 'rowsRestrictedInSql', 'comparesColumns'], array_map(
             fn (ReflectionProperty $property): string => $property->getName(),
             (new ReflectionClass(EngineRestrictionContext::class))->getProperties(ReflectionProperty::IS_PUBLIC),
         ));
@@ -278,7 +278,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
 
     /**
      * @param  array<string, class-string<Extension>>  $extensions
-     * @param  array{bool, bool}  $expected
+     * @param  array{bool, bool, bool}  $expected
      */
     #[Test]
     #[DataProvider('capabilities')]
@@ -294,18 +294,18 @@ class EngineRestrictionTest extends EngineSearchTestCase
 
         $context = EngineLog::$contexts[0];
         $this->assertInstanceOf(EngineRestrictionContext::class, $context);
-        $this->assertSame($expected, [$context->matchesStringLists, $context->rowsRestrictedInSql]);
+        $this->assertSame($expected, [$context->matchesStringLists, $context->rowsRestrictedInSql, $context->comparesColumns]);
     }
 
-    /** @return array<string, array{?string, array<string, class-string<Extension>>, array{bool, bool}}> */
+    /** @return array<string, array{?string, array<string, class-string<Extension>>, array{bool, bool, bool}}> */
     public static function capabilities(): array
     {
         return [
-            'the collection engine' => [null, ['guestless' => GuestlessEngineExtension::class], [false, false]],
-            'the database engine without SQL restriction' => ['database', ['guestless' => GuestlessEngineExtension::class], [false, false]],
-            'the database engine with the SQL restriction of another extension' => ['database', ['guestless' => GuestlessEngineExtension::class, 'red' => RedRowsExtension::class], [false, false]],
-            'the database engine with its own SQL restriction' => ['database', ['aware' => SqlAwareEngineExtension::class], [false, true]],
-            'the collection engine with its own SQL restriction' => [null, ['aware' => SqlAwareEngineExtension::class], [false, true]],
+            'the collection engine' => [null, ['guestless' => GuestlessEngineExtension::class], [false, false, true]],
+            'the database engine without SQL restriction' => ['database', ['guestless' => GuestlessEngineExtension::class], [false, false, true]],
+            'the database engine with the SQL restriction of another extension' => ['database', ['guestless' => GuestlessEngineExtension::class, 'red' => RedRowsExtension::class], [false, false, true]],
+            'the database engine with its own SQL restriction' => ['database', ['aware' => SqlAwareEngineExtension::class], [false, true, true]],
+            'the collection engine with its own SQL restriction' => [null, ['aware' => SqlAwareEngineExtension::class], [false, true, true]],
         ];
     }
 

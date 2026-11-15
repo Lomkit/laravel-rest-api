@@ -9,6 +9,7 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Text\Engine\EngineQuery;
+use Lomkit\Rest\Text\Engine\Profiles\ComparesColumns;
 use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use Lomkit\Rest\Text\Engine\RestrictingExtension;
 
@@ -50,11 +51,12 @@ final readonly class EngineRestrictions
 
         $user = $this->resource->context()->actingUser()->user;
         $lists = $query->profile() instanceof MatchesStringLists;
+        $columns = $query->profile() instanceof ComparesColumns;
 
         foreach ($this->engine as $name => $extension) {
             $restriction = new EngineRestriction($query, new RestrictingExtension($name, $extension::class));
 
-            $extension->restrictEngine(new EngineRestrictionContext($restriction, $this->resource, $user, $lists, $inSql?->restricts($name) === true));
+            $extension->restrictEngine(new EngineRestrictionContext($restriction, $this->resource, $user, $lists, $inSql?->restricts($name) === true, $columns));
         }
     }
 

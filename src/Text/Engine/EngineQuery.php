@@ -9,6 +9,7 @@ use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use Lomkit\Rest\Text\TextQuery;
 
 final class EngineQuery
@@ -57,7 +58,7 @@ final class EngineQuery
      */
     public function restrictIn(string $attribute, array $values, ?RestrictingExtension $by = null): static
     {
-        $declared = $this->index->attributes->declared($attribute);
+        $declared = $this->compared($attribute);
 
         $this->conditions->include($attribute, $declared->members(FilterOperator::In, $values), $declared->list, $by);
 
@@ -67,7 +68,7 @@ final class EngineQuery
     /** @param array<mixed> $values */
     public function whereNotIn(string $attribute, array $values): static
     {
-        $this->conditions->exclude($attribute, $this->index->attributes->declared($attribute)->members(FilterOperator::NotIn, $values));
+        $this->conditions->exclude($attribute, $this->compared($attribute)->members(FilterOperator::NotIn, $values));
 
         return $this;
     }
@@ -151,5 +152,16 @@ final class EngineQuery
     public function paging(): EnginePaging
     {
         return new EnginePaging($this->index->profile);
+    }
+
+    private function compared(string $attribute): IndexAttribute
+    {
+        $declared = $this->index->attributes->declared($attribute);
+
+        if ($declared->list && ! $this->index->profile instanceof MatchesStringLists) {
+            throw InvalidEngineQueryException::unmatchedStringList($this->index->searchedClass(), $attribute, $this->index->profile->name());
+        }
+
+        return $declared;
     }
 }
