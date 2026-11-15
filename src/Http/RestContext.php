@@ -51,6 +51,7 @@ final class RestContext
         public readonly RestRequest $request,
         private readonly Container $container,
         private readonly ?ActingUser $actingUser = null,
+        private readonly bool $documentation = false,
     ) {
         $this->resources = new ResourceRegistry($container);
         $this->definitions = new WeakMap;
@@ -72,6 +73,11 @@ final class RestContext
     public function text(Resource $resource): ResolvedText
     {
         return $this->definition($resource)->text();
+    }
+
+    public function isDocumentation(): bool
+    {
+        return $this->documentation;
     }
 
     public function config(): RestConfig

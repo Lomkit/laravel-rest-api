@@ -5,9 +5,12 @@ namespace Lomkit\Rest\Tests\Feature\Extensions;
 use Illuminate\Support\Arr;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
+use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\After;
@@ -64,6 +67,17 @@ final class NoExtensionTest extends PackageTestCase
         $response = $this->withoutExceptionHandling()->postJson('/api/products/search', ['search' => ['limit' => 10]]);
 
         $response->assertOk()->assertJsonPath('data', [['id' => 1, 'category_id' => 1, 'name' => 'Desk lamp', 'price' => 39]]);
+        $this->assertSame([], ExtensionLog::$built);
+    }
+
+    #[Test]
+    public function it_returns_the_declared_fields_without_an_extension(): void
+    {
+        $definition = (new RestContext(RestRequest::create('/api/products/search', 'POST'), $this->app))
+            ->resource(ProductResource::class)
+            ->definition();
+
+        $this->assertSame($definition->declaredFields(), $definition->fields());
         $this->assertSame([], ExtensionLog::$built);
     }
 }

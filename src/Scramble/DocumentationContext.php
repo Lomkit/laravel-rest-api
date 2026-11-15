@@ -31,7 +31,7 @@ final readonly class DocumentationContext
     {
         $request = RestRequest::createFrom(Request::create('/'.$route->uri(), strtoupper($method)));
         $guest = ActingUser::of($container->make(AuthManager::class)->getDefaultDriver(), null);
-        $resource = (new RestContext($request, $container, $guest))->resource($controller::resourceClass());
+        $resource = (new RestContext($request, $container, $guest, documentation: true))->resource($controller::resourceClass());
 
         return new self($route, $endpoint, $resource, self::nameOf($resource), $components);
     }

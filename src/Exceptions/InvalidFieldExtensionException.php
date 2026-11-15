@@ -1,0 +1,33 @@
+<?php
+
+namespace Lomkit\Rest\Exceptions;
+
+use Lomkit\Rest\Fields\FieldReduction;
+
+final class InvalidFieldExtensionException extends InvalidExtensionException
+{
+    public static function unknownField(string $name, string $resource, FieldReduction $reduction, string $field): self
+    {
+        return self::about($name, "The [{$name}] extension calls {$reduction->value}('{$field}') on {$resource}, whose fields() declares no field [{$field}]. Name a field that fields() returns; FieldsContext::declares() tells whether it does.");
+    }
+
+    public static function hidesVersion(string $name, string $resource, string $field): self
+    {
+        return self::about($name, "The [{$name}] extension hides [{$field}], the row version of {$resource}: versioned() reads it on each update and returns it in a 409. Call readOnly(), unfilterable() or unsortable() on it instead, or turn versioned() off.");
+    }
+
+    public static function hidesKey(string $name, string $resource, string $field): self
+    {
+        return self::about($name, "The [{$name}] extension hides [{$field}], the key of the model of {$resource}: writes, actions and their responses name rows by it. Call readOnly(), unfilterable() or unsortable() on it instead.");
+    }
+
+    public static function hidesSearchable(string $name, string $resource, string $field): self
+    {
+        return self::about($name, "The [{$name}] extension hides [{$field}], a searchable() field of {$resource}: its text search would still match the value. Remove searchable() from the field or keep it visible.");
+    }
+
+    public static function readsNarrowedFields(string $resource): self
+    {
+        return new self("An extension reads the fields or the text search of {$resource} while the NarrowsFields extensions narrow them. Read the declared names with FieldsContext::declares() instead.");
+    }
+}
