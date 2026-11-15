@@ -437,6 +437,8 @@ final class GuardedWritesTest extends PackageTestCase
             'destroy of a denied row' => ['DELETE', '/written-documents', ['resources' => [1, 2]], false, 403],
             'action on a denied row' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []], false, 403],
             'destroy to confirm' => ['DELETE', '/written-documents', ['resources' => [1]], true, 428],
+            'mutate to confirm' => ['POST', '/written-documents/mutate', ['mutate' => [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Annual summary']]]], true, 428],
+            'action to confirm' => ['POST', '/written-documents/actions/confirmed-archive-documents', ['search' => ['filters' => [['field' => 'id', 'value' => 1]]]], true, 428],
         ];
     }
 

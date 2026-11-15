@@ -7,6 +7,7 @@ use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Confirmation\Confirmation;
 use Lomkit\Rest\Mutations\MutationNode;
+use Lomkit\Rest\Mutations\PendingMutation;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Fixtures\Archive\DocumentResource;
 
@@ -24,6 +25,7 @@ final class WrittenDocumentResource extends DocumentResource
             ArchiveEachDocument::make()->transactionPerRow(),
             QueuedArchiveDocumentsByOne::make(),
             FailingArchiveDocuments::make(),
+            ConfirmedArchiveDocuments::make(),
         ];
     }
 
@@ -85,6 +87,12 @@ final class WrittenDocumentResource extends DocumentResource
     public function forceDestroyedAll(Collection $models): void
     {
         EventLog::record('forceDestroyedAll '.implode(',', $models->modelKeys()));
+    }
+
+    #[\Override]
+    public function mutateConfirmation(PendingMutation $mutation): ?Confirmation
+    {
+        return self::$confirming ? Confirmation::make('Change the documents?') : null;
     }
 
     #[\Override]
