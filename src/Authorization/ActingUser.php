@@ -16,6 +16,11 @@ final readonly class ActingUser
         return new self($guard, $user);
     }
 
+    public function sameAs(self $other): bool
+    {
+        return $this->guard === $other->guard && $this->user === $other->user;
+    }
+
     public function identity(): UserIdentity
     {
         return UserIdentity::of($this->guard, $this->user);

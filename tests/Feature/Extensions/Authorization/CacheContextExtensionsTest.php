@@ -5,12 +5,15 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Authorization;
 use Closure;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Cache\Events\KeyWritten;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Event;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\TeamTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\TeamTicketResource;
@@ -330,6 +333,66 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     private function useStore(string $store): void
     {
         config(['rest.authorizations.cache.store' => $store, 'cache.stores.database.connection' => null]);
+    }
+
+    #[Test]
+    public function it_reads_the_cache_context_again_when_the_user_changes(): void
+    {
+        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('team', $context->user instanceof GenericUser ? $context->user->current_team_id : null);
+        $user = new GenericUser(['id' => 1, 'current_team_id' => 3]);
+        $definition = $this->contextFollowing($user)->resource(CachedTicketResource::class)->definition();
+
+        $first = [$definition->cacheContext()->values, $definition->cachedAbilities()->context];
+        $user = new GenericUser(['id' => 2, 'current_team_id' => 4]);
+        $second = [$definition->cacheContext()->values, $definition->cachedAbilities()->context];
+
+        $this->assertSame([['acl.team' => 3], serialize(['acl.team' => 3])], $first);
+        $this->assertSame([['acl.team' => 4], serialize(['acl.team' => 4])], $second);
+    }
+
+    #[Test]
+    public function it_narrows_the_cached_abilities_for_the_new_user(): void
+    {
+        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        FirstCacheContext::$contribute = static function (CacheContributionContext $context): void {
+            if (($context->user instanceof GenericUser ? $context->user->current_team_id : null) === 4) {
+                $context->forget('view');
+            }
+        };
+        $user = new GenericUser(['id' => 1, 'current_team_id' => 3]);
+        $definition = $this->contextFollowing($user)->resource(CachedTicketResource::class)->definition();
+
+        $first = $definition->cachedAbilities()->seconds('view');
+        $user = new GenericUser(['id' => 2, 'current_team_id' => 4]);
+
+        $this->assertSame(60, $first);
+        $this->assertNull($definition->cachedAbilities()->seconds('view'));
+    }
+
+    #[Test]
+    public function it_keeps_the_cache_context_while_the_user_stays(): void
+    {
+        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('rules', 'v1');
+        $user = new GenericUser(['id' => 1, 'current_team_id' => 3]);
+        $definition = $this->contextFollowing($user)->resource(CachedTicketResource::class)->definition();
+
+        $definition->cacheContext();
+        $definition->cachedAbilities()->seconds('view');
+        $definition->cacheContext();
+
+        $this->assertCount(1, FirstCacheContext::$contexts);
+    }
+
+    private function contextFollowing(?Authenticatable &$user): RestContext
+    {
+        $request = RestRequest::create('/api/cached-tickets/search', 'POST');
+        $request->setUserResolver(static function () use (&$user): ?Authenticatable {
+            return $user;
+        });
+
+        return new RestContext($request, $this->app ?? $this->fail('No application.'));
     }
 
     private static function reset(): void

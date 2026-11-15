@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Http;
 
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Auth\Access\Gate;
-use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\Container;
@@ -46,9 +45,7 @@ final class RestContext
 
     private ?Authorizer $authorizer = null;
 
-    private ?string $authorizerGuard = null;
-
-    private ?Authenticatable $authorizerUser = null;
+    private ?ActingUser $authorizerFor = null;
 
     public function __construct(
         public readonly RestRequest $request,
@@ -100,13 +97,13 @@ final class RestContext
     public function authorizer(): Authorizer
     {
         $acting = $this->actingUser();
-        [$guard, $user] = [$acting->guard, $acting->user];
 
-        if ($this->authorizer !== null && $guard === $this->authorizerGuard && $user === $this->authorizerUser) {
+        if ($this->authorizer !== null && $this->authorizerFor?->sameAs($acting) === true) {
             return $this->authorizer;
         }
 
-        [$this->authorizerGuard, $this->authorizerUser] = [$guard, $user];
+        $this->authorizerFor = $acting;
+        $user = $acting->user;
 
         return $this->authorizer = new Authorizer(
             $this->container->make(Gate::class)->forUser($user),
