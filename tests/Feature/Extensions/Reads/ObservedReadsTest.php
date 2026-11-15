@@ -47,6 +47,17 @@ final class ObservedReadsTest extends HelpdeskTestCase
         'total' => 2,
     ];
 
+    private const array DETAILS = ['data' => [
+        'fields' => [
+            ['name' => 'id', 'label' => null, 'type' => 'id', 'nullable' => false],
+            ['name' => 'team_id', 'label' => null, 'type' => 'integer', 'nullable' => false],
+            ['name' => 'title', 'label' => null, 'type' => 'text', 'nullable' => false],
+            ['name' => 'status', 'label' => null, 'type' => 'text', 'nullable' => false],
+        ],
+        'limits' => [10, 25, 50],
+        'meta' => ['plan' => 'pro'],
+    ]];
+
     private GenericUser $lead;
 
     #[\Override]
@@ -144,12 +155,10 @@ final class ObservedReadsTest extends HelpdeskTestCase
     #[Test]
     public function it_notifies_details_after_described(): void
     {
-        $response = $this->getJson('/observed-tickets')->assertOk();
+        $this->getJson('/observed-tickets')->assertOk()->assertExactJson(self::DETAILS);
 
-        $keys = implode(',', array_keys($response->json('data')));
-        $this->assertSame(['describing', "described {$keys}", "read details {$keys}"], EventLog::$lines);
-        $this->assertSame($response->json('data'), WriteLog::$reads[0]->details);
-        $this->assertSame(['plan' => 'pro'], WriteLog::$reads[0]->details['meta'] ?? null);
+        $this->assertSame(['describing', 'described fields,limits,meta', 'read details fields,limits,meta'], EventLog::$lines);
+        $this->assertSame(self::DETAILS['data'], WriteLog::$reads[0]->details);
         $this->assertSame(Endpoint::Details, WriteLog::$reads[0]->endpoint);
     }
 
@@ -245,10 +254,9 @@ final class ObservedReadsTest extends HelpdeskTestCase
     {
         config(['rest.extensions' => $extensions]);
 
-        $response = $this->getJson('/observed-tickets')->assertOk();
+        $this->getJson('/observed-tickets')->assertOk()->assertExactJson(self::DETAILS);
 
-        $keys = implode(',', array_keys($response->json('data')));
-        $this->assertSame(['read readonly', "read details {$keys}"], array_values(array_filter(EventLog::$lines, fn (string $line): bool => str_starts_with($line, 'read'))));
+        $this->assertSame(['read readonly', 'read details fields,limits,meta'], array_values(array_filter(EventLog::$lines, fn (string $line): bool => str_starts_with($line, 'read'))));
     }
 
     #[Test]
