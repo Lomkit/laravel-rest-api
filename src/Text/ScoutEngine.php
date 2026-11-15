@@ -87,7 +87,7 @@ final readonly class ScoutEngine implements EngineTextSearch
         }
 
         $model = ScoutModel::tryFrom($target->model) ?? throw InvalidTextSearchException::unsearchableModel($target->resource, $target->model::class);
-        $profile = EngineProfiles::for($model->engine(), $target->resource, $target->extensions);
+        $profile = EngineProfiles::forTarget($target);
 
         $profile->ensureUsableBy($target);
 

@@ -12,6 +12,8 @@ use Laravel\Scout\Engines\TurbopufferEngine;
 use Laravel\Scout\Engines\TypesenseEngine;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Text\Engine\IndexExtensions;
+use Lomkit\Rest\Text\Engine\ScoutModel;
+use Lomkit\Rest\Text\TextTarget;
 
 final class EngineProfiles
 {
@@ -33,5 +35,12 @@ final class EngineProfiles
             $engine instanceof NullEngine => new NullProfile($engine),
             default => throw InvalidTextSearchException::unsupportedEngine($resource, get_debug_type($engine)),
         };
+    }
+
+    public static function forTarget(TextTarget $target): EngineProfile
+    {
+        $model = ScoutModel::tryFrom($target->model) ?? throw InvalidTextSearchException::unsearchableModel($target->resource, $target->model::class);
+
+        return self::for($model->engine(), $target->resource, $target->extensions);
     }
 }

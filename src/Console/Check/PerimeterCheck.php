@@ -17,9 +17,12 @@ final readonly class PerimeterCheck
     {
         $resources = ControllerResources::of($controllers);
         $report = new PerimeterReport;
+        $engines = new EngineReach($context);
 
         foreach ((new ReachedResources($context))->from($resources) as $resource) {
             $report = self::checkRows($resource, $report);
+            $problem = $engines->problem($context->resource($resource));
+            $report = $problem === null ? $report : $report->withRowProblem($problem);
         }
 
         foreach ($resources as $resource) {
