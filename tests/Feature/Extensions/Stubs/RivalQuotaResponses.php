@@ -5,12 +5,12 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 use Lomkit\Rest\Extensions\Contexts\OperationDocumentationContext;
 use Lomkit\Rest\Http\Routing\Endpoint;
 
-class RivalQuotaResponses extends DocumentedResponses
+final class RivalQuotaResponses extends DocumentedResponses
 {
     #[\Override]
     public static function name(): string
     {
-        return 'rival';
+        return 'limits';
     }
 
     #[\Override]

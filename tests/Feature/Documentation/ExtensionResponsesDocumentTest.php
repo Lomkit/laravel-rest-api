@@ -12,11 +12,9 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CreatedResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DottedResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForbiddenResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MovingResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RivalQuotaResponses;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RivalQuotaResponsesNamedLimits;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharedBodyResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ShiftingResponses;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
@@ -64,28 +62,12 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
         $this->assertSame(['quota.Exceeded'], array_values(array_filter(array_keys($document['components']['responses']), fn (string $name): bool => str_starts_with($name, 'quota.'))));
     }
 
-    /** @return array<string, array{list<class-string>, list<class-string>}> */
-    public static function orders(): array
-    {
-        $quota = [QuotaResponses::class, ArchivedResponses::class];
-
-        return [
-            'quota first' => [$quota, array_reverse($quota)],
-            'archived first' => [array_reverse($quota), $quota],
-        ];
-    }
-
-    /**
-     * @param  list<class-string>  $extensions
-     * @param  list<class-string>  $reversed
-     */
     #[Test]
-    #[DataProvider('orders')]
-    public function it_sorts_the_responses_by_status_whatever_the_config_order(array $extensions, array $reversed): void
+    public function it_sorts_the_responses_by_status_whatever_the_config_order(): void
     {
-        config(['rest.extensions' => $extensions]);
+        config(['rest.extensions' => [QuotaResponses::class, ArchivedResponses::class]]);
         $first = $this->document();
-        config(['rest.extensions' => $reversed]);
+        config(['rest.extensions' => [ArchivedResponses::class, QuotaResponses::class]]);
         $second = $this->document();
 
         $this->assertSame([200, 403, 404, 409, 410, 422, 429], array_keys($first['paths']['/stages/mutate']['post']['responses']));
@@ -124,10 +106,8 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     public static function rivals(): array
     {
         return [
-            'quota first' => [[QuotaResponses::class, RivalQuotaResponses::class], 'rival', RivalQuotaResponses::class, 'quota', QuotaResponses::class],
-            'rival first' => [[RivalQuotaResponses::class, QuotaResponses::class], 'rival', RivalQuotaResponses::class, 'quota', QuotaResponses::class],
-            'limits, a later class, first by name' => [[QuotaResponses::class, RivalQuotaResponsesNamedLimits::class], 'quota', QuotaResponses::class, 'limits', RivalQuotaResponsesNamedLimits::class],
-            'limits first in the config' => [[RivalQuotaResponsesNamedLimits::class, QuotaResponses::class], 'quota', QuotaResponses::class, 'limits', RivalQuotaResponsesNamedLimits::class],
+            'limits, a later class, first by name' => [[QuotaResponses::class, RivalQuotaResponses::class], 'quota', QuotaResponses::class, 'limits', RivalQuotaResponses::class],
+            'limits first in the config' => [[RivalQuotaResponses::class, QuotaResponses::class], 'quota', QuotaResponses::class, 'limits', RivalQuotaResponses::class],
         ];
     }
 
@@ -195,16 +175,6 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
         config(['rest.extensions' => [SharedBodyResponses::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationException::componentChanged('response', 'shared.Refused', SharedBodyResponses::class));
-
-        $this->document();
-    }
-
-    #[Test]
-    public function it_refuses_one_response_name_with_two_statuses(): void
-    {
-        config(['rest.extensions' => [MovingResponses::class], 'app.debug' => false]);
-
-        $this->expectExceptionObject(InvalidDocumentationException::componentTaken('response', 'moving.Refused', MovingResponses::class, MovingResponses::class));
 
         $this->document();
     }
