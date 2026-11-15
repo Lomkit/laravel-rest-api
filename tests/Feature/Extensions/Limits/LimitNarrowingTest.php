@@ -96,7 +96,7 @@ class LimitNarrowingTest extends PackageTestCase
     #[Test]
     public function it_refuses_sizes_all_above_the_default(): void
     {
-        $this->expectExceptionObject(InvalidQueryExtensionException::defaultAboveSizes(CappedBookLimitsResource::class, ['first'], 25, [50]));
+        $this->expectExceptionObject(InvalidQueryExtensionException::defaultAboveSizes(CappedBookLimitsResource::class, ['first' => FirstNarrowing::class], 25, [50]));
 
         $this->limits(CappedBookLimitsResource::class, static fn (LimitsContext $context): mixed => $context->allowSizes([50]));
     }
@@ -104,15 +104,31 @@ class LimitNarrowingTest extends PackageTestCase
     #[Test]
     public function it_refuses_an_empty_intersection(): void
     {
-        $this->expectExceptionObject(InvalidQueryExtensionException::noPageSize(BookResource::class, ['first']));
+        $this->expectExceptionObject(InvalidQueryExtensionException::noPageSize(BookResource::class, ['first' => FirstNarrowing::class]));
 
         $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->allowSizes([5]));
     }
 
     #[Test]
+    public function it_names_each_narrowing_extension_by_name_and_class(): void
+    {
+        FirstNarrowing::$narrow = static fn (LimitsContext $context): mixed => $context->allowSizes([5]);
+        SecondNarrowing::$narrow = static fn (LimitsContext $context): mixed => $context->maxSize(1);
+        config(['rest.extensions' => [SecondNarrowing::class, FirstNarrowing::class]]);
+
+        try {
+            $this->context()->resource(BookResource::class)->definition()->limits();
+            $this->fail('The narrowing was accepted.');
+        } catch (InvalidQueryExtensionException $exception) {
+            $this->assertSame('The [first] extension '.FirstNarrowing::class.' and the [second] extension '.SecondNarrowing::class.' narrow the page sizes of '.BookResource::class.' to none. Keep at least one size of its limits() that every allowSizes() lists, at or below every maxSize() and maxTotal() they set.', $exception->getMessage());
+            $this->assertSame([true, false], [$exception->concerns(FirstNarrowing::class), $exception->concerns(SecondNarrowing::class)]);
+        }
+    }
+
+    #[Test]
     public function it_refuses_a_max_total_below_every_size(): void
     {
-        $this->expectExceptionObject(InvalidQueryExtensionException::noPageSize(BookResource::class, ['first']));
+        $this->expectExceptionObject(InvalidQueryExtensionException::noPageSize(BookResource::class, ['first' => FirstNarrowing::class]));
 
         $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->maxTotal(5));
     }
@@ -120,7 +136,7 @@ class LimitNarrowingTest extends PackageTestCase
     #[Test]
     public function it_refuses_an_include_limit_below_every_size(): void
     {
-        $this->expectExceptionObject(InvalidQueryExtensionException::includeLimitAboveSizes(BookResource::class, ['first'], 5, [10, 25, 50]));
+        $this->expectExceptionObject(InvalidQueryExtensionException::includeLimitAboveSizes(BookResource::class, ['first' => FirstNarrowing::class], 5, [10, 25, 50]));
 
         $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->includeLimit(5));
     }
@@ -129,7 +145,7 @@ class LimitNarrowingTest extends PackageTestCase
     #[DataProvider('belowOne')]
     public function it_refuses_a_value_below_one(Closure $narrow, string $method, int $value): void
     {
-        $this->expectExceptionObject(InvalidQueryExtensionException::invalidLimit('first', BookResource::class, $method, $value));
+        $this->expectExceptionObject(InvalidQueryExtensionException::invalidLimit('first', FirstNarrowing::class, BookResource::class, $method, $value));
 
         $this->limits(BookResource::class, $narrow);
     }
@@ -170,7 +186,7 @@ class LimitNarrowingTest extends PackageTestCase
     #[Test]
     public function it_refuses_an_extension_that_reads_the_narrowed_limits(): void
     {
-        $this->expectExceptionObject(InvalidQueryExtensionException::limitsReadWhileNarrowing('first', BookResource::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::limitsReadWhileNarrowing('first', FirstNarrowing::class, BookResource::class));
 
         $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->resource->definition()->limits());
     }

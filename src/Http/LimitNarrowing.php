@@ -4,13 +4,14 @@ namespace Lomkit\Rest\Http;
 
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Extensions\Contexts\LimitsContext;
+use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\NarrowsLimits;
 use WeakMap;
 
 /** @internal */
 final class LimitNarrowing
 {
-    /** @var WeakMap<Resource, string>|null */
+    /** @var WeakMap<Resource, array{string, string}>|null */
     private static ?WeakMap $narrowing = null;
 
     public static function of(ResourceLimits $limits, Resource $resource): ResourceLimits
@@ -18,7 +19,9 @@ final class LimitNarrowing
         $narrowing = self::$narrowing ??= new WeakMap;
 
         if (isset($narrowing[$resource])) {
-            throw InvalidQueryExtensionException::limitsReadWhileNarrowing($narrowing[$resource], $resource::class);
+            [$name, $class] = $narrowing[$resource];
+
+            throw InvalidQueryExtensionException::limitsReadWhileNarrowing($name, $class, $resource::class);
         }
 
         $extensions = $resource->context()->extensions()->applicable($resource::class, NarrowsLimits::class);
@@ -32,14 +35,14 @@ final class LimitNarrowing
 
         try {
             foreach ($extensions as $name => $extension) {
-                $narrowing[$resource] = $name;
-                $extension->narrowLimits(new LimitsContext($name, $resource, $user, $limits, $requests));
+                $narrowing[$resource] = [$name, $extension::class];
+                $extension->narrowLimits(new LimitsContext($name, $extension::class, $resource, $user, $limits, $requests));
             }
         } finally {
             unset($narrowing[$resource]);
         }
 
-        return self::narrowed($limits, $requests, $resource::class, array_keys($extensions));
+        return self::narrowed($limits, $requests, $resource::class, array_map(static fn (Extension $extension): string => $extension::class, $extensions));
     }
 
     public static function appliesTo(Resource $resource): bool
@@ -47,7 +50,7 @@ final class LimitNarrowing
         return $resource->context()->extensions()->applicable($resource::class, NarrowsLimits::class) !== [];
     }
 
-    /** @param list<string> $names */
+    /** @param non-empty-array<string, string> $names */
     private static function narrowed(ResourceLimits $limits, LimitRequests $requests, string $resource, array $names): ResourceLimits
     {
         $maxTotal = self::smallest($limits->maxTotal, $requests->totalCeiling());

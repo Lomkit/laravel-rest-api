@@ -20,30 +20,30 @@ final class LimitRequests
     public function __construct(private readonly string $resource) {}
 
     /** @param list<int> $sizes */
-    public function allowSizes(string $extension, array $sizes): void
+    public function allowSizes(string $extension, string $class, array $sizes): void
     {
         foreach ($sizes as $size) {
-            $this->ensurePositive($extension, __FUNCTION__, $size);
+            $this->ensurePositive($extension, $class, __FUNCTION__, $size);
         }
 
         $this->sizes = $this->sizes === null ? array_values(array_unique($sizes)) : array_values(array_intersect($this->sizes, $sizes));
     }
 
-    public function maxSize(string $extension, int $size): void
+    public function maxSize(string $extension, string $class, int $size): void
     {
-        $this->ensurePositive($extension, __FUNCTION__, $size);
+        $this->ensurePositive($extension, $class, __FUNCTION__, $size);
         $this->maxSize = min($this->maxSize ?? $size, $size);
     }
 
-    public function maxTotal(string $extension, int $total): void
+    public function maxTotal(string $extension, string $class, int $total): void
     {
-        $this->ensurePositive($extension, __FUNCTION__, $total);
+        $this->ensurePositive($extension, $class, __FUNCTION__, $total);
         $this->maxTotal = min($this->maxTotal ?? $total, $total);
     }
 
-    public function includeLimit(string $extension, int $limit): void
+    public function includeLimit(string $extension, string $class, int $limit): void
     {
-        $this->ensurePositive($extension, __FUNCTION__, $limit);
+        $this->ensurePositive($extension, $class, __FUNCTION__, $limit);
         $this->includeLimit = min($this->includeLimit ?? $limit, $limit);
     }
 
@@ -67,10 +67,10 @@ final class LimitRequests
         return $this->includeLimit;
     }
 
-    private function ensurePositive(string $extension, string $method, int $value): void
+    private function ensurePositive(string $extension, string $class, string $method, int $value): void
     {
         if ($value < 1) {
-            throw InvalidQueryExtensionException::invalidLimit($extension, $this->resource, $method, $value);
+            throw InvalidQueryExtensionException::invalidLimit($extension, $class, $this->resource, $method, $value);
         }
     }
 }

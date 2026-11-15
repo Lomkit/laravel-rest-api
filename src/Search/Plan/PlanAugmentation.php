@@ -32,7 +32,7 @@ final readonly class PlanAugmentation
         $gates = self::gates($plan);
 
         foreach ($extensions as $name => $extension) {
-            $extension->augment(new AugmentationContext($name, $resource, $user, $gates, $additions));
+            $extension->augment(new AugmentationContext($name, $extension::class, $resource, $user, $gates, $additions));
         }
 
         $additions->seal();

@@ -19,6 +19,7 @@ final readonly class AugmentationContext
      */
     public function __construct(
         private string $extension,
+        private string $class,
         public Resource $resource,
         public ?Authenticatable $user,
         public array $gates,
@@ -27,18 +28,18 @@ final readonly class AugmentationContext
 
     public function column(string $column): void
     {
-        $this->additions->column($this->extension, $column);
+        $this->additions->column($this->extension, $this->class, $column);
     }
 
     /** @param Closure(QueryBuilder): mixed|QueryBuilder|EloquentBuilder<Model> $subquery */
     public function select(string $alias, Closure|QueryBuilder|EloquentBuilder $subquery): string
     {
-        return $this->additions->select($this->extension, $alias, $subquery);
+        return $this->additions->select($this->extension, $this->class, $alias, $subquery);
     }
 
     /** @param (Closure(mixed): mixed)|null $constraint */
     public function with(string $relation, ?Closure $constraint = null): void
     {
-        $this->additions->with($this->extension, $relation, $constraint);
+        $this->additions->with($this->extension, $this->class, $relation, $constraint);
     }
 }

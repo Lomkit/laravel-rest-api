@@ -51,7 +51,7 @@ class AugmentedMorphLoadTest extends MorphTargetsTestCase
         $this->withoutExceptionHandling();
         $before = DB::table('books')->count();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::loadThroughMorphTo('first', $relation, 'labelable', LabelResource::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::loadThroughMorphTo('first', FirstAugmentation::class, $relation, 'labelable', LabelResource::class));
 
         try {
             $this->postJson('/api/labels/search', ['search' => []]);

@@ -9,7 +9,7 @@ use Lomkit\Rest\Instructions\Instruction;
 /** @internal */
 final readonly class ExtensionInstructions
 {
-    /** @return array<string, list<Instruction|class-string<Instruction>>> */
+    /** @return array<string, array{string, list<Instruction|class-string<Instruction>>}> */
     public static function of(Resource $resource): array
     {
         $extensions = $resource->context()->extensions()->applicable($resource::class, DeclaresInstructions::class);
@@ -22,7 +22,7 @@ final readonly class ExtensionInstructions
         $declared = [];
 
         foreach ($extensions as $name => $extension) {
-            $declared[$name] = $extension->instructions($context);
+            $declared[$name] = [$extension::class, $extension->instructions($context)];
         }
 
         return $declared;

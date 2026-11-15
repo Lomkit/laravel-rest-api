@@ -15,18 +15,18 @@ final readonly class RestrictionGuard
     private const string NESTED = 'Nested';
 
     /** @param Builder<Model> $query */
-    public static function ensureOnlyWheres(Builder $query, string $extension, Resource $resource): void
+    public static function ensureOnlyWheres(Builder $query, string $extension, string $class, Resource $resource): void
     {
         $removed = $query->removedScopes();
 
         if ($removed !== []) {
-            throw InvalidQueryExtensionException::restrictionRemovesScopes($extension, $resource::class, array_map(static fn (mixed $scope): string => is_string($scope) ? $scope : get_debug_type($scope), array_values($removed)));
+            throw InvalidQueryExtensionException::restrictionRemovesScopes($extension, $class, $resource::class, array_map(static fn (mixed $scope): string => is_string($scope) ? $scope : get_debug_type($scope), array_values($removed)));
         }
 
         $part = self::refusedIn($query->getQuery(), $query->getModel()->getTable()) ?? self::refusedOn($query);
 
         if ($part !== null) {
-            throw InvalidQueryExtensionException::restrictionClause($extension, $resource::class, $part);
+            throw InvalidQueryExtensionException::restrictionClause($extension, $class, $resource::class, $part);
         }
     }
 

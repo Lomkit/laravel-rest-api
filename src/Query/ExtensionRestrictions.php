@@ -38,14 +38,14 @@ final readonly class ExtensionRestrictions
             $query->where(function (Builder $group) use ($name, $extension, $user): void {
                 $extension->restrict(new RestrictionContext($group, $this->resource, $user));
 
-                RestrictionGuard::ensureOnlyWheres($group, $name, $this->resource);
+                RestrictionGuard::ensureOnlyWheres($group, $name, $extension::class, $this->resource);
             });
         }
     }
 
-    /** @return list<string> */
-    public function names(): array
+    /** @return non-empty-array<string, string> */
+    public function classes(): array
     {
-        return array_keys($this->extensions);
+        return array_map(static fn (Extension $extension): string => $extension::class, $this->extensions);
     }
 }

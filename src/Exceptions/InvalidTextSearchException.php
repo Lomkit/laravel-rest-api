@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Exceptions;
 
+use Illuminate\Support\Arr;
 use LogicException;
 use Throwable;
 
@@ -149,13 +150,18 @@ final class InvalidTextSearchException extends LogicException
         return new self("The text search of the resource [{$resource}] does not run on a search engine.");
     }
 
-    /** @param list<string> $names */
-    public static function restrictedByExtensions(string $resource, array $names): self
+    /** @param array<string, string> $extensions */
+    public static function restrictedByExtensions(string $resource, array $extensions): self
     {
-        $extensions = implode(', ', $names);
+        $named = [];
 
-        $first = $names[0] ?? 'name';
+        foreach ($extensions as $name => $class) {
+            $named[] = "the [{$name}] extension {$class}";
+        }
 
-        return new self("The extensions [{$extensions}] restrict the rows of {$resource}, whose text search runs on a search engine that these restrictions do not reach. Leave {$resource} out of them with appliesTo(), disable one with '{$first}' => false in the [rest.extensions] config, or remove the text search of {$resource}.");
+        $restricting = ucfirst(Arr::join($named, ', ', ' and '));
+        [$restrict, $one] = count($extensions) > 1 ? ['restrict', 'one of these classes'] : ['restricts', 'this class'];
+
+        return new self("{$restricting} {$restrict} the rows of {$resource}, whose text search runs on a search engine that these restrictions do not reach. Leave {$resource} out of them with appliesTo(), add {$one} to the [rest.disabled_extensions] config, or remove the text search of {$resource}.");
     }
 }

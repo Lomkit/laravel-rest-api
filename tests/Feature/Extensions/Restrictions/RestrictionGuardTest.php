@@ -61,7 +61,7 @@ class RestrictionGuardTest extends PackageTestCase
         ClausedExtension::$clause = $clause;
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::restrictionClause('claused', RestrictedAuthorResource::class, $part));
+        $this->expectExceptionObject(InvalidQueryExtensionException::restrictionClause('claused', ClausedExtension::class, RestrictedAuthorResource::class, $part));
 
         $this->postJson('/restricted-authors/search', ['search' => []]);
     }
@@ -105,7 +105,7 @@ class RestrictionGuardTest extends PackageTestCase
         ClausedExtension::$clause = static fn (Builder $query): Builder => $query->withoutGlobalScope(SoftDeletingScope::class);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::restrictionRemovesScopes('claused', RestrictedAuthorResource::class, [SoftDeletingScope::class]));
+        $this->expectExceptionObject(InvalidQueryExtensionException::restrictionRemovesScopes('claused', ClausedExtension::class, RestrictedAuthorResource::class, [SoftDeletingScope::class]));
 
         $this->postJson('/restricted-authors/search', ['search' => []]);
     }
@@ -116,7 +116,7 @@ class RestrictionGuardTest extends PackageTestCase
         ClausedExtension::$clause = static fn (Builder $query): Builder => $query->where(static fn (Builder $nested): Builder => $nested->where(static fn (Builder $deeper): Builder => $deeper->withTrashed()->where('first_name', 'Ada')));
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::restrictionRemovesScopes('claused', RestrictedAuthorResource::class, [SoftDeletingScope::class]));
+        $this->expectExceptionObject(InvalidQueryExtensionException::restrictionRemovesScopes('claused', ClausedExtension::class, RestrictedAuthorResource::class, [SoftDeletingScope::class]));
 
         $this->postJson('/restricted-authors/search', ['search' => []]);
     }
@@ -124,9 +124,9 @@ class RestrictionGuardTest extends PackageTestCase
     #[Test]
     public function it_names_the_extension_and_the_resource_and_advises_another_table(): void
     {
-        $exception = InvalidQueryExtensionException::restrictionClause('claused', RestrictedAuthorResource::class, QueryPart::Join);
+        $exception = InvalidQueryExtensionException::restrictionClause('claused', ClausedExtension::class, RestrictedAuthorResource::class, QueryPart::Join);
 
-        $this->assertSame('The [claused] extension adds a join to the restriction of '.RestrictedAuthorResource::class.', which holds only where clauses. Restrict through another table with whereHas() or whereExists().', $exception->getMessage());
-        $this->assertTrue($exception->concerns('claused'));
+        $this->assertSame('The [claused] extension '.ClausedExtension::class.' adds a join to the restriction of '.RestrictedAuthorResource::class.', which holds only where clauses. Restrict through another table with whereHas() or whereExists().', $exception->getMessage());
+        $this->assertSame([true, false], [$exception->concerns(ClausedExtension::class), $exception->concerns('claused')]);
     }
 }

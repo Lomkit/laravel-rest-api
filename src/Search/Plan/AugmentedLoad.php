@@ -15,17 +15,17 @@ final readonly class AugmentedLoad
 {
     public const string SEPARATOR = '.';
 
-    public static function ensureDeclared(string $extension, Resource $resource, string $path): void
+    public static function ensureDeclared(string $extension, string $class, Resource $resource, string $path): void
     {
         $model = $resource::newModel();
         $segments = explode(self::SEPARATOR, $path);
         $last = count($segments) - 1;
 
         foreach ($segments as $index => $segment) {
-            $relation = self::declared($model, $segment) ?? throw InvalidQueryExtensionException::unknownRelation($extension, $path, $resource::class);
+            $relation = self::declared($model, $segment) ?? throw InvalidQueryExtensionException::unknownRelation($extension, $class, $path, $resource::class);
 
             if ($relation instanceof MorphTo && $index < $last) {
-                throw InvalidQueryExtensionException::loadThroughMorphTo($extension, $path, $segment, $resource::class);
+                throw InvalidQueryExtensionException::loadThroughMorphTo($extension, $class, $path, $segment, $resource::class);
             }
 
             $model = $relation->getRelated();

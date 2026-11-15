@@ -110,7 +110,7 @@ class ExtensionInstructionsTest extends PackageTestCase
         Rest::resource('colliding-authors', CollidingAuthorController::class)->register();
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::instructionTaken('arc.with-archived', CollidingAuthorResource::class, [null, 'arc']));
+        $this->expectExceptionObject(InvalidQueryExtensionException::instructionTaken('arc.with-archived', CollidingAuthorResource::class, [null, ['arc', ArchiveInstructionsExtension::class]]));
 
         $this->getJson('/colliding-authors?with=instructions');
     }
@@ -120,7 +120,7 @@ class ExtensionInstructionsTest extends PackageTestCase
     {
         config(['rest.extensions' => [TwinInstructionsExtension::class]]);
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::instructionTaken('arc.with-archived', AuthorResource::class, ['arc', 'arc']));
+        $this->expectExceptionObject(InvalidQueryExtensionException::instructionTaken('arc.with-archived', AuthorResource::class, [['arc', TwinInstructionsExtension::class], ['arc', TwinInstructionsExtension::class]]));
 
         $this->context()->resource(AuthorResource::class)->definition()->instructions();
     }
@@ -129,8 +129,8 @@ class ExtensionInstructionsTest extends PackageTestCase
     public function it_names_the_owners_of_a_taken_key(): void
     {
         $this->assertSame(
-            'The instruction key [arc.with-archived] of '.AuthorResource::class.' is declared by [arc, the resource]. Rename one: the key of an extension instruction is the extension name, a dot and the uriKey() of the instruction.',
-            InvalidQueryExtensionException::instructionTaken('arc.with-archived', AuthorResource::class, [null, 'arc'])->getMessage(),
+            'The instruction key [arc.with-archived] of '.AuthorResource::class.' is declared by the [arc] extension '.ArchiveInstructionsExtension::class.' and the resource. Rename one: the key of an extension instruction is the extension name, a dot and the uriKey() of the instruction.',
+            InvalidQueryExtensionException::instructionTaken('arc.with-archived', AuthorResource::class, [null, ['arc', ArchiveInstructionsExtension::class]])->getMessage(),
         );
     }
 
@@ -207,9 +207,9 @@ class ExtensionInstructionsTest extends PackageTestCase
     public static function brokenEntries(): array
     {
         return [
-            'a class that is no instruction' => [AuthorResource::class, InvalidQueryExtensionException::instructionNotAnInstruction('broken', AuthorResource::class, AuthorResource::class)],
-            'the base instruction' => [Instruction::class, InvalidQueryExtensionException::instructionBaseListed('broken', AuthorResource::class)],
-            'an abstract instruction' => [AbstractInstruction::class, InvalidQueryExtensionException::instructionNotInstantiable('broken', AuthorResource::class, AbstractInstruction::class)],
+            'a class that is no instruction' => [AuthorResource::class, InvalidQueryExtensionException::instructionNotAnInstruction('broken', BrokenInstructionsExtension::class, AuthorResource::class, AuthorResource::class)],
+            'the base instruction' => [Instruction::class, InvalidQueryExtensionException::instructionBaseListed('broken', BrokenInstructionsExtension::class, AuthorResource::class)],
+            'an abstract instruction' => [AbstractInstruction::class, InvalidQueryExtensionException::instructionNotInstantiable('broken', BrokenInstructionsExtension::class, AuthorResource::class, AbstractInstruction::class)],
         ];
     }
 
@@ -220,7 +220,7 @@ class ExtensionInstructionsTest extends PackageTestCase
         BrokenInstructionsExtension::$entry = MarkedInstruction::class;
         $this->app?->bind(MarkedInstruction::class, InStatus::class);
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::instructionForeignBinding('broken', AuthorResource::class, MarkedInstruction::class, InStatus::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::instructionForeignBinding('broken', BrokenInstructionsExtension::class, AuthorResource::class, MarkedInstruction::class, InStatus::class));
 
         $this->context()->resource(AuthorResource::class)->definition()->instructions();
     }
@@ -237,7 +237,7 @@ class ExtensionInstructionsTest extends PackageTestCase
 
         $this->assertIsArray($report);
         $this->assertSame(array_map(
-            static fn (string $resource): string => $resource.': '.InvalidQueryExtensionException::instructionNotInstantiable('broken', $resource, AbstractInstruction::class)->getMessage(),
+            static fn (string $resource): string => $resource.': '.InvalidQueryExtensionException::instructionNotInstantiable('broken', BrokenInstructionsExtension::class, $resource, AbstractInstruction::class)->getMessage(),
             [CollidingAuthorResource::class, AuthorResource::class, PostResource::class, DraftResource::class, TagResource::class],
         ), $report['declarations']['problems']);
     }
@@ -252,7 +252,7 @@ class ExtensionInstructionsTest extends PackageTestCase
 
         $this->assertIsArray($report);
         $this->assertSame(
-            [CollidingAuthorResource::class.': '.InvalidQueryExtensionException::instructionTaken('arc.with-archived', CollidingAuthorResource::class, [null, 'arc'])->getMessage()],
+            [CollidingAuthorResource::class.': '.InvalidQueryExtensionException::instructionTaken('arc.with-archived', CollidingAuthorResource::class, [null, ['arc', ArchiveInstructionsExtension::class]])->getMessage()],
             $report['declarations']['problems'],
         );
     }

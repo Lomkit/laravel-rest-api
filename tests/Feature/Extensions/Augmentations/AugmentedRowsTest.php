@@ -220,7 +220,7 @@ class AugmentedRowsTest extends PackageTestCase
         $this->postJson('/path-authors/search', ['search' => []])->assertOk();
         $this->assertInstanceOf(AugmentationContext::class, $kept);
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::lateAddition('first', $method, PathAuthorResource::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::lateAddition('first', FirstAugmentation::class, $method, PathAuthorResource::class));
 
         $call($kept);
     }
@@ -248,7 +248,7 @@ class AugmentedRowsTest extends PackageTestCase
         };
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::lateAddition('first', 'column', PathAuthorResource::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::lateAddition('first', FirstAugmentation::class, 'column', PathAuthorResource::class));
 
         $this->postJson('/path-authors/search', ['search' => []]);
     }
@@ -306,7 +306,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[DataProvider('invalidAliases')]
     public function it_refuses_an_invalid_alias(string $alias): void
     {
-        $this->expectRefusal(static fn (AugmentationContext $context): string => $context->select($alias, Post::query()), InvalidQueryExtensionException::invalidAlias('first', $alias));
+        $this->expectRefusal(static fn (AugmentationContext $context): string => $context->select($alias, Post::query()), InvalidQueryExtensionException::invalidAlias('first', FirstAugmentation::class, $alias));
     }
 
     /** @return array<string, array{string}> */
@@ -337,7 +337,7 @@ class AugmentedRowsTest extends PackageTestCase
         };
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::aliasTooLong($name, $name.'__'.str_repeat('b', 30), PathAuthorResource::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::aliasTooLong($name, LongNamedAugmentation::class, $name.'__'.str_repeat('b', 30), PathAuthorResource::class));
 
         try {
             $this->postJson('/path-authors/search', ['search' => []]);
@@ -351,17 +351,17 @@ class AugmentedRowsTest extends PackageTestCase
     {
         $this->expectRefusal(
             static fn (AugmentationContext $context): array => [$context->select('total', Post::query()->selectRaw('1')), $context->select('total', Post::query()->selectRaw('2'))],
-            InvalidQueryExtensionException::aliasRepeated('first', 'first__total', PathAuthorResource::class),
+            InvalidQueryExtensionException::aliasRepeated('first', FirstAugmentation::class, 'first__total', PathAuthorResource::class),
         );
     }
 
     #[Test]
     public function it_names_one_extension_once_when_it_selects_an_alias_twice(): void
     {
-        $exception = InvalidQueryExtensionException::aliasRepeated('first', 'first__total', PathAuthorResource::class);
+        $exception = InvalidQueryExtensionException::aliasRepeated('first', FirstAugmentation::class, 'first__total', PathAuthorResource::class);
 
-        $this->assertSame('The [first] extension selects [first__total] twice in the rows of '.PathAuthorResource::class.'. Give each select() its own alias.', $exception->getMessage());
-        $this->assertTrue($exception->concerns('first'));
+        $this->assertSame('The [first] extension '.FirstAugmentation::class.' selects [first__total] twice in the rows of '.PathAuthorResource::class.'. Give each select() its own alias.', $exception->getMessage());
+        $this->assertSame([true, false], [$exception->concerns(FirstAugmentation::class), $exception->concerns('first')]);
     }
 
     #[Test]
@@ -389,7 +389,7 @@ class AugmentedRowsTest extends PackageTestCase
         FirstAugmentation::$augment = static fn (AugmentationContext $context): string => $context->select('total', Post::query()->selectRaw('1'));
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::aliasNamesField('first', 'first__total', AliasFieldAuthorResource::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::aliasNamesField('first', FirstAugmentation::class, 'first__total', AliasFieldAuthorResource::class));
 
         $this->postJson('/alias-field-authors/search', ['search' => []]);
     }
@@ -401,7 +401,7 @@ class AugmentedRowsTest extends PackageTestCase
         $this->captureQueries();
 
         try {
-            $this->expectRefusal(static fn (AugmentationContext $context): mixed => $context->with($relation), InvalidQueryExtensionException::unknownRelation('first', $relation, PathAuthorResource::class));
+            $this->expectRefusal(static fn (AugmentationContext $context): mixed => $context->with($relation), InvalidQueryExtensionException::unknownRelation('first', FirstAugmentation::class, $relation, PathAuthorResource::class));
         } finally {
             $this->assertSame([], array_values(array_filter($this->statements, static fn (array $statement): bool => ! str_starts_with($statement[0], 'select'))));
         }
@@ -430,9 +430,18 @@ class AugmentedRowsTest extends PackageTestCase
         SecondAugmentation::$augment = static fn (AugmentationContext $context): mixed => $context->with('drafts');
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, ['a', 'b']));
+        $this->expectExceptionObject(InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, ['a' => FirstAugmentationNamedA::class, 'b' => SecondAugmentationNamedB::class]));
 
         $this->postJson('/path-authors/search', ['search' => []]);
+    }
+
+    #[Test]
+    public function it_names_both_extensions_of_a_relation_loaded_twice(): void
+    {
+        $exception = InvalidQueryExtensionException::relationTaken('drafts', PathAuthorResource::class, ['a' => FirstAugmentationNamedA::class, 'b' => SecondAugmentationNamedB::class]);
+
+        $this->assertSame('The [a] extension '.FirstAugmentationNamedA::class.' and the [b] extension '.SecondAugmentationNamedB::class.' eager load [drafts] on '.PathAuthorResource::class.' twice. Load it from one extension, once.', $exception->getMessage());
+        $this->assertSame([true, false], [$exception->concerns(FirstAugmentationNamedA::class), $exception->concerns(SecondAugmentationNamedB::class)]);
     }
 
     #[Test]
@@ -443,17 +452,17 @@ class AugmentedRowsTest extends PackageTestCase
                 $context->with('drafts');
                 $context->with('drafts');
             },
-            InvalidQueryExtensionException::relationRepeated('first', 'drafts', PathAuthorResource::class),
+            InvalidQueryExtensionException::relationRepeated('first', FirstAugmentation::class, 'drafts', PathAuthorResource::class),
         );
     }
 
     #[Test]
     public function it_names_one_extension_once_when_it_loads_a_relation_twice(): void
     {
-        $exception = InvalidQueryExtensionException::relationRepeated('first', 'drafts', PathAuthorResource::class);
+        $exception = InvalidQueryExtensionException::relationRepeated('first', FirstAugmentation::class, 'drafts', PathAuthorResource::class);
 
-        $this->assertSame('The [first] extension eager loads [drafts] on '.PathAuthorResource::class.' twice. Call with() once for each relation.', $exception->getMessage());
-        $this->assertTrue($exception->concerns('first'));
+        $this->assertSame('The [first] extension '.FirstAugmentation::class.' eager loads [drafts] on '.PathAuthorResource::class.' twice. Call with() once for each relation.', $exception->getMessage());
+        $this->assertSame([true, false], [$exception->concerns(FirstAugmentation::class), $exception->concerns('first')]);
     }
 
     /** @param Closure(EloquentBuilder<Author>): mixed $change */
@@ -461,7 +470,7 @@ class AugmentedRowsTest extends PackageTestCase
     #[DataProvider('invalidColumns')]
     public function it_refuses_an_invalid_column(string $column): void
     {
-        $this->expectRefusal(static fn (AugmentationContext $context): mixed => $context->column($column), InvalidQueryExtensionException::invalidColumn('first', $column, PathAuthorResource::class));
+        $this->expectRefusal(static fn (AugmentationContext $context): mixed => $context->column($column), InvalidQueryExtensionException::invalidColumn('first', FirstAugmentation::class, $column, PathAuthorResource::class));
     }
 
     /** @return array<string, array{string}> */

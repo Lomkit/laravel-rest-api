@@ -9,6 +9,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Query\QueryPart;
 use Lomkit\Rest\Query\RestrictionGuard;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ClausedExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictedAuthorResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
@@ -32,9 +33,9 @@ class RestrictionGuardPartsTest extends PackageTestCase
         $query = Author::query();
         $clause($query);
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::restrictionClause('claused', RestrictedAuthorResource::class, $part));
+        $this->expectExceptionObject(InvalidQueryExtensionException::restrictionClause('claused', ClausedExtension::class, RestrictedAuthorResource::class, $part));
 
-        RestrictionGuard::ensureOnlyWheres($query, 'claused', new RestrictedAuthorResource);
+        RestrictionGuard::ensureOnlyWheres($query, 'claused', ClausedExtension::class, new RestrictedAuthorResource);
     }
 
     /** @return array<string, array{Closure(Builder<Model>): mixed, QueryPart}> */
@@ -59,7 +60,7 @@ class RestrictionGuardPartsTest extends PackageTestCase
         $query = Author::query();
         $clause($query);
 
-        RestrictionGuard::ensureOnlyWheres($query, 'claused', new RestrictedAuthorResource);
+        RestrictionGuard::ensureOnlyWheres($query, 'claused', ClausedExtension::class, new RestrictedAuthorResource);
 
         $this->assertNotSame([], $query->getQuery()->wheres);
     }

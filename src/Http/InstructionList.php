@@ -18,7 +18,7 @@ final class InstructionList
     /** @var array<array-key, Instruction> */
     private array $built = [];
 
-    /** @var array<int, array{Instruction|class-string<Instruction>, ?string}>|null */
+    /** @var array<int, array{Instruction|class-string<Instruction>, array{string, string}|null}>|null */
     private ?array $listed = null;
 
     private bool $distinct = false;
@@ -28,7 +28,7 @@ final class InstructionList
 
     /**
      * @param  array<int, Instruction|class-string<Instruction>>  $entries
-     * @param  Closure(): array<string, list<Instruction|class-string<Instruction>>>  $extensions
+     * @param  Closure(): array<string, array{string, list<Instruction|class-string<Instruction>>}>  $extensions
      */
     public function __construct(
         private readonly array $entries,
@@ -90,7 +90,7 @@ final class InstructionList
         }
 
         foreach ($owners as $key => $declaring) {
-            if (count($declaring) > 1 && array_any($declaring, static fn (?string $owner): bool => $owner !== null)) {
+            if (count($declaring) > 1 && array_any($declaring, static fn (?array $owner): bool => $owner !== null)) {
                 throw InvalidQueryExtensionException::instructionTaken((string) $key, $this->resource::class, $declaring);
             }
         }
@@ -98,7 +98,7 @@ final class InstructionList
         $this->distinct = true;
     }
 
-    /** @return array<int, array{Instruction|class-string<Instruction>, ?string}> */
+    /** @return array<int, array{Instruction|class-string<Instruction>, array{string, string}|null}> */
     private function listed(): array
     {
         if ($this->listed !== null) {
@@ -107,17 +107,20 @@ final class InstructionList
 
         $listed = array_map(static fn (Instruction|string $entry): array => [$entry, null], $this->entries);
 
-        foreach (($this->extensions)() as $name => $entries) {
+        foreach (($this->extensions)() as $name => [$class, $entries]) {
             foreach ($entries as $entry) {
-                $listed[] = [$entry, $name];
+                $listed[] = [$entry, [$name, $class]];
             }
         }
 
         return $this->listed = $listed;
     }
 
-    /** @param Instruction|class-string<Instruction> $entry */
-    private function build(Instruction|string $entry, ?string $owner): Instruction
+    /**
+     * @param  Instruction|class-string<Instruction>  $entry
+     * @param  array{string, string}|null  $owner
+     */
+    private function build(Instruction|string $entry, ?array $owner): Instruction
     {
         $instruction = is_string($entry) ? $this->make($entry, $owner) : $entry;
 
@@ -126,13 +129,16 @@ final class InstructionList
         }
 
         $clone = clone $instruction;
-        $this->owners[$clone] = $owner;
+        $this->owners[$clone] = $owner[0];
 
         return $clone;
     }
 
-    /** @param class-string<Instruction> $entry */
-    private function make(string $entry, ?string $owner): Instruction
+    /**
+     * @param  class-string<Instruction>  $entry
+     * @param  array{string, string}|null  $owner
+     */
+    private function make(string $entry, ?array $owner): Instruction
     {
         $this->ensureInstantiable($entry, $owner);
         $instruction = $this->container->make($entry);
@@ -140,26 +146,27 @@ final class InstructionList
         if (! $instruction instanceof $entry) {
             throw $owner === null
                 ? InvalidInstructionException::foreignBinding($this->resource::class, $entry, get_debug_type($instruction))
-                : InvalidQueryExtensionException::instructionForeignBinding($owner, $this->resource::class, $entry, get_debug_type($instruction));
+                : InvalidQueryExtensionException::instructionForeignBinding($owner[0], $owner[1], $this->resource::class, $entry, get_debug_type($instruction));
         }
 
         return $instruction;
     }
 
-    private function ensureInstantiable(string $entry, ?string $owner): void
+    /** @param array{string, string}|null $owner */
+    private function ensureInstantiable(string $entry, ?array $owner): void
     {
         $resource = $this->resource::class;
 
         if ($entry === Instruction::class) {
-            throw $owner === null ? InvalidInstructionException::baseListed($resource) : InvalidQueryExtensionException::instructionBaseListed($owner, $resource);
+            throw $owner === null ? InvalidInstructionException::baseListed($resource) : InvalidQueryExtensionException::instructionBaseListed($owner[0], $owner[1], $resource);
         }
 
         if (! is_subclass_of($entry, Instruction::class)) {
-            throw $owner === null ? InvalidInstructionException::notAnInstruction($resource, $entry) : InvalidQueryExtensionException::instructionNotAnInstruction($owner, $resource, $entry);
+            throw $owner === null ? InvalidInstructionException::notAnInstruction($resource, $entry) : InvalidQueryExtensionException::instructionNotAnInstruction($owner[0], $owner[1], $resource, $entry);
         }
 
         if (! (new ReflectionClass($entry))->isInstantiable()) {
-            throw $owner === null ? InvalidInstructionException::notInstantiable($resource, $entry) : InvalidQueryExtensionException::instructionNotInstantiable($owner, $resource, $entry);
+            throw $owner === null ? InvalidInstructionException::notInstantiable($resource, $entry) : InvalidQueryExtensionException::instructionNotInstantiable($owner[0], $owner[1], $resource, $entry);
         }
     }
 }

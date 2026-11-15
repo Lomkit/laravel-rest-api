@@ -3,8 +3,10 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions\Restrictions;
 
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstHalfExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondHalfExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
@@ -38,7 +40,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
         config(['scout.driver' => $driver, 'rest.extensions' => [HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['hidden']));
+        $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['hidden' => HiddenRowsExtension::class]));
 
         $this->search('vouchers', ['text' => ['value' => 'report']]);
     }
@@ -49,7 +51,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
         config(['rest.extensions' => [HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['hidden']));
+        $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['hidden' => HiddenRowsExtension::class]));
 
         $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
     }
@@ -58,8 +60,8 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_names_the_extensions_and_how_to_leave_the_resource_out(): void
     {
         $this->assertSame(
-            'The extensions [a, b] restrict the rows of '.VoucherResource::class.', whose text search runs on a search engine that these restrictions do not reach. Leave '.VoucherResource::class.' out of them with appliesTo(), disable one with \'a\' => false in the [rest.extensions] config, or remove the text search of '.VoucherResource::class.'.',
-            InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['a', 'b'])->getMessage(),
+            'The [half_a] extension '.FirstHalfExtension::class.' and the [half_b] extension '.SecondHalfExtension::class.' restrict the rows of '.VoucherResource::class.', whose text search runs on a search engine that these restrictions do not reach. Leave '.VoucherResource::class.' out of them with appliesTo(), add one of these classes to the [rest.disabled_extensions] config, or remove the text search of '.VoucherResource::class.'.',
+            InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, ['half_a' => FirstHalfExtension::class, 'half_b' => SecondHalfExtension::class])->getMessage(),
         );
     }
 
