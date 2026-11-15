@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Exceptions;
 
 use Lomkit\Rest\Http\Routing\Endpoint;
 
-final class InvalidWriteExtensionException extends InvalidExtensionException
+final class InvalidWriteExtensionException extends ExtensionException
 {
     public static function refusalStatus(string $name, string $class, string $resource, Endpoint $endpoint, int $status): self
     {
