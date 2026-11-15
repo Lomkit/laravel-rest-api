@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\Changes;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Authorization\PendingChecks;
+use Lomkit\Rest\Authorization\RowVersions;
 use Lomkit\Rest\Http\Routing\Endpoint;
 
 trait Authorizable
@@ -36,6 +37,8 @@ trait Authorizable
     }
 
     public function prepareAuthorization(PendingChecks $checks): void {}
+
+    public function versionAuthorization(RowVersions $versions): void {}
 
     /** @param list<Model|Changes> $arguments */
     public function authorizeTo(string $ability, Model|string $model, array $arguments = []): void

@@ -6,25 +6,33 @@ use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\Date;
 
-final readonly class CacheDecisionStore implements DecisionStore
+final class CacheDecisionStore implements DecisionStore
 {
-    private DecisionStamps $stamps;
+    private readonly DecisionStamps $stamps;
 
-    private int $since;
+    private readonly DecisionEntries $entries;
+
+    /** @var array<string, array{DecisionKey, int}|null> */
+    private array $read = [];
 
     public function __construct(
-        private Factory $cache,
-        private UserIdentity $user,
-        private ?string $store = null,
+        private readonly Factory $cache,
+        private readonly UserIdentity $user,
+        private readonly ?string $store = null,
+        DecisionVersions $versions = new DecisionVersions,
     ) {
         $this->stamps = new DecisionStamps($user->user);
-        $this->since = Date::now()->getTimestamp();
+        $this->entries = new DecisionEntries(Date::now()->getTimestamp(), $versions);
     }
 
     #[\Override]
     public function many(array $checks): array
     {
-        $entries = $this->entries($checks);
+        $entries = $this->entries->of($checks);
+
+        foreach (array_keys($checks) as $key) {
+            $this->read[$key] = $entries[$key] ?? null;
+        }
 
         if ($entries === []) {
             return [];
@@ -40,13 +48,15 @@ final readonly class CacheDecisionStore implements DecisionStore
             }
         }
 
+        $this->read = array_diff_key($this->read, $decisions);
+
         return $decisions;
     }
 
     #[\Override]
     public function putMany(array $checks, array $decisions): void
     {
-        $entries = $this->entries($checks);
+        $entries = $this->written($checks);
 
         if ($entries === []) {
             return;
@@ -68,18 +78,14 @@ final readonly class CacheDecisionStore implements DecisionStore
      * @param  array<string, Check>  $checks
      * @return array<string, array{DecisionKey, int}>
      */
-    private function entries(array $checks): array
+    private function written(array $checks): array
     {
-        $read = [];
+        $unread = $this->entries->of(array_diff_key($checks, $this->read));
         $entries = [];
 
-        foreach ($checks as $key => $check) {
-            if ($check->isKeyedByInstance()) {
-                continue;
-            }
-
-            $abilities = $read[spl_object_id($check->resource)] ??= $check->resource->definition()->cachedAbilities();
-            $entry = $this->entry($check, $abilities);
+        foreach (array_keys($checks) as $key) {
+            $entry = array_key_exists($key, $this->read) ? $this->read[$key] : $unread[$key] ?? null;
+            unset($this->read[$key]);
 
             if ($entry !== null) {
                 $entries[$key] = $entry;
@@ -87,20 +93,6 @@ final readonly class CacheDecisionStore implements DecisionStore
         }
 
         return $entries;
-    }
-
-    /** @return array{DecisionKey, int}|null */
-    private function entry(Check $check, CachedAbilities $abilities): ?array
-    {
-        $seconds = $abilities->seconds($check->ability);
-
-        if ($seconds === null) {
-            return null;
-        }
-
-        $key = DecisionKey::of($check, $abilities->context, $this->since);
-
-        return $key === null ? null : [$key, $seconds];
     }
 
     /**

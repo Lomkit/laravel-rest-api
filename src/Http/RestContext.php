@@ -13,6 +13,7 @@ use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\CacheDecisionStore;
 use Lomkit\Rest\Authorization\DecisionPreparation;
 use Lomkit\Rest\Authorization\DecisionStore;
+use Lomkit\Rest\Authorization\DecisionVersions;
 use Lomkit\Rest\Authorization\NullDecisionStore;
 use Lomkit\Rest\Config\RestConfig;
 use Lomkit\Rest\Extensions\ExtensionRegistry;
@@ -161,6 +162,6 @@ final class RestContext
             return new NullDecisionStore;
         }
 
-        return new CacheDecisionStore($this->container->make(Factory::class), $acting->identity(), $this->config()->cacheStore);
+        return new CacheDecisionStore($this->container->make(Factory::class), $acting->identity(), $this->config()->cacheStore, new DecisionVersions($acting->user));
     }
 }

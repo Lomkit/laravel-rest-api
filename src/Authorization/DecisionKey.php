@@ -12,18 +12,19 @@ final readonly class DecisionKey
     /** @param list<string> $parts */
     private function __construct(private array $parts) {}
 
-    public static function of(Check $check, string $context, int $since): ?self
+    public static function of(Check $check, string $context, int $since, DependentVersions $versions = new DependentVersions): ?self
     {
         $parts = [$check->key()];
 
         foreach ($check->models() as $model) {
             $version = self::version($model, $since);
+            $dependent = $versions->of($model);
 
-            if ($version === null) {
+            if ($version === null || $dependent === null) {
                 return null;
             }
 
-            $parts[] = $version;
+            $parts[] = $version.$dependent;
         }
 
         return new self([...$parts, $context]);

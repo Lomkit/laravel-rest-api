@@ -73,6 +73,21 @@ final class InvalidResourceException extends LogicException
         return new self("The resource [{$resource}] returns a value for the key [{$key}] from authorizationCacheContext() that is not an integer, a string, a boolean or null. Give a scalar value, for example ['team' => 1].");
     }
 
+    public static function changedVersionedRows(string $resource, string $ability): self
+    {
+        return new self("The resource [{$resource}] changed the rows that versionAuthorization() receives for the ability [{$ability}]: an attribute, a relation loaded before the call or its models, the exists flag, table, connection, key name, casts or timestamps of a row, or the list of rows. Read the versions with a query, and leave the rows as they are.");
+    }
+
+    public static function unknownVersionedRow(string $resource, string $ability, string $model): self
+    {
+        return new self("The resource [{$resource}] adds a version in versionAuthorization() for a {$model} row that is not one of the rows of the ability [{$ability}]. Add versions only for the models of \$versions->rows.");
+    }
+
+    public static function invalidVersionKey(string $resource, string $key): self
+    {
+        return new self("The resource [{$resource}] adds a version under the key [{$key}] in versionAuthorization(). A key has 1 to 64 letters, digits or underscores and starts with a letter, such as [folder].");
+    }
+
     public static function notAMorphTo(string $resource, string $relation): self
     {
         return new self("The relation [{$relation}] of the resource [{$resource}] is declared with MorphTo, but its model method does not return a MorphTo relation.");
