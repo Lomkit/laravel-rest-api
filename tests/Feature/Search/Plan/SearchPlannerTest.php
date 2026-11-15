@@ -174,6 +174,17 @@ class SearchPlannerTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_lists_only_the_alias_of_an_aliased_include(): void
+    {
+        $authors = $this->listed(AuthorResource::class);
+        $this->listed(PostResource::class);
+
+        $plan = $this->paged($authors, ['includes' => [['relation' => 'posts', 'alias' => 'writings']]]);
+
+        $this->assertSame(['writings'], $plan->rendered?->relations);
+    }
+
+    #[Test]
     public function it_marks_no_plan_whose_rows_are_not_rendered(): void
     {
         $authors = $this->listed(AuthorResource::class);

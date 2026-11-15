@@ -15,9 +15,10 @@ final readonly class RenderedLevel
     /** @param list<IncludeNode|MorphIncludeNode> $includes */
     public static function of(array $includes): self
     {
+        $named = array_values(array_filter($includes, static fn (IncludeNode|MorphIncludeNode $include): bool => $include->alias === null));
         $aliases = array_filter(array_map(static fn (IncludeNode|MorphIncludeNode $include): ?string => $include->alias, $includes), static fn (?string $alias): bool => $alias !== null);
 
-        return new self(array_values(array_unique([...self::names($includes), ...$aliases])));
+        return new self(array_values(array_unique([...self::names($named), ...$aliases])));
     }
 
     /**

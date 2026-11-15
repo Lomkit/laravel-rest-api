@@ -177,6 +177,35 @@ class AugmentedRowsTest extends PackageTestCase
         $this->assertCount(1, $this->readsOf('posts'));
     }
 
+    #[Test]
+    public function it_loads_a_relation_that_the_client_includes_by_alias_only(): void
+    {
+        config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
+        FirstAugmentation::$augment = static function (AugmentationContext $context): void {
+            if ($context->resource instanceof PathAuthorResource) {
+                $context->with('posts');
+            }
+        };
+        $seen = [];
+        Gate::before(function (?Authenticatable $user, string $ability, array $arguments) use (&$seen): ?bool {
+            $row = $arguments[0] ?? null;
+
+            if ($ability === 'update' && $row instanceof Author) {
+                $seen[] = [$row->getKey(), $row->relationLoaded('posts') ? $row->posts->modelKeys() : null];
+            }
+
+            return null;
+        });
+
+        $response = $this->postJson('/path-authors/search', ['search' => [
+            'gates' => ['update'],
+            'includes' => [['relation' => 'posts', 'alias' => 'writings', 'filters' => [['field' => 'title', 'value' => 'Notes']]]],
+        ]]);
+
+        $response->assertOk()->assertJsonPath('data.*.writings.*.id', [1])->assertJsonMissingPath('data.0.posts');
+        $this->assertSame([[2, [3]], [1, [1, 2]]], $seen);
+    }
+
     /** @param array<string, class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
