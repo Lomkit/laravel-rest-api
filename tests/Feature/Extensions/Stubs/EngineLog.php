@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Lomkit\Rest\Extensions\Applicability;
 
 final class EngineLog
 {
@@ -21,6 +20,5 @@ final class EngineLog
         self::$calls = [];
         self::$users = [];
         self::$contexts = [];
-        Applicability::flush();
     }
 }
