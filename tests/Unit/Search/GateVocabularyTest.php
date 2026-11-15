@@ -129,6 +129,17 @@ class GateVocabularyTest extends TestCase
         GateVocabulary::of(['escalate'], self::OWNER, true, [self::extension('acl', ['export']), self::extension('shares', $declared)]);
     }
 
+    #[Test]
+    public function it_names_the_type_that_an_extension_returns_instead_of_a_gate_name(): void
+    {
+        try {
+            GateVocabulary::of(['escalate'], self::OWNER, true, [self::extension('shares', [7])]);
+            $this->fail('The integer was not refused.');
+        } catch (InvalidAuthorizationExtensionException $exception) {
+            $this->assertSame('The [shares] extension Vendor\Shares\SharesExtension returns int at index 0 from gates() for App\Rest\Resources\TicketResource. Return the names of policy methods.', $exception->getMessage());
+        }
+    }
+
     /** @return array<string, array{array<mixed>, int, mixed}> */
     public static function invalidExtensionDeclarations(): array
     {
