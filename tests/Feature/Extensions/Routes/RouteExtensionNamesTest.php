@@ -194,7 +194,7 @@ final class RouteExtensionNamesTest extends HelpdeskTestCase
     #[Test]
     public function it_registers_routes_beside_an_extension_config_of_another_kind_that_is_not_a_list(): void
     {
-        config(['rest.extensions' => ['counting' => CountingExtension::class, 'stamp' => 'Missing\Extension']]);
+        config(['rest.extensions' => [1 => CountingExtension::class, 2 => 'Missing\Extension']]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
 
