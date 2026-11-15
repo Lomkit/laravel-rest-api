@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Lomkit\Rest\Exceptions\InvalidDocumentationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Kinds\AddsDetailsMeta;
 use Lomkit\Rest\Extensions\Kinds\AddsSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaStageMeta;
@@ -32,14 +31,12 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
         parent::setUp();
 
         SharedSchemaMeta::$schema = null;
-        Applicability::flush();
     }
 
     #[\Override]
     protected function tearDown(): void
     {
         SharedSchemaMeta::$schema = null;
-        Applicability::flush();
 
         parent::tearDown();
     }

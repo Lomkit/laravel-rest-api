@@ -7,7 +7,6 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Lomkit\Rest\Authorization\ActingUser;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
@@ -36,7 +35,6 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
 
         MetaLog::reset();
         WriteLog::reset();
-        Applicability::flush();
         Rest::resource('meta-tickets', MetaTicketController::class)->register();
         config(['rest.extensions' => ['quota' => QuotaDetailsMeta::class, 'region' => RegionDetailsMeta::class]]);
     }
@@ -46,7 +44,6 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     {
         MetaLog::reset();
         WriteLog::reset();
-        Applicability::flush();
 
         parent::tearDown();
     }

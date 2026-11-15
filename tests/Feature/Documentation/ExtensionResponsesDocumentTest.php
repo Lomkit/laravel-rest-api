@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Lomkit\Rest\Exceptions\InvalidDocumentationException;
 use Lomkit\Rest\Exceptions\InvalidDocumentationExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\OperationDocumentationContext;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ArchivedResponses;
@@ -34,7 +33,6 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
         parent::setUp();
 
         MetaLog::reset();
-        Applicability::flush();
     }
 
     #[\Override]
@@ -42,7 +40,6 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     {
         MetaLog::reset();
         SharedBodyResponses::reset(registersAgain: true);
-        Applicability::flush();
 
         parent::tearDown();
     }

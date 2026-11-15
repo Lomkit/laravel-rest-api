@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Exceptions\MissingColumnException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingSearchMeta;
@@ -49,7 +48,6 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         parent::setUp();
 
         MetaLog::reset();
-        Applicability::flush();
         $this->travelTo('2026-11-15 10:00:00');
         DB::table('teams')->insert([
             ['id' => 1, 'name' => 'Billing', 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00'],
@@ -71,7 +69,6 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     protected function tearDown(): void
     {
         MetaLog::reset();
-        Applicability::flush();
 
         parent::tearDown();
     }

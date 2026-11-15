@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Support\Facades\DB;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaGuardResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaStageMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionStageMeta;
@@ -20,21 +19,12 @@ class ExtensionMetaContractTest extends DocumentationTestCase
     {
         parent::setUp();
 
-        Applicability::flush();
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage']]);
         DB::table('shows')->insert([
             ['id' => 1, 'stage_code' => 'main', 'title' => 'Opening night', 'summary' => null, 'price' => 12.5, 'seats' => 300, 'featured' => true, 'starts_on' => '2026-07-01', 'starts_at' => null, 'status' => 'on_sale', 'level' => 3, 'settings' => '[]', 'secret' => null, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00'],
             ['id' => 2, 'stage_code' => 'main', 'title' => 'Closing night', 'summary' => null, 'price' => null, 'seats' => 500, 'featured' => false, 'starts_on' => '2026-07-03', 'starts_at' => null, 'status' => 'planned', 'level' => 1, 'settings' => '[]', 'secret' => null, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00'],
         ]);
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        Applicability::flush();
-
-        parent::tearDown();
     }
 
     #[Test]
