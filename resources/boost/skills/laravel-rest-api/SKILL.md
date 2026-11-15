@@ -1459,7 +1459,7 @@ In the app, key each class by its name in `config/rest.php`:
 ],
 ```
 
-From a package, register it in the `register()` (or `boot()`) method of its service provider, so it is active on install and in the package's own tests:
+From a package, register it in the `register()` method of its service provider, so it is active on install and in the package's own tests:
 
 ```php
 public function register(): void
@@ -1468,7 +1468,7 @@ public function register(): void
 }
 ```
 
-`Rest::registerExtensions(['acl' => AccessControlExtension::class, 'tenant' => TenantExtension::class])` registers several. From `register()`, both work whatever the order of the providers. From `boot()`, they work only before every provider that declares REST routes in its own `boot()`.
+`Rest::registerExtensions(['acl' => AccessControlExtension::class, 'tenant' => TenantExtension::class])` registers several. From `register()`, both work whatever the order of the providers; prefer it. From `boot()`, they work only before every provider that declares REST routes in its own `boot()`.
 
 - The name is mandatory: 1 to 32 lowercase letters or digits, starting with a letter, words joined by single underscores (`row_lock`; `acl__x` and `acl_` are refused). It prefixes the meta keys, cache keys, SQL aliases and instruction keys of the extension. A config list without names is refused.
 - When two packages register two classes under one name, both registrations are kept and every context refuses the name when it builds its extensions, until the config settles it (see below); `rest:check` names both classes. The same class registered twice under one name counts once.
@@ -1497,7 +1497,7 @@ final class ArchiveExtension extends Extension implements SomeKind
 }
 ```
 
-- Register the class, never an instance: the container builds each extension once per context (request, queued job, search), at first use, so its constructor can inject services. Keep settings in properties; for other settings, register a subclass.
+- Register the class, never an instance: the container builds each extension once per context (request, queued job, search), at first use, so its constructor can inject services. `registerExtension()` takes a class name, so an instance is a PHP `TypeError`; in `registerExtensions()` or the config, it throws `InvalidExtensionException`. Keep settings in properties; for other settings, register a subclass. Never bind the extension as a singleton: one instance would then serve every context of an Octane or queue worker.
 - `SomeKind` stands for the kinds the extension implements, the interfaces of `Lomkit\Rest\Extensions\Kinds`; the constructor injects what their methods use. Implement at least one kind; a class with no kind, an abstract class, or a binding that builds another class is refused when the extensions are built.
 - `appliesTo()` returns `true` by default. Each context (request, queued job, search) asks it once per resource class and keeps the answer: answer from the resource class and the config, never from the user or the request (use a request kind for that).
 - An exception thrown by an extension reaches the caller.
