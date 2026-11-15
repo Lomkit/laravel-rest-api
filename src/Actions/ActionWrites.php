@@ -15,6 +15,7 @@ final readonly class ActionWrites
 {
     private function __construct(
         private Action $action,
+        private ActionTransaction $mode,
         private ActionFields $fields,
         private WriteTransaction $transaction,
         private ?WriteGuard $guard,
@@ -23,13 +24,13 @@ final readonly class ActionWrites
 
     public static function of(Action $action, ActionFields $fields, Resource $resource): self
     {
-        return new self($action, $fields, WriteTransaction::of($resource), WriteGuard::of($resource), WriteObservers::of($resource));
+        return new self($action, $action->transaction, $fields, WriteTransaction::of($resource), WriteGuard::of($resource), WriteObservers::of($resource));
     }
 
     /** @param Closure(): int $run */
     public function around(Closure $run): int
     {
-        if ($this->action->transaction !== ActionTransaction::Whole) {
+        if ($this->mode !== ActionTransaction::Whole) {
             return $run();
         }
 
@@ -46,7 +47,7 @@ final readonly class ActionWrites
     /** @param Collection<array-key, Model> $models */
     public function handle(Collection $models): void
     {
-        if ($this->action->transaction === ActionTransaction::Row) {
+        if ($this->mode === ActionTransaction::Row) {
             foreach ($models as $row) {
                 $this->action->beforeRow($this->fields, $row);
                 $this->transacted([$row], fn () => $this->action->handleRow($this->fields, $row));
@@ -55,13 +56,13 @@ final readonly class ActionWrites
             return;
         }
 
-        if ($this->action->transaction === ActionTransaction::Chunk) {
+        if ($this->mode === ActionTransaction::Chunk) {
             $this->transacted(array_values($models->all()), fn () => $this->action->handle($this->fields, $models));
 
             return;
         }
 
-        if ($this->action->transaction === ActionTransaction::None) {
+        if ($this->mode === ActionTransaction::None) {
             $this->direct($models);
 
             return;

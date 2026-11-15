@@ -63,7 +63,7 @@ final readonly class WriteObservers
     public function operated(WriteTransaction $transaction, Action $action, ActionFields $fields, int $impacted, ?array $rows): void
     {
         $this->schedule($transaction, fn (?Authenticatable $user): WriteObservationContext => new WriteObservationContext(
-            $this->resource, Endpoint::Operate, $user, rows: $rows === null ? null : RowCopies::of($rows), action: $action, fields: $fields, impacted: $impacted,
+            $this->resource, Endpoint::Operate, $user, rows: $rows === null ? null : RowCopies::of($rows), action: clone $action, fields: $fields, impacted: $impacted,
         ));
     }
 

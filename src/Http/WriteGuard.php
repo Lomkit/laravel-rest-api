@@ -64,7 +64,7 @@ final readonly class WriteGuard
         $user = $this->resource->context()->actingUser()->user;
 
         foreach ($this->extensions as $name => $extension) {
-            $extension->guardWrite(new WriteGuardContext($name, $extension::class, $this->resource, $endpoint, $user, $entries, $rows === null ? null : RowCopies::of($rows), $action, $fields));
+            $extension->guardWrite(new WriteGuardContext($name, $extension::class, $this->resource, $endpoint, $user, $entries, $rows === null ? null : RowCopies::of($rows), $action === null ? null : clone $action, $fields));
         }
     }
 }

@@ -21,6 +21,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AtomicArchiveDocuments;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DirectArchiveDocuments;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FailingWriteObserver;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ModeChangingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrittenDocumentController;
@@ -205,6 +206,26 @@ final class ObservedWritesTest extends PackageTestCase
             $this->assertSame(2, $context->user?->getAuthIdentifier());
             $this->assertNull($context->operations);
         }
+    }
+
+    #[Test]
+    public function it_runs_each_chunk_in_its_transaction_when_an_observer_changes_the_action(): void
+    {
+        config(['rest.extensions' => ['history' => RecordingWriteObserver::class, 'mode' => ModeChangingExtension::class]]);
+        $this->seedDocuments(null, null);
+        EventLog::listen();
+
+        $this->postJson('/written-documents/actions/archive-documents-by-one', ['search' => []])
+            ->assertOk()
+            ->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
+
+        $this->assertSame([
+            'operating archive-documents-by-one',
+            'begin level 2', 'handle 1', 'sql update documents', 'commit level 1', 'observe operate 1 (1)',
+            'begin level 2', 'handle 2', 'sql update documents', 'commit level 1', 'observe operate 2 (1)',
+            'operated archive-documents-by-one 2',
+        ], $this->writeLines());
+        $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
     }
 
     /** @return array<string, array{string, string, string, array<string, mixed>, ?string}> */

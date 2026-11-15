@@ -29,6 +29,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DenyingDocumentPolicy;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DirectArchiveDocuments;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FrozenGuard;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ModeChangingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
@@ -319,6 +320,26 @@ final class GuardedWritesTest extends PackageTestCase
     #[Test]
     public function it_keeps_the_transactions_committed_before_a_refusal(): void
     {
+        WriteLog::$refuseAt = 2;
+        $this->seedDocuments(null, null);
+        EventLog::listen();
+
+        $this->postJson('/written-documents/actions/archive-documents-by-one', ['search' => []])
+            ->assertStatus(429)
+            ->assertExactJson(['message' => 'The monthly quota is reached.']);
+
+        $this->assertSame([
+            'operating archive-documents-by-one',
+            'begin level 2', 'guard operate 1', 'handle 1', 'sql update documents', 'commit level 1',
+            'begin level 2', 'guard operate 2', 'rollback level 1',
+        ], $this->writeLines());
+        $this->assertSame([[1, 'Annual report', true], [2, 'Budget', false]], $this->documents());
+    }
+
+    #[Test]
+    public function it_guards_each_transaction_of_an_action_whose_mode_an_extension_changes(): void
+    {
+        config(['rest.extensions' => ['mode' => ModeChangingExtension::class, 'quota' => RecordingGuard::class]]);
         WriteLog::$refuseAt = 2;
         $this->seedDocuments(null, null);
         EventLog::listen();
