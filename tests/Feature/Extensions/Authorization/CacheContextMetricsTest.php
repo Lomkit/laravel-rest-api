@@ -11,7 +11,6 @@ use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
 use Lomkit\Rest\Metrics\CacheScope;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstCacheContext;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TenantCacheContext;
 use Lomkit\Rest\Tests\Feature\Metrics\SalesTestCase;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\MetricOrderResource;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\TotalRevenue;
@@ -52,7 +51,8 @@ class CacheContextMetricsTest extends SalesTestCase
     {
         $this->useStore($store);
         $this->serve(TotalRevenue::make()->cacheFor(600)->cacheScope($scope));
-        config(['rest.extensions' => [TenantCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
+        FirstCacheContext::$named = 'tenant';
         $tenant = 0;
         FirstCacheContext::$contribute = static function (CacheContributionContext $context) use (&$tenant): void {
             $context->put('id', $tenant);

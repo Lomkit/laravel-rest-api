@@ -15,6 +15,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherMaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionStageMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RoutedStampNamedLimits;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RowCheckLog;
@@ -60,5 +61,6 @@ trait ResetsExtensionStubs
         ReadersExtension::$excludes = false;
         ReadersExtension::$groups = null;
         SqlForeignEngineProfiles::$skipsRows = false;
+        RegionStageMeta::$named = null;
     }
 }

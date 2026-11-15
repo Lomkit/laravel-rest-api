@@ -12,7 +12,6 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstLateGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondEarlyGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondGates;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharesGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharingTicketPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
@@ -63,7 +62,8 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_answers_an_extension_gate_on_each_row(): void
     {
-        config(['rest.extensions' => [SharesGates::class], 'rest.gates.names.authorized_to_share' => 'can_share']);
+        config(['rest.extensions' => [FirstGates::class], 'rest.gates.names.authorized_to_share' => 'can_share']);
+        FirstGates::$named = 'shares';
         FirstGates::$gates = ['share'];
 
         $response = $this->postJson('/api/tickets/search', ['search' => ['gates' => ['share'], 'sorts' => [['field' => 'id']]]]);
@@ -78,7 +78,8 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_accepts_an_extension_gate_in_an_include_of_its_resource(): void
     {
-        config(['rest.extensions' => [SharesGates::class]]);
+        config(['rest.extensions' => [FirstGates::class]]);
+        FirstGates::$named = 'shares';
         FirstGates::$gates = ['share'];
         FirstGates::$resources = [TicketResource::class];
 
@@ -97,7 +98,8 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_refuses_an_extension_gate_at_the_level_of_another_resource(): void
     {
-        config(['rest.extensions' => [SharesGates::class]]);
+        config(['rest.extensions' => [FirstGates::class]]);
+        FirstGates::$named = 'shares';
         FirstGates::$gates = ['share'];
         FirstGates::$resources = [TicketResource::class];
 
@@ -109,7 +111,8 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_refuses_an_extension_gate_when_the_extension_does_not_apply(): void
     {
-        config(['rest.extensions' => [SharesGates::class]]);
+        config(['rest.extensions' => [FirstGates::class]]);
+        FirstGates::$named = 'shares';
         FirstGates::$gates = ['share'];
         FirstGates::$resources = [TeamResource::class];
 
@@ -122,7 +125,8 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_lists_no_gate_for_a_resource_that_turns_them_off(): void
     {
-        config(['rest.extensions' => [SharesGates::class]]);
+        config(['rest.extensions' => [FirstGates::class]]);
+        FirstGates::$named = 'shares';
         FirstGates::$gates = ['share'];
         $search = ['selects' => [['field' => 'id']], 'sorts' => [['field' => 'id']]];
 
@@ -180,7 +184,8 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_an_extension_gate_to_the_augmentation_and_the_preparation(): void
     {
-        config(['rest.extensions' => [SharesGates::class, AugmentedPreparingExtension::class]]);
+        config(['rest.extensions' => [FirstGates::class, AugmentedPreparingExtension::class]]);
+        FirstGates::$named = 'shares';
         FirstGates::$gates = ['share'];
 
         $this->postJson('/api/tickets/search', ['search' => ['gates' => ['share'], 'sorts' => [['field' => 'id']]]])->assertOk();

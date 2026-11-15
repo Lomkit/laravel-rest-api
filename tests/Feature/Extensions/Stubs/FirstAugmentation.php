@@ -12,10 +12,12 @@ class FirstAugmentation extends Extension implements AugmentsQueries
     /** @var (Closure(AugmentationContext): mixed)|null */
     public static ?Closure $augment = null;
 
+    public static ?string $named = null;
+
     #[\Override]
     public static function name(): string
     {
-        return 'first';
+        return self::$named ?? 'first';
     }
 
     #[\Override]

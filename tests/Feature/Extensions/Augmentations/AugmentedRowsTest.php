@@ -21,7 +21,6 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentationLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FlagExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LongNamedAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentationNamedA;
@@ -312,7 +311,8 @@ class AugmentedRowsTest extends PackageTestCase
     public function it_refuses_an_alias_too_long_with_its_prefix(): void
     {
         $name = str_repeat('n', 32);
-        config(['rest.extensions' => [LongNamedAugmentation::class]]);
+        config(['rest.extensions' => [FirstAugmentation::class]]);
+        FirstAugmentation::$named = $name;
         FirstAugmentation::$augment = static function (AugmentationContext $context): void {
             AugmentationLog::$aliases[] = $context->select(str_repeat('a', 29), static function (Builder $query): void {
                 $query->selectRaw('1');
@@ -323,7 +323,7 @@ class AugmentedRowsTest extends PackageTestCase
         };
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidQueryExtensionException::aliasTooLong($name, LongNamedAugmentation::class, $name.'__'.str_repeat('b', 30), PathAuthorResource::class));
+        $this->expectExceptionObject(InvalidQueryExtensionException::aliasTooLong($name, FirstAugmentation::class, $name.'__'.str_repeat('b', 30), PathAuthorResource::class));
 
         try {
             $this->postJson('/path-authors/search', ['search' => []]);

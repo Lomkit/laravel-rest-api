@@ -5,12 +5,11 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstGates;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharesGates;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', [SharesGates::class])]
+#[WithConfig('rest.extensions', [FirstGates::class])]
 class ExtensionGatesDocumentTest extends DocumentationTestCase
 {
     use ResetsExtensionStubs;
@@ -20,6 +19,7 @@ class ExtensionGatesDocumentTest extends DocumentationTestCase
     {
         parent::setUp();
 
+        FirstGates::$named = 'shares';
         FirstGates::$gates = ['share'];
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage']]);

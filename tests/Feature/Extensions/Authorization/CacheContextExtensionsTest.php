@@ -24,7 +24,6 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstCacheContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstLateCacheContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondCacheContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondEarlyCacheContext;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TenantCacheContext;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\CachedTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
@@ -67,7 +66,8 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     public function it_keeps_the_decisions_of_two_tenants_apart(string $store): void
     {
         $this->useStore($store);
-        config(['rest.extensions' => [TenantCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
+        FirstCacheContext::$named = 'tenant';
         $tenant = 0;
         FirstCacheContext::$contribute = static function (CacheContributionContext $context) use (&$tenant): void {
             $context->put('id', $tenant);

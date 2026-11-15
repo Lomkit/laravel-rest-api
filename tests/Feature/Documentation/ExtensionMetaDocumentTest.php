@@ -6,10 +6,10 @@ use Lomkit\Rest\Exceptions\InvalidDocumentationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Extensions\Kinds\AddsDetailsMeta;
 use Lomkit\Rest\Extensions\Kinds\AddsSearchMeta;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaStageMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionStageMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionStageMetaNamedArea;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionStageMetaNamedInstructions;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SchemaOnlyMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SearchOnlyMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharedSchemaMeta;
@@ -22,6 +22,8 @@ use stdClass;
 #[WithConfig('rest.extensions', [QuotaStageMeta::class, RegionStageMeta::class])]
 class ExtensionMetaDocumentTest extends DocumentationTestCase
 {
+    use ResetsExtensionStubs;
+
     private const string GATE = '{"$ref":"#\/components\/schemas\/RestGateAnswer"}';
 
     private const string PAGE_META = '{"type":"object","properties":{"gates":{"type":"object","description":"Present when the search lists the create gate","properties":{"authorized_to_create":'.self::GATE.'}},"quota":{"type":"object","description":"Added by the [quota] extension for the page","properties":{"remaining":{"type":"integer"}},"required":["remaining"],"additionalProperties":false},"region":{"type":"object","description":"Added by the [region] extension for the page","additionalProperties":{}}},"required":["quota","region"],"additionalProperties":false}';
@@ -161,9 +163,10 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_refuses_an_extension_named_after_a_key_of_the_package_in_the_document(): void
     {
-        config(['rest.extensions' => [RegionStageMetaNamedInstructions::class], 'app.debug' => false]);
+        config(['rest.extensions' => [RegionStageMeta::class], 'app.debug' => false]);
+        RegionStageMeta::$named = 'instructions';
 
-        $this->expectExceptionObject(InvalidMetaExtensionException::instructionsName('instructions', RegionStageMetaNamedInstructions::class, StageResource::class));
+        $this->expectExceptionObject(InvalidMetaExtensionException::instructionsName('instructions', RegionStageMeta::class, StageResource::class));
 
         $this->document();
     }
