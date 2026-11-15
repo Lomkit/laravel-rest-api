@@ -105,7 +105,7 @@ class EngineTargetKeysTest extends EngineSearchTestCase
     {
         $this->useEngine(new PagedMeilisearchEngine(new SettingsClient(fn (): never => throw new RuntimeException('The key cannot read the settings.'))));
 
-        $response = $this->actingAs(new GenericUser(['id' => 1, 'teams' => []]))->postJson('/api/team-vouchers/actions/review-vouchers', ['search' => self::ACTIVE]);
+        $response = $this->actingAs(new GenericUser(['id' => 1, 'teams' => []]))->postJson('/api/team-vouchers/actions/retitle-vouchers', ['search' => self::ACTIVE]);
 
         $this->assertRefused($response->json(), 'The search engine does not report how many results this search can reach; give the search a limit.');
         $this->assertSame([], $this->received->calls());
