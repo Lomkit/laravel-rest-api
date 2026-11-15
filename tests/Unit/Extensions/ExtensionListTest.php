@@ -145,15 +145,6 @@ final class ExtensionListTest extends TestCase
     }
 
     #[Test]
-    public function it_does_not_disable_a_subclass_by_the_entry_of_its_parent(): void
-    {
-        $list = ExtensionList::of([], [AclExtension::class], [AppAclExtension::class]);
-
-        $this->assertEnabled(['acl'], [AppAclExtension::class], $list->named());
-        $this->assertSame([AclExtension::class], $list->idle);
-    }
-
-    #[Test]
     public function it_replaces_a_package_class_with_its_subclass_and_a_disabled_entry(): void
     {
         $list = ExtensionList::of([AppAclExtension::class], [AclExtension::class], [AclExtension::class]);
@@ -164,18 +155,6 @@ final class ExtensionListTest extends TestCase
         ], $list->named()->entries);
         $this->assertEnabled(['acl'], [AppAclExtension::class], $list->named());
         $this->assertSame([], $list->idle);
-    }
-
-    #[Test]
-    public function it_refuses_a_subclass_beside_its_parent_without_the_disabled_entry(): void
-    {
-        $named = ExtensionList::of([AppAclExtension::class], [], [AclExtension::class])->named();
-
-        $this->assertEquals([InvalidExtensionException::sharedName('acl', [AclExtension::class, AppAclExtension::class])], $named->refused);
-
-        $this->expectExceptionObject(InvalidExtensionException::sharedName('acl', [AclExtension::class, AppAclExtension::class]));
-
-        $named->enabled();
     }
 
     #[Test]

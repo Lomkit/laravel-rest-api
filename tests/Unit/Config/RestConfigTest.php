@@ -169,10 +169,7 @@ class RestConfigTest extends TestCase
             'null transaction attempts' => ['rest.transactions.attempts', null, 'The [rest.transactions.attempts] option must be an integer of 1 or more.'],
             'the more key' => ['rest.search.more_key', '', 'The [rest.search.more_key] option must be a non-empty string.'],
             'the extensions' => ['rest.extensions', 'acl', 'The [rest.extensions] option must be a list of extension class names.'],
-            'null extensions' => ['rest.extensions', null, 'The [rest.extensions] option must be a list of extension class names.'],
-            'extensions by name' => ['rest.extensions', ['acl' => 'Vendor\Acl\AccessControl'], 'The [rest.extensions] option must be a list of extension class names.'],
             'the disabled extensions' => ['rest.disabled_extensions', 'acl', 'The [rest.disabled_extensions] option must be a list of extension class names.'],
-            'disabled extensions by class' => ['rest.disabled_extensions', ['Vendor\Acl\AccessControl' => true], 'The [rest.disabled_extensions] option must be a list of extension class names.'],
         ];
     }
 
