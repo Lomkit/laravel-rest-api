@@ -23,7 +23,6 @@ final readonly class ExtensionCacheContext
             return $contributions;
         }
 
-        ksort($extensions);
         $user = $resource->context()->actingUser()->user;
 
         foreach ($extensions as $name => $extension) {

@@ -19,7 +19,6 @@ final readonly class ExtensionGates
             return [];
         }
 
-        ksort($extensions);
         $context = new GatesContext($resource::class);
         $declared = [];
 

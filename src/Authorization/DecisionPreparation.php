@@ -95,13 +95,7 @@ final class DecisionPreparation
             return [];
         }
 
-        if (! isset($this->extensions[$resource::class])) {
-            $extensions = ($this->registry)()->applicable($resource::class, PreparesRowChecks::class);
-            ksort($extensions);
-            $this->extensions[$resource::class] = $extensions;
-        }
-
-        return $this->extensions[$resource::class];
+        return $this->extensions[$resource::class] ??= ($this->registry)()->applicable($resource::class, PreparesRowChecks::class);
     }
 
     private static function hooked(Resource $resource): bool
