@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Writes;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Extensions\Contexts\WriteGuardContext;
 use Lomkit\Rest\Extensions\Contexts\WriteObservationContext;
 use Lomkit\Rest\Mutations\MutationNode;
@@ -15,8 +16,14 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Feature\Mutate\Concerns\SeedsLibraryRows;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\LinkCheckedBookResource;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\RefusingLibraryLinksPolicy;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
+use Lomkit\Rest\Tests\Fixtures\Library\Book;
+use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
+use Lomkit\Rest\Tests\Fixtures\Library\Label;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
+use Lomkit\Rest\Tests\Fixtures\Library\Loan;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -178,6 +185,47 @@ final class NestedWriteExtensionsTest extends PackageTestCase
             ->assertStatus(423)
             ->assertExactJson(['message' => 'The shelf is on hold.']);
 
+        $this->assertSame($library, self::library());
+    }
+
+    /** @return array<string, array{array<string, mixed>}> */
+    public static function linkedCreations(): array
+    {
+        return [
+            'created book with an attached label' => [['operation' => 'create', 'attributes' => ['title' => 'Middlemarch'], 'relations' => ['labels' => [['operation' => 'attach', 'key' => [103]]]]]],
+            'created book with an attached loan' => [['operation' => 'create', 'attributes' => ['title' => 'Middlemarch'], 'relations' => ['loan' => ['operation' => 'attach', 'key' => 103]]]],
+            'created loan of a stored book' => [['operation' => 'update', 'key' => 107, 'relations' => ['loan' => ['operation' => 'create', 'attributes' => ['borrower' => 'Linus']]]]],
+        ];
+    }
+
+    /** @param array<string, mixed> $entry */
+    #[Test]
+    #[DataProvider('linkedCreations')]
+    public function it_asks_the_guard_before_the_link_checks_of_a_created_row(array $entry): void
+    {
+        foreach ([Book::class, Loan::class, Label::class] as $model) {
+            Gate::policy($model, RefusingLibraryLinksPolicy::class);
+        }
+
+        $this->app?->bind(BookResource::class, LinkCheckedBookResource::class);
+        config(['rest.extensions' => ['quota' => RecordingGuard::class]]);
+        $library = self::library();
+
+        $this->postJson('/api/books/mutate', ['mutate' => [$entry]])
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'This action is unauthorized.']);
+
+        $this->assertNotSame([], WriteLog::$guards);
+        $this->assertSame($library, self::library());
+
+        WriteLog::reset();
+        WriteLog::$refuseAt = 1;
+
+        $this->postJson('/api/books/mutate', ['mutate' => [$entry]])
+            ->assertStatus(429)
+            ->assertExactJson(['message' => 'The monthly quota is reached.']);
+
+        $this->assertCount(1, WriteLog::$guards);
         $this->assertSame($library, self::library());
     }
 
