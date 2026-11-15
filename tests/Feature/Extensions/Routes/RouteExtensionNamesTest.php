@@ -169,7 +169,12 @@ final class RouteExtensionNamesTest extends HelpdeskTestCase
 
         $this->expectExceptionObject(InvalidConfigException::mustBe('rest.disabled_extensions', 'a list of extension class names'));
 
-        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+        try {
+            Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+        } finally {
+            $this->assertNull($this->app['router']->getRoutes()->getByName('routed-tickets.search'));
+            $this->assertSame(0, StampRoutes::$built);
+        }
     }
 
     #[Test]
