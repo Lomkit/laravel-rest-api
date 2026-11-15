@@ -30,19 +30,24 @@ final class CastedAttributes
         return array_values(array_unique($keys));
     }
 
-    public static function equivalent(Model $row, string $key, mixed $now, mixed $before): bool
+    /**
+     * @param  array<string, mixed>  $now
+     * @param  array<string, mixed>  $before
+     */
+    public static function equivalent(Model $row, string $key, array $now, array $before): bool
     {
         $probe = (clone $row)->setRawAttributes([]);
-        $probe->setRawAttributes([$key => $before], true);
-        $probe->setRawAttributes([$key => $now]);
+        $probe->setRawAttributes($before, true);
+        $probe->setRawAttributes($now);
 
         return $probe->originalIsEquivalent($key)
             || self::read($row, $key, $now) === self::read($row, $key, $before);
     }
 
-    private static function read(Model $row, string $key, mixed $stored): mixed
+    /** @param array<string, mixed> $attributes */
+    private static function read(Model $row, string $key, array $attributes): mixed
     {
-        $probe = (clone $row)->setRawAttributes([$key => $stored]);
+        $probe = (clone $row)->setRawAttributes($attributes);
 
         return self::plain($probe->getAttribute($key));
     }

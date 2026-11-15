@@ -77,7 +77,7 @@ final readonly class RowState
         }
 
         foreach ($now as $key => $value) {
-            if ($value !== $before[$key] && (! in_array($key, $castKeys, true) || ! CastedAttributes::equivalent($row, $key, $value, $before[$key]))) {
+            if ($value !== $before[$key] && (! in_array($key, $castKeys, true) || ! CastedAttributes::equivalent($row, $key, $now, $before))) {
                 return false;
             }
         }
