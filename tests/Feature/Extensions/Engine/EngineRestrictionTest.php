@@ -371,21 +371,25 @@ class EngineRestrictionTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_builds_no_extension_for_an_engine_search_without_one(): void
+    public function it_builds_no_extension_for_an_engine_search_until_one_is_configured(): void
     {
         $resolved = [];
         $this->app->beforeResolving(function (string $abstract) use (&$resolved): void {
-            $resolved[] = $abstract;
+            if (class_exists($abstract) && is_subclass_of($abstract, Extension::class)) {
+                $resolved[] = $abstract;
+            }
         });
 
         $this->search('vouchers', ['text' => ['value' => 'report']])->assertOk();
         $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]])->assertOk();
 
-        $this->assertSame([], array_values(array_filter(
-            $resolved,
-            fn (string $abstract): bool => class_exists($abstract) && is_subclass_of($abstract, Extension::class),
-        )));
-        $this->assertSame([], ExtensionLog::$built);
+        $this->assertSame([[], [], []], [$resolved, ExtensionLog::$built, EngineLog::$calls]);
+
+        config(['rest.extensions' => ['team' => TeamIndexExtension::class]]);
+
+        $this->search('vouchers', ['text' => ['value' => 'report']])->assertOk();
+
+        $this->assertSame([[TeamIndexExtension::class], ['VoucherResource']], [$resolved, EngineLog::$calls]);
     }
 
     /** @return Builder<Model> */
