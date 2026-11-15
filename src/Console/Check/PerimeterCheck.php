@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Console\Check;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Attributes\WithoutPerimeter;
+use Lomkit\Rest\Extensions\Kinds\ProvidesPerimeter;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use ReflectionClass;
@@ -21,7 +22,7 @@ final readonly class PerimeterCheck
 
         foreach ((new ReachedResources($context))->from($resources) as $resource) {
             $restrictions = $engines->restrictions($context->resource($resource));
-            $report = self::checkRows($resource, $restrictions, $report);
+            $report = self::checkRows($resource, $restrictions, self::providers($context, $restrictions), $report);
             $problem = $engines->problem($context->resource($resource));
             $report = $problem === null ? $report : $report->withRowProblem($problem);
         }
@@ -38,8 +39,9 @@ final readonly class PerimeterCheck
     /**
      * @param  class-string<Resource>  $resource
      * @param  list<string>  $restrictions
+     * @param  list<string>  $providers
      */
-    private static function checkRows(string $resource, array $restrictions, PerimeterReport $report): PerimeterReport
+    private static function checkRows(string $resource, array $restrictions, array $providers, PerimeterReport $report): PerimeterReport
     {
         $report = $restrictions === [] ? $report : $report->withRestriction($resource, $restrictions);
 
@@ -51,7 +53,22 @@ final readonly class PerimeterCheck
             return $report->withoutPerimeter($resource);
         }
 
+        if ($providers !== []) {
+            return $report->withExtensionPerimeter($resource, $providers);
+        }
+
         return $report->withRowProblem($restrictions === [] ? self::unrestricted($resource) : self::restricted($resource, $restrictions));
+    }
+
+    /**
+     * @param  list<string>  $restrictions
+     * @return list<string>
+     */
+    private static function providers(RestContext $context, array $restrictions): array
+    {
+        $extensions = $restrictions === [] ? [] : $context->extensions()->all();
+
+        return array_values(array_filter($restrictions, fn (string $name): bool => ($extensions[$name] ?? null) instanceof ProvidesPerimeter));
     }
 
     private static function unrestricted(string $resource): string

@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Laravel\Scout\Builder;
+use Laravel\Scout\EngineManager;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Query\EngineRestrictions;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CheapEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ComparedPriceVoucherController;
@@ -31,6 +33,8 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamIndexExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnappliedEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PagedMeilisearchEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainEngineVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainProfile;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnboundedVoucherController;
@@ -38,6 +42,12 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnboundedVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
+use Lomkit\Rest\Text\Engine\EngineIndex;
+use Lomkit\Rest\Text\Engine\EngineQuery;
+use Lomkit\Rest\Text\Engine\IndexAttributes;
+use Lomkit\Rest\Text\Engine\ScoutModel;
+use Lomkit\Rest\Text\TextQuery;
+use Lomkit\Rest\Text\TextTarget;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -275,6 +285,74 @@ class EngineRestrictionTest extends EngineSearchTestCase
             'the database engine with its own SQL restriction' => ['database', [SqlAwareEngineExtension::class], [false, true, true]],
             'the collection engine with its own SQL restriction' => [null, [SqlAwareEngineExtension::class], [false, true, true]],
         ];
+    }
+
+    #[Test]
+    #[DataProvider('engines')]
+    public function it_gives_the_extension_the_engine_that_runs_the_search(?string $driver, string $class): void
+    {
+        if ($driver !== null) {
+            config(['scout.driver' => $driver]);
+        }
+
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $user = new GenericUser(['id' => 1]);
+
+        $this->actingAs($user)->search('vouchers', ['text' => ['value' => 'report']])->assertOk();
+        Rest::search(VoucherResource::class)->as($user)->payload(['text' => ['value' => 'report']])->page();
+        $this->postJson('/api/vouchers/actions/retitle-vouchers', ['search' => ['text' => ['value' => 'report']]])->assertOk();
+
+        $this->assertInstanceOf($class, $engine);
+        $this->assertSame([$engine, $engine, $engine], array_map(fn (object $context): object => $context instanceof EngineRestrictionContext ? $context->engine : $context, EngineLog::$contexts));
+    }
+
+    /** @return array<string, array{?string, string}> */
+    public static function engines(): array
+    {
+        return [
+            'the engine of the test' => [null, RecordingCollectionEngine::class],
+            'the database driver' => ['database', 'Laravel\\Scout\\Engines\\DatabaseEngine'],
+            'the collection driver' => ['collection', 'Laravel\\Scout\\Engines\\CollectionEngine'],
+        ];
+    }
+
+    #[Test]
+    public function it_gives_the_extension_the_engine_of_another_engine_text_search(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('plain-engine-vouchers', PlainEngineVoucherController::class)->register());
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
+
+        $this->actingAs(new GenericUser(['id' => 1]))->search('plain-engine-vouchers', ['text' => ['value' => 'report']])->assertOk();
+
+        $this->assertSame(['PlainEngineVoucherResource'], EngineLog::$calls);
+        $this->assertSame([$this->engine], array_map(fn (object $context): object => $context instanceof EngineRestrictionContext ? $context->engine : $context, EngineLog::$contexts));
+    }
+
+    #[Test]
+    public function it_refuses_an_engine_restriction_when_the_model_gives_no_engine(): void
+    {
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
+        $resource = $this->resource(VoucherResource::class);
+        $model = ScoutModel::tryFrom(new class extends Voucher
+        {
+            #[\Override]
+            public function searchableUsing(): mixed
+            {
+                return null;
+            }
+        });
+        $this->assertNotNull($model);
+        $profile = new PlainProfile;
+        $query = new EngineQuery(new EngineIndex($model, $profile, IndexAttributes::of(TextTarget::of($resource), $profile, ['team'], [], []), VoucherResource::class), new TextQuery('report'));
+
+        $this->assertSame(
+            'An engine search of the resource ['.VoucherResource::class.'] runs an engine restriction, but searchableUsing() of its model ['.Voucher::class.'] returns [null] instead of the Scout engine. Return the engine from searchableUsing(), as Laravel\\Scout\\Searchable does.',
+            InvalidTextSearchException::engineNotAnObject(VoucherResource::class, Voucher::class, 'null')->getMessage(),
+        );
+        $this->expectExceptionObject(InvalidTextSearchException::engineNotAnObject(VoucherResource::class, $model->model()::class, 'null'));
+
+        EngineRestrictions::of($resource)?->applyTo($query);
     }
 
     #[Test]

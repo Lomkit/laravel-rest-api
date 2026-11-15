@@ -22,9 +22,15 @@ final readonly class DeclarationCheck
     public function run(array $controllers, RestContext $context): DeclarationReport
     {
         $resources = ControllerResources::of($controllers);
+        $reach = (new ReachedResources($context))->reach($resources);
+        $built = $reach->resources;
         $report = new DeclarationReport;
 
-        foreach ($resources as $resource) {
+        foreach ($reach->problems as $problem) {
+            $report = $report->withProblem($problem);
+        }
+
+        foreach (array_values(array_intersect($resources, $built)) as $resource) {
             $declarations = $context->resource($resource)->definition()->declarations();
             $report = self::build($resource, $declarations->actions(), $report, fn (DeclarationReport $report, Action $action): DeclarationReport => $report->withAction($resource, $action));
             $report = self::build($resource, $declarations->metrics(), $report, fn (DeclarationReport $report): DeclarationReport => $report->withMetric());
@@ -32,7 +38,7 @@ final readonly class DeclarationCheck
 
         $extensions = BuiltExtensions::in($context);
 
-        foreach ((new ReachedResources($context))->from($resources) as $resource) {
+        foreach ($built as $resource) {
             $report = self::buildInstructions($resource, $this->instructions($context->resource($resource), $extensions), $report);
         }
 

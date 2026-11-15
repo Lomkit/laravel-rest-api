@@ -30,7 +30,7 @@ final readonly class ExtensionResourceCheck
             $report = self::checkMetaName($report, $context, $resource);
 
             foreach ($extensions as $name => $extension) {
-                $report = self::check($report, $context->extensions(), $name, $extension, $resource);
+                $report = self::check($report, $context->extensions(), $name, $extension, $context->resource($resource));
             }
         }
 
@@ -53,32 +53,32 @@ final readonly class ExtensionResourceCheck
         return $problem === null ? $report : $report->withProblem($problem);
     }
 
-    /** @param class-string<Resource> $resource */
-    private static function check(ExtensionResourceReport $report, ExtensionRegistry $registry, string $name, Extension&ChecksResources $extension, string $resource): ExtensionResourceReport
+    private static function check(ExtensionResourceReport $report, ExtensionRegistry $registry, string $name, Extension&ChecksResources $extension, Resource $resource): ExtensionResourceReport
     {
         $class = $registry->classOf($name);
-        $undecided = UndecidedExtension::problem($registry, $name, $resource);
+        $checked = $resource::class;
+        $undecided = UndecidedExtension::problem($registry, $name, $checked);
 
         if ($undecided !== null) {
             return $report->withProblem($undecided);
         }
 
-        if (! $registry->appliesTo($name, $resource)) {
+        if (! $registry->appliesTo($name, $checked)) {
             return $report;
         }
 
         $problems = [];
-        $reported = function (string $message) use (&$problems, $name, $class, $resource): void {
-            $problems[] = "The [{$name}] extension {$class} reports {$resource}: {$message}";
+        $reported = function (string $message) use (&$problems, $name, $class, $checked): void {
+            $problems[] = "The [{$name}] extension {$class} reports {$checked}: {$message}";
         };
 
         try {
             $extension->checkResource(new ResourceCheckContext($resource, $reported));
         } catch (Throwable $exception) {
-            $problems[] = "The [{$name}] extension {$class} throws while it checks {$resource}: {$exception->getMessage()}";
+            $problems[] = "The [{$name}] extension {$class} throws while it checks {$checked}: {$exception->getMessage()}";
         }
 
-        $report = $report->withCheck($name, $resource);
+        $report = $report->withCheck($name, $checked);
 
         foreach ($problems as $problem) {
             $report = $report->withProblem($problem);

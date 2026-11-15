@@ -8,11 +8,17 @@ use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
+use Lomkit\Rest\Tests\Fixtures\Atlas\ContinentController;
+use Lomkit\Rest\Tests\Fixtures\Atlas\ContinentResource;
+use Lomkit\Rest\Tests\Fixtures\Atlas\CountryController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource;
 use Lomkit\Rest\Tests\Fixtures\Atlas\JournalController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource;
+use Lomkit\Rest\Tests\Fixtures\Atlas\KeptTripController;
+use Lomkit\Rest\Tests\Fixtures\Atlas\KeptTripResource;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripResource;
+use Lomkit\Rest\Tests\Fixtures\Extensions\AclPerimeterExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AtlasRowsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AtlasRowsExtensionNamedZones;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ColumnCheckExtension;
@@ -24,8 +30,10 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedAbilities;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedInstructions;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PassingCheckExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\RelationCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\TripCheckExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\UnappliedAclPerimeterExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedMetaCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedRowsExtension;
@@ -33,6 +41,7 @@ use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 #[WithConfig('auth.guards.sanctum', ['driver' => 'session', 'provider' => 'users'])]
@@ -118,6 +127,65 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $this->assertStringEndsWith("  extension checks ... 1 check passed\n", $output);
         $this->assertSame(['checked' => [['extension' => 'trips', 'resource' => TripResource::class]], 'problems' => []], $report['extension_checks']);
         $this->assertSame([TripResource::class, TripResource::class], ExtensionLog::$checked);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [RelationCheckExtension::class])]
+    public function it_gives_the_check_the_resource_built_in_the_context_of_rest_check(): void
+    {
+        $this->expose('trips', TripController::class);
+
+        $report = $this->report(1, TripController::class);
+
+        $this->assertSame(['The [relations] extension '.RelationCheckExtension::class.' reports '.TripResource::class.': it declares the relations [country].'], $report['extension_checks']['problems'] ?? null);
+        $this->assertCount(2, ExtensionLog::$resources);
+        [[$extension, $trips], [, $countries]] = ExtensionLog::$resources;
+        $this->assertSame([TripResource::class, CountryResource::class], [$trips::class, $countries::class]);
+        $this->assertSame($trips, $trips->context()->resource(TripResource::class));
+        $this->assertSame($countries, $trips->context()->resource(CountryResource::class));
+        $this->assertSame(['relations' => $extension], $trips->context()->extensions()->all());
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [PassingCheckExtension::class])]
+    public function it_reports_a_resource_that_cannot_be_built_and_checks_the_others(): void
+    {
+        $this->app->bind(CountryResource::class, static fn (): never => throw new RuntimeException('The country settings are missing.'));
+        $this->expose('trips', TripController::class);
+        $this->expose('continents', ContinentController::class);
+        $this->app->bind(ContinentResource::class, static fn (): never => throw new RuntimeException('The continent settings are missing.'));
+        $problems = [
+            CountryResource::class.' cannot be built (reached through '.TripResource::class.' [country]), so no other check reads it: The country settings are missing.',
+            ContinentResource::class.' cannot be built, so no other check reads it: The continent settings are missing.',
+        ];
+
+        $output = $this->check(1, TripController::class, ContinentController::class);
+        $report = $this->report(1, TripController::class, ContinentController::class);
+
+        $this->assertStringContainsString("  declarations ... FAILED\n  ⇂ ".rtrim($problems[0], '.')."\n  ⇂ ".rtrim($problems[1], '.')."\n  rows ... 1 resource with a perimeter\n", $output);
+        $this->assertSame(['actions' => 2, 'metrics' => 0, 'instructions' => 0, 'problems' => $problems], $report['declarations']);
+        $this->assertSame(['perimeter' => [TripResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [], 'extension_perimeter' => []], $report['rows']);
+        $this->assertSame(['checked' => [['extension' => 'passing', 'resource' => TripResource::class]], 'problems' => []], $report['extension_checks']);
+        $this->assertSame([TripResource::class, TripResource::class], ExtensionLog::$checked);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [PassingCheckExtension::class])]
+    public function it_reports_a_resource_that_cannot_be_built_once_with_what_reaches_it(): void
+    {
+        $this->expose('trips', TripController::class);
+        $this->expose('kept-trips', KeptTripController::class);
+        $this->expose('countries', CountryController::class);
+        $this->app->bind(CountryResource::class, static fn (): never => throw new RuntimeException('The country settings are missing.'));
+        $problem = CountryResource::class.' cannot be built (reached through '.TripResource::class.' [country], '.KeptTripResource::class.' [country]), so no other check reads it: The country settings are missing.';
+
+        $report = $this->report(1, TripController::class, KeptTripController::class, CountryController::class);
+
+        $this->assertSame([$problem], $report['declarations']['problems'] ?? null);
+        $this->assertSame([
+            ['extension' => 'passing', 'resource' => TripResource::class],
+            ['extension' => 'passing', 'resource' => KeptTripResource::class],
+        ], $report['extension_checks']['checked'] ?? null);
     }
 
     #[Test]
@@ -271,6 +339,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
             'without_perimeter' => [CountryResource::class],
             'problems' => [],
             'restricted' => [['resource' => TripResource::class, 'extensions' => $names]],
+            'extension_perimeter' => [],
         ], $report['rows']);
     }
 
@@ -294,6 +363,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
             'without_perimeter' => [],
             'problems' => [self::RESTRICTED_JOURNAL_PROBLEM],
             'restricted' => [['resource' => JournalResource::class, 'extensions' => ['atlas']]],
+            'extension_perimeter' => [],
         ], $report['rows']);
     }
 
@@ -310,6 +380,121 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
             'without_perimeter' => [],
             'problems' => [self::JOURNAL_PROBLEM],
             'restricted' => [],
+            'extension_perimeter' => [],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [AclPerimeterExtension::class])]
+    public function it_accepts_a_resource_whose_perimeter_an_extension_provides(): void
+    {
+        $this->expose('journals', JournalController::class);
+
+        $output = $this->check(0, JournalController::class);
+        $report = $this->report(0, JournalController::class);
+
+        $this->assertStringContainsString(
+            "  rows ... 0 resources with a perimeter, 1 with a perimeter from extensions, 1 restricted by extensions\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource ... perimeter from acl\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource ... restricted by acl\n"
+            .'  actions ',
+            $output,
+        );
+        $this->assertSame([
+            'perimeter' => [],
+            'without_perimeter' => [],
+            'problems' => [],
+            'restricted' => [['resource' => JournalResource::class, 'extensions' => ['acl']]],
+            'extension_perimeter' => [['resource' => JournalResource::class, 'extensions' => ['acl']]],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [AtlasRowsExtension::class, AclPerimeterExtension::class])]
+    public function it_names_only_the_extensions_that_provide_the_perimeter(): void
+    {
+        $this->expose('journals', JournalController::class);
+
+        $output = $this->check(0, JournalController::class);
+        $report = $this->report(0, JournalController::class);
+
+        $this->assertStringContainsString(
+            "  Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource ... perimeter from acl\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource ... restricted by acl, atlas\n",
+            $output,
+        );
+        $this->assertSame([
+            'perimeter' => [],
+            'without_perimeter' => [],
+            'problems' => [],
+            'restricted' => [['resource' => JournalResource::class, 'extensions' => ['acl', 'atlas']]],
+            'extension_perimeter' => [['resource' => JournalResource::class, 'extensions' => ['acl']]],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [UnappliedAclPerimeterExtension::class])]
+    public function it_keeps_the_problem_when_the_perimeter_extension_does_not_apply(): void
+    {
+        $this->expose('journals', JournalController::class);
+
+        $report = $this->report(1, JournalController::class);
+
+        $this->assertSame([
+            'perimeter' => [],
+            'without_perimeter' => [],
+            'problems' => [self::JOURNAL_PROBLEM],
+            'restricted' => [],
+            'extension_perimeter' => [],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [AtlasRowsExtension::class, AclPerimeterExtension::class])]
+    #[WithConfig('rest.disabled_extensions', [AclPerimeterExtension::class])]
+    public function it_keeps_the_problem_when_the_perimeter_extension_is_disabled(): void
+    {
+        $this->expose('journals', JournalController::class);
+
+        $output = $this->check(1, JournalController::class);
+        $report = $this->report(1, JournalController::class);
+
+        $this->assertStringNotContainsString('perimeter from', $output);
+        $this->assertSame([
+            'perimeter' => [],
+            'without_perimeter' => [],
+            'problems' => [self::RESTRICTED_JOURNAL_PROBLEM],
+            'restricted' => [['resource' => JournalResource::class, 'extensions' => ['atlas']]],
+            'extension_perimeter' => [],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [AclPerimeterExtension::class])]
+    public function it_keeps_the_report_of_a_resource_with_its_own_perimeter_or_without_perimeter(): void
+    {
+        $this->expose('trips', TripController::class);
+
+        $output = $this->check(0, TripController::class);
+        $report = $this->report(0, TripController::class);
+
+        $this->assertStringContainsString(
+            "  rows ... 1 resource with a perimeter, 1 marked #[WithoutPerimeter], 2 restricted by extensions\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource ... restricted by acl\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... restricted by acl\n"
+            .'  actions ',
+            $output,
+        );
+        $this->assertSame([
+            'perimeter' => [TripResource::class],
+            'without_perimeter' => [CountryResource::class],
+            'problems' => [],
+            'restricted' => [
+                ['resource' => TripResource::class, 'extensions' => ['acl']],
+                ['resource' => CountryResource::class, 'extensions' => ['acl']],
+            ],
+            'extension_perimeter' => [],
         ], $report['rows']);
     }
 
@@ -391,6 +576,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
                 ['resource' => TripResource::class, 'extensions' => ['atlas']],
                 ['resource' => CountryResource::class, 'extensions' => ['undecided']],
             ],
+            'extension_perimeter' => [],
         ], $report['rows']);
         $this->assertSame(['checked' => [], 'problems' => []], $report['extension_checks']);
     }

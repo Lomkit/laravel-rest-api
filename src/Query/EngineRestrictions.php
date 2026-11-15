@@ -51,11 +51,12 @@ final readonly class EngineRestrictions
         $registry = $this->resource->context()->extensions();
         $lists = $query->profile() instanceof MatchesStringLists;
         $columns = $query->profile() instanceof ComparesColumns;
+        $engine = $query->engine();
 
         foreach ($this->engine as $name => $extension) {
             $restriction = new EngineRestriction($query, new RestrictingExtension($name, $registry->classOf($name)), $this->resource::class);
 
-            $extension->restrictEngine(new EngineRestrictionContext($restriction, $this->resource, $user, $lists, $inSql?->restricts($name) === true, $columns));
+            $extension->restrictEngine(new EngineRestrictionContext($restriction, $this->resource, $user, $lists, $inSql?->restricts($name) === true, $columns, $engine));
         }
     }
 

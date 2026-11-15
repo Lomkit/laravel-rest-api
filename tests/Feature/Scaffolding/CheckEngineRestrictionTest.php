@@ -92,7 +92,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
         [$exitCode, $rows] = $this->rows();
         $text = Artisan::call('rest:check', ['controllers' => [CheckedVoucherController::class]], $output = new BufferedOutput);
 
-        $this->assertSame([1, ['perimeter' => [CheckedVoucherResource::class], 'without_perimeter' => [], 'problems' => [$problem], 'restricted' => [['resource' => CheckedVoucherResource::class, 'extensions' => ['red']]]]], [$exitCode, $rows]);
+        $this->assertSame([1, ['perimeter' => [CheckedVoucherResource::class], 'without_perimeter' => [], 'problems' => [$problem], 'restricted' => [['resource' => CheckedVoucherResource::class, 'extensions' => ['red']]], 'extension_perimeter' => []]], [$exitCode, $rows]);
         $this->assertSame(1, $text);
         $this->assertStringContainsString("  rows ... FAILED\n  ⇂ ".rtrim($problem, '.')."\n", $this->summary($output->fetch()));
     }
@@ -114,7 +114,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     {
         config(['scout.driver' => 'database', 'rest.extensions' => [RedRowsExtension::class]]);
 
-        $this->assertSame([0, ['perimeter' => [CheckedVoucherResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [['resource' => CheckedVoucherResource::class, 'extensions' => ['red']]]]], $this->rows());
+        $this->assertSame([0, ['perimeter' => [CheckedVoucherResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [['resource' => CheckedVoucherResource::class, 'extensions' => ['red']]], 'extension_perimeter' => []]], $this->rows());
     }
 
     #[Test]
@@ -122,7 +122,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     {
         $this->useForeignEngine([RedEverywhereExtension::class]);
 
-        $this->assertSame([0, ['perimeter' => [CheckedVoucherResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [['resource' => CheckedVoucherResource::class, 'extensions' => ['red']]]]], $this->rows());
+        $this->assertSame([0, ['perimeter' => [CheckedVoucherResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [['resource' => CheckedVoucherResource::class, 'extensions' => ['red']]], 'extension_perimeter' => []]], $this->rows());
     }
 
     #[Test]
@@ -157,7 +157,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
 
         $exitCode = Artisan::call('rest:check', ['controllers' => [RouteBoundVoucherController::class], '--json' => true], $output = new BufferedOutput);
 
-        $this->assertSame([0, ['perimeter' => [RouteBoundVoucherResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => []], 0], [$exitCode, json_decode($output->fetch(), true)['rows'], RouteBoundVoucherResource::$textCalls]);
+        $this->assertSame([0, ['perimeter' => [RouteBoundVoucherResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [], 'extension_perimeter' => []], 0], [$exitCode, json_decode($output->fetch(), true)['rows'], RouteBoundVoucherResource::$textCalls]);
     }
 
     #[Test]
