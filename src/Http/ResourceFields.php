@@ -10,7 +10,7 @@ use ReflectionClass;
 /** @internal */
 final class ResourceFields
 {
-    private ?FieldSet $fields = null;
+    private ?FieldSet $declared = null;
 
     private ?RowVersion $version = null;
 
@@ -18,17 +18,22 @@ final class ResourceFields
 
     public function fields(): FieldSet
     {
-        return $this->fields ??= $this->declared();
+        return $this->declared();
+    }
+
+    public function declared(): FieldSet
+    {
+        return $this->declared ??= $this->declare();
     }
 
     public function version(): ?RowVersion
     {
-        $this->fields();
+        $this->declared();
 
         return $this->version;
     }
 
-    private function declared(): FieldSet
+    private function declare(): FieldSet
     {
         $fields = FieldSet::of($this->resource->fields(), $this->resource::class.'::fields()');
         $config = $this->resource->context()->config();

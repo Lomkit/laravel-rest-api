@@ -36,7 +36,7 @@ final class ResourceDefinition
 
     private readonly ResourceDeclarations $declarations;
 
-    private readonly ResourceFields $declaredFields;
+    private readonly ResourceFields $fields;
 
     private readonly ResourceAuthorization $authorization;
 
@@ -46,18 +46,24 @@ final class ResourceDefinition
         Container $container,
     ) {
         $this->declarations = new ResourceDeclarations($resource, $container);
-        $this->declaredFields = new ResourceFields($resource);
+        $this->fields = new ResourceFields($resource);
         $this->authorization = new ResourceAuthorization($resource);
     }
 
     public function fields(): FieldSet
     {
-        return $this->declaredFields->fields();
+        return $this->fields->fields();
+    }
+
+    /** @internal */
+    public function declaredFields(): FieldSet
+    {
+        return $this->fields->declared();
     }
 
     public function version(): ?RowVersion
     {
-        return $this->declaredFields->version();
+        return $this->fields->version();
     }
 
     /** @return list<Scope> */

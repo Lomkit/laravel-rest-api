@@ -63,7 +63,7 @@ final readonly class KeysGrammar
     {
         $model = $resource::newModel();
         $field = $resource->definition()
-            ->fields()
+            ->declaredFields()
             ->find($model->getKeyName());
 
         if ($field instanceof ID) {
