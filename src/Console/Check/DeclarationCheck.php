@@ -22,14 +22,13 @@ final readonly class DeclarationCheck
     public function run(array $controllers, RestContext $context): DeclarationReport
     {
         $resources = ControllerResources::of($controllers);
-        $reached = new ReachedResources($context);
+        $reach = (new ReachedResources($context))->reach($resources);
+        $built = $reach->resources;
         $report = new DeclarationReport;
 
-        foreach ($reached->problems($resources) as $problem) {
+        foreach ($reach->problems as $problem) {
             $report = $report->withProblem($problem);
         }
-
-        $built = $reached->from($resources);
 
         foreach (array_values(array_intersect($resources, $built)) as $resource) {
             $declarations = $context->resource($resource)->definition()->declarations();

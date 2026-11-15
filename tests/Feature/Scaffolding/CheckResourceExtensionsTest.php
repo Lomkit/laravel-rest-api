@@ -10,9 +10,12 @@ use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Atlas\ContinentController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\ContinentResource;
+use Lomkit\Rest\Tests\Fixtures\Atlas\CountryController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource;
 use Lomkit\Rest\Tests\Fixtures\Atlas\JournalController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource;
+use Lomkit\Rest\Tests\Fixtures\Atlas\KeptTripController;
+use Lomkit\Rest\Tests\Fixtures\Atlas\KeptTripResource;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AclPerimeterExtension;
@@ -152,7 +155,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $this->expose('continents', ContinentController::class);
         $this->app->bind(ContinentResource::class, static fn (): never => throw new RuntimeException('The continent settings are missing.'));
         $problems = [
-            TripResource::class.' [country]: the resource of the relation cannot be built, so no other check reads it: The country settings are missing.',
+            CountryResource::class.' cannot be built (reached through '.TripResource::class.' [country]), so no other check reads it: The country settings are missing.',
             ContinentResource::class.' cannot be built, so no other check reads it: The continent settings are missing.',
         ];
 
@@ -164,6 +167,25 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $this->assertSame(['perimeter' => [TripResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [], 'extension_perimeter' => []], $report['rows']);
         $this->assertSame(['checked' => [['extension' => 'passing', 'resource' => TripResource::class]], 'problems' => []], $report['extension_checks']);
         $this->assertSame([TripResource::class, TripResource::class], ExtensionLog::$checked);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [PassingCheckExtension::class])]
+    public function it_reports_a_resource_that_cannot_be_built_once_with_what_reaches_it(): void
+    {
+        $this->expose('trips', TripController::class);
+        $this->expose('kept-trips', KeptTripController::class);
+        $this->expose('countries', CountryController::class);
+        $this->app->bind(CountryResource::class, static fn (): never => throw new RuntimeException('The country settings are missing.'));
+        $problem = CountryResource::class.' cannot be built (reached through '.TripResource::class.' [country], '.KeptTripResource::class.' [country]), so no other check reads it: The country settings are missing.';
+
+        $report = $this->report(1, TripController::class, KeptTripController::class, CountryController::class);
+
+        $this->assertSame([$problem], $report['declarations']['problems'] ?? null);
+        $this->assertSame([
+            ['extension' => 'passing', 'resource' => TripResource::class],
+            ['extension' => 'passing', 'resource' => KeptTripResource::class],
+        ], $report['extension_checks']['checked'] ?? null);
     }
 
     #[Test]

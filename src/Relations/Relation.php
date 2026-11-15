@@ -82,6 +82,16 @@ class Relation
         return $this->fromResource->context()->resource($this->type);
     }
 
+    /**
+     * @internal
+     *
+     * @return class-string<Resource>
+     */
+    public function resourceClass(): string
+    {
+        return $this->type;
+    }
+
     public function fromResource(Resource $fromResource): static
     {
         $this->fromResource = $fromResource;

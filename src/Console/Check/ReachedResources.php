@@ -18,27 +18,15 @@ final readonly class ReachedResources
      */
     public function from(array $roots): array
     {
-        return $this->walk($roots)['reached'];
+        return $this->reach($roots)->resources;
     }
 
-    /**
-     * @param  list<class-string<Resource>>  $roots
-     * @return list<string>
-     */
-    public function problems(array $roots): array
-    {
-        return $this->walk($roots)['problems'];
-    }
-
-    /**
-     * @param  list<class-string<Resource>>  $roots
-     * @return array{reached: list<class-string<Resource>>, problems: list<string>}
-     */
-    private function walk(array $roots): array
+    /** @param list<class-string<Resource>> $roots */
+    public function reach(array $roots): ResourceReach
     {
         $queued = $roots;
         $reached = [];
-        $problems = [];
+        $unbuilt = new UnbuiltResources;
 
         for ($index = 0; $index < count($queued); $index++) {
             $resource = $queued[$index];
@@ -46,7 +34,7 @@ final readonly class ReachedResources
             try {
                 $built = $this->context->resource($resource);
             } catch (Throwable $exception) {
-                $problems[] = "{$resource} cannot be built, so no other check reads it: {$exception->getMessage()}";
+                $unbuilt->add($resource, $exception);
 
                 continue;
             }
@@ -54,15 +42,7 @@ final readonly class ReachedResources
             $reached[] = $resource;
 
             foreach ($built->definition()->relations() as $relation) {
-                try {
-                    $related = self::related($relation);
-                } catch (Throwable $exception) {
-                    $problems[] = "{$resource} [{$relation->relation}]: the resource of the relation cannot be built, so no other check reads it: {$exception->getMessage()}";
-
-                    continue;
-                }
-
-                foreach ($related as $class) {
+                foreach (self::related($resource, $relation, $unbuilt) as $class) {
                     if (! in_array($class, $queued, true)) {
                         $queued[] = $class;
                     }
@@ -70,12 +50,25 @@ final readonly class ReachedResources
             }
         }
 
-        return ['reached' => $reached, 'problems' => $problems];
+        return new ResourceReach($reached, $unbuilt->problems());
     }
 
-    /** @return list<class-string<Resource>> */
-    private static function related(Relation $relation): array
+    /**
+     * @param  class-string<Resource>  $resource
+     * @return list<class-string<Resource>>
+     */
+    private static function related(string $resource, Relation $relation, UnbuiltResources $unbuilt): array
     {
-        return $relation instanceof PolymorphicRelation ? $relation->targets()->resources() : [$relation->resource()::class];
+        if ($relation instanceof PolymorphicRelation) {
+            return $relation->targets()->resources();
+        }
+
+        try {
+            return [$relation->resource()::class];
+        } catch (Throwable $exception) {
+            $unbuilt->add($relation->resourceClass(), $exception, "{$resource} [{$relation->relation}]");
+
+            return [];
+        }
     }
 }
