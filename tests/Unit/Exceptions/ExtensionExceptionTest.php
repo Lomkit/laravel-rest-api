@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Unit\Exceptions;
 
 use Lomkit\Rest\Exceptions\ExtensionException;
+use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentation;
@@ -28,6 +29,19 @@ class ExtensionExceptionTest extends TestCase
     public function it_keeps_the_registry_exception_final(): void
     {
         $this->assertTrue((new ReflectionClass(InvalidExtensionException::class))->isFinal());
+    }
+
+    #[Test]
+    public function it_gives_the_engine_extension_exception_the_shared_base_only(): void
+    {
+        $exception = InvalidEngineExtensionException::repeatedIndexAttribute('first', 'App\Rest\FirstExtension', 'App\Rest\PostResource', 'owner_id');
+
+        $this->assertSame([true, false, false, true], [
+            is_a($exception, ExtensionException::class),
+            is_a($exception, InvalidExtensionException::class),
+            method_exists(InvalidEngineExtensionException::class, 'missingName'),
+            $exception->namesExtension('first'),
+        ]);
     }
 
     #[Test]

@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Exceptions;
 
 use Lomkit\Rest\Text\Engine\ResourceIndexList;
 
-final class InvalidEngineExtensionException extends InvalidExtensionException
+final class InvalidEngineExtensionException extends ExtensionException
 {
     public static function notAnIndexAttribute(string $name, string $class, string $resource, int $index, string $type): self
     {
