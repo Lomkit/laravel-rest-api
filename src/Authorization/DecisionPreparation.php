@@ -6,6 +6,9 @@ use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\ExtensionRegistry;
+use Lomkit\Rest\Extensions\Kinds\PreparesRowChecks;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Support\Overrides;
 
@@ -15,10 +18,17 @@ final class DecisionPreparation
     /** @var array<class-string<Resource>, bool> */
     private static array $hooked = [];
 
+    /** @var array<class-string<Resource>, array<string, Extension&PreparesRowChecks>> */
+    private array $extensions = [];
+
     /** @var array<string, true> */
     private array $prepared = [];
 
-    public function __construct(private readonly ?Authenticatable $user = null) {}
+    /** @param (Closure(): ExtensionRegistry)|null $registry */
+    public function __construct(
+        private readonly ?Authenticatable $user = null,
+        private readonly ?Closure $registry = null,
+    ) {}
 
     /**
      * @param  array<string, Check>  $checks
@@ -52,12 +62,34 @@ final class DecisionPreparation
 
     private function prepares(Resource $resource): bool
     {
-        return self::hooked($resource);
+        return self::hooked($resource) || $this->extensionsOf($resource) !== [];
     }
 
     private function hand(PendingChecks $checks): void
     {
-        $checks->resource->prepareAuthorization($checks);
+        if (self::hooked($checks->resource)) {
+            $checks->resource->prepareAuthorization($checks);
+        }
+
+        foreach ($this->extensionsOf($checks->resource) as $extension) {
+            $extension->prepareRowChecks($checks);
+        }
+    }
+
+    /** @return array<string, Extension&PreparesRowChecks> */
+    private function extensionsOf(Resource $resource): array
+    {
+        if ($this->registry === null) {
+            return [];
+        }
+
+        if (! isset($this->extensions[$resource::class])) {
+            $extensions = ($this->registry)()->applicable($resource::class, PreparesRowChecks::class);
+            ksort($extensions);
+            $this->extensions[$resource::class] = $extensions;
+        }
+
+        return $this->extensions[$resource::class];
     }
 
     private static function hooked(Resource $resource): bool
