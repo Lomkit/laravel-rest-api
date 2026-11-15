@@ -2,9 +2,12 @@
 
 namespace Lomkit\Rest\Tests\Feature\Serialization;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Extensions\Applicability;
+use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Http\Serialization\GatePrefetch;
 use Lomkit\Rest\Http\Serialization\GateReach;
 use Lomkit\Rest\Search\GateAbility;
@@ -16,6 +19,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PreparingExtension;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\CachedTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class GatePrefetchTest extends HelpdeskTestCase
@@ -72,6 +76,43 @@ class GatePrefetchTest extends HelpdeskTestCase
         $plan = $this->plan(PreparedTicketResource::class, ['create']);
 
         $this->assertSame(['update 1', 'update 2', 'escalate 1', 'escalate 2'], self::described(GatePrefetch::page($plan, $this->rows(), GateReach::everyRow())));
+    }
+
+    #[Test]
+    public function it_batches_a_cached_class_gate_of_a_resource_that_prepares(): void
+    {
+        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        $plan = $this->plan(CachedTicketResource::class, ['create']);
+
+        $this->assertSame(['create class', 'update 1', 'update 2', 'escalate 1', 'escalate 2'], self::described(GatePrefetch::page($plan, $this->rows(), GateReach::everyRow())));
+    }
+
+    /** @param list<GateAbility>|null $gates */
+    #[Test]
+    #[DataProvider('noGates')]
+    public function it_reads_neither_the_authorizer_nor_the_cache_without_gates(?array $gates, bool $cache): void
+    {
+        config(['rest.authorizations.cache.enabled' => $cache]);
+        $resolutions = 0;
+        $request = RestRequest::create('/api/tickets/search', 'POST');
+        $request->setUserResolver(static function () use (&$resolutions): ?Authenticatable {
+            $resolutions++;
+
+            return null;
+        });
+        $plan = new QueryPlan((new RestContext($request, $this->app ?? $this->fail('No application.')))->resource(PreparedTicketResource::class), [], [], [], LimitPolicy::none(), gates: $gates);
+
+        $this->assertSame([], GatePrefetch::page($plan, $this->rows(), GateReach::everyRow()));
+        $this->assertSame(0, $resolutions);
+    }
+
+    /** @return iterable<string, array{list<GateAbility>|null, bool}> */
+    public static function noGates(): iterable
+    {
+        yield 'no gates, cache off' => [null, false];
+        yield 'no gates, cache on' => [null, true];
+        yield 'an empty list, cache off' => [[], false];
+        yield 'an empty list, cache on' => [[], true];
     }
 
     /**

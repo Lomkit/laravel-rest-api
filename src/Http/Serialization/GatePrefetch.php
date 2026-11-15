@@ -52,7 +52,7 @@ final readonly class GatePrefetch
     {
         $resource = $plan->resource;
 
-        if (! $resource->isGatingEnabled()) {
+        if ($plan->gates === null || $plan->gates === [] || ! $resource->isGatingEnabled()) {
             return [];
         }
 
@@ -60,7 +60,7 @@ final readonly class GatePrefetch
         $prepares = ! $classLevel && $resource->context()->authorizer()->prepares($resource);
 
         return array_values(array_filter(
-            $plan->gates ?? [],
+            $plan->gates,
             static fn (GateAbility $gate): bool => $gate->isClassLevel() === $classLevel && ($prepares || $cached?->seconds($gate->name()) !== null),
         ));
     }
