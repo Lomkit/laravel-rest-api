@@ -54,7 +54,7 @@ final class TicketQueryExtension extends Extension implements AugmentsQueries, D
     public function narrowLimits(LimitsContext $context): void
     {
         $context->allowSizes([10, 25]);
-        $context->includeLimit(5);
+        $context->includeLimit(min(5, $context->declared->includeLimit));
     }
 
     #[\Override]

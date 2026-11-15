@@ -160,7 +160,12 @@ final class ResourceDefinition
 
     public function limits(): ResourceLimits
     {
-        return $this->limits ??= LimitNarrowing::of(ResourceLimits::of($this->resource, $this->resource->limits()), $this->resource);
+        return $this->limits ??= LimitNarrowing::of($this->declaredLimits(), $this->resource);
+    }
+
+    public function declaredLimits(): ResourceLimits
+    {
+        return ResourceLimits::of($this->resource, $this->resource->limits());
     }
 
     public function text(): ResolvedText

@@ -146,6 +146,36 @@ class LimitNarrowingTest extends PackageTestCase
         ];
     }
 
+    #[Test]
+    public function it_gives_the_declared_limits_to_each_extension(): void
+    {
+        $seen = [];
+        FirstNarrowing::$narrow = static function (LimitsContext $context) use (&$seen): void {
+            $seen[] = ['first', ...self::values($context->declared)];
+            $context->allowSizes([1, 10]);
+            $context->maxTotal(20);
+        };
+        SecondNarrowing::$narrow = static function (LimitsContext $context) use (&$seen): void {
+            $seen[] = ['second', ...self::values($context->declared)];
+        };
+        config(['rest.extensions' => ['first' => FirstNarrowing::class, 'second' => SecondNarrowing::class]]);
+
+        $this->context()->resource(CappedBookLimitsResource::class)->definition()->limits();
+
+        $this->assertSame([
+            ['first', [1, 10, 25, 50], 25, 10, 60],
+            ['second', [1, 10, 25, 50], 25, 10, 60],
+        ], $seen);
+    }
+
+    #[Test]
+    public function it_refuses_an_extension_that_reads_the_narrowed_limits(): void
+    {
+        $this->expectExceptionObject(InvalidQueryExtensionException::limitsReadWhileNarrowing('first', BookResource::class));
+
+        $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->resource->definition()->limits());
+    }
+
     /** @param array<string, class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]

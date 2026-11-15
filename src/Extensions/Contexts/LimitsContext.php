@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Extensions\Contexts;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Lomkit\Rest\Http\LimitRequests;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\ResourceLimits;
 
 final readonly class LimitsContext
 {
@@ -13,6 +14,7 @@ final readonly class LimitsContext
         private string $extension,
         public Resource $resource,
         public ?Authenticatable $user,
+        public ResourceLimits $declared,
         private LimitRequests $requests,
     ) {}
 

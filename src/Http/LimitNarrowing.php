@@ -5,12 +5,22 @@ namespace Lomkit\Rest\Http;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Extensions\Contexts\LimitsContext;
 use Lomkit\Rest\Extensions\Kinds\NarrowsLimits;
+use WeakMap;
 
 /** @internal */
-final readonly class LimitNarrowing
+final class LimitNarrowing
 {
+    /** @var WeakMap<Resource, string>|null */
+    private static ?WeakMap $narrowing = null;
+
     public static function of(ResourceLimits $limits, Resource $resource): ResourceLimits
     {
+        $narrowing = self::$narrowing ??= new WeakMap;
+
+        if (isset($narrowing[$resource])) {
+            throw InvalidQueryExtensionException::limitsReadWhileNarrowing($narrowing[$resource], $resource::class);
+        }
+
         $extensions = $resource->context()->extensions()->applicable($resource::class, NarrowsLimits::class);
 
         if ($extensions === []) {
@@ -20,8 +30,13 @@ final readonly class LimitNarrowing
         $requests = new LimitRequests($resource::class);
         $user = $resource->context()->actingUser()->user;
 
-        foreach ($extensions as $name => $extension) {
-            $extension->narrowLimits(new LimitsContext($name, $resource, $user, $requests));
+        try {
+            foreach ($extensions as $name => $extension) {
+                $narrowing[$resource] = $name;
+                $extension->narrowLimits(new LimitsContext($name, $resource, $user, $limits, $requests));
+            }
+        } finally {
+            unset($narrowing[$resource]);
         }
 
         return self::narrowed($limits, $requests, $resource::class, array_keys($extensions));
