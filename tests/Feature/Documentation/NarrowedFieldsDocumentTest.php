@@ -66,11 +66,10 @@ class NarrowedFieldsDocumentTest extends DocumentationTestCase
 
         $response = $this->postJson('api/shows/search', $body);
 
-        $response->assertOk();
-        $this->assertSame(
-            ['id', 'title', 'summary', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'settings', 'updated_at'],
-            array_keys($response->json('data.0')),
-        );
+        $response->assertOk()->assertJsonPath('data', [
+            ['id' => 1, 'title' => 'Opening night', 'summary' => null, 'seats' => 300, 'featured' => true, 'starts_on' => '2026-07-01', 'starts_at' => null, 'status' => 'on_sale', 'level' => 3, 'settings' => [], 'updated_at' => '2026-01-01T00:00:00.000000Z'],
+            ['id' => 2, 'title' => 'Closing night', 'summary' => null, 'seats' => 500, 'featured' => false, 'starts_on' => '2026-07-03', 'starts_at' => null, 'status' => 'planned', 'level' => 1, 'settings' => [], 'updated_at' => '2026-01-01T00:00:00.000000Z'],
+        ]);
         $this->assertSame([], $validator->requestErrors($document, '/shows/search', 'post', $body));
         $this->assertSame([], $validator->responseErrors($document, '/shows/search', 'post', 200, (string) $response->getContent()));
     }

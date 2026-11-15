@@ -9,6 +9,7 @@ use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
 use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
+use Lomkit\Rest\Fields\FieldReduction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Fixtures\Accounts\Accounts;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
@@ -110,11 +111,9 @@ class NarrowedShowFieldsTest extends PackageTestCase
 
         $created = $this->postJson('/api/shows/mutate', ['mutate' => [['operation' => 'create', 'attributes' => $show]]]);
 
-        $created->assertOk()->assertJsonPath('operations.0.operation', 'create');
-        $this->assertSame([null, 'Matinee'], [
-            Show::query()->findOrFail($created->json('operations.0.key'))->getAttribute('price'),
-            Show::query()->findOrFail($created->json('operations.0.key'))->getAttribute('title'),
-        ]);
+        $matinee = Show::query()->where('title', 'Matinee')->sole();
+        $created->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $matinee->getKey()]]]);
+        $this->assertSame([null, '2026-07-05'], [$matinee->getAttribute('price'), $matinee->getAttribute('starts_on')?->format('Y-m-d')]);
         $this->assertLikeUnknown(fn (string $field): TestResponse => $this->postJson('/api/shows/mutate', ['mutate' => [
             ['operation' => 'create', 'attributes' => [...$show, $field => 12]],
         ]]));
@@ -127,8 +126,11 @@ class NarrowedShowFieldsTest extends PackageTestCase
 
         $metric = $this->postJson('/api/shows/metrics/seats-by-level', ['range' => 30]);
 
-        $metric->assertOk()->assertJsonPath('data.parts.*.key', [1, 2]);
-        $this->assertSame([300.0, 100.0], array_map(floatval(...), $metric->json('data.parts.*.value')));
+        $metric->assertOk();
+        $this->assertSame(['data' => ['type' => 'partition', 'parts' => [
+            ['key' => 1, 'label' => 'Open', 'value' => 300.0, 'previous' => null],
+            ['key' => 2, 'label' => 'Main', 'value' => 100.0, 'previous' => null],
+        ], 'other' => null]], self::withFloatValues($metric->json()));
         $this->assertLikeUnknown(
             fn (string $field): TestResponse => $this->postJson('/api/shows/metrics/seats-by-level', ['range' => 30, 'search' => ['filters' => [['field' => $field, 'value' => 300]]]]),
             'seats',
@@ -152,16 +154,29 @@ class NarrowedShowFieldsTest extends PackageTestCase
 
         $search = $this->postJson('/api/notes/search', ['search' => ['includes' => [['relation' => 'notable']]]]);
 
-        $search->assertOk();
-        $this->assertSame(['@type', 'id', 'title', 'summary', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'settings', 'updated_at'], array_keys($search->json('data.0.notable')));
+        $search->assertOk()->assertExactJson([
+            'current_page' => 1,
+            'data' => [[
+                'id' => 1,
+                'notable_type' => Show::class,
+                'body' => 'Sold out soon',
+                'notable' => ['@type' => Show::class, 'id' => $this->opening, 'title' => 'Opening night', 'summary' => null, 'seats' => 300, 'featured' => false, 'starts_on' => '2026-07-01', 'starts_at' => '2026-02-20T20:00:00.000000Z', 'status' => 'on_sale', 'level' => 1, 'settings' => null, 'updated_at' => '2026-02-01T08:00:00.000000Z'],
+            ]],
+            'from' => 1,
+            'last_page' => 1,
+            'per_page' => 50,
+            'to' => 1,
+            'total' => 1,
+            'meta' => [],
+        ]);
         $this->assertLikeUnknown(fn (string $field): TestResponse => $this->postJson('/api/notes/search', ['search' => ['filters' => [
             ['relation' => 'notable', 'types' => [Show::class => [['field' => $field, 'value' => 20]]]],
         ]]]));
     }
 
     #[Test]
-    #[DataProvider('rowWrites')]
-    public function it_narrows_the_rows_of_a_row_write_before_writing_them(string $method, string $uri, bool $trashed): void
+    #[DataProvider('renderedRowWrites')]
+    public function it_narrows_the_rows_of_a_row_write_before_writing_them(string $method, string $uri, bool $trashed, string $updatedAt): void
     {
         $this->trashOpeningIf($trashed);
         $states = [];
@@ -173,9 +188,10 @@ class NarrowedShowFieldsTest extends PackageTestCase
 
         $response = $this->json($method, $uri, ['resources' => [$this->opening]]);
 
-        $response->assertOk()->assertJsonCount(1, 'data');
+        $response->assertOk()->assertExactJson(['data' => [
+            ['id' => $this->opening, 'title' => 'Opening night', 'summary' => null, 'seats' => 300, 'featured' => false, 'starts_on' => '2026-07-01', 'starts_at' => '2026-02-20T20:00:00.000000Z', 'status' => 'on_sale', 'level' => 1, 'settings' => null, 'updated_at' => $updatedAt],
+        ], 'meta' => []]);
         $this->assertSame([$before], $states);
-        $this->assertSame(['id', 'title', 'summary', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'settings', 'updated_at'], array_keys($response->json('data.0')));
     }
 
     #[Test]
@@ -186,10 +202,16 @@ class NarrowedShowFieldsTest extends PackageTestCase
         $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('colour'));
         $before = $this->openingState();
 
-        $response = $this->json($method, $uri, ['resources' => [$this->opening]]);
+        try {
+            $this->withoutExceptionHandling()->json($method, $uri, ['resources' => [$this->opening]]);
+        } catch (InvalidFieldExtensionException $exception) {
+            $this->assertSame(InvalidFieldExtensionException::unknownField('mask', ShowResource::class, FieldReduction::Hide, 'colour')->getMessage(), $exception->getMessage());
+            $this->assertSame($before, $this->openingState());
 
-        $response->assertServerError();
-        $this->assertSame($before, $this->openingState());
+            return;
+        }
+
+        $this->fail('The row write passed although its field narrowing failed.');
     }
 
     /** @return array<string, array{string, string, bool}> */
@@ -200,6 +222,28 @@ class NarrowedShowFieldsTest extends PackageTestCase
             'a restore' => ['POST', '/api/shows/restore', true],
             'a force destroy' => ['DELETE', '/api/shows/force', true],
         ];
+    }
+
+    /** @return array<string, array{string, string, bool, string}> */
+    public static function renderedRowWrites(): array
+    {
+        return [
+            'a destroy' => ['DELETE', '/api/shows', false, '2026-03-01T09:00:00.000000Z'],
+            'a restore' => ['POST', '/api/shows/restore', true, '2026-03-01T09:00:00.000000Z'],
+            'a force destroy' => ['DELETE', '/api/shows/force', true, '2026-02-01T08:00:00.000000Z'],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $body
+     * @return array<string, mixed>
+     */
+    private static function withFloatValues(array $body): array
+    {
+        $parts = $body['data']['parts'] ?? [];
+        $body['data']['parts'] = array_map(static fn (array $part): array => [...$part, 'value' => (float) $part['value']], is_array($parts) ? $parts : []);
+
+        return $body;
     }
 
     private function trashOpeningIf(bool $trashed): void

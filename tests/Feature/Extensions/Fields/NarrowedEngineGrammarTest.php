@@ -127,7 +127,10 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
 
         $narrowed = $this->search('vouchers', $search);
 
-        $declared->assertOk()->assertJsonPath('data.*.id', [1, 3]);
+        $declared->assertOk()->assertJsonPath('data', [
+            ['id' => 1, 'code' => 'V-c', 'number' => 3, 'team' => 'red', 'title' => 'Report alpha', 'price' => 1.5, 'active' => true],
+            ['id' => 3, 'code' => 'V-a', 'number' => 1, 'team' => 'red', 'title' => 'Report beta', 'price' => 7.25, 'active' => true],
+        ]);
         $narrowed->assertOk()->assertJsonPath('data', [
             ['id' => 1, 'code' => 'V-c', 'number' => 3, 'team' => 'red', 'title' => 'Report alpha', 'active' => true],
             ['id' => 3, 'code' => 'V-a', 'number' => 1, 'team' => 'red', 'title' => 'Report beta', 'active' => true],
