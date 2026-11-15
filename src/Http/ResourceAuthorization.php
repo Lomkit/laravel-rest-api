@@ -23,7 +23,7 @@ final class ResourceAuthorization
 
     public function gates(): GateVocabulary
     {
-        return $this->gates ??= GateVocabulary::of($this->resource->gates(), $this->resource::class.'::gates()', Trashed::supportedBy($this->resource::modelClass()));
+        return $this->gates ??= GateVocabulary::of($this->resource->gates(), $this->resource::class.'::gates()', Trashed::supportedBy($this->resource::modelClass()), ExtensionGates::of($this->resource));
     }
 
     public function cachedAbilities(): CachedAbilities

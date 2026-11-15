@@ -12,6 +12,10 @@ class GateVocabularyTest extends TestCase
 {
     private const string OWNER = 'App\Rest\Resources\TicketResource::gates()';
 
+    private const string ACL = 'The [acl] extension Vendor\Acl\AclExtension in gates() for App\Rest\Resources\TicketResource';
+
+    private const string SHARES = 'The [shares] extension Vendor\Shares\SharesExtension in gates() for App\Rest\Resources\TicketResource';
+
     #[Test]
     public function it_lists_the_built_in_gates_then_the_declared_ones(): void
     {
@@ -88,5 +92,32 @@ class GateVocabularyTest extends TestCase
             'null' => [['escalate', null], ' returned null at index 1. Return the names of policy methods.'],
             'an integer' => [[7], ' returned int at index 0. Return the names of policy methods.'],
         ];
+    }
+
+    #[Test]
+    public function it_lists_extension_gates_after_the_resource_gates_once(): void
+    {
+        $gates = GateVocabulary::of(['escalate', 'archive'], self::OWNER, false, [self::ACL => ['export', 'archive', 'share'], self::SHARES => ['share', 'escalate', 'publish']]);
+
+        $this->assertSame(['view', 'create', 'update', 'delete', 'escalate', 'archive', 'export', 'share', 'publish'], $gates->names());
+        $this->assertSame('authorized_to_share', $gates->find('share')?->key());
+    }
+
+    #[Test]
+    public function it_refuses_a_gate_listed_twice_by_one_extension(): void
+    {
+        $this->expectExceptionObject(InvalidResourceException::invalidGate(self::ACL, 1, 'share'));
+
+        GateVocabulary::of(['share'], self::OWNER, true, [self::ACL => ['share', 'share']]);
+    }
+
+    /** @param array<mixed> $declared */
+    #[Test]
+    #[DataProvider('invalidDeclarations')]
+    public function it_names_the_extension_of_an_invalid_name(array $declared, string $message): void
+    {
+        $this->expectExceptionObject(new InvalidResourceException(self::SHARES.$message));
+
+        GateVocabulary::of(['escalate'], self::OWNER, true, [self::ACL => ['export'], self::SHARES => $declared]);
     }
 }
