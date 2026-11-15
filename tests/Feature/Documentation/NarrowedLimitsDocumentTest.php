@@ -12,16 +12,18 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', ['plan' => FirstNarrowing::class])]
 class NarrowedLimitsDocumentTest extends DocumentationTestCase
 {
+    /** @var list<?int> */
+    private array $narrowed = [];
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
         Applicability::flush();
-        FirstNarrowing::$narrow = static function (LimitsContext $context): void {
-            if ($context->user !== null) {
-                $context->allowSizes([10, 25]);
-            }
+        FirstNarrowing::$narrow = function (LimitsContext $context): void {
+            $this->narrowed[] = $context->user?->getAuthIdentifier();
+            $context->allowSizes([10]);
         };
     }
 
@@ -35,13 +37,14 @@ class NarrowedLimitsDocumentTest extends DocumentationTestCase
     }
 
     #[Test]
-    public function it_documents_the_limits_of_a_guest_for_a_logged_in_viewer(): void
+    public function it_documents_the_declared_limits_without_narrowing_them(): void
     {
         $this->actingAs(new GenericUser(['id' => 1]));
 
         $search = $this->search($this->document(), '/shows/search');
 
         $this->assertSame('{"type":"integer","enum":[10,25,50]}', json_encode($search['limit']));
+        $this->assertSame([], $this->narrowed);
     }
 
     #[Test]

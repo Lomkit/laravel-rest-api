@@ -44,7 +44,7 @@ final readonly class PageSchema
     {
         $capped = $resource
             ->definition()
-            ->limits()
+            ->declaredLimits()
             ->maxTotal !== null || LimitNarrowing::appliesTo($resource);
         $engine = $resource->context()->text($resource)->backend === TextBackend::Engine;
         $optional = $engine || $resource->maxTotal === null;

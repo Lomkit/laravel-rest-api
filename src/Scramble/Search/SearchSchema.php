@@ -100,7 +100,7 @@ final readonly class SearchSchema
             'aggregates' => self::capped((new AggregateSchema($this->components))->reference($resource), $sizes->aggregates),
             'includes' => self::capped((new IncludeSchema($this->components))->reference($resource), $sizes->includes),
             'instructions' => self::capped((new InputSchema($this->components))->instruction($resource), $sizes->instructions),
-            'limit' => (new IntegerType)->enum($resource->definition()->limits()->allowed),
+            'limit' => (new IntegerType)->enum($resource->definition()->declaredLimits()->allowed),
             'page' => self::page($resource),
             default => null,
         };
@@ -152,7 +152,7 @@ final readonly class SearchSchema
     {
         $page = new IntegerType;
         $page->setMin(1);
-        $page->setMax($resource->definition()->limits()->maxPage);
+        $page->setMax($resource->definition()->declaredLimits()->maxPage);
 
         return $page;
     }
