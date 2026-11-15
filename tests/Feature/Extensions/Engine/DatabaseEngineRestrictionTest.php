@@ -48,7 +48,7 @@ class DatabaseEngineRestrictionTest extends EngineSearchTestCase
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([5, 1, 3], 3));
-        $this->assertSame(['VoucherResource'], RestrictionLog::$seen);
+        $this->assertSame(['VoucherResource', 'VoucherResource'], RestrictionLog::$seen);
     }
 
     #[Test]
@@ -126,7 +126,7 @@ class DatabaseEngineRestrictionTest extends EngineSearchTestCase
         $page = Rest::search(VoucherResource::class)->as($user)->payload(['text' => ['value' => 'report']])->page();
 
         $this->assertSame(4, $page->total());
-        $this->assertSame([$user], RestrictionLog::$users);
+        $this->assertSame([$user, $user], RestrictionLog::$users);
     }
 
     #[Test]
@@ -142,14 +142,14 @@ class DatabaseEngineRestrictionTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_runs_each_restriction_once_per_engine_page(): void
+    public function it_runs_each_restriction_on_the_engine_page_and_on_the_rows_read_again(): void
     {
         config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
 
         $response = $this->postJson('/api/vouchers/actions/retitle-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
-        $this->assertSame(['VoucherResource guest', 'VoucherResource guest'], RestrictionLog::$seen);
+        $this->assertSame(array_fill(0, 4, 'VoucherResource guest'), RestrictionLog::$seen);
     }
 
     private function loggedQuery(int $index): string

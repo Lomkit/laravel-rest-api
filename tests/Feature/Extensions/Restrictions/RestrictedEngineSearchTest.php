@@ -88,7 +88,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([5, 4, 1, 3], 4));
-        $this->assertSame(['VoucherResource guest'], RestrictionLog::$seen);
+        $this->assertSame(['VoucherResource guest', 'VoucherResource guest'], RestrictionLog::$seen);
     }
 
     #[Test]
@@ -164,7 +164,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
-        $response->assertOk()->assertExactJson($this->page([3], 1));
+        $response->assertOk()->assertExactJson($this->page([], 1));
         $this->assertInstanceOf(RowRestriction::class, ForeignProfile::$pages[0][2]);
         $this->assertSame(['select * from vouchers where (0 = 1) and vouchers.deleted_at is null'], array_map(fn (string $sql): string => str_replace(['"', '`'], '', $sql), ForeignProfile::$sql));
     }

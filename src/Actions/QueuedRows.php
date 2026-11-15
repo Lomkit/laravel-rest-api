@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Query\Clauses\ExtensionRestrictionClause;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Query\Clauses\TrashedClause;
 use Lomkit\Rest\Query\Trashed;
@@ -41,8 +42,10 @@ final readonly class QueuedRows
             ->useWritePdo();
         TrashedClause::of($this->trashed)?->apply($query);
 
-        if ($this->perimeter) {
-            (new PerimeterClause($resource))->apply($query);
+        $clauses = $this->perimeter ? [new PerimeterClause($resource)] : ExtensionRestrictionClause::of($resource);
+
+        foreach ($clauses as $clause) {
+            $clause->apply($query);
         }
 
         $rows = KeysGrammar::idOf($resource)
