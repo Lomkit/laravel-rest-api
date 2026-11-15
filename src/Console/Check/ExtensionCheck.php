@@ -5,8 +5,8 @@ namespace Lomkit\Rest\Console\Check;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Lomkit\Rest\Config\RestConfig;
+use Lomkit\Rest\Exceptions\ExtensionException;
 use Lomkit\Rest\Exceptions\InvalidConfigException;
-use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\ExtensionEntry;
 use Lomkit\Rest\Extensions\ExtensionFactory;
 use Lomkit\Rest\Extensions\ExtensionList;
@@ -71,7 +71,7 @@ final readonly class ExtensionCheck
 
     private static function problem(ExtensionEntry $entry, Throwable $exception): string
     {
-        if ($exception instanceof InvalidExtensionException && $exception->concerns($entry->class)) {
+        if ($exception instanceof ExtensionException && $exception->concerns($entry->class)) {
             return $exception->getMessage();
         }
 

@@ -7,7 +7,7 @@ use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Query\QueryPart;
 use Lomkit\Rest\Search\Plan\QueryAdditions;
 
-final class InvalidQueryExtensionException extends InvalidExtensionException
+final class InvalidQueryExtensionException extends ExtensionException
 {
     public static function restrictionClause(string $name, string $resource, QueryPart $part): self
     {
