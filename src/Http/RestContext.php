@@ -12,6 +12,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Lomkit\Rest\Authorization\ActingUser;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\CacheDecisionStore;
+use Lomkit\Rest\Authorization\DecisionPreparation;
 use Lomkit\Rest\Authorization\DecisionStore;
 use Lomkit\Rest\Authorization\NullDecisionStore;
 use Lomkit\Rest\Config\RestConfig;
@@ -111,6 +112,7 @@ final class RestContext
             $this->container->make(Gate::class)->forUser($user),
             $this->decisionStore($acting),
             strict: $this->config()->strict,
+            preparation: new DecisionPreparation($user),
         );
     }
 

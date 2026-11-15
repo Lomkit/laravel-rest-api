@@ -6,6 +6,7 @@ use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\Changes;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Http\Routing\Endpoint;
 
 trait Authorizable
@@ -33,6 +34,8 @@ trait Authorizable
     {
         return [];
     }
+
+    public function prepareAuthorization(PendingChecks $checks): void {}
 
     /** @param list<Model|Changes> $arguments */
     public function authorizeTo(string $ability, Model|string $model, array $arguments = []): void

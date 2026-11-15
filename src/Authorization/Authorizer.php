@@ -22,8 +22,9 @@ final class Authorizer
         DecisionStore $store = new NullDecisionStore,
         private readonly DecisionMemo $memo = new DecisionMemo,
         private readonly bool $strict = false,
+        DecisionPreparation $preparation = new DecisionPreparation,
     ) {
-        $this->batch = new DecisionBatch($store, $memo);
+        $this->batch = new DecisionBatch($store, $memo, $preparation);
     }
 
     public function inspect(Check $check): Decision
