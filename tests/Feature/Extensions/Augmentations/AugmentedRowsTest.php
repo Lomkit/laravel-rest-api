@@ -206,6 +206,52 @@ class AugmentedRowsTest extends PackageTestCase
         $this->assertSame([[2, [3]], [1, [1, 2]]], $seen);
     }
 
+    /** @param Closure(AugmentationContext): mixed $call */
+    #[Test]
+    #[DataProvider('lateCalls')]
+    public function it_refuses_an_addition_after_the_augmentation(Closure $call, string $method): void
+    {
+        config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
+        $kept = null;
+        FirstAugmentation::$augment = static function (AugmentationContext $context) use (&$kept): void {
+            $kept = $context;
+        };
+        $this->postJson('/path-authors/search', ['search' => []])->assertOk();
+        $this->assertInstanceOf(AugmentationContext::class, $kept);
+
+        $this->expectExceptionObject(InvalidQueryExtensionException::lateAddition('first', $method, PathAuthorResource::class));
+
+        $call($kept);
+    }
+
+    /** @return array<string, array{Closure(AugmentationContext): mixed, string}> */
+    public static function lateCalls(): array
+    {
+        return [
+            'a column' => [static fn (AugmentationContext $context): mixed => $context->column('views'), 'column'],
+            'a subquery' => [static fn (AugmentationContext $context): string => $context->select('late', static fn (Builder $query): Builder => $query->selectRaw('1')), 'select'],
+            'an eager load' => [static fn (AugmentationContext $context): mixed => $context->with('posts'), 'with'],
+        ];
+    }
+
+    #[Test]
+    public function it_refuses_a_column_added_while_a_relation_loads(): void
+    {
+        config(['rest.extensions' => ['first' => FirstAugmentation::class]]);
+        FirstAugmentation::$augment = static function (AugmentationContext $context): void {
+            if ($context->resource instanceof PathAuthorResource) {
+                $context->with('posts', static function () use ($context): void {
+                    $context->column('api_token');
+                });
+            }
+        };
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidQueryExtensionException::lateAddition('first', 'column', PathAuthorResource::class));
+
+        $this->postJson('/path-authors/search', ['search' => []]);
+    }
+
     /** @param array<string, class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]

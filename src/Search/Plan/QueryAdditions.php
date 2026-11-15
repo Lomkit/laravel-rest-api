@@ -31,13 +31,22 @@ final class QueryAdditions
     /** @var array<string, array{string, Closure|null}> */
     private array $loads = [];
 
+    private bool $sealed = false;
+
     public function __construct(
         private readonly Resource $resource,
         private readonly RenderedLevel $level,
     ) {}
 
+    public function seal(): void
+    {
+        $this->sealed = true;
+    }
+
     public function column(string $extension, string $column): void
     {
+        $this->ensureOpen($extension, __FUNCTION__);
+
         if (preg_match(self::COLUMN, $column) !== 1) {
             throw InvalidQueryExtensionException::invalidColumn($extension, $column, $this->resource::class);
         }
@@ -48,6 +57,8 @@ final class QueryAdditions
     /** @param Closure|QueryBuilder|EloquentBuilder<Model> $subquery */
     public function select(string $extension, string $alias, Closure|QueryBuilder|EloquentBuilder $subquery): string
     {
+        $this->ensureOpen($extension, __FUNCTION__);
+
         if (! ExtensionName::matches($alias)) {
             throw InvalidQueryExtensionException::invalidAlias($extension, $alias);
         }
@@ -77,6 +88,8 @@ final class QueryAdditions
 
     public function with(string $extension, string $relation, ?Closure $constraint): void
     {
+        $this->ensureOpen($extension, __FUNCTION__);
+
         AugmentedLoad::ensureDeclared($extension, $this->resource, $relation);
 
         if (isset($this->loads[$relation])) {
@@ -142,6 +155,13 @@ final class QueryAdditions
 
         if ($part !== null) {
             throw InvalidQueryExtensionException::augmentedQuery($extension, $this->resource::class, $part);
+        }
+    }
+
+    private function ensureOpen(string $extension, string $method): void
+    {
+        if ($this->sealed) {
+            throw InvalidQueryExtensionException::lateAddition($extension, $method, $this->resource::class);
         }
     }
 

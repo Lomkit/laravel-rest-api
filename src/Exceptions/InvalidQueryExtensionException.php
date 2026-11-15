@@ -92,6 +92,11 @@ final class InvalidQueryExtensionException extends InvalidExtensionException
         return self::about($name, "The [{$name}] extension passes {$value} to {$method}() for {$resource}. Page sizes, totals and include limits are 1 or more.");
     }
 
+    public static function lateAddition(string $name, string $method, string $resource): self
+    {
+        return self::about($name, "The [{$name}] extension calls {$method}() on the rows of {$resource} after augment() returned. Call column(), select() and with() inside augment().");
+    }
+
     public static function limitsReadWhileNarrowing(string $name, string $resource): self
     {
         return self::about($name, "The [{$name}] extension reads the limits of {$resource} inside narrowLimits(), which computes them. Read \$context->declared instead.");

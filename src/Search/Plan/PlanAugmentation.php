@@ -35,6 +35,8 @@ final readonly class PlanAugmentation
             $extension->augment(new AugmentationContext($name, $resource, $user, $gates, $additions));
         }
 
+        $additions->seal();
+
         if ($query instanceof Relation) {
             $additions->applyTo($eloquent);
 
