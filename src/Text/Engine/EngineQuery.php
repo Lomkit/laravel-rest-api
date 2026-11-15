@@ -105,8 +105,20 @@ final class EngineQuery
         return $this->index->profile->page($builder, $this->index->model, $perPage, $page);
     }
 
+    /** @internal */
+    public function matchNothing(): static
+    {
+        $this->conditions->nothing();
+
+        return $this;
+    }
+
     public function reachable(): ?int
     {
+        if ($this->conditions->matchesNothing()) {
+            return PHP_INT_MAX;
+        }
+
         return $this->index->profile->reachable($this->index->model);
     }
 

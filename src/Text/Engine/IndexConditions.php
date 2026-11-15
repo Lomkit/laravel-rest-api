@@ -17,6 +17,8 @@ final class IndexConditions
     /** @var array<string, list<int|float|string|bool>> */
     private array $exclusions = [];
 
+    private bool $nothing = false;
+
     public function compare(string $attribute, FilterOperator $operator, int|float|string|bool $value): void
     {
         $this->comparisons[] = [$attribute, $operator, $value];
@@ -42,9 +44,14 @@ final class IndexConditions
         $this->exclusions[$attribute] = self::unique([...$this->exclusions[$attribute] ?? [], ...$values]);
     }
 
+    public function nothing(): void
+    {
+        $this->nothing = true;
+    }
+
     public function matchesNothing(): bool
     {
-        return in_array([], $this->memberships, true);
+        return $this->nothing || in_array([], $this->memberships, true);
     }
 
     /** @param Builder<Model> $builder */

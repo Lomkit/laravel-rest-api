@@ -65,6 +65,7 @@ final readonly class EngineSearch implements SearchSource
         $query = $this->text->engineQuery($this->search->trashed)
             ?? throw InvalidTextSearchException::notOnEngine($this->resource::class);
 
+        EngineRestrictions::of($this->resource)?->applyTo($query);
         EngineCriteria::of($this->search->filters, $this->search->sorts)->applyTo($query);
 
         foreach ($this->search->instructions as $instruction) {
