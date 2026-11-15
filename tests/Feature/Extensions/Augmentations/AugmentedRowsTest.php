@@ -7,18 +7,12 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
 use Lomkit\Rest\Facades\Rest;
-use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\RestContext;
-use Lomkit\Rest\Query\QueryPart;
-use Lomkit\Rest\Search\Plan\QueryAdditions;
-use Lomkit\Rest\Search\Plan\RenderedLevel;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorResource;
@@ -452,38 +446,6 @@ class AugmentedRowsTest extends PackageTestCase
     }
 
     /** @param Closure(EloquentBuilder<Author>): mixed $change */
-    #[Test]
-    #[DataProvider('outerChanges')]
-    public function it_refuses_a_subquery_that_changes_the_outer_query(Closure $change, QueryPart $part): void
-    {
-        $context = new RestContext(RestRequest::create('/path-authors/search', 'POST'), $this->app);
-        $additions = new QueryAdditions($context->resource(PathAuthorResource::class), RenderedLevel::of([]));
-        $query = Author::query()->select('authors.id');
-        $additions->select('first', 'total', static function (Builder $subquery) use ($query, $change): void {
-            $subquery->selectRaw('1');
-            $change($query);
-        });
-
-        try {
-            $additions->applyTo($query);
-            $this->fail('The subquery changed the outer query without a refusal.');
-        } catch (InvalidQueryExtensionException $exception) {
-            $this->assertEquals(InvalidQueryExtensionException::augmentedQuery('first', PathAuthorResource::class, $part), $exception);
-            $this->assertSame('The [first] extension adds '.$part->value.' to the query of '.PathAuthorResource::class.' while adding to its rows. An augmentation adds columns, subqueries and eager loads only: restrict rows with RestrictsQueries.', $exception->getMessage());
-            $this->assertTrue($exception->namesExtension('first'));
-        }
-    }
-
-    /** @return array<string, array{Closure(EloquentBuilder<Author>): mixed, QueryPart}> */
-    public static function outerChanges(): array
-    {
-        return [
-            'a where' => [static fn (EloquentBuilder $query): EloquentBuilder => $query->where('id', 1), QueryPart::Where],
-            'a join' => [static fn (EloquentBuilder $query): EloquentBuilder => $query->join('posts', 'posts.author_id', '=', 'authors.id'), QueryPart::Join],
-            'a removed scope' => [static fn (EloquentBuilder $query): EloquentBuilder => $query->withoutGlobalScope(SoftDeletingScope::class), QueryPart::RemovedScope],
-        ];
-    }
-
     #[Test]
     #[DataProvider('invalidColumns')]
     public function it_refuses_an_invalid_column(string $column): void

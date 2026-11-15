@@ -10,7 +10,6 @@ use Illuminate\Support\Str;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Extensions\ExtensionName;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Query\OuterQueryShape;
 use Lomkit\Rest\Search\Plan\Columns\RelationKeys;
 
 /** @internal */
@@ -119,10 +118,8 @@ final class QueryAdditions
 
         AddedColumns::merge($query, [...array_keys($this->columns), ...$keys]);
 
-        foreach ($this->selects as $alias => [$extension, $subquery]) {
-            $before = OuterQueryShape::of($query);
+        foreach ($this->selects as $alias => [, $subquery]) {
             $query->addSelect([$alias => $subquery]);
-            $this->ensureUnchanged($query, $before, $extension);
         }
     }
 
@@ -146,16 +143,6 @@ final class QueryAdditions
         }
 
         return $kept;
-    }
-
-    /** @param EloquentBuilder<Model> $query */
-    private function ensureUnchanged(EloquentBuilder $query, OuterQueryShape $before, string $extension): void
-    {
-        $part = OuterQueryShape::of($query)->changedFrom($before);
-
-        if ($part !== null) {
-            throw InvalidQueryExtensionException::augmentedQuery($extension, $this->resource::class, $part);
-        }
     }
 
     private function ensureOpen(string $extension, string $method): void

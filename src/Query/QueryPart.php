@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Query;
 /** @internal */
 enum QueryPart: string
 {
-    case Where = 'a where clause';
     case Join = 'a join';
     case Order = 'an order';
     case Limit = 'a limit';
@@ -21,5 +20,4 @@ enum QueryPart: string
     case Callback = 'a before query callback';
     case AfterCallback = 'an after query callback';
     case Scope = 'a global scope';
-    case RemovedScope = 'a removed global scope';
 }

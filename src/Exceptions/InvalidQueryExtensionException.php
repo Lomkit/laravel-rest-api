@@ -82,11 +82,6 @@ final class InvalidQueryExtensionException extends ExtensionException
         return self::about($name, "The [{$name}] extension eager loads [{$relation}] on {$resource} twice. Call with() once for each relation.");
     }
 
-    public static function augmentedQuery(string $name, string $resource, QueryPart $part): self
-    {
-        return self::about($name, "The [{$name}] extension adds {$part->value} to the query of {$resource} while adding to its rows. An augmentation adds columns, subqueries and eager loads only: restrict rows with RestrictsQueries.");
-    }
-
     public static function invalidLimit(string $name, string $resource, string $method, int $value): self
     {
         return self::about($name, "The [{$name}] extension passes {$value} to {$method}() for {$resource}. Page sizes, totals and include limits are 1 or more.");
