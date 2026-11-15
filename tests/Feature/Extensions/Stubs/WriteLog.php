@@ -27,6 +27,9 @@ final class WriteLog
 
     public static int $status = 429;
 
+    /** @var array<string, string> */
+    public static array $headers = [];
+
     /** @var list<int> */
     public static array $frozen = [];
 
@@ -39,6 +42,7 @@ final class WriteLog
         self::$refuseAt = null;
         self::$refusal = 'The monthly quota is reached.';
         self::$status = 429;
+        self::$headers = [];
         self::$frozen = [];
     }
 }

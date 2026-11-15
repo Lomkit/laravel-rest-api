@@ -39,6 +39,10 @@ final class TicketWritesExtension extends Extension implements GuardsWrites, Obs
         if ($frozen !== [] || $context->action?->uriKey() === 'close-tickets') {
             $context->refuse('Closed tickets are frozen.');
         }
+
+        if ($context->endpoint === Endpoint::ForceDestroy) {
+            $context->refuse('The archive is under maintenance.', 503, ['Retry-After' => '60']);
+        }
     }
 
     #[\Override]

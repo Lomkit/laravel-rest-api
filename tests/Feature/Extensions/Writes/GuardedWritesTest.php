@@ -313,6 +313,8 @@ final class GuardedWritesTest extends PackageTestCase
             '302' => [302],
             '399' => [399],
             '500' => [500],
+            '502' => [502],
+            '504' => [504],
         ];
     }
 
@@ -327,8 +329,61 @@ final class GuardedWritesTest extends PackageTestCase
 
         $this->deleteJson('/written-documents', ['resources' => [1, 2]])->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
 
-        $message = 'The [quota] extension '.RecordingGuard::class.' refuses a destroy write on '.WrittenDocumentResource::class." with the status {$status}. Pass a client error status from 400 to 499 to refuse(), such as 403 or 429: a refusal answers the client and rolls the write back.";
+        $message = 'The [quota] extension '.RecordingGuard::class.' refuses a destroy write on '.WrittenDocumentResource::class." with the status {$status}. Pass 403, another client error status from 400 to 499 such as 423 or 429, or 503 to refuse(): a refusal answers the client and rolls the write back.";
         Exceptions::assertReported(fn (InvalidWriteExtensionException $exception): bool => $exception->getMessage() === $message && $exception->namesExtension('quota'));
+        $this->assertSame([[1, null], [2, null]], $this->rows());
+    }
+
+    /** @return array<string, array{int}> */
+    public static function reservedStatuses(): array
+    {
+        return [
+            '409' => [409],
+            '422' => [422],
+            '428' => [428],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('reservedStatuses')]
+    public function it_refuses_a_status_that_the_package_answers_with_another_body(int $status): void
+    {
+        Exceptions::fake();
+        WriteLog::$refuseAt = 1;
+        WriteLog::$status = $status;
+        $this->seedDocuments(null, null);
+
+        $this->deleteJson('/written-documents', ['resources' => [1, 2]])->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
+
+        $message = 'The [quota] extension '.RecordingGuard::class.' refuses a destroy write on '.WrittenDocumentResource::class." with the status {$status}, which the package answers with another body (409 conflicts, 422 validation errors, 428 confirmations). Refuse with 423 or 429.";
+        Exceptions::assertReported(fn (InvalidWriteExtensionException $exception): bool => $exception->getMessage() === $message && $exception->namesExtension('quota'));
+        $this->assertSame([[1, null], [2, null]], $this->rows());
+    }
+
+    /** @return array<string, array{int, string, string}> */
+    public static function refusalsWithHeaders(): array
+    {
+        return [
+            'maintenance' => [503, 'The archive is under maintenance.', '600'],
+            'quota' => [429, 'The monthly quota is reached.', '60'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('refusalsWithHeaders')]
+    public function it_answers_a_refusal_with_its_status_and_headers(int $status, string $refusal, string $retryAfter): void
+    {
+        WriteLog::$refuseAt = 1;
+        WriteLog::$status = $status;
+        WriteLog::$refusal = $refusal;
+        WriteLog::$headers = ['Retry-After' => $retryAfter];
+        $this->seedDocuments(null, null);
+
+        $this->deleteJson('/written-documents', ['resources' => [1, 2]])
+            ->assertStatus($status)
+            ->assertHeader('Retry-After', $retryAfter)
+            ->assertExactJson(['message' => $refusal]);
+
         $this->assertSame([[1, null], [2, null]], $this->rows());
     }
 

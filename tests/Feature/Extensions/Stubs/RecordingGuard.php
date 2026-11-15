@@ -18,7 +18,7 @@ final class RecordingGuard extends Extension implements GuardsWrites
         EventLog::record("guard {$context->endpoint->value} ".self::subject($context));
 
         if (count(WriteLog::$guards) === WriteLog::$refuseAt) {
-            $context->refuse(WriteLog::$refusal, WriteLog::$status);
+            $context->refuse(WriteLog::$refusal, WriteLog::$status, WriteLog::$headers);
         }
     }
 

@@ -12,9 +12,12 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\MutationNode;
+use Symfony\Component\HttpFoundation\Response;
 
 final readonly class WriteGuardContext
 {
+    private const array RESERVED_STATUSES = [Response::HTTP_CONFLICT, Response::HTTP_UNPROCESSABLE_ENTITY, Response::HTTP_PRECONDITION_REQUIRED];
+
     /**
      * @internal
      *
@@ -34,12 +37,17 @@ final readonly class WriteGuardContext
         public ?ActionFields $fields = null,
     ) {}
 
-    public function refuse(string $message, int $status = 403): never
+    /** @param array<string, string> $headers */
+    public function refuse(string $message, int $status = 403, array $headers = []): never
     {
-        if ($status < 400 || $status > 499) {
+        if (in_array($status, self::RESERVED_STATUSES, true)) {
+            throw InvalidWriteExtensionException::reservedRefusalStatus($this->extension, $this->class, $this->resource::class, $this->endpoint, $status);
+        }
+
+        if ($status !== Response::HTTP_SERVICE_UNAVAILABLE && ($status < 400 || $status > 499)) {
             throw InvalidWriteExtensionException::refusalStatus($this->extension, $this->class, $this->resource::class, $this->endpoint, $status);
         }
 
-        throw new WriteRefused($this->extension, $message, $status);
+        throw new WriteRefused($this->extension, $message, $status, $headers);
     }
 }
