@@ -94,6 +94,18 @@ class LimitNarrowingTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_narrows_the_limits_as_the_narrows_limits_example_of_the_skill(): void
+    {
+        $limits = $this->limits(BookResource::class, static function (LimitsContext $context): void {
+            $context->allowSizes([10, 25]);
+            $context->maxTotal(1000);
+            $context->includeLimit(10);
+        });
+
+        $this->assertSame([[10, 25], 25, 10, 1000], self::values($limits));
+    }
+
+    #[Test]
     public function it_refuses_sizes_all_above_the_default(): void
     {
         $this->expectExceptionObject(InvalidQueryExtensionException::defaultAboveSizes(CappedBookLimitsResource::class, [['first', FirstNarrowing::class]], 25, [50]));

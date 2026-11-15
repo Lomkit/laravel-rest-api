@@ -1650,7 +1650,7 @@ final class PlanLimitsExtension extends Extension implements NarrowsLimits
     {
         $context->allowSizes([10, 25]);
         $context->maxTotal(1000);
-        $context->includeLimit(5);
+        $context->includeLimit(10);
     }
 }
 ```
