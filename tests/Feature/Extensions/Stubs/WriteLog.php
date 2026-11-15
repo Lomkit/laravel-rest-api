@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 
 use Closure;
+use Lomkit\Rest\Extensions\Contexts\ReadObservationContext;
 use Lomkit\Rest\Extensions\Contexts\WriteGuardContext;
 use Lomkit\Rest\Extensions\Contexts\WriteObservationContext;
 
@@ -13,6 +14,9 @@ final class WriteLog
 
     /** @var list<WriteObservationContext> */
     public static array $writes = [];
+
+    /** @var list<ReadObservationContext> */
+    public static array $reads = [];
 
     /** @var (Closure(WriteObservationContext): void)|null */
     public static ?Closure $observing = null;
@@ -27,6 +31,7 @@ final class WriteLog
     {
         self::$guards = [];
         self::$writes = [];
+        self::$reads = [];
         self::$observing = null;
         self::$refuseAt = null;
         self::$refusal = 'The monthly quota is reached.';

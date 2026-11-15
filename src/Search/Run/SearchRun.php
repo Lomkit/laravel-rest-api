@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Search\Run;
 use Generator;
 use Illuminate\Support\LazyCollection;
 use Lomkit\Rest\Exceptions\SearchRunException;
+use Lomkit\Rest\Http\ReadObservers;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\EngineSearch;
 use Lomkit\Rest\Query\SearchSource;
@@ -39,6 +40,7 @@ final readonly class SearchRun
 
         $strict->run(fn () => $this->resource->searched($page->rows));
         $meta = $strict->run(fn (): array => SearchMeta::of($this->resource, $this->search)->compute($context, $page->rows));
+        ReadObservers::of($this->resource)?->searched($page->rows, $strict);
 
         return new SearchedPage($page->plan, $page->rows, $overflow, $meta);
     }

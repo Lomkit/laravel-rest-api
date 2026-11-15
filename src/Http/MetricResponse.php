@@ -24,8 +24,10 @@ final readonly class MetricResponse implements Responsable
         }
 
         $store = $resource->context()->metricStore();
+        $json = $store->remember($node, fn (): string => self::render($resource, $node));
+        ReadObservers::of($resource)?->metric($node->metric, $json);
 
-        return new self($store->remember($node, fn (): string => self::render($resource, $node)));
+        return new self($json);
     }
 
     private static function render(Resource $resource, MetricNode $node): string
