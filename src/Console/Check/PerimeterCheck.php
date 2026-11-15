@@ -7,7 +7,6 @@ use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Attributes\WithoutPerimeter;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
-use Lomkit\Rest\Query\ExtensionRestrictions;
 use ReflectionClass;
 use ReflectionMethod;
 
@@ -21,7 +20,7 @@ final readonly class PerimeterCheck
         $engines = new EngineReach($context);
 
         foreach ((new ReachedResources($context))->from($resources) as $resource) {
-            $restrictions = $engines->extensionsBuilt() ? (ExtensionRestrictions::of($context->resource($resource))?->names() ?? []) : [];
+            $restrictions = $engines->restrictions($context->resource($resource));
             $report = self::checkRows($resource, $restrictions, $report);
             $problem = $engines->problem($context->resource($resource));
             $report = $problem === null ? $report : $report->withRowProblem($problem);

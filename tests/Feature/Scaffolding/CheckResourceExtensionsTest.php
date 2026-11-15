@@ -20,6 +20,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\PassingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\TripCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedCheckExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedRowsExtension;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\After;
@@ -285,6 +286,26 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
             'problems' => [self::JOURNAL_PROBLEM],
             'restricted' => [],
         ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['undecided' => UndecidedRowsExtension::class])]
+    public function it_reports_an_exception_of_applies_to_of_a_row_restriction_as_a_problem(): void
+    {
+        $this->expose('trips', TripController::class);
+        $problem = 'The [undecided] extension '.UndecidedRowsExtension::class.' throws while it tells whether it applies to '.TripResource::class.': The tenant table is missing.';
+
+        $output = $this->check(1, TripController::class);
+        $report = $this->report(1, TripController::class);
+
+        $this->assertStringContainsString("  rows ... FAILED\n  ⇂ ".rtrim($problem, '.')."\n", $output);
+        $this->assertSame([
+            'perimeter' => [TripResource::class],
+            'without_perimeter' => [CountryResource::class],
+            'problems' => [$problem],
+            'restricted' => [['resource' => CountryResource::class, 'extensions' => ['undecided']]],
+        ], $report['rows']);
+        $this->assertSame(['checked' => [], 'problems' => []], $report['extension_checks']);
     }
 
     private function expose(string $name, string $controller): void

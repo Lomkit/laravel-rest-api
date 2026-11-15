@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Console\Check;
 
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
+use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Query\ExtensionRestrictions;
@@ -27,6 +28,12 @@ final class EngineReach
             return null;
         }
 
+        $undecided = $this->undecided($resource);
+
+        if ($undecided !== null) {
+            return $undecided;
+        }
+
         $unreached = ExtensionRestrictions::of($resource)?->unreached() ?? [];
         $name = array_key_first($unreached);
 
@@ -43,6 +50,21 @@ final class EngineReach
         }
 
         return $profile === null || $profile instanceof AppliesRowRestrictions ? null : InvalidTextSearchException::unrestrictedEngine($resource::class, $name, $class, $profile->name())->getMessage();
+    }
+
+    /** @return list<string> */
+    public function restrictions(Resource $resource): array
+    {
+        if (! $this->extensionsBuilt() || $this->undecided($resource) !== null) {
+            return [];
+        }
+
+        return ExtensionRestrictions::of($resource)?->names() ?? [];
+    }
+
+    private function undecided(Resource $resource): ?string
+    {
+        return UndecidedExtension::first($this->context->extensions(), RestrictsQueries::class, $resource::class);
     }
 
     private function profile(Resource $resource): ?EngineProfile

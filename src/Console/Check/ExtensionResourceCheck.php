@@ -35,14 +35,13 @@ final readonly class ExtensionResourceCheck
     private static function check(ExtensionResourceReport $report, ExtensionRegistry $registry, string $name, Extension&ChecksResources $extension, string $resource): ExtensionResourceReport
     {
         $class = $extension::class;
+        $undecided = UndecidedExtension::problem($registry, $name, $extension, $resource);
 
-        try {
-            $applies = $registry->appliesTo($name, $resource);
-        } catch (Throwable $exception) {
-            return $report->withProblem("The [{$name}] extension {$class} throws while it tells whether it applies to {$resource}: {$exception->getMessage()}");
+        if ($undecided !== null) {
+            return $report->withProblem($undecided);
         }
 
-        if (! $applies) {
+        if (! $registry->appliesTo($name, $resource)) {
             return $report;
         }
 
