@@ -24,7 +24,12 @@ final readonly class ActionWrites
 
     public static function of(Action $action, ActionFields $fields, Resource $resource): self
     {
-        return new self($action, $action->transaction, $fields, WriteTransaction::of($resource), WriteGuard::of($resource), WriteObservers::of($resource));
+        return self::in($action->transaction, $action, $fields, $resource, WriteTransaction::of($resource));
+    }
+
+    public static function in(ActionTransaction $mode, Action $action, ActionFields $fields, Resource $resource, WriteTransaction $transaction): self
+    {
+        return new self($action, $mode, $fields, $transaction, WriteGuard::of($resource), WriteObservers::of($resource));
     }
 
     /** @param Closure(): int $run */
