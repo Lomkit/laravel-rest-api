@@ -18,7 +18,6 @@ use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Search\GateVocabulary;
 use Lomkit\Rest\Text\ResolvedText;
-use WeakMap;
 
 final class ResourceDefinition
 {
@@ -39,9 +38,6 @@ final class ResourceDefinition
 
     private ?CachedAbilities $cachedAbilities = null;
 
-    /** @var WeakMap<Action|Instruction, FieldSet> */
-    private WeakMap $inputs;
-
     private readonly ResourceDeclarations $declarations;
 
     private readonly ResourceFields $declaredFields;
@@ -51,7 +47,6 @@ final class ResourceDefinition
         private readonly RestRequest $request,
         Container $container,
     ) {
-        $this->inputs = new WeakMap;
         $this->declarations = new ResourceDeclarations($resource, $container);
         $this->declaredFields = new ResourceFields($resource);
     }
@@ -149,7 +144,7 @@ final class ResourceDefinition
 
     public function inputFields(Action|Instruction $declaration): FieldSet
     {
-        return $this->inputs[$declaration] ??= FieldSet::forInputs($declaration->fields(), $declaration::class.'::fields()');
+        return $this->declarations->inputFields($declaration);
     }
 
     /** @return list<string> */
