@@ -18,6 +18,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\OtherAtlasRowsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PassingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingCheckExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\TripCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedCheckExtension;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -93,6 +94,20 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
             'problems' => [self::COLUMN_PROBLEM],
         ], $report['extension_checks']);
         $this->assertSame([TripResource::class, CountryResource::class], ExtensionLog::$checked);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['trips' => TripCheckExtension::class])]
+    public function it_checks_only_the_resources_that_an_extension_applies_to(): void
+    {
+        $this->expose('trips', TripController::class);
+
+        $output = $this->check(0, TripController::class);
+        $report = $this->report(0, TripController::class);
+
+        $this->assertStringEndsWith("  extension checks ... 1 check passed\n", $output);
+        $this->assertSame(['checked' => [['extension' => 'trips', 'resource' => TripResource::class]], 'problems' => []], $report['extension_checks']);
+        $this->assertSame([TripResource::class, TripResource::class], ExtensionLog::$checked);
     }
 
     #[Test]
