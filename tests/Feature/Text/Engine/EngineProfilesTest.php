@@ -89,7 +89,7 @@ class EngineProfilesTest extends EngineTestCase
             'typesense' => [FakeTypesenseEngine::class, false, true, false],
             'algolia 3' => [FakeAlgolia3Engine::class, false, true, false],
             'algolia 4' => [FakeAlgolia4Engine::class, false, true, false],
-            'turbopuffer' => [FakeTurbopufferEngine::class, false, false, false],
+            'turbopuffer' => [FakeTurbopufferEngine::class, false, true, false],
             'null' => [NullEngine::class, true, false, false],
         ];
     }

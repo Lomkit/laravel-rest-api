@@ -18,7 +18,7 @@ final class ReaderInstructionsExtension extends Extension implements DeclaresIns
     #[\Override]
     public function appliesTo(string $resource): bool
     {
-        return $resource === ReaderVoucherResource::class;
+        return is_a($resource, ReaderVoucherResource::class, true);
     }
 
     #[\Override]

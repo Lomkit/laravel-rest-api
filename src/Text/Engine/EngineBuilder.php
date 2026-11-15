@@ -26,7 +26,11 @@ final readonly class EngineBuilder
     {
         $builder = new Builder($this->index->model->model(), implode(' ', $this->text->terms()), null, $this->index->model->softDeletes());
 
-        $conditions->applyTo($builder);
+        if ($options !== []) {
+            $builder->options($options);
+        }
+
+        $conditions->applyTo($builder, $this->index->profile);
 
         match ($this->trashed) {
             Trashed::With => $builder->withTrashed(),
@@ -36,10 +40,6 @@ final readonly class EngineBuilder
 
         foreach ($orders as [$attribute, $direction]) {
             $builder->orderBy($attribute, $direction->value);
-        }
-
-        if ($options !== []) {
-            $builder->options($options);
         }
 
         if ($builder::class !== Builder::class || $builder->callback !== null || $builder->queryCallback !== null) {

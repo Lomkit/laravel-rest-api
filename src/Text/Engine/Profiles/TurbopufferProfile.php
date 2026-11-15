@@ -9,7 +9,7 @@ use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class TurbopufferProfile implements EngineProfile
+final readonly class TurbopufferProfile implements FiltersStringLists, MatchesStringLists
 {
     use PlainLiterals;
 
@@ -70,5 +70,21 @@ final readonly class TurbopufferProfile implements EngineProfile
     public function reachable(ScoutModel $model): int
     {
         return PHP_INT_MAX;
+    }
+
+    #[\Override]
+    public function stringListOptions(array $memberships, array $exclusions): array
+    {
+        $filters = [];
+
+        foreach ($memberships as $attribute => $values) {
+            $filters[] = [$attribute, 'ContainsAny', $values];
+        }
+
+        foreach ($exclusions as $attribute => $values) {
+            $filters[] = [$attribute, 'NotContainsAny', $values];
+        }
+
+        return ['filters' => count($filters) === 1 ? $filters[0] : ['And', $filters]];
     }
 }

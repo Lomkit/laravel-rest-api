@@ -85,6 +85,7 @@ class StringListAttributesTest extends EngineSearchTestCase
             'algolia 4' => [FakeAlgolia4Engine::class],
             'meilisearch' => [FakeMeilisearchEngine::class],
             'typesense' => [FakeTypesenseEngine::class],
+            'turbopuffer' => [FakeTurbopufferEngine::class],
         ];
     }
 
@@ -137,7 +138,6 @@ class StringListAttributesTest extends EngineSearchTestCase
         return [
             'collection' => [CollectionEngine::class],
             'database' => [DatabaseEngine::class],
-            'turbopuffer' => [FakeTurbopufferEngine::class],
             'null' => [NullEngine::class],
         ];
     }

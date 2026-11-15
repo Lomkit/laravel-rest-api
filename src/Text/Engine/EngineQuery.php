@@ -68,7 +68,9 @@ final class EngineQuery
     /** @param array<mixed> $values */
     public function whereNotIn(string $attribute, array $values): static
     {
-        $this->conditions->exclude($attribute, $this->compared($attribute)->members(FilterOperator::NotIn, $values));
+        $declared = $this->compared($attribute);
+
+        $this->conditions->exclude($attribute, $declared->members(FilterOperator::NotIn, $values), $declared->list);
 
         return $this;
     }
