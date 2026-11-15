@@ -1839,9 +1839,9 @@ final class OpenSearchExtension extends Extension implements ProvidesEngineProfi
 
 ### Preparing row checks (`PreparesRowChecks`)
 
-App: `'acl' => \Vendor\Acl\AccessControlExtension::class` in `rest.extensions`.
+App: `\Vendor\Acl\AccessControlExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(AccessControlExtension::class)`:
 
 ```php
 use Lomkit\Rest\Authorization\PendingChecks;
@@ -1853,6 +1853,12 @@ final class AccessControlExtension extends Extension implements PreparesRowCheck
     public function __construct(private readonly GrantTable $grants) {}
 
     #[\Override]
+    public static function name(): string
+    {
+        return 'acl';
+    }
+
+    #[\Override]
     public function prepareRowChecks(PendingChecks $checks): void
     {
         $this->grants->load($checks->user, $checks->resource::class, $checks->ability, $checks->rows->modelKeys());
@@ -1861,15 +1867,15 @@ final class AccessControlExtension extends Extension implements PreparesRowCheck
 ```
 
 - Guarantees: a request kind. It receives the `PendingChecks` that `prepareAuthorization()` of the resource receives, the same object, after the hook, in name order. `$checks->ability` is the exact string the Gate checks (never the rendered gate key), `$checks->user` the user the policies run for (`null` for a guest, the user of `Rest::search()->as($user)`), and `$checks->rows` only stored, unchanged rows checked alone that no decision of the request or of `authorizationCache()` covers: the same model instances that carry the columns of `AugmentsQueries` and that the policy receives. Rows of one resource class at several levels of a page share a call. It decides nothing and changes none of the rows it receives: the policy runs on every row. Without the hook and without such an extension, a resource does no preparation work.
-- Forbids: changing the rows: `InvalidAuthorizationExtensionException` names the extension. A change is an attribute of a row; a relation loaded before the preparation, at any depth, that is replaced or dropped or whose models are added, removed, replaced or reordered; the settings that decide where and how a row is written (`exists`, table, connection, key name, casts, timestamps); or the list of rows. An attribute is compared strictly with the value the row stores, so `'1'` in place of `1` is a change. Reading an attribute through a cast is not a change, even when the cast stores its object as other text or encrypts it again: for an attribute that a cast has read, the check compares the values the cast reads (decrypted), so `APP_PREVIOUS_KEYS` changes nothing; changing the object that a cast returned is, when Eloquent would store another value. Loading a relation that was not loaded is allowed, on a row or on a related model, also when the hook or another extension loaded it first; it does not render. The check does not read the attributes of related models: leave them as they are. Store what the policies read in a service of the extension, keyed by user and row key: the kind runs zero or more times per request, so it must be idempotent. An exception thrown by it stops the request before any policy of that batch runs.
+- Forbids: changing the rows: `InvalidAuthorizationExtensionException` names the extension by its name and its class (`concerns(AccessControlExtension::class)` is `true`). A change is an attribute of a row; a relation loaded before the preparation, at any depth, that is replaced or dropped or whose models are added, removed, replaced or reordered; the settings that decide where and how a row is written (`exists`, table, connection, key name, casts, timestamps); or the list of rows. An attribute is compared strictly with the value the row stores, so `'1'` in place of `1` is a change. Reading an attribute through a cast is not a change, even when the cast stores its object as other text or encrypts it again: for an attribute that a cast has read, the check compares the values the cast reads (decrypted), so `APP_PREVIOUS_KEYS` changes nothing; changing the object that a cast returned is, when Eloquent would store another value. Loading a relation that was not loaded is allowed, on a row or on a related model, also when the hook or another extension loaded it first; it does not render. The check does not read the attributes of related models: leave them as they are. Store what the policies read in a service of the extension, keyed by user and row key: the kind runs zero or more times per request, so it must be idempotent. An exception thrown by it stops the request before any policy of that batch runs.
 - The check catches mistakes and is not a sandbox: an extension runs in the process with full access, and the check does not read the attributes of related models.
 - The hook itself is not checked: each extension is compared with the rows as the hook and the extensions before it left them (the reference state is taken after the hook), and a relation counts as loaded before the preparation when it was loaded before the hook.
 
 ### Adding to the cache context (`ContributesCacheContext`)
 
-App: `'tenant' => \Vendor\Tenancy\TenantExtension::class` in `rest.extensions`.
+App: `\Vendor\Tenancy\TenantExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(TenantExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
@@ -1881,6 +1887,12 @@ final class TenantExtension extends Extension implements ContributesCacheContext
     public function __construct(private readonly Tenants $tenants, private readonly RuleVersions $rules) {}
 
     #[\Override]
+    public static function name(): string
+    {
+        return 'tenant';
+    }
+
+    #[\Override]
     public function contributeCacheContext(CacheContributionContext $context): void
     {
         $context->put('id', $this->tenants->current()?->id);
@@ -1890,14 +1902,14 @@ final class TenantExtension extends Extension implements ContributesCacheContext
 }
 ```
 
-- Guarantees: a request kind (`$context->resource`, `$context->user`), called at most once per resource and acting user per request (read again when the guard or the user changes, as the authorizer), only when the resource keeps a decision or a metric key reads its context. Each item goes under `{name}.{key}` (`tenant.rules`) next to `authorizationCacheContext()`, in the key of every kept decision of the resource and of every metric result that reads it, on the resource and on each resource its `search` reaches, `'global'` scope included: another tenant or rules version never reads a kept decision or result. `shorten()` keeps the smallest duration of the resource and the extensions, and `forget()` keeps no decision of the ability, in any order. Without items, the keys do not change.
-- Forbids: adding an ability (an ability that `authorizationCache()` does not list is ignored) and lengthening a duration (a larger value is ignored). It does not change `cacheFor()` of metrics. A key that is not 1 to 64 letters, digits or underscores starting with a letter, a float that is not finite, a duration below 1 second, and a key that `authorizationCacheContext()` returns under the same name throw `InvalidAuthorizationExtensionException`, naming the extension and the resource.
+- Guarantees: a request kind (`$context->resource`, `$context->user`), called at most once per resource and acting user per request (read again when the guard or the user changes, as the authorizer), only when the resource keeps a decision or a metric key reads its context. Each item goes under `{name}.{key}`, where `{name}` is what `name()` returns (`tenant.rules`), next to `authorizationCacheContext()`, in the key of every kept decision of the resource and of every metric result that reads it, on the resource and on each resource its `search` reaches, `'global'` scope included: another tenant or rules version never reads a kept decision or result. `shorten()` keeps the smallest duration of the resource and the extensions, and `forget()` keeps no decision of the ability, in any order. Without items, the keys do not change.
+- Forbids: adding an ability (an ability that `authorizationCache()` does not list is ignored) and lengthening a duration (a larger value is ignored). It does not change `cacheFor()` of metrics. A key that is not 1 to 64 letters, digits or underscores starting with a letter, a float that is not finite, a duration below 1 second, and a key that `authorizationCacheContext()` returns under the same name throw `InvalidAuthorizationExtensionException`, naming the extension by its name and its class, and the resource.
 
 ### Declaring gates (`DeclaresGates`)
 
-App: `'share' => \Vendor\Sharing\SharingExtension::class` in `rest.extensions`.
+App: `\Vendor\Sharing\SharingExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(SharingExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\GatesContext;
@@ -1907,6 +1919,12 @@ use Lomkit\Rest\Extensions\Kinds\DeclaresGates;
 final class SharingExtension extends Extension implements DeclaresGates
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'share';
+    }
+
+    #[\Override]
     public function gates(GatesContext $context): array
     {
         return ['share'];
@@ -1915,7 +1933,7 @@ final class SharingExtension extends Extension implements DeclaresGates
 ```
 
 - Guarantees: a static kind. It receives the resource class only, no user. Its gates come after those of the resource, in name order, each listed once even when the resource or another extension declares it too. They show in `/details` (`with=gates`), are accepted in `search.gates` at every level of the resource and answered from the policy method (`share($user, $model)`, `authorized_to_share`, renamed in `rest.gates.names`), and the OpenAPI document lists them. A resource that turns its gates off lists none.
-- Forbids: what `gates()` of a resource refuses (a name that is not camelCase, `viewAny`, a built-in ability) and a name listed twice by one extension. `InvalidAuthorizationExtensionException` names the extension, its class and the resource when the gates are first read.
+- Forbids: what `gates()` of a resource refuses (a name that is not camelCase, `viewAny`, a built-in ability) and a name listed twice by one extension. `InvalidAuthorizationExtensionException` names the extension by its name and its class, and the resource, when the gates are first read.
 
 ## Artisan commands shipped by the package
 
