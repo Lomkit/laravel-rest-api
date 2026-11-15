@@ -18,7 +18,7 @@ use Lomkit\Rest\Http\Resource;
 #[Singleton]
 final class RouteExtensions
 {
-    /** @var array{mixed, array<string, string>}|null */
+    /** @var array{mixed, array<string, non-empty-list<string>>}|null */
     private ?array $source = null;
 
     /** @var array<string, string> */
@@ -64,7 +64,7 @@ final class RouteExtensions
     }
 
     /**
-     * @param  array<string, string>  $registered
+     * @param  array<string, non-empty-list<string>>  $registered
      * @return array<string, string>
      */
     private static function candidates(mixed $configured, array $registered, Container $container): array
@@ -79,6 +79,12 @@ final class RouteExtensions
         $candidates = [];
 
         foreach (ExtensionList::merge($configured, $registered)->entries as $entry) {
+            $shared = $entry->conflicts() ? $registered[$entry->name] ?? [] : [];
+
+            if ($shared !== [] && array_any($shared, self::addsRouteMiddleware(...))) {
+                throw InvalidExtensionException::sharedName($entry->name, $shared);
+            }
+
             if (! $entry->disabled && $entry->class !== null && (self::addsRouteMiddleware($entry->class) || $container->bound($entry->class))) {
                 $candidates[$entry->name] = $entry->class;
             }
