@@ -7,11 +7,15 @@ use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource;
+use Lomkit\Rest\Tests\Fixtures\Atlas\JournalController;
+use Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripResource;
+use Lomkit\Rest\Tests\Fixtures\Extensions\AtlasRowsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ColumnCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
+use Lomkit\Rest\Tests\Fixtures\Extensions\OtherAtlasRowsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PassingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingCheckExtension;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
@@ -28,6 +32,10 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     use RunsTheQuickStart;
 
     private const string COLUMN_PROBLEM = 'The [columns] extension '.ColumnCheckExtension::class.' reports '.TripResource::class.': the trips table has no tenant_id column.';
+
+    private const string RESTRICTED_JOURNAL_PROBLEM = 'Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource does not override perimeterQuery(): only the extensions [atlas] restrict its rows. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when the rows that these extensions leave are meant for every user who passes viewAny.';
+
+    private const string JOURNAL_PROBLEM = 'Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource does not override perimeterQuery(): every row is visible to users who pass viewAny. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when every row is meant for these users.';
 
     #[Before]
     #[After]
@@ -164,6 +172,80 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $this->assertSame(['checked' => [], 'problems' => []], $report['extension_checks']);
         $this->assertCount(1, $report['extensions']['problems'] ?? []);
         $this->assertSame([], ExtensionLog::$checked);
+    }
+
+    /** @return array<string, array{array<string, class-string>}> */
+    public static function restrictions(): array
+    {
+        return [
+            'atlas first' => [['atlas' => AtlasRowsExtension::class, 'other' => OtherAtlasRowsExtension::class]],
+            'other first' => [['other' => OtherAtlasRowsExtension::class, 'atlas' => AtlasRowsExtension::class]],
+        ];
+    }
+
+    /** @param array<string, class-string> $extensions */
+    #[Test]
+    #[DataProvider('restrictions')]
+    public function it_names_the_extensions_that_restrict_the_rows_of_a_resource(array $extensions): void
+    {
+        config(['rest.extensions' => $extensions]);
+        $this->expose('trips', TripController::class);
+
+        $output = $this->check(0, TripController::class);
+        $report = $this->report(0, TripController::class);
+
+        $this->assertStringContainsString(
+            "  rows ... 1 resource with a perimeter, 1 marked #[WithoutPerimeter], 1 restricted by extensions\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource ... restricted by atlas, other\n"
+            .'  actions ',
+            $output,
+        );
+        $this->assertSame([
+            'perimeter' => [TripResource::class],
+            'without_perimeter' => [CountryResource::class],
+            'problems' => [],
+            'restricted' => [['resource' => TripResource::class, 'extensions' => ['atlas', 'other']]],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['atlas' => AtlasRowsExtension::class])]
+    public function it_keeps_the_problem_of_a_restricted_resource_without_a_perimeter(): void
+    {
+        $this->expose('journals', JournalController::class);
+
+        $output = $this->check(1, JournalController::class);
+        $report = $this->report(1, JournalController::class);
+
+        $this->assertStringContainsString(
+            "  rows ... FAILED\n"
+            .'  ⇂ '.rtrim(self::RESTRICTED_JOURNAL_PROBLEM, '.')."\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource ... restricted by atlas\n",
+            $output,
+        );
+        $this->assertSame([
+            'perimeter' => [],
+            'without_perimeter' => [],
+            'problems' => [self::RESTRICTED_JOURNAL_PROBLEM],
+            'restricted' => [['resource' => JournalResource::class, 'extensions' => ['atlas']]],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['other' => OtherAtlasRowsExtension::class])]
+    public function it_keeps_the_problem_of_a_resource_that_no_extension_restricts(): void
+    {
+        $this->expose('journals', JournalController::class);
+
+        $report = $this->report(1, JournalController::class);
+
+        $this->assertSame([
+            'perimeter' => [],
+            'without_perimeter' => [],
+            'problems' => [self::JOURNAL_PROBLEM],
+            'restricted' => [],
+        ], $report['rows']);
     }
 
     private function expose(string $name, string $controller): void

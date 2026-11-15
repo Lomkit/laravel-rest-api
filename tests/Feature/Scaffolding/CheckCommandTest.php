@@ -123,6 +123,7 @@ class CheckCommandTest extends ScaffoldingTestCase
                     'perimeter' => [],
                     'without_perimeter' => [BookResource::class, LabelResource::class, LoanResource::class, ShelfResource::class],
                     'problems' => [],
+                    'restricted' => [],
                 ],
                 'actions' => ['checked' => [], 'problems' => []],
                 'relations' => [

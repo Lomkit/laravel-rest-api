@@ -106,6 +106,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                     'perimeter' => ['Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'Lomkit\Rest\Tests\Fixtures\Atlas\BookingResource'],
                     'without_perimeter' => ['Lomkit\Rest\Tests\Fixtures\Atlas\ContinentResource', 'Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource'],
                     'problems' => [self::JOURNAL_PROBLEM],
+                    'restricted' => [],
                 ],
                 'actions' => [
                     'checked' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'action' => 'Lomkit\Rest\Tests\Fixtures\Atlas\CancelTripsAction', 'ability' => 'update']],
@@ -161,6 +162,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                     'perimeter' => ['Lomkit\Rest\Tests\Fixtures\Atlas\TripResource'],
                     'without_perimeter' => ['Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource'],
                     'problems' => [],
+                    'restricted' => [],
                 ],
                 'actions' => [
                     'checked' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'action' => 'Lomkit\Rest\Tests\Fixtures\Atlas\CancelTripsAction', 'ability' => 'update']],

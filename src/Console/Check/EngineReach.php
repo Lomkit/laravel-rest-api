@@ -23,7 +23,7 @@ final class EngineReach
 
     public function problem(Resource $resource): ?string
     {
-        if (! ($this->built ??= BuiltExtensions::in($this->context))) {
+        if (! $this->extensionsBuilt()) {
             return null;
         }
 
@@ -54,5 +54,10 @@ final class EngineReach
             $text instanceof EngineTextSearch => $text->query(new TextQuery('rest-check'), TextTarget::of($resource))->profile(),
             default => null,
         };
+    }
+
+    public function extensionsBuilt(): bool
+    {
+        return $this->built ??= BuiltExtensions::in($this->context);
     }
 }

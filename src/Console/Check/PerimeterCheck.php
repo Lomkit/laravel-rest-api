@@ -7,6 +7,7 @@ use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Attributes\WithoutPerimeter;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Query\ExtensionRestrictions;
 use ReflectionClass;
 use ReflectionMethod;
 
@@ -20,7 +21,8 @@ final readonly class PerimeterCheck
         $engines = new EngineReach($context);
 
         foreach ((new ReachedResources($context))->from($resources) as $resource) {
-            $report = self::checkRows($resource, $report);
+            $restrictions = $engines->extensionsBuilt() ? (ExtensionRestrictions::of($context->resource($resource))?->names() ?? []) : [];
+            $report = self::checkRows($resource, $restrictions, $report);
             $problem = $engines->problem($context->resource($resource));
             $report = $problem === null ? $report : $report->withRowProblem($problem);
         }
@@ -34,9 +36,14 @@ final readonly class PerimeterCheck
         return $report;
     }
 
-    /** @param class-string<Resource> $resource */
-    private static function checkRows(string $resource, PerimeterReport $report): PerimeterReport
+    /**
+     * @param  class-string<Resource>  $resource
+     * @param  list<string>  $restrictions
+     */
+    private static function checkRows(string $resource, array $restrictions, PerimeterReport $report): PerimeterReport
     {
+        $report = $restrictions === [] ? $report : $report->withRestriction($resource, $restrictions);
+
         if ((new ReflectionMethod($resource, 'perimeterQuery'))->getDeclaringClass()->getName() !== Resource::class) {
             return $report->withPerimeter($resource);
         }
@@ -45,7 +52,20 @@ final readonly class PerimeterCheck
             return $report->withoutPerimeter($resource);
         }
 
-        return $report->withRowProblem("{$resource} does not override perimeterQuery(): every row is visible to users who pass viewAny. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when every row is meant for these users.");
+        return $report->withRowProblem($restrictions === [] ? self::unrestricted($resource) : self::restricted($resource, $restrictions));
+    }
+
+    private static function unrestricted(string $resource): string
+    {
+        return "{$resource} does not override perimeterQuery(): every row is visible to users who pass viewAny. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when every row is meant for these users.";
+    }
+
+    /** @param list<string> $restrictions */
+    private static function restricted(string $resource, array $restrictions): string
+    {
+        $names = implode(', ', $restrictions);
+
+        return "{$resource} does not override perimeterQuery(): only the extensions [{$names}] restrict its rows. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when the rows that these extensions leave are meant for every user who passes viewAny.";
     }
 
     /** @param class-string<Resource> $resource */
