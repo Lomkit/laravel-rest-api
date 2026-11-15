@@ -70,7 +70,6 @@ final readonly class MetaSchema
     private static function records(Resource $resource): array
     {
         $extensions = $resource->context()->extensions()->applicable($resource::class, DocumentsExtension::class);
-        ksort($extensions);
         $records = [];
 
         foreach ($extensions as $name => $extension) {

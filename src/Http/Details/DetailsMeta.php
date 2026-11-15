@@ -18,7 +18,6 @@ final readonly class DetailsMeta
     public static function extensions(Resource $resource): array
     {
         $extensions = $resource->context()->extensions()->applicable($resource::class, AddsDetailsMeta::class);
-        ksort($extensions);
 
         return $extensions;
     }

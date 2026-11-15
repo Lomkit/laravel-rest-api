@@ -28,7 +28,6 @@ final readonly class ExtensionSearchMeta
             return [];
         }
 
-        ksort($extensions);
         $gatesKey = $resource->context()->config()->gatesKey;
 
         foreach ($extensions as $name => $extension) {

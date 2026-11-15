@@ -36,7 +36,6 @@ final class ExtensionResponses
             return;
         }
 
-        ksort($extensions);
         $responses = new self($operation, $context->components, $context->route->uri(), self::owners($operation));
         $declaration = $context->declaration();
         $authenticates = $context->authenticates();
