@@ -14,7 +14,6 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LateRedEverywhereExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\NoSqlDatabaseProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedEverywhereExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SkippingForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SqlForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignEngine;
@@ -36,6 +35,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
 
         RestrictionLog::reset();
         ForeignProfile::reset();
+        SqlForeignEngineProfiles::$skipsRows = false;
     }
 
     #[\Override]
@@ -43,6 +43,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     {
         RestrictionLog::reset();
         ForeignProfile::reset();
+        SqlForeignEngineProfiles::$skipsRows = false;
 
         parent::tearDown();
     }
@@ -188,7 +189,8 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_refuses_a_profile_that_claims_sql_restrictions_without_applying_them(): void
     {
         $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => [GuestlessExtension::class, SkippingForeignEngineProfiles::class]]);
+        SqlForeignEngineProfiles::$skipsRows = true;
+        config(['rest.extensions' => [GuestlessExtension::class, SqlForeignEngineProfiles::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidEngineQueryException::unappliedRowRestriction(VoucherResource::class, RestrictingForeignProfile::class, ForeignEngine::class));
