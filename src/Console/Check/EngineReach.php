@@ -55,11 +55,20 @@ final class EngineReach
     /** @return list<string> */
     public function restrictions(Resource $resource): array
     {
-        if (! $this->extensionsBuilt() || $this->undecided($resource) !== null) {
+        if (! $this->extensionsBuilt()) {
             return [];
         }
 
-        return ExtensionRestrictions::of($resource)?->names() ?? [];
+        $registry = $this->context->extensions();
+        $names = [];
+
+        foreach ($registry->ofKind(RestrictsQueries::class) as $name => $extension) {
+            if (UndecidedExtension::problem($registry, $name, $extension, $resource::class) === null && $registry->appliesTo($name, $resource::class)) {
+                $names[] = $name;
+            }
+        }
+
+        return $names;
     }
 
     private function undecided(Resource $resource): ?string

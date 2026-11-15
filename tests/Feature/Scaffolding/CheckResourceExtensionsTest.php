@@ -373,6 +373,26 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $this->assertSame(['checked' => [], 'problems' => []], $report['extension_checks']);
     }
 
+    #[Test]
+    #[WithConfig('rest.extensions', ['atlas' => AtlasRowsExtension::class, 'undecided' => UndecidedRowsExtension::class])]
+    public function it_names_the_decided_restrictions_beside_an_extension_whose_applies_to_throws(): void
+    {
+        $this->expose('trips', TripController::class);
+        $problem = 'The [undecided] extension '.UndecidedRowsExtension::class.' throws while it tells whether it applies to '.TripResource::class.': The tenant table is missing.';
+
+        $report = $this->report(1, TripController::class);
+
+        $this->assertSame([
+            'perimeter' => [TripResource::class],
+            'without_perimeter' => [CountryResource::class],
+            'problems' => [$problem],
+            'restricted' => [
+                ['resource' => TripResource::class, 'extensions' => ['atlas']],
+                ['resource' => CountryResource::class, 'extensions' => ['undecided']],
+            ],
+        ], $report['rows']);
+    }
+
     private function expose(string $name, string $controller): void
     {
         Route::prefix('api')->group(function () use ($name, $controller): void {
