@@ -4,11 +4,13 @@ namespace Lomkit\Rest\Tests\Feature\MorphTargets;
 
 use LogicException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
+use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Relations\MorphTo;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\MorphTargets\Stubs\DeclaredLabelController;
 use Lomkit\Rest\Tests\Feature\MorphTargets\Stubs\DeclaredLabelResource;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\BookLabelResource;
@@ -35,6 +37,7 @@ class MorphToDeclarationTest extends MorphTargetsTestCase
     protected function tearDown(): void
     {
         DeclaredLabelResource::$declare = null;
+        MaskingFields::reset();
 
         parent::tearDown();
     }
@@ -71,6 +74,19 @@ class MorphToDeclarationTest extends MorphTargetsTestCase
         $this->withoutExceptionHandling();
 
         $listed->assertOk();
+        $this->expectExceptionObject(InvalidResourceException::morphTypeKeyField(ShelfResource::class, 'name', LabelResource::class, 'labelable'));
+
+        $this->postJson('/api/labels/search', ['search' => ['includes' => [['relation' => 'labelable']]]]);
+    }
+
+    #[Test]
+    public function it_refuses_a_target_that_hides_a_field_named_like_the_type_key(): void
+    {
+        config(['rest.morph.type_key' => 'name', 'rest.extensions' => ['mask' => MaskingFields::class]]);
+        MaskingFields::reset();
+        MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->resource instanceof ShelfResource ? $context->hide('name') : null;
+        $this->withoutExceptionHandling();
+
         $this->expectExceptionObject(InvalidResourceException::morphTypeKeyField(ShelfResource::class, 'name', LabelResource::class, 'labelable'));
 
         $this->postJson('/api/labels/search', ['search' => ['includes' => [['relation' => 'labelable']]]]);
