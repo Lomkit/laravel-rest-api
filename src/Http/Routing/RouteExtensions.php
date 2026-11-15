@@ -5,11 +5,14 @@ namespace Lomkit\Rest\Http\Routing;
 use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
+use Lomkit\Rest\Config\RestConfig;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\ExtensionEntry;
 use Lomkit\Rest\Extensions\ExtensionFactory;
 use Lomkit\Rest\Extensions\ExtensionList;
 use Lomkit\Rest\Extensions\Kinds\AddsRouteMiddleware;
+use Lomkit\Rest\Extensions\NamedExtensions;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Resource;
@@ -18,7 +21,7 @@ use Lomkit\Rest\Http\Resource;
 #[Singleton]
 final class RouteExtensions
 {
-    /** @var array{mixed, array<string, non-empty-list<string>>}|null */
+    /** @var array{mixed, mixed, list<string>}|null */
     private ?array $source = null;
 
     /** @var array<string, string> */
@@ -51,11 +54,11 @@ final class RouteExtensions
     /** @return array<string, string> */
     private function classes(): array
     {
-        $source = [$this->config->get('rest.extensions'), $this->runtime->all()];
+        $source = [$this->config->get(RestConfig::EXTENSIONS), $this->config->get(RestConfig::DISABLED_EXTENSIONS), $this->runtime->all()];
 
         if ($source !== $this->source) {
             $this->source = $source;
-            $this->candidates = self::candidates($source[0], $source[1], $this->container);
+            $this->candidates = $this->candidates(self::listed($source[0]), self::listed($source[1]), $source[2]);
             $this->built = null;
             $this->applicable = [];
         }
@@ -64,35 +67,64 @@ final class RouteExtensions
     }
 
     /**
-     * @param  array<string, non-empty-list<string>>  $registered
+     * @param  list<mixed>  $configured
+     * @param  list<mixed>  $disabled
+     * @param  list<string>  $registered
      * @return array<string, string>
      */
-    private static function candidates(mixed $configured, array $registered, Container $container): array
+    private function candidates(array $configured, array $disabled, array $registered): array
     {
-        $configured = is_array($configured) ? $configured : [];
-        $refused = ExtensionList::merge(array_filter($configured, self::addsRouteMiddleware(...)), [])->refused;
-
-        if ($refused !== []) {
-            throw $refused[0];
+        if ($configured === [] && $registered === []) {
+            return [];
         }
 
+        $own = array_filter(
+            ExtensionList::of($configured, $disabled, $registered)->entries,
+            fn (ExtensionEntry $entry): bool => ! $entry->disabled && (self::addsRouteMiddleware($entry->class) || $this->container->bound($entry->class)),
+        );
+
+        $named = NamedExtensions::of(array_values($own));
         $candidates = [];
 
-        foreach (ExtensionList::merge($configured, $registered)->entries as $entry) {
-            $shared = $entry->conflicts() ? $registered[$entry->name] ?? [] : [];
+        foreach ($named->refused as $exception) {
+            if (array_any($own, static fn (ExtensionEntry $entry): bool => self::addsRouteMiddleware($entry->class) && $exception->concerns($entry->class))) {
+                throw $exception;
+            }
+        }
 
-            if ($shared !== [] && array_any($shared, self::addsRouteMiddleware(...))) {
-                throw InvalidExtensionException::sharedName($entry->name, $shared);
+        foreach ($named->entries as $entry) {
+            if ($entry->name === null) {
+                continue;
             }
 
-            if (! $entry->disabled && $entry->class !== null && (self::addsRouteMiddleware($entry->class) || $container->bound($entry->class))) {
-                $candidates[$entry->name] = $entry->class;
+            if (in_array($entry->name, $named->shared, true)) {
+                self::ensureNotShared($entry->name, $named->entries);
+
+                continue;
             }
+
+            $candidates[$entry->name] = $entry->class;
         }
 
         ksort($candidates);
 
         return $candidates;
+    }
+
+    /** @param list<ExtensionEntry> $entries */
+    private static function ensureNotShared(string $name, array $entries): void
+    {
+        $sharing = array_values(array_map(static fn (ExtensionEntry $entry): string => $entry->class, array_filter($entries, static fn (ExtensionEntry $entry): bool => $entry->name === $name)));
+
+        if ($sharing !== [] && array_any($sharing, self::addsRouteMiddleware(...))) {
+            throw InvalidExtensionException::sharedName($name, $sharing);
+        }
+    }
+
+    /** @return list<mixed> */
+    private static function listed(mixed $value): array
+    {
+        return is_array($value) ? array_values($value) : [];
     }
 
     /** @return array<string, Extension&AddsRouteMiddleware> */
@@ -106,7 +138,7 @@ final class RouteExtensions
         $built = [];
 
         foreach ($this->candidates as $name => $class) {
-            $extension = self::addsRouteMiddleware($class) ? $factory->make($name, $class) : self::boundOnly($factory, $name, $class);
+            $extension = self::addsRouteMiddleware($class) ? $factory->make($class, $name) : self::boundOnly($factory, $name, $class);
 
             if ($extension instanceof AddsRouteMiddleware) {
                 $built[$name] = $extension;
@@ -119,15 +151,15 @@ final class RouteExtensions
     private static function boundOnly(ExtensionFactory $factory, string $name, string $class): ?Extension
     {
         try {
-            return $factory->make($name, $class);
+            return $factory->make($class, $name);
         } catch (InvalidExtensionException) {
             return null;
         }
     }
 
-    private static function addsRouteMiddleware(mixed $class): bool
+    private static function addsRouteMiddleware(string $class): bool
     {
-        return is_string($class) && is_subclass_of($class, AddsRouteMiddleware::class);
+        return is_subclass_of($class, AddsRouteMiddleware::class);
     }
 
     /**

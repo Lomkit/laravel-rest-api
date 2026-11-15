@@ -4,10 +4,15 @@ namespace Lomkit\Rest\Tests\Feature\Extensions;
 
 use Illuminate\Support\Arr;
 use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\ExtensionFactory;
+use Lomkit\Rest\Extensions\ExtensionList;
+use Lomkit\Rest\Extensions\NamedExtensions;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
+use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CountedFieldsProductResource;
+use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
@@ -17,6 +22,8 @@ use Lomkit\Rest\Tests\PackageTestCase;
 use Lomkit\Rest\Text\TextBackend;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 
 final class NoExtensionTest extends PackageTestCase
@@ -96,5 +103,20 @@ final class NoExtensionTest extends PackageTestCase
         $this->assertSame(TextBackend::None, $text->backend);
         $this->assertSame(0, CountedFieldsProductResource::$reads);
         $this->assertSame([], ExtensionLog::$built);
+    }
+
+    #[Test]
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function it_registers_routes_without_loading_the_extension_list(): void
+    {
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+
+        $this->assertNotNull($this->app['router']->getRoutes()->getByName('routed-tickets.search'));
+        $this->assertSame([false, false, false], [
+            class_exists(ExtensionList::class, false),
+            class_exists(NamedExtensions::class, false),
+            class_exists(ExtensionFactory::class, false),
+        ]);
     }
 }

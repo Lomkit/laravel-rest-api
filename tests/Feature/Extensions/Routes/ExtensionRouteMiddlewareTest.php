@@ -17,6 +17,8 @@ use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Tests\Concerns\CompilesRoutes;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AbstractStampRoutes;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\BadlyNamedStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutesNamedB;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PlainLimits;
@@ -24,17 +26,21 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampingLimits;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutesNamedA;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampsRequests;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ThrowingNameStampRoutes;
 use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketController;
 use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketResource;
+use Lomkit\Rest\Tests\Fixtures\Extensions\AbstractNotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BadlyNamedExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\KindlessExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingNameExtension;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use ReflectionProperty;
+use RuntimeException;
 use stdClass;
 
 class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
@@ -367,10 +373,14 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
             'an instance' => [static fn (): array => [new stdClass]],
             'an invalid name' => [static fn (): array => [BadlyNamedExtension::class]],
             'a class without a kind' => [static fn (): array => [KindlessExtension::class]],
+            'a class whose name throws' => [static fn (): array => [ThrowingNameExtension::class]],
+            'an abstract class' => [static fn (): array => [AbstractNotingExtension::class]],
+            'a bound class with an invalid name' => [$bound(BadlyNamedExtension::class)],
+            'a bound class whose name throws' => [$bound(ThrowingNameExtension::class)],
         ];
     }
 
-    /** @param array<array-key, mixed> $entries */
+    /** @param list<mixed> $entries */
     #[Test]
     #[DataProvider('refusedRouteEntries')]
     public function it_refuses_at_registration_a_route_extension_that_the_config_refuses(array $entries, InvalidExtensionException $refusal): void
@@ -382,12 +392,14 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
     }
 
-    /** @return array<string, array{array<array-key, mixed>, InvalidExtensionException}> */
+    /** @return array<string, array{list<mixed>, InvalidExtensionException}> */
     public static function refusedRouteEntries(): array
     {
         return [
-            'an invalid name' => [['Bad-Name' => OtherStampRoutes::class], InvalidExtensionException::invalidName('Bad-Name')],
-            'an unnamed entry' => [[0 => OtherStampRoutes::class], InvalidExtensionException::missingName(OtherStampRoutes::class)],
+            'an invalid name' => [[BadlyNamedStampRoutes::class], InvalidExtensionException::invalidName(BadlyNamedStampRoutes::class, 'Bad-Name')],
+            'a name that throws' => [[ThrowingNameStampRoutes::class], InvalidExtensionException::unreadableName(ThrowingNameStampRoutes::class, new RuntimeException(ThrowingNameStampRoutes::MESSAGE))],
+            'an abstract class' => [[AbstractStampRoutes::class], InvalidExtensionException::notInstantiable(AbstractStampRoutes::class)],
+            'the name of another route class' => [[OtherStampRoutes::class], InvalidExtensionException::sharedName('stamp', [StampRoutes::class, OtherStampRoutes::class])],
         ];
     }
 

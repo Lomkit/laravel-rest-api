@@ -26,6 +26,9 @@ class StampRoutes extends Extension implements AddsRouteMiddleware
 
     public static int $built = 0;
 
+    /** @var list<class-string> */
+    public static array $ran = [];
+
     public function __construct()
     {
         self::$built++;
@@ -41,6 +44,7 @@ class StampRoutes extends Extension implements AddsRouteMiddleware
     public function routeMiddleware(RouteMiddlewareContext $context): array
     {
         self::$contexts[] = $context;
+        self::$ran[] = static::class;
 
         return self::$middleware === null ? [StampsRequests::class.':a'] : (self::$middleware)($context);
     }
@@ -51,5 +55,6 @@ class StampRoutes extends Extension implements AddsRouteMiddleware
         self::$resources = null;
         self::$contexts = [];
         self::$built = 0;
+        self::$ran = [];
     }
 }
