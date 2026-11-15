@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions\Writes;
 
 use Closure;
+use Illuminate\Database\DatabaseTransactionsManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -338,6 +339,52 @@ final class ObservedWritesTest extends PackageTestCase
         DB::rollBack();
 
         $this->assertSame([], WriteLog::$writes);
+        $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
+    }
+
+    #[Test]
+    public function it_notifies_after_the_write_commit_when_the_container_holds_another_transactions_manager(): void
+    {
+        $this->seedDocuments(null, null);
+        $this->app->instance('db.transactions', new DatabaseTransactionsManager);
+        EventLog::listen();
+
+        $this->postJson('/written-documents/actions/atomic-archive-documents', ['search' => []])->assertOk()->assertExactJson(self::IMPACTED);
+
+        $this->assertSame([
+            'begin level 2',
+            'operating atomic-archive-documents',
+            'handle 1', 'sql update documents', 'handle 2', 'sql update documents',
+            'operated atomic-archive-documents 2',
+            'commit level 1', 'observe operate * (2)',
+        ], $this->writeLines());
+    }
+
+    #[Test]
+    public function it_waits_for_the_application_commit_when_the_container_holds_another_transactions_manager(): void
+    {
+        $this->seedDocuments(null, null);
+        $this->app->instance('db.transactions', new DatabaseTransactionsManager);
+        DB::beginTransaction();
+
+        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::operations($this->minutes()));
+
+        $this->assertCount(0, WriteLog::$writes);
+        DB::commit();
+        $this->assertCount(1, WriteLog::$writes);
+    }
+
+    #[Test]
+    public function it_drops_the_notification_on_a_rollback_when_the_container_holds_another_transactions_manager(): void
+    {
+        $this->seedDocuments(null, null);
+        $this->app->instance('db.transactions', new DatabaseTransactionsManager);
+        DB::beginTransaction();
+
+        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::operations($this->minutes()));
+        DB::rollBack();
+
+        $this->assertCount(0, WriteLog::$writes);
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
     }
 

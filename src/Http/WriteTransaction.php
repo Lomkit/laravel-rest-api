@@ -72,13 +72,19 @@ final readonly class WriteTransaction
         $pending = $transactions->callbackApplicableTransactions()
             ->last(fn (DatabaseTransactionRecord $record): bool => $record->connection === $this->connection->getName());
 
-        if ($pending === null) {
-            $callback();
+        if ($pending !== null) {
+            $pending->addCallback($callback);
 
             return;
         }
 
-        $pending->addCallback($callback);
+        if ($this->connection->transactionLevel() > 0) {
+            $this->connection->afterCommit($callback);
+
+            return;
+        }
+
+        $callback();
     }
 
     private function restore(): void
