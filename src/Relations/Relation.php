@@ -13,6 +13,7 @@ use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Relations\Traits\Constrained;
+use Lomkit\Rest\Relations\Traits\DeclaresLinkAbilities;
 use Lomkit\Rest\Relations\Traits\SelectsOperations;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
 use Lomkit\Rest\Validation\Mutate\RelatedEntryRule;
@@ -21,6 +22,7 @@ use Lomkit\Rest\Validation\Mutate\RelatedEntryRule;
 class Relation
 {
     use Constrained;
+    use DeclaresLinkAbilities;
     use SelectsOperations;
 
     public string $relation;
@@ -31,10 +33,6 @@ class Relation
     public string $name;
 
     protected Resource $fromResource;
-
-    private ?string $attachAbility = null;
-
-    private ?string $detachAbility = null;
 
     /** @param class-string<Resource> $type */
     public function __construct(string $relation, string $type)
@@ -102,19 +100,6 @@ class Relation
     public function parentResource(): Resource
     {
         return $this->fromResource;
-    }
-
-    public function abilities(?string $attach = null, ?string $detach = null): static
-    {
-        $this->attachAbility = $attach;
-        $this->detachAbility = $detach;
-
-        return $this;
-    }
-
-    public function linkAbility(bool $detach): ?string
-    {
-        return $detach ? $this->detachAbility : $this->attachAbility;
     }
 
     /** @return list<MutationOperation> */
