@@ -320,6 +320,17 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     }
 
     #[Test]
+    public function it_builds_every_extension_at_each_registration_beside_a_route_extension(): void
+    {
+        config(['rest.extensions' => ['stamp' => StampRoutes::class, 'counting' => CountingExtension::class]]);
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+        Rest::resource('routed-tickets-again', RoutedTicketController::class)->only('search')->register();
+
+        $this->assertSame([CountingExtension::class, CountingExtension::class], ExtensionLog::$built);
+    }
+
+    #[Test]
     public function it_adds_the_middleware_of_a_subclass_bound_in_the_container(): void
     {
         config(['rest.extensions' => ['plain' => PlainLimits::class]]);
