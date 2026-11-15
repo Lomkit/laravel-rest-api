@@ -2,10 +2,7 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
-use Illuminate\Database\Eloquent\Model;
-use Laravel\Scout\Builder;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
-use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\Trashed;
@@ -90,25 +87,7 @@ final class EngineQuery
     /** @param array<mixed> $options */
     public function options(array $options): static
     {
-        $merged = $this->options;
-
-        foreach ($options as $key => $value) {
-            if (! is_string($key)) {
-                throw InvalidEngineQueryException::invalidOption($key);
-            }
-
-            if (in_array($key, $this->index->profile->ownedOptions(), true)) {
-                throw InvalidEngineQueryException::ownedOption($key);
-            }
-
-            if (array_key_exists($key, $merged) && $merged[$key] !== $value) {
-                throw InvalidEngineQueryException::conflictingOption($key);
-            }
-
-            $merged[$key] = $value;
-        }
-
-        $this->options = $merged;
+        $this->options = EngineOptions::merge($this->options, $options, $this->index->profile->ownedOptions());
 
         return $this;
     }
@@ -121,7 +100,9 @@ final class EngineQuery
             return EnginePage::empty();
         }
 
-        return $this->index->profile->page($this->builder(), $this->index->model, $perPage, $page);
+        $builder = (new EngineBuilder($this->index, $this->text, $this->trashed))->build($this->conditions, $this->orders, $this->options);
+
+        return $this->index->profile->page($builder, $this->index->model, $perPage, $page);
     }
 
     public function reachable(): ?int
@@ -152,33 +133,5 @@ final class EngineQuery
         }
 
         return array_map(fn (mixed $value): int|float|string|bool => $declared->value($value), array_values($values));
-    }
-
-    /** @return Builder<Model> */
-    private function builder(): Builder
-    {
-        $builder = new Builder($this->index->model->model(), implode(' ', $this->text->terms()), null, $this->index->model->softDeletes());
-
-        $this->conditions->applyTo($builder);
-
-        match ($this->trashed) {
-            Trashed::With => $builder->withTrashed(),
-            Trashed::Only => $builder->onlyTrashed(),
-            null => $builder,
-        };
-
-        foreach ($this->orders as [$attribute, $direction]) {
-            $builder->orderBy($attribute, $direction->value);
-        }
-
-        if ($this->options !== []) {
-            $builder->options($this->options);
-        }
-
-        if ($builder::class !== Builder::class || $builder->callback !== null || $builder->queryCallback !== null) {
-            throw InvalidTextSearchException::unexpectedBuilder($builder::class);
-        }
-
-        return $builder;
     }
 }
