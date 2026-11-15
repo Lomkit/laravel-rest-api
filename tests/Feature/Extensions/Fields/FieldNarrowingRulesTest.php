@@ -225,9 +225,29 @@ class FieldNarrowingRulesTest extends PackageTestCase
     {
         MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->resource->definition()->{$read}();
 
-        $this->expectExceptionObject(InvalidFieldExtensionException::readsNarrowedFields(ProductResource::class));
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension reads the fields or the text search of '.ProductResource::class.' while the NarrowsFields extensions narrow them. Read the declared names with FieldsContext::declares() instead.'));
 
         $this->withoutExceptionHandling()->actingAs(self::user())->postJson('/api/products/search', ['search' => []]);
+    }
+
+    #[Test]
+    public function it_names_the_extension_that_reads_the_fields_it_narrows(): void
+    {
+        config(['rest.extensions' => self::BOTH]);
+        MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->hide('price');
+        OtherMaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->resource->definition()->fields();
+
+        try {
+            $this->withoutExceptionHandling()->actingAs(self::user())->postJson('/api/products/search', ['search' => []]);
+        } catch (InvalidFieldExtensionException $exception) {
+            $this->assertStringStartsWith('The [other] extension reads the fields or the text search of '.ProductResource::class, $exception->getMessage());
+            $this->assertTrue($exception->namesExtension('other'));
+            $this->assertFalse($exception->namesExtension('mask'));
+
+            return;
+        }
+
+        $this->fail('The search passed although an extension read the fields it narrows.');
     }
 
     /** @return array<string, array{string}> */

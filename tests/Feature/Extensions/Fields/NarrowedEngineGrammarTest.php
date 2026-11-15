@@ -139,7 +139,7 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
     {
         $this->narrow(static fn (FieldsContext $context): mixed => $context->resource->definition()->text());
 
-        $this->expectExceptionObject(InvalidFieldExtensionException::readsNarrowedFields(VoucherResource::class));
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension reads the fields or the text search of '.VoucherResource::class.' while the NarrowsFields extensions narrow them. Read the declared names with FieldsContext::declares() instead.'));
 
         $this->withoutExceptionHandling()->search('vouchers', ['text' => ['value' => 'report']]);
     }

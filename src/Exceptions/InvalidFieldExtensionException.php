@@ -31,8 +31,8 @@ final class InvalidFieldExtensionException extends InvalidExtensionException
         return self::about($name, "The [{$name}] extension hides [{$field}], an attribute that ScoutEngine::perimeter() of {$resource} reads for every user. Keep it visible: clients cannot filter or sort on a perimeter attribute anyway.");
     }
 
-    public static function readsNarrowedFields(string $resource): self
+    public static function readsNarrowedFields(string $name, string $resource): self
     {
-        return new self("An extension reads the fields or the text search of {$resource} while the NarrowsFields extensions narrow them. Read the declared names with FieldsContext::declares() instead.");
+        return self::about($name, "The [{$name}] extension reads the fields or the text search of {$resource} while the NarrowsFields extensions narrow them. Read the declared names with FieldsContext::declares() instead.");
     }
 }

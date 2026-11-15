@@ -22,7 +22,7 @@ final class ResourceFields
 
     private ?FieldSet $fields = null;
 
-    private bool $narrowing = false;
+    private ?FieldNarrowing $narrowing = null;
 
     public function __construct(private readonly Resource $resource) {}
 
@@ -49,17 +49,17 @@ final class ResourceFields
             return $this->narrowed;
         }
 
-        if ($this->narrowing) {
-            throw InvalidFieldExtensionException::readsNarrowedFields($this->resource::class);
+        if ($this->narrowing !== null) {
+            throw InvalidFieldExtensionException::readsNarrowedFields($this->narrowing->running(), $this->resource::class);
         }
 
         $declared = $this->declared();
-        $this->narrowing = true;
+        $this->narrowing = new FieldNarrowing($this->resource, $declared, $this->version?->column, $this->key);
 
         try {
-            return $this->narrowed = FieldNarrowing::of($this->resource, $declared, $this->version?->column, $this->key);
+            return $this->narrowed = $this->narrowing->narrowed();
         } finally {
-            $this->narrowing = false;
+            $this->narrowing = null;
         }
     }
 

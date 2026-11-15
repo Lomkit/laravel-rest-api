@@ -8,28 +8,43 @@ use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\NarrowedFields;
 
 /** @internal */
-final readonly class FieldNarrowing
+final class FieldNarrowing
 {
-    public static function of(Resource $resource, FieldSet $declared, ?string $version, ?string $key): NarrowedFields
+    private string $running = '';
+
+    public function __construct(
+        private readonly Resource $resource,
+        private readonly FieldSet $declared,
+        private readonly ?string $version,
+        private readonly ?string $key,
+    ) {}
+
+    public function running(): string
     {
-        $context = $resource->context();
+        return $this->running;
+    }
+
+    public function narrowed(): NarrowedFields
+    {
+        $context = $this->resource->context();
 
         if ($context->isDocumentation()) {
             return NarrowedFields::none();
         }
 
-        $extensions = $context->extensions()->applicable($resource::class, NarrowsFields::class);
+        $extensions = $context->extensions()->applicable($this->resource::class, NarrowsFields::class);
 
         if ($extensions === []) {
             return NarrowedFields::none();
         }
 
         ksort($extensions);
-        $requests = new FieldRequests($resource, $declared, $version, $key);
+        $requests = new FieldRequests($this->resource, $this->declared, $this->version, $this->key);
         $user = $context->actingUser()->user;
 
         foreach ($extensions as $name => $extension) {
-            $extension->narrowFields(new FieldsContext($name, $resource, $user, $requests));
+            $this->running = $name;
+            $extension->narrowFields(new FieldsContext($name, $this->resource, $user, $requests));
         }
 
         return $requests->narrowed();
