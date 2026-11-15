@@ -21,11 +21,7 @@ class Instruction
     use Makeable;
     use Resourcable;
 
-    private const string EXTENSION_SEPARATOR = '.';
-
     public ?string $name = null;
-
-    private ?string $declaringExtension = null;
 
     public function name(): string
     {
@@ -39,15 +35,7 @@ class Instruction
 
     final public function publicUriKey(): string
     {
-        return $this->declaringExtension === null ? $this->uriKey() : $this->declaringExtension.self::EXTENSION_SEPARATOR.$this->uriKey();
-    }
-
-    /** @internal */
-    final public function declaredBy(string $extension): static
-    {
-        $this->declaringExtension = $extension;
-
-        return $this;
+        return isset($this->resource) ? $this->resource->definition()->declarations()->instructions()->keyOf($this) : $this->uriKey();
     }
 
     public function request(): RestRequest

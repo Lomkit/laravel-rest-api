@@ -8,10 +8,13 @@ use Lomkit\Rest\Exceptions\InvalidInstructionException;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Instructions\Instruction;
 use ReflectionClass;
+use WeakMap;
 
 /** @internal */
 final class InstructionList
 {
+    private const string OWNER_SEPARATOR = '.';
+
     /** @var array<array-key, Instruction> */
     private array $built = [];
 
@@ -19,6 +22,9 @@ final class InstructionList
     private ?array $listed = null;
 
     private bool $distinct = false;
+
+    /** @var WeakMap<Instruction, string> */
+    private WeakMap $owners;
 
     /**
      * @param  array<int, Instruction|class-string<Instruction>>  $entries
@@ -29,7 +35,9 @@ final class InstructionList
         private readonly Closure $extensions,
         private readonly Resource $resource,
         private readonly Container $container,
-    ) {}
+    ) {
+        $this->owners = new WeakMap;
+    }
 
     /** @return list<int> */
     public function indexes(): array
@@ -53,7 +61,14 @@ final class InstructionList
 
     public function find(string $key): ?Instruction
     {
-        return array_find($this->all(), fn (Instruction $instruction): bool => $instruction->publicUriKey() === $key);
+        return array_find($this->all(), fn (Instruction $instruction): bool => $this->keyOf($instruction) === $key);
+    }
+
+    public function keyOf(Instruction $instruction): string
+    {
+        $owner = $this->owners[$instruction] ?? null;
+
+        return $owner === null ? $instruction->uriKey() : $owner.self::OWNER_SEPARATOR.$instruction->uriKey();
     }
 
     public function at(int|string $index): Instruction
@@ -71,7 +86,7 @@ final class InstructionList
         $owners = [];
 
         foreach ($instructions as $index => $instruction) {
-            $owners[$instruction->publicUriKey()][] = $this->listed()[$index][1];
+            $owners[$this->keyOf($instruction)][] = $this->listed()[$index][1];
         }
 
         foreach ($owners as $key => $declaring) {
@@ -106,7 +121,14 @@ final class InstructionList
     {
         $instruction = is_string($entry) ? $this->make($entry, $owner) : $entry;
 
-        return $owner === null ? $instruction : (clone $instruction)->declaredBy($owner);
+        if ($owner === null) {
+            return $instruction;
+        }
+
+        $clone = clone $instruction;
+        $this->owners[$clone] = $owner;
+
+        return $clone;
     }
 
     /** @param class-string<Instruction> $entry */

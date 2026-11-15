@@ -18,19 +18,8 @@ class PublicUriKeyTest extends TestCase
     }
 
     #[Test]
-    public function it_prefixes_the_uri_key_with_the_name_of_the_declaring_extension(): void
+    public function it_keeps_the_owner_of_an_instruction_out_of_its_public_methods(): void
     {
-        $named = new Instruction;
-        $named->name = 'With Archived';
-        $keyed = new class extends Instruction
-        {
-            #[\Override]
-            public function uriKey(): string
-            {
-                return 'as-of';
-            }
-        };
-
-        $this->assertSame(['arc.with-archived', 'history.as-of'], [$named->declaredBy('arc')->publicUriKey(), $keyed->declaredBy('history')->publicUriKey()]);
+        $this->assertFalse(method_exists(Instruction::class, 'declaredBy'));
     }
 }

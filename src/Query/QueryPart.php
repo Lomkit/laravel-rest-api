@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Query;
 
+/** @internal */
 enum QueryPart: string
 {
     case Where = 'a where clause';
