@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 
+/** @internal */
 final readonly class CacheContext
 {
     /** @param array<array-key, int|float|string|bool|null> $values */

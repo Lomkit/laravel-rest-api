@@ -17,6 +17,7 @@ final class Authorizer
 
     private readonly DecisionBatch $batch;
 
+    /** @internal */
     public function __construct(
         private readonly Gate $gate,
         DecisionStore $store = new NullDecisionStore,

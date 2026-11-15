@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Authorization;
 
 use Closure;
 
+/** @internal */
 final class DecisionBatch
 {
     /** @var array<string, Decision|null> */

@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Authorization;
 use Closure;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 
+/** @internal */
 final readonly class CachedAbilities
 {
     /** @param array<string, int> $seconds */
