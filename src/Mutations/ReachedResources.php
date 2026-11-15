@@ -11,7 +11,7 @@ final class ReachedResources
     /** @var array<class-string<Resource>, Resource> */
     private array $resources = [];
 
-    /** @var array<class-string<Resource>, list<MutationNode>> */
+    /** @var array<class-string<Resource>, array<int, MutationNode>> */
     private array $nodes = [];
 
     /** @var array<class-string<Resource>, array<int, Model>> */
@@ -21,7 +21,7 @@ final class ReachedResources
     public function add(Resource $resource, MutationNode $node, array $rows): void
     {
         $this->resources[$resource::class] ??= $resource;
-        $this->nodes[$resource::class][] = $node;
+        $this->nodes[$resource::class][spl_object_id($node)] = $node;
         $this->rows[$resource::class] ??= [];
 
         foreach ($rows as $row) {
@@ -37,7 +37,7 @@ final class ReachedResources
         $reached = [];
 
         foreach ($this->resources as $class => $resource) {
-            $reached[] = [$resource, $this->nodes[$class] ?? [], array_values($this->rows[$class] ?? [])];
+            $reached[] = [$resource, array_values($this->nodes[$class] ?? []), array_values($this->rows[$class] ?? [])];
         }
 
         return $reached;

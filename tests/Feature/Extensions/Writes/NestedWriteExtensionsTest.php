@@ -9,6 +9,7 @@ use Lomkit\Rest\Extensions\Contexts\WriteObservationContext;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Mutations\WrittenRow;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HeldShelfGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LoanWritesExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
@@ -18,6 +19,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 #[WithConfig('app.debug', false)]
@@ -37,6 +39,10 @@ final class NestedWriteExtensionsTest extends PackageTestCase
             'loan' => ['operation' => 'update', 'key' => 101],
             'shelves' => [['operation' => 'attach', 'key' => [102]]],
         ]],
+    ]];
+
+    private const array SYNC = ['mutate' => [
+        ['operation' => 'update', 'key' => 101, 'relations' => ['shelves' => [['operation' => 'sync', 'key' => [102]]]]],
     ]];
 
     #[\Override]
@@ -130,6 +136,52 @@ final class NestedWriteExtensionsTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_hands_the_rows_that_a_sync_detaches_to_the_guard_and_the_observer(): void
+    {
+        config(['rest.extensions' => ['history' => RecordingWriteObserver::class, 'quota' => RecordingGuard::class]]);
+
+        $this->postJson('/api/books/mutate', self::SYNC)
+            ->assertOk()
+            ->assertExactJson(['operations' => [
+                ['operation' => 'update', 'key' => 101, 'relations' => ['shelves' => [['operation' => 'sync', 'key' => [102]]]]],
+            ]]);
+
+        $this->assertSame([
+            ['BookResource', ['update 101'], [[101, 'Dune']]],
+            ['ShelfResource', ['sync 102'], [[101, 'Classics'], [102, 'Poetry'], [103, 'Hidden']]],
+        ], self::sortedRows(self::guarded()));
+        $this->assertSame([
+            ['BookResource', [['BookResource', 'update', 101, 'Dune']]],
+            ['ShelfResource', [['ShelfResource', 'sync', 101, 'Classics'], ['ShelfResource', 'sync', 102, 'Poetry'], ['ShelfResource', 'sync', 103, 'Hidden']]],
+        ], self::sortedRows(self::observed()));
+        $this->assertSame(['Dune > Poetry'], self::library()['shelves']);
+    }
+
+    /** @return array<string, array{list<array<string, mixed>>}> */
+    public static function unlinkedShelves(): array
+    {
+        return [
+            'detach' => [[['operation' => 'detach', 'key' => [101]]]],
+            'sync' => [[['operation' => 'sync', 'key' => [102]]]],
+        ];
+    }
+
+    /** @param list<array<string, mixed>> $shelves */
+    #[Test]
+    #[DataProvider('unlinkedShelves')]
+    public function it_refuses_the_unlinking_of_a_held_row_whether_named_or_left_out_of_a_sync(array $shelves): void
+    {
+        config(['rest.extensions' => ['hold' => HeldShelfGuard::class]]);
+        $library = self::library();
+
+        $this->postJson('/api/books/mutate', ['mutate' => [['operation' => 'update', 'key' => 101, 'relations' => ['shelves' => $shelves]]]])
+            ->assertStatus(423)
+            ->assertExactJson(['message' => 'The shelf is on hold.']);
+
+        $this->assertSame($library, self::library());
+    }
+
+    #[Test]
     public function it_neither_asks_nor_schedules_an_extension_of_a_resource_that_a_mutation_does_not_reach(): void
     {
         $without = $this->scheduledCallbacks([]);
@@ -179,6 +231,21 @@ final class NestedWriteExtensionsTest extends PackageTestCase
                 self::label($row->model),
             ], $context->written ?? []),
         ], WriteLog::$writes);
+    }
+
+    /**
+     * @param  list<array<int, mixed>>  $calls
+     * @return list<array<int, mixed>>
+     */
+    private static function sortedRows(array $calls): array
+    {
+        return array_map(function (array $call): array {
+            $rows = end($call);
+            usort($rows, fn (array $left, array $right): int => array_values($left) <=> array_values($right));
+            $call[array_key_last($call)] = $rows;
+
+            return $call;
+        }, $calls);
     }
 
     private static function label(Model $row): mixed

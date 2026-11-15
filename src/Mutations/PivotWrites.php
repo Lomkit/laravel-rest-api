@@ -46,6 +46,10 @@ final readonly class PivotWrites extends RelationWrites
             $persister->detach(new PivotWrite($parent, $name, $plan->detached, [], $node, $user));
         }
 
+        if ($node->operation === MutationOperation::Sync) {
+            $log->unlinked($resource, $node, $plan->detached);
+        }
+
         if ($plan->attached !== []) {
             $persister->attach(new PivotWrite($parent, $name, $plan->attached, $pivot, $node, $user));
         }
@@ -66,6 +70,10 @@ final readonly class PivotWrites extends RelationWrites
         foreach ($this->nodes() as $node) {
             $related = $checks->walk($this->relation->resource(), $node);
             $plan = $checks->pivots->apply($this->relation, $parent, $node, $related);
+
+            if ($node->operation === MutationOperation::Sync) {
+                $checks->reached?->add($this->relation->resource(), $node, $plan->detached);
+            }
 
             foreach (self::links($node, $related, $plan) as [$model, $detach]) {
                 $checks->link($this->relation, $node, $parent, $model, $detach);

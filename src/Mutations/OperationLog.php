@@ -65,6 +65,18 @@ final class OperationLog
         return $model;
     }
 
+    /** @param list<Model> $models */
+    public function unlinked(Resource $resource, MutationNode $node, array $models): void
+    {
+        if (! $this->recordsRows) {
+            return;
+        }
+
+        foreach ($models as $model) {
+            $this->written[] = new WrittenRow($resource, $node, $model);
+        }
+    }
+
     /** @return list<OperationEntry> */
     public function entries(): array
     {
