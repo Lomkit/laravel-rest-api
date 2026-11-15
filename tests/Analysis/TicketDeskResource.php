@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Analysis;
 
+use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 
@@ -19,5 +20,11 @@ final class TicketDeskResource extends Resource
     public function instructions(): array
     {
         return [RankTicketsInstruction::class, TaggedTicketsInstruction::make()];
+    }
+
+    #[\Override]
+    public function prepareAuthorization(PendingChecks $checks): void
+    {
+        $checks->rows->loadMissing('team');
     }
 }
