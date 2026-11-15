@@ -46,6 +46,18 @@ final readonly class NarrowedFields
         return FieldSet::of($kept);
     }
 
+    public function hiddenFrom(FieldSet $declared): FieldSet
+    {
+        if ($this->hidden === []) {
+            return FieldSet::of([]);
+        }
+
+        return FieldSet::of(array_values(array_filter(
+            iterator_to_array($declared, false),
+            fn (Field $field): bool => in_array($field->name, $this->hidden, true),
+        )));
+    }
+
     /**
      * @template TKey of array-key
      *

@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Fields;
 
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -62,6 +63,7 @@ class HiddenFieldsTest extends PackageTestCase
     {
         MaskingFields::reset();
         Applicability::flush();
+        Model::shouldBeStrict(false);
 
         parent::tearDown();
     }
@@ -288,6 +290,69 @@ class HiddenFieldsTest extends PackageTestCase
             ['id' => 2, 'category_id' => 1, 'name' => 'Floor lamp', 'gates' => ['authorized_to_view' => ['allowed' => false, 'message' => null]]],
             ['id' => 1, 'category_id' => 1, 'name' => 'Desk lamp', 'gates' => ['authorized_to_view' => ['allowed' => true, 'message' => null]]],
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $search
+     * @param  list<array<string, mixed>>  $data
+     */
+    #[Test]
+    #[DataProvider('gateLevels')]
+    public function it_computes_gates_on_a_hidden_column_without_always_select(string $uri, array $search, array $data): void
+    {
+        Gate::policy(Product::class, PriceCapPolicy::class);
+        Model::shouldBeStrict();
+
+        $response = $this->actingAs(self::user())->postJson($uri, ['search' => $search]);
+
+        $response->assertOk()->assertJsonPath('data', $data);
+        $this->assertStringNotContainsString('price', (string) $response->getContent());
+    }
+
+    /** @return array<string, array{string, array<string, mixed>, list<array<string, mixed>>}> */
+    public static function gateLevels(): array
+    {
+        $view = static fn (bool $allowed): array => ['authorized_to_view' => ['allowed' => $allowed, 'message' => null]];
+
+        return [
+            'the root level' => ['/api/products/search', ['gates' => ['view']], [
+                ['id' => 3, 'category_id' => 2, 'name' => 'Stool', 'gates' => $view(true)],
+                ['id' => 2, 'category_id' => 1, 'name' => 'Floor lamp', 'gates' => $view(false)],
+                ['id' => 1, 'category_id' => 1, 'name' => 'Desk lamp', 'gates' => $view(true)],
+            ]],
+            'client selects' => ['/api/products/search', ['selects' => [['field' => 'name']], 'gates' => ['view']], [
+                ['name' => 'Stool', 'gates' => $view(true)],
+                ['name' => 'Floor lamp', 'gates' => $view(false)],
+                ['name' => 'Desk lamp', 'gates' => $view(true)],
+            ]],
+            'an include level' => ['/api/categories/search', ['sorts' => [['field' => 'id']], 'includes' => [
+                ['relation' => 'products', 'sorts' => [['field' => 'id']], 'gates' => ['view']],
+            ]], [
+                ['id' => 1, 'name' => 'Lighting', 'products' => [
+                    ['id' => 1, 'category_id' => 1, 'name' => 'Desk lamp', 'gates' => $view(true)],
+                    ['id' => 2, 'category_id' => 1, 'name' => 'Floor lamp', 'gates' => $view(false)],
+                ], '@more' => []],
+                ['id' => 2, 'name' => 'Seating', 'products' => [
+                    ['id' => 3, 'category_id' => 2, 'name' => 'Stool', 'gates' => $view(true)],
+                ], '@more' => []],
+            ]],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('columnSelections')]
+    public function it_renders_no_hidden_column_it_loads_for_the_policies(bool $selectColumns): void
+    {
+        config(['rest.search.select_columns' => $selectColumns]);
+        Gate::policy(Product::class, PriceCapPolicy::class);
+
+        $response = $this->actingAs(self::user())->postJson('/api/products/search', ['search' => []]);
+        $rendered = Rest::search(ProductResource::class)->as(self::user())->payload([])->render();
+
+        $response->assertOk()->assertJsonPath('data', self::PRICELESS_PRODUCTS);
+        $this->assertSame(self::PRICELESS_PRODUCTS, $rendered['data']);
+        $this->assertStringNotContainsString('price', (string) $response->getContent());
+        $this->assertStringNotContainsString('price', (string) json_encode($rendered));
     }
 
     #[Test]

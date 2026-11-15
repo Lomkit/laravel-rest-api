@@ -93,6 +93,20 @@ final class NarrowedFieldsTest extends TestCase
         $this->assertFalse($narrowed->isEmpty());
     }
 
+    #[Test]
+    public function it_returns_the_declared_fields_it_hides(): void
+    {
+        $declared = self::declared();
+
+        $hidden = (new NarrowedFields(hidden: ['price', 'id'], readOnly: ['name']))->hiddenFrom($declared);
+
+        $this->assertSame(['id', 'price'], $hidden->names());
+        $this->assertSame($declared->get('id'), $hidden->get('id'));
+        $this->assertSame($declared->get('price'), $hidden->get('price'));
+        $this->assertSame([], (new NarrowedFields(readOnly: ['price']))->hiddenFrom($declared)->names());
+        $this->assertSame([], NarrowedFields::none()->hiddenFrom($declared)->names());
+    }
+
     private static function declared(): FieldSet
     {
         return FieldSet::of([ID::make('id'), Integer::make('category_id'), Text::make('name'), Integer::make('price')]);
