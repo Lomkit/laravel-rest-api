@@ -42,7 +42,7 @@ class ExtensionGatesDocumentTest extends DocumentationTestCase
     {
         $enum = $this->search($this->document(), '/shows/search')['gates']['items']['enum'];
 
-        $this->assertSame(['feature', 'share'], array_slice($enum, -2));
+        $this->assertSame(['view', 'create', 'update', 'delete', 'restore', 'forceDelete', 'feature', 'share'], $enum);
     }
 
     #[Test]
@@ -50,7 +50,16 @@ class ExtensionGatesDocumentTest extends DocumentationTestCase
     {
         $gates = $this->document()['components']['schemas']['Show']['properties']['gates']['properties'];
 
-        $this->assertSame(['authorized_to_feature', 'authorized_to_share'], array_slice(array_keys($gates), -2));
+        $answer = ['$ref' => '#/components/schemas/RestGateAnswer'];
+        $this->assertSame([
+            'authorized_to_view' => $answer,
+            'authorized_to_update' => $answer,
+            'authorized_to_delete' => $answer,
+            'authorized_to_restore' => $answer,
+            'authorized_to_force_delete' => $answer,
+            'authorized_to_feature' => $answer,
+            'authorized_to_share' => $answer,
+        ], $gates);
     }
 
     #[Test]
@@ -62,7 +71,8 @@ class ExtensionGatesDocumentTest extends DocumentationTestCase
 
         $response = $this->postJson('api/shows/search', $body);
 
-        $response->assertOk()->assertJsonPath('data.0.gates.authorized_to_share.allowed', false);
+        $denied = ['authorized_to_share' => ['allowed' => false, 'message' => null]];
+        $response->assertOk()->assertJsonPath('data.*.gates', [$denied, $denied]);
         $this->assertSame([], $validator->requestErrors($document, '/shows/search', 'post', $body));
         $this->assertSame([], $validator->responseErrors($document, '/shows/search', 'post', 200, (string) $response->getContent()));
     }
@@ -75,7 +85,7 @@ class ExtensionGatesDocumentTest extends DocumentationTestCase
         $response = $this->getJson('api/shows?with=gates');
 
         $response->assertOk();
-        $this->assertSame(['feature', 'share'], array_slice($response->json('data.gates'), -2));
+        $this->assertSame(['view', 'create', 'update', 'delete', 'restore', 'forceDelete', 'feature', 'share'], $response->json('data.gates'));
         $this->assertSame([], (new OpenApiValidator)->responseErrors($document, '/shows', 'get', 200, (string) $response->getContent()));
     }
 }
