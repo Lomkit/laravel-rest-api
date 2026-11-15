@@ -62,6 +62,15 @@ final class GuardedWritesTest extends PackageTestCase
         ['operation' => 'create', 'attributes' => ['title' => 'Minutes']],
     ]];
 
+    private const array OPERATIONS = ['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => 3]]];
+
+    private const array DOCUMENTS = ['data' => [
+        ['id' => 1, 'title' => 'Annual report', 'archived' => false],
+        ['id' => 2, 'title' => 'Budget', 'archived' => false],
+    ], 'meta' => []];
+
+    private const array IMPACTED = ['data' => ['impacted' => 2, 'result' => null]];
+
     private ArchiveUser $grace;
 
     #[\Override]
@@ -105,7 +114,7 @@ final class GuardedWritesTest extends PackageTestCase
         $this->seedDocuments(null, null);
         EventLog::listen();
 
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk();
+        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::OPERATIONS);
 
         $this->assertSame([
             'begin level 2',
@@ -148,7 +157,7 @@ final class GuardedWritesTest extends PackageTestCase
         $this->seedDocuments($deletedAt, $deletedAt);
         EventLog::listen();
 
-        $this->json($method, $uri, ['resources' => [1, 2]])->assertOk();
+        $this->json($method, $uri, ['resources' => [1, 2]])->assertOk()->assertExactJson(self::DOCUMENTS);
 
         $this->assertSame(['begin level 2', "guard {$endpoint->value} 1,2", ...$writes, 'commit level 1'], $this->writeLines());
         $this->assertCount(1, WriteLog::$guards);
@@ -204,7 +213,7 @@ final class GuardedWritesTest extends PackageTestCase
 
         $this->postJson("/written-documents/actions/{$uriKey}", ['search' => []])
             ->assertOk()
-            ->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
+            ->assertExactJson(self::IMPACTED);
 
         $this->assertSame($lines, $this->writeLines());
         $this->assertSame($rows, array_map(fn ($context): ?array => $context->rows === null ? null : array_map(fn (Model $row): mixed => $row->getKey(), $context->rows), WriteLog::$guards));
@@ -314,7 +323,7 @@ final class GuardedWritesTest extends PackageTestCase
         WriteLog::$status = $status;
         $this->seedDocuments(null, null);
 
-        $this->deleteJson('/written-documents', ['resources' => [1, 2]])->assertInternalServerError();
+        $this->deleteJson('/written-documents', ['resources' => [1, 2]])->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
 
         $message = 'The [quota] extension '.RecordingGuard::class.' refuses a destroy write on '.WrittenDocumentResource::class." with the status {$status}. Pass a client error status from 400 to 499 to refuse(), such as 403 or 429: a refusal answers the client and rolls the write back.";
         Exceptions::assertReported(fn (InvalidWriteExtensionException $exception): bool => $exception->getMessage() === $message && $exception->namesExtension('quota'));
@@ -389,21 +398,24 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
     }
 
-    /** @return array<string, array{string, string, array<string, mixed>}> */
+    /** @return array<string, array{string, string, array<string, mixed>, array<string, mixed>}> */
     public static function precognitiveWrites(): array
     {
         return [
-            'mutate' => ['POST', '/written-documents/mutate', self::MUTATE],
-            'destroy' => ['DELETE', '/written-documents', ['resources' => [1, 2]]],
-            'action' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []]],
+            'mutate' => ['POST', '/written-documents/mutate', self::MUTATE, self::OPERATIONS],
+            'destroy' => ['DELETE', '/written-documents', ['resources' => [1, 2]], self::DOCUMENTS],
+            'action' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []], self::IMPACTED],
         ];
     }
 
-    /** @param array<string, mixed> $body */
+    /**
+     * @param  array<string, mixed>  $body
+     * @param  array<string, mixed>  $answer
+     */
     #[Test]
     #[DataProvider('precognitiveWrites')]
     #[WithConfig('rest.precognition.enabled', true)]
-    public function it_never_guards_under_precognition(string $method, string $uri, array $body): void
+    public function it_never_guards_under_precognition(string $method, string $uri, array $body, array $answer): void
     {
         $this->seedDocuments(null, null);
 
@@ -413,7 +425,7 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertSame([[1, null], [2, null]], $this->rows());
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
 
-        $this->json($method, $uri, $body)->assertOk();
+        $this->json($method, $uri, $body)->assertOk()->assertExactJson($answer);
 
         $this->assertNotSame([], WriteLog::$guards);
     }
@@ -429,8 +441,7 @@ final class GuardedWritesTest extends PackageTestCase
             ->assertExactJson(['operations' => [['operation' => 'update', 'key' => 1]]]);
         $destroyed = $this->deleteJson('/written-documents', ['resources' => [2]]);
 
-        $destroyed->assertOk();
-        $this->assertSame(['Budget'], array_column($destroyed->json('data'), 'title'));
+        $destroyed->assertOk()->assertExactJson(['data' => [['id' => 2, 'title' => 'Budget', 'archived' => false]], 'meta' => []]);
         $this->assertSame([[1, 'Annual report', true], [2, 'Budget', false]], $this->documents());
         $this->assertSame(['Changed', 'Changed'], [WriteLog::$guards[0]->rows[0]->getAttribute('title') ?? null, WriteLog::$guards[1]->rows[0]->getAttribute('title') ?? null]);
     }
@@ -443,7 +454,7 @@ final class GuardedWritesTest extends PackageTestCase
 
         $this->postJson('/written-documents/actions/queued-archive-documents-by-one', ['search' => []])
             ->assertOk()
-            ->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
+            ->assertExactJson(self::IMPACTED);
         $this->assertSame([], WriteLog::$guards);
         $this->assertDatabaseCount('jobs', 2);
         $this->app['auth']->forgetGuards();
@@ -474,7 +485,7 @@ final class GuardedWritesTest extends PackageTestCase
         });
         $this->seedDocuments(null, null);
 
-        $this->postJson('/written-documents/actions/queued-archive-documents-by-one', ['search' => []])->assertOk();
+        $this->postJson('/written-documents/actions/queued-archive-documents-by-one', ['search' => []])->assertOk()->assertExactJson(self::IMPACTED);
         $this->app['auth']->forgetGuards();
         $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
 

@@ -32,6 +32,12 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
         ['operation' => 'create', 'attributes' => ['title' => 'Agenda']],
     ]];
 
+    private const array OPERATIONS = ['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => 4]]];
+
+    private const array DESTROYED = ['data' => [['id' => 1, 'title' => 'Annual report'], ['id' => 3, 'title' => 'Minutes']], 'meta' => []];
+
+    private const array IMPACTED = ['data' => ['impacted' => 3, 'result' => null]];
+
     #[\Override]
     protected function defineEnvironment($app): void
     {
@@ -94,7 +100,7 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
         parent::tearDown();
     }
 
-    /** @return array<string, array{string, string, array<string, mixed>, int, list<string>}> */
+    /** @return array<string, array{string, string, array<string, mixed>, int, list<string>, array<string, mixed>}> */
     public static function retriedWrites(): array
     {
         $search = ['search' => []];
@@ -104,75 +110,79 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
                 'begin secondary', 'guard mutate update,create', 'rollback secondary',
                 'begin secondary', 'guard mutate update,create', 'commit secondary',
                 'observe mutate update:1,create:4',
-            ]],
+            ], self::OPERATIONS],
             'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]], 0, [
                 'begin secondary', 'guard destroy 1,3', 'rollback secondary',
                 'begin secondary', 'guard destroy 1,3', 'commit secondary',
                 'observe destroy 1,3',
-            ]],
+            ], self::DESTROYED],
             'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', $search, 1, [
                 'begin secondary', 'guard operate 1,2', 'commit secondary', 'observe operate 1,2 (2)',
                 'begin secondary', 'guard operate 3', 'rollback secondary',
                 'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
-            ]],
+            ], self::IMPACTED],
             'a queued action chunk' => ['POST', '/retried-documents/actions/queued-rename-retried-documents', $search, 1, [
                 'begin secondary', 'guard operate 1,2', 'commit secondary', 'observe operate 1,2 (2)',
                 'begin secondary', 'guard operate 3', 'rollback secondary',
                 'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
-            ]],
+            ], self::IMPACTED],
             'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', $search, 1, [
                 'begin secondary', 'guard operate *', 'rollback secondary',
                 'begin secondary', 'guard operate *', 'commit secondary', 'observe operate * (3)',
-            ]],
+            ], self::IMPACTED],
             'an action row' => ['POST', '/retried-documents/actions/rename-retried-documents-per-row', $search, 1, [
                 'begin secondary', 'guard operate 1', 'commit secondary', 'observe operate 1 (1)',
                 'begin secondary', 'guard operate 2', 'rollback secondary',
                 'begin secondary', 'guard operate 2', 'commit secondary', 'observe operate 2 (1)',
                 'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
-            ]],
+            ], self::IMPACTED],
             'a queued action row' => ['POST', '/retried-documents/actions/queued-rename-retried-documents-per-row', $search, 1, [
                 'begin secondary', 'guard operate 1', 'commit secondary', 'observe operate 1 (1)',
                 'begin secondary', 'guard operate 2', 'rollback secondary',
                 'begin secondary', 'guard operate 2', 'commit secondary', 'observe operate 2 (1)',
                 'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
-            ]],
+            ], self::IMPACTED],
         ];
     }
 
     /**
      * @param  array<string, mixed>  $payload
      * @param  list<string>  $lines
+     * @param  array<string, mixed>  $answer
      */
     #[Test]
     #[DataProvider('retriedWrites')]
-    public function it_guards_each_attempt_and_notifies_once_after_the_last_commit(string $method, string $uri, array $payload, int $deadlockAt, array $lines): void
+    public function it_guards_each_attempt_and_notifies_once_after_the_last_commit(string $method, string $uri, array $payload, int $deadlockAt, array $lines, array $answer): void
     {
         config(['rest.transactions.attempts' => 2]);
         Interruptions::reset([...array_fill(0, $deadlockAt, null), Interruptions::deadlock()]);
 
-        $this->json($method, $uri, $payload)->assertOk();
+        $this->json($method, $uri, $payload)->assertOk()->assertExactJson($answer);
 
         $this->assertSame($lines, EventLog::$lines);
     }
 
-    /** @return array<string, array{string, string, array<string, mixed>}> */
+    /** @return array<string, array{string, string, array<string, mixed>, array<string, mixed>}> */
     public static function rebuiltWrites(): array
     {
         return [
-            'mutate' => ['POST', '/retried-documents/mutate', self::MUTATE],
-            'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]]],
+            'mutate' => ['POST', '/retried-documents/mutate', self::MUTATE, self::OPERATIONS],
+            'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]], self::DESTROYED],
         ];
     }
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $answer
+     */
     #[Test]
     #[DataProvider('rebuiltWrites')]
-    public function it_rebuilds_the_context_of_each_attempt(string $method, string $uri, array $payload): void
+    public function it_rebuilds_the_context_of_each_attempt(string $method, string $uri, array $payload, array $answer): void
     {
         config(['rest.transactions.attempts' => 2]);
         Interruptions::reset([Interruptions::deadlock()]);
 
-        $this->json($method, $uri, $payload)->assertOk();
+        $this->json($method, $uri, $payload)->assertOk()->assertExactJson($answer);
 
         [$first, $second] = WriteLog::$guards;
         $this->assertCount(2, WriteLog::$guards);
@@ -188,7 +198,7 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
         config(['rest.transactions.attempts' => 2]);
         Interruptions::reset([Interruptions::deadlock()]);
 
-        $this->postJson('/retried-documents/mutate', self::MUTATE)->assertOk();
+        $this->postJson('/retried-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::OPERATIONS);
 
         $this->assertCount(1, WriteLog::$writes);
         $this->assertSame([[1, 'Final report'], [4, 'Agenda']], array_map(
@@ -230,7 +240,7 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
     {
         Interruptions::reset([...array_fill(0, $deadlockAt, null), Interruptions::deadlock()]);
 
-        $this->json($method, $uri, $payload)->assertInternalServerError();
+        $this->json($method, $uri, $payload)->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
 
         $this->assertSame($lines, EventLog::$lines);
         $this->assertSame($titles, SecondaryDocument::query()

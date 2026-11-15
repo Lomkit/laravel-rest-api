@@ -33,6 +33,20 @@ final class ObservedReadsTest extends HelpdeskTestCase
         'limit' => 10,
     ]];
 
+    private const array PAGE = [
+        'current_page' => 1,
+        'data' => [
+            ['id' => 1, 'status' => 'open', 'team' => ['id' => 1, 'name' => 'Billing'], 'team_id' => 1, 'title' => 'Printer jam'],
+            ['id' => 3, 'status' => 'open', 'team' => ['id' => 1, 'name' => 'Billing'], 'team_id' => 1, 'title' => 'Printer toner'],
+        ],
+        'from' => 1,
+        'last_page' => 1,
+        'meta' => [],
+        'per_page' => 10,
+        'to' => 2,
+        'total' => 2,
+    ];
+
     private GenericUser $lead;
 
     #[\Override]
@@ -64,7 +78,7 @@ final class ObservedReadsTest extends HelpdeskTestCase
     #[Test]
     public function it_notifies_a_search_after_its_page_is_computed(): void
     {
-        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk();
+        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson(self::PAGE);
 
         $this->assertSame(['searching', 'searched 1,3 of 2', 'read search 1 Printer jam,3 Printer toner of 2'], EventLog::$lines);
         $context = WriteLog::$reads[0];
@@ -209,7 +223,7 @@ final class ObservedReadsTest extends HelpdeskTestCase
     {
         config(['rest.extensions' => $extensions]);
 
-        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk();
+        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson(self::PAGE);
 
         $this->assertSame(['read search 1 Printer jam,3 Printer toner of 2'], array_values(array_filter(EventLog::$lines, fn (string $line): bool => str_starts_with($line, 'read'))));
         $this->assertSame([['Billing'], ['Billing']], array_map(fn (Model $row): array => [$row->getRelation('team')?->getAttribute('name')], WriteLog::$reads[0]->rows));
@@ -242,7 +256,7 @@ final class ObservedReadsTest extends HelpdeskTestCase
     {
         config(['rest.extensions' => ['reads' => TeamReadingObserver::class]]);
 
-        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk();
+        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson(self::PAGE);
         $narrowed = $this->postJson('/observed-tickets/search', ['search' => ['selects' => [['field' => 'title']], 'sorts' => [['field' => 'id', 'direction' => 'asc']]]]);
 
         $narrowed->assertStatus(500);

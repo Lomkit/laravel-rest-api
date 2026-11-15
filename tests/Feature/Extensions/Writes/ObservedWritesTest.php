@@ -50,6 +50,15 @@ final class ObservedWritesTest extends PackageTestCase
         ['operation' => 'create', 'attributes' => ['title' => 'Minutes']],
     ]];
 
+    private const array OPERATIONS = ['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => 3]]];
+
+    private const array DOCUMENTS = ['data' => [
+        ['id' => 1, 'title' => 'Annual report', 'archived' => false],
+        ['id' => 2, 'title' => 'Budget', 'archived' => false],
+    ], 'meta' => []];
+
+    private const array IMPACTED = ['data' => ['impacted' => 2, 'result' => null]];
+
     private ArchiveUser $grace;
 
     #[\Override]
@@ -91,7 +100,7 @@ final class ObservedWritesTest extends PackageTestCase
         $this->seedDocuments(null, null);
         EventLog::listen();
 
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk();
+        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::OPERATIONS);
 
         $this->assertSame([
             'begin level 2',
@@ -136,7 +145,7 @@ final class ObservedWritesTest extends PackageTestCase
         $this->seedDocuments($deletedAt, $deletedAt);
         EventLog::listen();
 
-        $this->json($method, $uri, ['resources' => [1, 2]])->assertOk();
+        $this->json($method, $uri, ['resources' => [1, 2]])->assertOk()->assertExactJson(self::DOCUMENTS);
 
         $this->assertSame(['begin level 2', ...$writes, 'commit level 1', "observe {$endpoint->value} 1,2"], $this->writeLines());
         $this->assertCount(1, WriteLog::$writes);
@@ -194,7 +203,7 @@ final class ObservedWritesTest extends PackageTestCase
         $this->seedDocuments(null, null);
         EventLog::listen();
 
-        $this->postJson("/written-documents/actions/{$uriKey}", ['search' => []])->assertOk();
+        $this->postJson("/written-documents/actions/{$uriKey}", ['search' => []])->assertOk()->assertExactJson(self::IMPACTED);
 
         $this->assertSame($lines, $this->writeLines());
         $this->assertSame(1, $operated);
@@ -217,7 +226,7 @@ final class ObservedWritesTest extends PackageTestCase
 
         $this->postJson('/written-documents/actions/archive-documents-by-one', ['search' => []])
             ->assertOk()
-            ->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
+            ->assertExactJson(self::IMPACTED);
 
         $this->assertSame([
             'operating archive-documents-by-one',
@@ -247,7 +256,7 @@ final class ObservedWritesTest extends PackageTestCase
         $this->seedDocuments($deletedAt, $deletedAt);
         EventLog::$failure = $failure;
 
-        $this->json($method, $uri, $body)->assertInternalServerError();
+        $this->json($method, $uri, $body)->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
 
         $this->assertSame([], WriteLog::$writes);
         $this->assertSame([[1, $deletedAt], [2, $deletedAt]], $this->rows());
@@ -259,7 +268,7 @@ final class ObservedWritesTest extends PackageTestCase
     {
         $this->seedDocuments(null, null);
 
-        $this->postJson('/written-documents/actions/failing-archive-documents', ['search' => []])->assertInternalServerError();
+        $this->postJson('/written-documents/actions/failing-archive-documents', ['search' => []])->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
 
         $this->assertSame(['operating failing-archive-documents', 'handle 1', 'observe operate 1 (1)', 'handle 2'], EventLog::$lines);
         $this->assertSame([[1, 'Annual report', true], [2, 'Budget', false]], $this->documents());
@@ -291,7 +300,7 @@ final class ObservedWritesTest extends PackageTestCase
 
         $this->postJson('/written-documents/mutate', self::MUTATE)
             ->assertOk()
-            ->assertExactJson(['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => 3]]]);
+            ->assertExactJson(self::OPERATIONS);
 
         $this->assertSame($lines, $this->observedLines());
         Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'The history store is offline.');
@@ -310,7 +319,7 @@ final class ObservedWritesTest extends PackageTestCase
         $this->seedDocuments(null, null);
         DB::beginTransaction();
 
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk();
+        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::OPERATIONS);
 
         $this->assertSame([], WriteLog::$writes);
         DB::commit();
@@ -324,32 +333,35 @@ final class ObservedWritesTest extends PackageTestCase
         $this->seedDocuments(null, null);
         DB::beginTransaction();
 
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk();
+        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::OPERATIONS);
         DB::rollBack();
 
         $this->assertSame([], WriteLog::$writes);
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
     }
 
-    /** @return array<string, array{string, string, array<string, mixed>, int}> */
+    /** @return array<string, array{string, string, array<string, mixed>, int, array<string, mixed>}> */
     public static function scheduledWrites(): array
     {
         return [
-            'mutate' => ['POST', '/written-documents/mutate', self::MUTATE, 1],
-            'destroy' => ['DELETE', '/written-documents', ['resources' => [1, 2]], 1],
-            'action chunks' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []], 2],
+            'mutate' => ['POST', '/written-documents/mutate', self::MUTATE, 1, self::OPERATIONS],
+            'destroy' => ['DELETE', '/written-documents', ['resources' => [1, 2]], 1, self::DOCUMENTS],
+            'action chunks' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []], 2, self::IMPACTED],
         ];
     }
 
-    /** @param array<string, mixed> $body */
+    /**
+     * @param  array<string, mixed>  $body
+     * @param  array<string, mixed>  $answer
+     */
     #[Test]
     #[DataProvider('scheduledWrites')]
-    public function it_schedules_nothing_without_an_observer(string $method, string $uri, array $body, int $transactions): void
+    public function it_schedules_nothing_without_an_observer(string $method, string $uri, array $body, int $transactions, array $answer): void
     {
         $this->seedDocuments(null, null);
 
-        $without = $this->scheduledCallbacks([], $method, $uri, $body);
-        $with = $this->scheduledCallbacks(['history' => RecordingWriteObserver::class], $method, $uri, $body);
+        $without = $this->scheduledCallbacks([], $method, $uri, $body, $answer);
+        $with = $this->scheduledCallbacks(['history' => RecordingWriteObserver::class], $method, $uri, $body, $answer);
 
         $this->assertSame($without + $transactions, $with);
         $this->assertSame([], WriteLog::$writes);
@@ -361,7 +373,7 @@ final class ObservedWritesTest extends PackageTestCase
     {
         $this->seedDocuments(null, null);
 
-        $this->postJson('/written-documents/actions/queued-archive-documents-by-one', ['search' => []])->assertOk();
+        $this->postJson('/written-documents/actions/queued-archive-documents-by-one', ['search' => []])->assertOk()->assertExactJson(self::IMPACTED);
         $this->assertSame([], WriteLog::$writes);
         $this->app['auth']->forgetGuards();
         $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
@@ -386,23 +398,23 @@ final class ObservedWritesTest extends PackageTestCase
         $destroyed = $this->deleteJson('/written-documents', ['resources' => [1, 2]]);
         $mutated = $this->postJson('/written-documents/mutate', ['mutate' => [['operation' => 'create', 'attributes' => ['title' => 'Minutes']]], 'response' => ['fields' => ['id', 'title']]]);
 
-        $destroyed->assertOk();
-        $this->assertSame(['Annual report', 'Budget'], array_column($destroyed->json('data'), 'title'));
-        $mutated->assertOk()->assertJsonPath('records.0.title', 'Minutes');
+        $destroyed->assertOk()->assertExactJson(self::DOCUMENTS);
+        $mutated->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => 3]], 'records' => [['id' => 3, 'title' => 'Minutes', 'archived' => false]]]);
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false], [3, 'Minutes', false]], $this->documents());
     }
 
     /**
      * @param  array<string, class-string>  $extensions
      * @param  array<string, mixed>  $body
+     * @param  array<string, mixed>  $answer
      */
-    private function scheduledCallbacks(array $extensions, string $method, string $uri, array $body): int
+    private function scheduledCallbacks(array $extensions, string $method, string $uri, array $body, array $answer): int
     {
         config(['rest.extensions' => $extensions]);
         DB::beginTransaction();
 
         try {
-            $this->json($method, $uri, $body)->assertOk();
+            $this->json($method, $uri, $body)->assertOk()->assertExactJson($answer);
 
             return count($this->app['db.transactions']->callbackApplicableTransactions()->last()->getCallbacks());
         } finally {
