@@ -28,6 +28,6 @@ enum ActionTransaction
     /** @param Collection<array-key, Model> $models */
     public function handle(Action $action, ActionFields $fields, WriteTransaction $transaction, Collection $models): void
     {
-        ActionWrites::in($this, $action, $fields, $action->resource, $transaction)->handle($models);
+        ActionWrites::in($this, $action, $fields, isset($action->resource) ? $action->resource : null, $transaction)->handle($models);
     }
 }

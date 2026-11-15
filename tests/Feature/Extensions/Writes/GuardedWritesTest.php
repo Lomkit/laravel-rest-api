@@ -36,6 +36,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FrozenGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ModeChangingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrittenDocumentController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrittenDocumentResource;
@@ -395,6 +396,29 @@ final class GuardedWritesTest extends PackageTestCase
             'begin level 2', 'run', 'guard operate 1,2', 'handle 1,2', 'sql update documents', 'sql update documents', 'commit level 1',
         ], $this->writeLines());
         $this->assertSame(2, WriteLog::$guards[0]->user?->getAuthIdentifier());
+        $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
+    }
+
+    #[Test]
+    public function it_runs_an_action_that_is_not_bound_to_a_resource_without_extensions(): void
+    {
+        config(['rest.extensions' => ['history' => RecordingWriteObserver::class, 'quota' => RecordingGuard::class]]);
+        $this->seedDocuments(null, null);
+        $request = RestRequest::create('/')->setContainer($this->app);
+        $resource = $request->context()->resource(WrittenDocumentResource::class);
+        $bound = $resource->definition()->action('archive-each-document');
+        $action = new ArchiveEachDocument;
+        $fields = ActionFields::of($action, InputValues::fromGiven($resource->definition()->inputFields($bound), []), 'web', $this->grace);
+        EventLog::listen();
+
+        ActionTransaction::Row->handle($action, $fields, WriteTransaction::of($resource), Document::query()->orderBy('id')->get());
+
+        $this->assertSame([
+            'before 1', 'begin level 2', 'row 1', 'sql update documents', 'commit level 1',
+            'before 2', 'begin level 2', 'row 2', 'sql update documents', 'commit level 1',
+        ], $this->writeLines());
+        $this->assertSame([], WriteLog::$guards);
+        $this->assertSame([], WriteLog::$writes);
         $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
     }
 
