@@ -18,6 +18,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\OtherAtlasRowsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PassingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingCheckExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedCheckExtension;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\After;
@@ -118,6 +119,29 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $this->assertArrayHasKey('routes', $report);
         $this->assertArrayHasKey('rows', $report);
         $this->assertSame([], $report['extensions']['problems'] ?? null);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['undecided' => UndecidedCheckExtension::class])]
+    public function it_reports_an_exception_of_applies_to_as_a_problem(): void
+    {
+        $this->expose('trips', TripController::class);
+        $problem = 'The [undecided] extension '.UndecidedCheckExtension::class.' throws while it tells whether it applies to '.TripResource::class.': The config table is missing.';
+
+        $output = $this->check(1, TripController::class);
+        $report = $this->report(1, TripController::class);
+
+        $this->assertStringEndsWith(
+            "  extension checks ... FAILED\n"
+            .'  ⇂ '.rtrim($problem, '.')."\n",
+            $output,
+        );
+        $this->assertSame([
+            'checked' => [['extension' => 'undecided', 'resource' => CountryResource::class]],
+            'problems' => [$problem],
+        ], $report['extension_checks']);
+        $this->assertSame([CountryResource::class, CountryResource::class], ExtensionLog::$checked);
+        $this->assertArrayHasKey('rows', $report);
     }
 
     /** @return array<string, array{array<string, class-string>}> */

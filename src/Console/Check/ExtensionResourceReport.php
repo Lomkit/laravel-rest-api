@@ -39,7 +39,7 @@ final readonly class ExtensionResourceReport
 
     public function render(Factory $components): void
     {
-        if ($this->checked === []) {
+        if ($this->checked === [] && $this->problems === []) {
             return;
         }
 

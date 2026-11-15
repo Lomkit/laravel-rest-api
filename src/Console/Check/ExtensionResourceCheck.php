@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Console\Check;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Request;
+use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\ResourceCheckContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\ChecksResources;
@@ -26,10 +27,10 @@ final readonly class ExtensionResourceCheck
             return $report;
         }
 
-        foreach ((new ReachedResources($context))->from(ControllerResources::of($controllers)) as $resource) {
-            $extensions = $context->extensions()->applicable($resource, ChecksResources::class);
-            ksort($extensions);
+        $extensions = array_filter($context->extensions()->all(), fn (Extension $extension): bool => $extension instanceof ChecksResources);
+        ksort($extensions);
 
+        foreach ((new ReachedResources($context))->from(ControllerResources::of($controllers)) as $resource) {
             foreach ($extensions as $name => $extension) {
                 $report = self::check($report, $name, $extension, $resource);
             }
@@ -42,6 +43,17 @@ final readonly class ExtensionResourceCheck
     private static function check(ExtensionResourceReport $report, string $name, Extension&ChecksResources $extension, string $resource): ExtensionResourceReport
     {
         $class = $extension::class;
+
+        try {
+            $applies = Applicability::of($extension, $resource);
+        } catch (Throwable $exception) {
+            return $report->withProblem("The [{$name}] extension {$class} throws while it tells whether it applies to {$resource}: {$exception->getMessage()}");
+        }
+
+        if (! $applies) {
+            return $report;
+        }
+
         $problems = [];
         $reported = function (string $message) use (&$problems, $name, $class, $resource): void {
             $problems[] = "The [{$name}] extension {$class} reports {$resource}: {$message}";
