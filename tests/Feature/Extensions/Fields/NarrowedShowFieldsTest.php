@@ -142,6 +142,31 @@ class NarrowedShowFieldsTest extends PackageTestCase
         );
     }
 
+    /** @param Closure(string): list<array<string, mixed>> $filters */
+    #[Test]
+    #[DataProvider('metricFilters')]
+    public function it_answers_a_hidden_field_in_a_metric_search_like_an_unknown_name(Closure $filters): void
+    {
+        $this->hidePrice();
+
+        $this->assertLikeUnknown(fn (string $field): TestResponse => $this->postJson('/api/shows/metrics/seats-by-level', [
+            'range' => 30,
+            'search' => ['filters' => $filters($field)],
+        ]));
+    }
+
+    /** @return array<string, array{Closure(string): list<array<string, mixed>>}> */
+    public static function metricFilters(): array
+    {
+        return [
+            'a filter' => [static fn (string $field): array => [['field' => $field, 'value' => 20]]],
+            'a filter with an operator' => [static fn (string $field): array => [['field' => $field, 'operator' => '>', 'value' => 20]]],
+            'an in filter' => [static fn (string $field): array => [['field' => $field, 'operator' => 'in', 'value' => [20, 35]]]],
+            'a nested filter' => [static fn (string $field): array => [['nested' => [['field' => $field, 'value' => 20]]]]],
+            'an or filter beside a valid one' => [static fn (string $field): array => [['field' => 'level', 'value' => 1], ['field' => $field, 'type' => 'or', 'value' => 20]]],
+        ];
+    }
+
     #[Test]
     public function it_refuses_a_hidden_field_in_the_search_of_an_action(): void
     {

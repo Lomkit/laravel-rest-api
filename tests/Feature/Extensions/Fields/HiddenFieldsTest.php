@@ -102,6 +102,19 @@ class HiddenFieldsTest extends PackageTestCase
         $this->assertSame([$undeclared->status(), $undeclared->json()], [$hidden->status(), $hidden->json()]);
     }
 
+    /** @param array<string, mixed> $payload */
+    #[Test]
+    #[DataProvider('probes')]
+    #[WithConfig('rest.precognition.enabled', true)]
+    public function it_answers_a_hidden_field_like_an_undeclared_one_under_precognition(string $uri, string $twin, array $payload, int $status): void
+    {
+        $hidden = $this->actingAs(self::user())->postJson($uri, $payload, ['Precognition' => 'true']);
+        $undeclared = $this->actingAs(self::user())->postJson($twin, $payload, ['Precognition' => 'true']);
+
+        $hidden->assertStatus($status === 200 ? 204 : $status)->assertHeader('Precognition', 'true');
+        $this->assertSame([$undeclared->status(), $undeclared->getContent()], [$hidden->status(), $hidden->getContent()]);
+    }
+
     /** @return array<string, array{string, string, array<string, mixed>, int}> */
     public static function probes(): array
     {
