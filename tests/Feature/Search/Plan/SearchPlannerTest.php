@@ -19,6 +19,7 @@ use Lomkit\Rest\Query\Clauses\ScopeClause;
 use Lomkit\Rest\Query\Clauses\SortClause;
 use Lomkit\Rest\Query\Clauses\TrashedClause;
 use Lomkit\Rest\Search\FilterGroup;
+use Lomkit\Rest\Search\Plan\AliasedIncludeClause;
 use Lomkit\Rest\Search\Plan\DefaultOrderClause;
 use Lomkit\Rest\Search\Plan\IncludeClause;
 use Lomkit\Rest\Search\Plan\KeyOrderClause;
@@ -34,6 +35,7 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
+use Lomkit\Rest\Tests\Fixtures\Publishing\TagResource;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Lomkit\Rest\Text\Engine\EngineFilterCondition;
 use Lomkit\Rest\Text\Engine\EngineSort;
@@ -147,6 +149,58 @@ class SearchPlannerTest extends PackageTestCase
     private static function sorted(SortNode $sort): SearchNode
     {
         return new SearchNode(null, null, new FilterGroup, [$sort], null, [], [], [], [], null, null, null);
+    }
+
+    #[Test]
+    public function it_marks_each_level_of_a_rendered_plan(): void
+    {
+        $authors = $this->listed(AuthorResource::class);
+        $this->listed(PostResource::class);
+        $this->listed(TagResource::class);
+        $search = ['includes' => [['relation' => 'posts.author'], ['relation' => 'tags'], ['relation' => 'posts', 'alias' => 'writings']]];
+
+        foreach ([$this->paged($authors, $search), SearchPlanner::rendered($authors, $this->parse($authors, $search), $authors->context()->text($authors))] as $plan) {
+            [$posts, $tags, $writings] = $plan->includes;
+            $this->assertInstanceOf(IncludeClause::class, $posts);
+            $this->assertInstanceOf(IncludeClause::class, $tags);
+            $this->assertInstanceOf(AliasedIncludeClause::class, $writings);
+            $author = $posts->plan->includes[0];
+            $this->assertInstanceOf(IncludeClause::class, $author);
+            $this->assertSame(
+                [['posts', 'tags', 'writings'], ['author'], [], [], []],
+                [$plan->rendered?->relations, $posts->plan->rendered?->relations, $author->plan->rendered?->relations, $tags->plan->rendered?->relations, $writings->plan->rendered?->relations],
+            );
+        }
+    }
+
+    #[Test]
+    public function it_lists_only_the_alias_of_an_aliased_include(): void
+    {
+        $authors = $this->listed(AuthorResource::class);
+        $this->listed(PostResource::class);
+
+        $plan = $this->paged($authors, ['includes' => [['relation' => 'posts', 'alias' => 'writings']]]);
+
+        $this->assertSame(['writings'], $plan->rendered?->relations);
+    }
+
+    #[Test]
+    public function it_marks_no_plan_whose_rows_are_not_rendered(): void
+    {
+        $authors = $this->listed(AuthorResource::class);
+        $this->listed(PostResource::class);
+        $this->listed(TagResource::class);
+        $plan = $this->all($authors, ['includes' => [['relation' => 'posts.author'], ['relation' => 'tags']]]);
+        [$posts, $tags] = $plan->includes;
+        $this->assertInstanceOf(IncludeClause::class, $posts);
+        $this->assertInstanceOf(IncludeClause::class, $tags);
+        $author = $posts->plan->includes[0];
+        $this->assertInstanceOf(IncludeClause::class, $author);
+
+        $this->assertSame(
+            [null, null, null, null, null, null],
+            [$plan->rendered, $posts->plan->rendered, $author->plan->rendered, $tags->plan->rendered, $this->paged($authors, [])->keys()->rendered, QueryPlan::bare($authors)->rendered],
+        );
     }
 
     /** @param array<string, mixed> $search */

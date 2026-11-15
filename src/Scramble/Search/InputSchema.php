@@ -62,7 +62,7 @@ final readonly class InputSchema
 
             foreach ($instructions as $instruction) {
                 $fields = $resource->definition()->inputFields($instruction);
-                $branches[] = [$instruction->uriKey(), $name.'Instruction'.Str::studly($instruction->uriKey()), fn (): Type => $this->fields($instruction, $fields, $resource)];
+                $branches[] = [$instruction->publicUriKey(), $name.'Instruction'.Str::studly($instruction->publicUriKey()), fn (): Type => $this->fields($instruction, $fields, $resource)];
             }
 
             return $this->components->discriminated('name', $resource::class, $branches);
@@ -98,7 +98,7 @@ final readonly class InputSchema
     private function fields(Instruction $instruction, FieldSet $fields, Resource $resource): ObjectType
     {
         $properties = [
-            'name' => (new StringType)->const($instruction->uriKey()),
+            'name' => (new StringType)->const($instruction->publicUriKey()),
             'alias' => SearchSchema::alias('The key of this entry among the instructions of the search, in place of the instruction name. It lets a search send one instruction several times.'),
         ];
         $entries = [];

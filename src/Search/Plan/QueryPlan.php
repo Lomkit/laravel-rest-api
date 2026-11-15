@@ -29,6 +29,7 @@ final readonly class QueryPlan implements Clause
         public ?array $selects = null,
         public ?array $gates = null,
         public ?ColumnSet $columns = null,
+        public ?RenderedLevel $rendered = null,
     ) {}
 
     public static function bare(Resource $resource): self
@@ -64,5 +65,7 @@ final readonly class QueryPlan implements Clause
         }
 
         $this->limit->apply($query);
+
+        PlanAugmentation::apply($this, $query);
     }
 }

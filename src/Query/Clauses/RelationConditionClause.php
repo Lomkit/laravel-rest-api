@@ -40,7 +40,7 @@ final readonly class RelationConditionClause implements Clause
             }
 
             $this->through($query, $relations, 'and');
-            $this->perimeter($query, $relation);
+            $relation->constrainToPerimeter($query);
         };
 
         if ($relation instanceof PolymorphicRelation) {
@@ -57,14 +57,6 @@ final readonly class RelationConditionClause implements Clause
     {
         $this->path->field->filter($query, $this->operator, $this->value, 'and', $this->path->column($query->getModel()));
 
-        $this->perimeter($query, $relation);
-    }
-
-    /** @param EloquentBuilder<Model> $query */
-    private function perimeter(EloquentBuilder $query, Relation $relation): void
-    {
-        $query->where(function (EloquentBuilder $query) use ($relation): void {
-            $relation->applyPerimeter($query);
-        });
+        $relation->constrainToPerimeter($query);
     }
 }

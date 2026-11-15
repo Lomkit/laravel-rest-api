@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Http\Request;
 use Lomkit\Rest\Console\Check\DeclarationCheck;
 use Lomkit\Rest\Console\Check\DetachCheck;
 use Lomkit\Rest\Console\Check\ExtensionCheck;
@@ -11,6 +12,8 @@ use Lomkit\Rest\Console\Check\PerimeterCheck;
 use Lomkit\Rest\Console\Check\RegisteredControllers;
 use Lomkit\Rest\Console\QuickStart\ExposureCheck;
 use Lomkit\Rest\Console\QuickStart\ExposureReport;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -29,10 +32,11 @@ class CheckCommand extends Command
 
         $controllers = $this->controllers();
         $access = $this->access($controllers);
-        $declarations = $this->laravel->make(DeclarationCheck::class)->run($controllers);
-        $rows = $this->laravel->make(PerimeterCheck::class)->run($controllers, $declarations);
-        $links = $this->laravel->make(DetachCheck::class)->run($controllers);
-        $extensions = $this->laravel->make(ExtensionCheck::class)->run();
+        $context = new RestContext(RestRequest::createFrom($this->laravel->make(Request::class)), $this->laravel);
+        $declarations = $this->laravel->make(DeclarationCheck::class)->run($controllers, $context);
+        $rows = $this->laravel->make(PerimeterCheck::class)->run($controllers, $declarations, $context);
+        $links = $this->laravel->make(DetachCheck::class)->run($controllers, $context);
+        $extensions = $this->laravel->make(ExtensionCheck::class)->run($context);
 
         if ($this->option('json') === true) {
             $this->output->writeln(json_encode([...$access->toArray(), ...$declarations->toArray(), ...$rows->toArray(), ...$links->toArray(), ...$extensions->toArray()], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), OutputInterface::OUTPUT_RAW);

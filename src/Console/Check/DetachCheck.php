@@ -2,12 +2,9 @@
 
 namespace Lomkit\Rest\Console\Check;
 
-use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\QueryException;
-use Illuminate\Http\Request;
 use InvalidArgumentException;
 use Lomkit\Rest\Fields\MutationOperation;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Mutations\LinkColumn;
@@ -16,12 +13,9 @@ use Lomkit\Rest\Relations\Relation;
 
 final readonly class DetachCheck
 {
-    public function __construct(private Container $container) {}
-
     /** @param list<string> $controllers */
-    public function run(array $controllers): DetachReport
+    public function run(array $controllers, RestContext $context): DetachReport
     {
-        $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
         $columns = new NullableColumns;
         $report = new DetachReport;
 

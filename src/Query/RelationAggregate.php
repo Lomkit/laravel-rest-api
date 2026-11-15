@@ -23,6 +23,7 @@ final readonly class RelationAggregate implements AggregateQuery
         private ModelRelation $relation,
         private AggregateFunction $function,
         private ?Field $field,
+        private bool $groupedConstraint = false,
     ) {}
 
     /** @param Closure(EloquentBuilder<Model>): void $constraint */
@@ -57,12 +58,19 @@ final readonly class RelationAggregate implements AggregateQuery
     {
         $column = new AggregateColumn($this->function, $this->column($query, true));
         $relation = $this->relation->on($query->getModel());
-        $subquery = $relation
+        $existence = $relation
             ->getRelationExistenceQuery($relation->getRelated()->newQuery(), $query)
-            ->select($column)
-            ->where(function (EloquentBuilder $query) use ($constraint): void {
+            ->select($column);
+
+        if ($this->groupedConstraint) {
+            $constraint($existence);
+        } else {
+            $existence->where(function (EloquentBuilder $query) use ($constraint): void {
                 $constraint($query);
-            })
+            });
+        }
+
+        $subquery = $existence
             ->mergeConstraintsFrom($relation->getQuery())
             ->toBase();
 

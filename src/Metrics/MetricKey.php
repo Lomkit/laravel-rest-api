@@ -7,6 +7,7 @@ use Lomkit\Rest\Authorization\CacheContext;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
+use Lomkit\Rest\Query\ExtensionRestrictions;
 
 final readonly class MetricKey
 {
@@ -41,6 +42,12 @@ final readonly class MetricKey
 
             if ($others !== []) {
                 $parts[] = array_map(self::perimeter(...), $others);
+            }
+        } else {
+            $restricted = self::restrictedPerimeters([$resource::class => $resource, ...$others]);
+
+            if ($restricted !== []) {
+                $parts[] = $restricted;
             }
         }
 
@@ -88,6 +95,23 @@ final readonly class MetricKey
         }
 
         return $contexts;
+    }
+
+    /**
+     * @param  array<class-string<Resource>, Resource>  $resources
+     * @return array<class-string<Resource>, string>
+     */
+    private static function restrictedPerimeters(array $resources): array
+    {
+        $perimeters = [];
+
+        foreach ($resources as $class => $resource) {
+            if (ExtensionRestrictions::of($resource) !== null) {
+                $perimeters[$class] = self::perimeter($resource);
+            }
+        }
+
+        return $perimeters;
     }
 
     private static function perimeter(Resource $resource): string

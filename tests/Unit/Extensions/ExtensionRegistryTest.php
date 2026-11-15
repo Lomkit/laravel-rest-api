@@ -102,13 +102,22 @@ final class ExtensionRegistryTest extends TestCase
     }
 
     #[Test]
-    public function it_gives_the_extensions_of_one_kind_by_name_in_registration_order(): void
+    public function it_gives_the_extensions_of_one_kind_in_name_order(): void
     {
         $registry = ExtensionRegistry::of([], [], [NotingExtension::class, CountingExtension::class, BothKindsExtension::class], new IlluminateContainer);
 
-        $this->assertSame(['noting', 'both'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
-        $this->assertSame(['counting', 'both'], array_keys($registry->applicable(ProductResource::class, CountsResources::class)));
+        $this->assertSame(['both', 'noting'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
+        $this->assertSame(['both', 'counting'], array_keys($registry->applicable(ProductResource::class, CountsResources::class)));
         $this->assertSame(['noting', 'counting', 'both'], array_keys($registry->all()));
+    }
+
+    #[Test]
+    public function it_gives_config_extensions_in_name_order(): void
+    {
+        $registry = ExtensionRegistry::of([NotingExtension::class, BothKindsExtension::class], [], [], new IlluminateContainer);
+
+        $this->assertSame(['both', 'noting'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
+        $this->assertSame([NotingExtension::class, BothKindsExtension::class], ExtensionLog::$built);
     }
 
     #[Test]
@@ -116,7 +125,7 @@ final class ExtensionRegistryTest extends TestCase
     {
         $registry = ExtensionRegistry::of([], [], [ProductsOnlyExtension::class, NotingExtension::class], new IlluminateContainer);
 
-        $this->assertSame(['products', 'noting'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
+        $this->assertSame(['noting', 'products'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
         $this->assertSame(['noting'], array_keys($registry->applicable(CategoryResource::class, NotesResources::class)));
     }
 

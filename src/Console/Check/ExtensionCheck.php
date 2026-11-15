@@ -5,12 +5,14 @@ namespace Lomkit\Rest\Console\Check;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Lomkit\Rest\Config\RestConfig;
+use Lomkit\Rest\Exceptions\ExtensionException;
 use Lomkit\Rest\Exceptions\InvalidConfigException;
-use Lomkit\Rest\Exceptions\InvalidExtensionException;
+use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\ExtensionEntry;
 use Lomkit\Rest\Extensions\ExtensionFactory;
 use Lomkit\Rest\Extensions\ExtensionList;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
+use Lomkit\Rest\Http\RestContext;
 use Throwable;
 
 /** @internal */
@@ -18,7 +20,7 @@ final readonly class ExtensionCheck
 {
     public function __construct(private Container $container) {}
 
-    public function run(): ExtensionReport
+    public function run(RestContext $context): ExtensionReport
     {
         $report = new ExtensionReport;
         $config = $this->container->make(Repository::class);
@@ -28,6 +30,7 @@ final readonly class ExtensionCheck
         $list = ExtensionList::of($configured, $disabled, $this->container->make(RuntimeExtensions::class)->all());
         $named = $list->named();
         $factory = new ExtensionFactory($this->container);
+        $built = self::built($context);
 
         foreach ($named->refused as $exception) {
             $report = $report->withProblem($exception->getMessage());
@@ -40,7 +43,7 @@ final readonly class ExtensionCheck
         foreach ($named->entries as $entry) {
             $report = $report->withEntry($entry);
 
-            if ($entry->disabled || in_array($entry->name, $named->shared, true)) {
+            if ($entry->disabled || in_array($entry->name, $named->shared, true) || isset($built[$entry->name ?? ''])) {
                 continue;
             }
 
@@ -69,9 +72,19 @@ final readonly class ExtensionCheck
         return "The [rest.disabled_extensions] config lists {$class}, but no extension of this class is registered or configured, so it disables nothing. Remove it, or list the exact class that the package registers.";
     }
 
+    /** @return array<string, Extension> */
+    private static function built(RestContext $context): array
+    {
+        try {
+            return $context->extensions()->all();
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
     private static function problem(ExtensionEntry $entry, Throwable $exception): string
     {
-        if ($exception instanceof InvalidExtensionException && $exception->concerns($entry->class)) {
+        if ($exception instanceof ExtensionException && $exception->concerns($entry->class)) {
             return $exception->getMessage();
         }
 

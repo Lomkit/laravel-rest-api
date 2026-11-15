@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Relations;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
 use LogicException;
@@ -87,13 +86,10 @@ class MorphTo extends BelongsTo implements PolymorphicRelation
         return $target === null ? null : $this->resourceOf($target);
     }
 
-    /** @param Builder<Model> $query */
     #[\Override]
-    public function applyPerimeter(Builder $query): void
+    protected function perimeterResource(Model $model): Resource
     {
-        $resource = $this->resourceFor($query->getModel()) ?? throw new LogicException($query->getModel()::class." is not a target of the MorphTo relation [{$this->relation}].");
-
-        self::perimeter($resource, $query);
+        return $this->resourceFor($model) ?? throw new LogicException($model::class." is not a target of the MorphTo relation [{$this->relation}].");
     }
 
     #[\Override]

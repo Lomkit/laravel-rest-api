@@ -5,24 +5,23 @@ namespace Lomkit\Rest\Console\Check;
 use Closure;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Http\Request;
 use LogicException;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
 use Lomkit\Rest\Http\DeclarationList;
 use Lomkit\Rest\Http\InstructionList;
-use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Metrics\Metric;
+use Throwable;
 
 final readonly class DeclarationCheck
 {
     public function __construct(private Container $container) {}
 
     /** @param list<string> $controllers */
-    public function run(array $controllers): DeclarationReport
+    public function run(array $controllers, RestContext $context): DeclarationReport
     {
-        $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
         $resources = ControllerResources::of($controllers);
         $report = new DeclarationReport;
 
@@ -32,11 +31,33 @@ final readonly class DeclarationCheck
             $report = self::build($resource, $declarations->metrics(), $report, fn (DeclarationReport $report): DeclarationReport => $report->withMetric());
         }
 
+        $extensions = self::extensionsBuild($context);
+
         foreach ((new ReachedResources($context))->from($resources) as $resource) {
-            $report = self::buildInstructions($resource, $context->resource($resource)->definition()->declarations()->instructions(), $report);
+            $report = self::buildInstructions($resource, $this->instructions($context->resource($resource), $extensions), $report);
         }
 
         return $report;
+    }
+
+    private function instructions(Resource $resource, bool $extensions): InstructionList
+    {
+        if ($extensions) {
+            return $resource->definition()->declarations()->instructions();
+        }
+
+        return new InstructionList($resource->instructions(), static fn (): array => [], $resource, $this->container);
+    }
+
+    private static function extensionsBuild(RestContext $context): bool
+    {
+        try {
+            $context->extensions()->all();
+        } catch (Throwable) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -60,13 +81,32 @@ final readonly class DeclarationCheck
 
     private static function buildInstructions(string $resource, InstructionList $instructions, DeclarationReport $report): DeclarationReport
     {
-        foreach ($instructions->indexes() as $index) {
+        $built = true;
+
+        try {
+            $indexes = $instructions->indexes();
+        } catch (LogicException|BindingResolutionException $exception) {
+            return $report->withProblem(self::instructionProblem($resource, $exception));
+        }
+
+        foreach ($indexes as $index) {
             try {
                 $instructions->at($index);
                 $report = $report->withInstruction();
             } catch (LogicException|BindingResolutionException $exception) {
+                $built = false;
                 $report = $report->withProblem(self::instructionProblem($resource, $exception));
             }
+        }
+
+        if (! $built) {
+            return $report;
+        }
+
+        try {
+            $instructions->all();
+        } catch (LogicException $exception) {
+            return $report->withProblem(self::instructionProblem($resource, $exception));
         }
 
         return $report;

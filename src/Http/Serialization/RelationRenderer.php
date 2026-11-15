@@ -53,7 +53,7 @@ final readonly class RelationRenderer
             if (isset($this->planned[$name])) {
                 [$key, $rows] = $this->planned[$name];
                 $rendered[$key] = $this->value($model, $name, $value, $rows);
-            } elseif ($value instanceof Pivot) {
+            } elseif ($value instanceof Pivot && $this->pivot->renders($name)) {
                 $rendered[Str::snake($name)] = $this->pivot->render($value);
             }
         }

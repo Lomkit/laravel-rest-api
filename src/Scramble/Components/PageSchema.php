@@ -8,6 +8,7 @@ use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
+use Lomkit\Rest\Http\LimitNarrowing;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Scramble\ComponentRegistry;
@@ -43,9 +44,10 @@ final readonly class PageSchema
     {
         $capped = $resource
             ->definition()
-            ->limits()
-            ->maxTotal !== null;
+            ->declaredLimits()
+            ->maxTotal !== null || LimitNarrowing::appliesTo($resource);
         $engine = $resource->context()->text($resource)->backend === TextBackend::Engine;
+        $optional = $engine || $resource->maxTotal === null;
 
         return Schemas::required([
             'current_page' => new IntegerType,
@@ -57,7 +59,7 @@ final readonly class PageSchema
             'total' => new IntegerType,
             ...($capped ? ['total_capped' => self::capped($engine)] : []),
             'meta' => $this->meta($resource),
-        ], $engine ? ['total_capped'] : [], 'A page of rows');
+        ], $optional ? ['total_capped'] : [], 'A page of rows');
     }
 
     private static function capped(bool $engine): BooleanType

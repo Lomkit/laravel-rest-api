@@ -29,12 +29,12 @@ final readonly class RelationSortClause implements Clause
     #[\Override]
     public function apply(Builder $query): void
     {
-        (new RelationAggregate(ModelRelation::of($this->relation), AggregateFunction::Max, $this->field))->order($query, $this->perimeter(...), $this->direction);
+        (new RelationAggregate(ModelRelation::of($this->relation), AggregateFunction::Max, $this->field, groupedConstraint: true))->order($query, $this->perimeter(...), $this->direction);
     }
 
     /** @param EloquentBuilder<Model> $query */
     private function perimeter(EloquentBuilder $query): void
     {
-        $this->relation->applyPerimeter($query);
+        $this->relation->constrainToPerimeter($query);
     }
 }

@@ -3,16 +3,13 @@
 namespace Lomkit\Rest\Exceptions;
 
 use Illuminate\Support\Arr;
-use LogicException;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\ExtensionName;
 use Lomkit\Rest\Extensions\Kinds\ExtensionKind;
 use Throwable;
 
-final class InvalidExtensionException extends LogicException
+final class InvalidExtensionException extends ExtensionException
 {
-    private ?string $extension = null;
-
     public static function invalidName(string $class, string $name): self
     {
         $length = ExtensionName::MAX_LENGTH;
@@ -80,21 +77,8 @@ final class InvalidExtensionException extends LogicException
         return self::about($class, "The container builds [{$bound}] for ".lcfirst(self::subject($class, $name)).": bind {$class} to itself or to a class that extends it.");
     }
 
-    public function concerns(string $class): bool
-    {
-        return $this->extension === $class;
-    }
-
     private static function subject(string $class, ?string $name): string
     {
         return $name === null ? "The extension {$class}" : "The [{$name}] extension {$class}";
-    }
-
-    private static function about(string $class, string $message, ?Throwable $previous = null): self
-    {
-        $exception = new self($message, 0, $previous);
-        $exception->extension = $class;
-
-        return $exception;
     }
 }

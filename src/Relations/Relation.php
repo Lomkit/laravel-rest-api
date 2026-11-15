@@ -11,6 +11,7 @@ use Lomkit\Rest\Fields\Details\FieldDetails;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\SelectsOperations;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
@@ -54,9 +55,15 @@ class Relation
     }
 
     /** @param Builder<Model> $query */
+    final public function constrainToPerimeter(Builder $query): void
+    {
+        (new PerimeterClause($this->perimeterResource($query->getModel()), $this->applyPerimeter(...)))->apply($query);
+    }
+
+    /** @param Builder<Model> $query */
     public function applyPerimeter(Builder $query): void
     {
-        self::perimeter($this->resource(), $query);
+        self::perimeter($this->perimeterResource($query->getModel()), $query);
     }
 
     public function hasMultipleEntries(): bool
@@ -164,6 +171,11 @@ class Relation
     }
 
     protected function constraintResource(): ?Resource
+    {
+        return $this->resource();
+    }
+
+    protected function perimeterResource(Model $model): Resource
     {
         return $this->resource();
     }

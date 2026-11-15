@@ -15,6 +15,6 @@ final readonly class InstructionNode
 
     public function key(): string
     {
-        return $this->alias ?? $this->instruction->uriKey();
+        return $this->alias ?? $this->instruction->publicUriKey();
     }
 }

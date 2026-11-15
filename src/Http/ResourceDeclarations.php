@@ -34,6 +34,6 @@ final class ResourceDeclarations
 
     public function instructions(): InstructionList
     {
-        return $this->instructions ??= new InstructionList($this->resource->instructions(), $this->resource, $this->container);
+        return $this->instructions ??= new InstructionList($this->resource->instructions(), fn (): array => ExtensionInstructions::of($this->resource), $this->resource, $this->container);
     }
 }

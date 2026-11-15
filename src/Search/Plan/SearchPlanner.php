@@ -8,13 +8,10 @@ use Lomkit\Rest\Contracts\OwnerRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\ResourceLimits;
-use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\Clause;
-use Lomkit\Rest\Query\Clauses\FilterGroupClause;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Query\TextMorphKeys;
 use Lomkit\Rest\Relations\Relation;
-use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Search\IncludeNode;
 use Lomkit\Rest\Search\MorphIncludeNode;
 use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
@@ -61,7 +58,7 @@ final readonly class SearchPlanner
             ->authorizer()
             ->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
-        $aggregates = array_map(self::aggregate(...), $search->aggregates, array_keys($search->aggregates));
+        $aggregates = array_map(AggregatePlan::of(...), $search->aggregates, array_keys($search->aggregates));
 
         return new QueryPlan(
             $resource,
@@ -71,7 +68,8 @@ final readonly class SearchPlanner
             $limit,
             $search->selects,
             $search->gates,
-            $this->columns->level($resource, $search->selects, self::names($includes), [...$keys, ...$this->rows->columns()], $search->gates ?? []),
+            $this->columns->level($resource, $search->selects, RenderedLevel::names($includes), [...$keys, ...$this->rows->columns()], $search->gates ?? []),
+            $this->rendered ? RenderedLevel::of($includes) : null,
         );
     }
 
@@ -151,11 +149,12 @@ final readonly class SearchPlanner
     {
         if ($level === null) {
             $resource = $relation->resource();
-            $columns = $this->columns->level($resource, null, self::names($children), RelationKeys::between($parent::newModel(), $relation->relation)->related());
+            $columns = $this->columns->level($resource, null, RenderedLevel::names($children), RelationKeys::between($parent::newModel(), $relation->relation)->related());
+            $rendered = $this->rendered ? RenderedLevel::of($children) : null;
 
             return $relation instanceof OwnerRelation
-                ? new QueryPlan($resource, [new PerimeterClause($resource)], $this->includes($resource, $children), [], LimitPolicy::none(), columns: $columns)
-                : new QueryPlan($resource, [new PerimeterClause($resource), new DefaultOrderClause($resource), new KeyOrderClause], $this->includes($resource, $children), [], $this->includeLimit($resource, null, $relation), columns: $columns);
+                ? new QueryPlan($resource, [new PerimeterClause($resource)], $this->includes($resource, $children), [], LimitPolicy::none(), columns: $columns, rendered: $rendered)
+                : new QueryPlan($resource, [new PerimeterClause($resource), new DefaultOrderClause($resource), new KeyOrderClause], $this->includes($resource, $children), [], $this->includeLimit($resource, null, $relation), columns: $columns, rendered: $rendered);
         }
 
         return $this->explicit($parent, $level, $children);
@@ -169,15 +168,6 @@ final readonly class SearchPlanner
         return (new self(new SqlRows(null, ! $owner), $this->columns, $this->rendered))->level($include->resource, $include->search, [...$children, ...$include->search->includes], $owner ? LimitPolicy::none() : $this->includeLimit($include->resource, $include->search->limit, $include->relations[0]), RelationKeys::between($parent::newModel(), $include->relations[0]->relation)->related());
     }
 
-    /**
-     * @param  list<IncludeNode|MorphIncludeNode>  $includes
-     * @return list<string>
-     */
-    private static function names(array $includes): array
-    {
-        return array_map(static fn (IncludeNode|MorphIncludeNode $include): string => Str::before($include->relation, '.'), $includes);
-    }
-
     private function includeLimit(Resource $resource, ?int $limit, Relation $relation): LimitPolicy
     {
         $limit ??= self::limits($resource)->includeLimit;
@@ -188,16 +178,5 @@ final readonly class SearchPlanner
     private static function limits(Resource $resource): ResourceLimits
     {
         return $resource->definition()->limits();
-    }
-
-    private static function aggregate(AggregateNode $aggregate, int $position): AggregateClause
-    {
-        $clauses = [new PerimeterClause($aggregate->resource)];
-
-        if ($aggregate->filters->filters !== []) {
-            $clauses[] = FilterGroupClause::of($aggregate->filters);
-        }
-
-        return AggregateClause::of($aggregate, new QueryPlan($aggregate->resource, $clauses, [], [], LimitPolicy::none()), $position);
     }
 }

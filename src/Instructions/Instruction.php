@@ -33,6 +33,11 @@ class Instruction
         return Str::slug($this->name(), '-', null);
     }
 
+    final public function publicUriKey(): string
+    {
+        return isset($this->resource) ? $this->resource->definition()->declarations()->instructions()->keyOf($this) : $this->uriKey();
+    }
+
     public function request(): RestRequest
     {
         return $this->resource->request();
@@ -43,7 +48,7 @@ class Instruction
     {
         return [
             'name' => $this->name(),
-            'uriKey' => $this->uriKey(),
+            'uriKey' => $this->publicUriKey(),
             ...$selection->part('instructions.fields', fn (): array => ['fields' => InputFieldDetails::forFields($this->resource->definition()->inputFields($this))]),
             ...$selection->part('instructions.meta', fn (): array => ['meta' => (object) $this->getMeta()]),
             'text' => InstructionSupport::of($this)->runsWithText($this->resource->context()->text($this->resource)->backend),
