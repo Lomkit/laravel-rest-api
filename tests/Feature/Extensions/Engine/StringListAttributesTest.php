@@ -12,6 +12,7 @@ use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AdaptiveReadersExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupsExtension;
@@ -40,29 +41,18 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class StringListAttributesTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        EngineLog::reset();
-        ReadersExtension::$excludes = false;
-        ReadersExtension::$groups = null;
         Route::prefix('api')->group(fn () => Rest::resource('reader-vouchers', ReaderVoucherController::class)->register());
         config([
             'rest.extensions' => [ReadersExtension::class],
             'scout.typesense.model-settings.'.ReaderVoucher::class.'.search-parameters.query_by' => 'title',
         ]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        EngineLog::reset();
-        ReadersExtension::$excludes = false;
-        ReadersExtension::$groups = null;
-
-        parent::tearDown();
     }
 
     /** @return array<string, array{class-string}> */

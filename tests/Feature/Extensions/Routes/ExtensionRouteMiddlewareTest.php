@@ -16,6 +16,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Tests\Concerns\CompilesRoutes;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AbstractStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutes;
@@ -39,6 +40,7 @@ use stdClass;
 class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
 {
     use CompilesRoutes;
+    use ResetsExtensionStubs;
 
     private const string STAMP = StampsRequests::class.':a';
 
@@ -59,10 +61,6 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     {
         $this->laravelVerbs = IlluminateResourceRegistrar::verbs();
         RoutedTicketResource::reset();
-        StampRoutes::reset();
-        OtherStampRoutes::reset();
-        StampsRequests::$stamps = [];
-        ExtensionLog::reset();
     }
 
     #[After]
@@ -70,10 +68,6 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     {
         (new ReflectionProperty(IlluminateResourceRegistrar::class, 'verbs'))->setValue(null, $this->laravelVerbs);
         RoutedTicketResource::reset();
-        StampRoutes::reset();
-        OtherStampRoutes::reset();
-        StampsRequests::$stamps = [];
-        ExtensionLog::reset();
     }
 
     #[Test]

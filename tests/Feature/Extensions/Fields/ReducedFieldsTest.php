@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadOnlyKeyCategoryController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadOnlyKeyProductController;
@@ -24,6 +25,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [MaskingFields::class])]
 class ReducedFieldsTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
     use SeedsCatalog;
 
     #[\Override]
@@ -37,7 +39,6 @@ class ReducedFieldsTest extends PackageTestCase
     {
         parent::setUp();
 
-        MaskingFields::reset();
         MaskingFields::$narrow = static function (FieldsContext $context): void {
             if ($context->user !== null && $context->resource::class === ProductResource::class) {
                 $context->readOnly('price');
@@ -52,14 +53,6 @@ class ReducedFieldsTest extends PackageTestCase
             Rest::resource('read-only-key-categories', ReadOnlyKeyCategoryController::class)->register();
         });
         $this->seedCatalog();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        MaskingFields::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

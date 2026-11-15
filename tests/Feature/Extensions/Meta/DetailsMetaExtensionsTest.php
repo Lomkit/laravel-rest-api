@@ -9,6 +9,7 @@ use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketController;
@@ -27,6 +28,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 final class DetailsMetaExtensionsTest extends HelpdeskTestCase
 {
+    use ResetsExtensionStubs;
+
     private const string META = '"meta":{"plan":"pro","quota":{"plan":"pro","user":1},"region":{}}';
 
     #[\Override]
@@ -34,19 +37,8 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     {
         parent::setUp();
 
-        MetaLog::reset();
-        WriteLog::reset();
         Rest::resource('meta-tickets', MetaTicketController::class)->register();
         config(['rest.extensions' => [QuotaDetailsMeta::class, RegionDetailsMeta::class]]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        MetaLog::reset();
-        WriteLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

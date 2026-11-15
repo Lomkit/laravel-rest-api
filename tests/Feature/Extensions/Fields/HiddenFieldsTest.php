@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PolicedProductController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PriceCapPolicy;
@@ -29,6 +30,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [MaskingFields::class])]
 class HiddenFieldsTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
     use SeedsCatalog;
 
     #[\Override]
@@ -42,7 +44,6 @@ class HiddenFieldsTest extends PackageTestCase
     {
         parent::setUp();
 
-        MaskingFields::reset();
         MaskingFields::$narrow = static function (FieldsContext $context): void {
             if ($context->user !== null && $context->resource instanceof ProductResource) {
                 $context->hide('price');
@@ -59,7 +60,6 @@ class HiddenFieldsTest extends PackageTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        MaskingFields::reset();
         Model::shouldBeStrict(false);
 
         parent::tearDown();

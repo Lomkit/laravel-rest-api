@@ -9,7 +9,7 @@ use Lomkit\Rest\Extensions\Contexts\WriteGuardContext;
 use Lomkit\Rest\Extensions\Contexts\WriteObservationContext;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Mutations\WrittenRow;
-use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HeldShelfGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LoanWritesExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
@@ -18,7 +18,6 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Feature\Mutate\Concerns\SeedsLibraryRows;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\LinkCheckedBookResource;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\RefusingLibraryLinksPolicy;
-use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
 use Lomkit\Rest\Tests\Fixtures\Library\Label;
@@ -32,6 +31,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('app.debug', false)]
 final class NestedWriteExtensionsTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
     use SeedsLibraryRows;
 
     private const array NESTED = ['mutate' => [
@@ -63,20 +63,7 @@ final class NestedWriteExtensionsTest extends PackageTestCase
     {
         parent::setUp();
 
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
         $this->seedLibrary();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

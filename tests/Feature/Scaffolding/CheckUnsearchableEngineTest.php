@@ -6,28 +6,21 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\IndexedBookController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\IndexedBookResource;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 #[WithConfig('auth.guards.sanctum', ['driver' => 'session', 'provider' => 'users'])]
 final class CheckUnsearchableEngineTest extends ScaffoldingTestCase
 {
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        RestrictionLog::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function fixtures(): array

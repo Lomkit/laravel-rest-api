@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Augmentations;
 
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Facades\Rest;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentationLog;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ClonedCountBookController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CopiesExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ShortCountBookController;
@@ -22,6 +22,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [CopiesExtension::class])]
 class AugmentedCountTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
+
     private const string GROUPED = 'from books inner join loans on loans.book_id = books.id group by books.id having count(loans.id) >= 2';
 
     #[\Override]
@@ -35,20 +37,11 @@ class AugmentedCountTest extends PackageTestCase
     {
         parent::setUp();
 
-        AugmentationLog::reset();
         Rest::resource('capped-books', CappedBookController::class)->register();
         Rest::resource('grouped-books', UncappedGroupedBookController::class)->register();
         Rest::resource('short-count-books', ShortCountBookController::class)->register();
         Rest::resource('cloned-count-books', ClonedCountBookController::class)->register();
         Book::query()->insert(array_map(static fn (int $id): array => ['id' => $id, 'title' => $id === 1 ? 'Dune' : 'Book '.$id], range(1, 30)));
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        AugmentationLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

@@ -14,6 +14,7 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\TeamTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\TeamTicketResource;
@@ -35,6 +36,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('cache.serializable_classes', false)]
 class CacheContextExtensionsTest extends HelpdeskTestCase
 {
+    use ResetsExtensionStubs;
+
     private const array SEARCH = ['search' => ['gates' => ['update'], 'sorts' => [['field' => 'id']]]];
 
     /** @var list<int> */
@@ -45,7 +48,6 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     {
         parent::setUp();
 
-        self::reset();
         Rest::resource('team-tickets', TeamTicketController::class)->register();
         Rest::resource('dotted-context-tickets', DottedContextTicketController::class)->register();
         Event::listen(KeyWritten::class, function (KeyWritten $event): void {
@@ -58,14 +60,6 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
         Ticket::forceCreate(['id' => 1, 'team_id' => 1, 'title' => 'Printer jam', 'status' => 'open']);
         Ticket::forceCreate(['id' => 2, 'team_id' => 1, 'title' => 'Printer toner', 'status' => 'open']);
         $this->travelTo('2026-11-06 10:00:05');
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        self::reset();
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -413,11 +407,5 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
         });
 
         return new RestContext($request, $this->app ?? $this->fail('No application.'));
-    }
-
-    private static function reset(): void
-    {
-        FirstCacheContext::reset();
-        SecondCacheContext::reset();
     }
 }

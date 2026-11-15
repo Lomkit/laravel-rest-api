@@ -5,11 +5,11 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Authorization;
 use LogicException;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentedPreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstLateGates;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RowCheckLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondEarlyGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharesGates;
@@ -24,6 +24,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ExtensionGatesTest extends HelpdeskTestCase
 {
+    use ResetsExtensionStubs;
+
     private const array TICKET_GATES = ['view', 'create', 'update', 'delete', 'escalate', 'reassignTeam', 'archive'];
 
     #[\Override]
@@ -31,19 +33,10 @@ class ExtensionGatesTest extends HelpdeskTestCase
     {
         parent::setUp();
 
-        self::reset();
         $this->app->instance(TicketPolicy::class, $this->tickets = new SharingTicketPolicy);
         Team::forceCreate(['id' => 1, 'name' => 'Billing']);
         Ticket::forceCreate(['id' => 1, 'team_id' => 1, 'title' => 'Printer jam', 'status' => 'open']);
         Ticket::forceCreate(['id' => 2, 'team_id' => 1, 'title' => 'Password reset', 'status' => 'closed']);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        self::reset();
-
-        parent::tearDown();
     }
 
     /** @param list<class-string<Extension>> $extensions */
@@ -196,12 +189,5 @@ class ExtensionGatesTest extends HelpdeskTestCase
         $this->assertCount(1, AugmentedPreparingExtension::$received);
         $this->assertSame('share', AugmentedPreparingExtension::$received[0]->ability);
         $this->assertSame([1, 2], AugmentedPreparingExtension::$received[0]->rows->modelKeys());
-    }
-
-    private static function reset(): void
-    {
-        FirstGates::reset();
-        SecondGates::reset();
-        RowCheckLog::reset();
     }
 }

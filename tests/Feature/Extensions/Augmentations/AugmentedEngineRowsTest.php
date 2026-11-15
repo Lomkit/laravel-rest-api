@@ -5,7 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Augmentations;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentationLog;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentation;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -16,25 +16,18 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [FirstAugmentation::class])]
 class AugmentedEngineRowsTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        AugmentationLog::reset();
         FirstAugmentation::$augment = static function (AugmentationContext $context): void {
             $context->select('marker', static function (Builder $query): void {
                 $query->selectRaw("'seen'");
             });
         };
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        AugmentationLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

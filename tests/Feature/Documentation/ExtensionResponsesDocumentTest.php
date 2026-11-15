@@ -6,6 +6,7 @@ use Lomkit\Rest\Exceptions\InvalidDocumentationException;
 use Lomkit\Rest\Exceptions\InvalidDocumentationExtensionException;
 use Lomkit\Rest\Extensions\Contexts\OperationDocumentationContext;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ArchivedResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CheckedResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CreatedResponses;
@@ -26,18 +27,11 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ExtensionResponsesDocumentTest extends DocumentationTestCase
 {
-    #[\Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        MetaLog::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function tearDown(): void
     {
-        MetaLog::reset();
         SharedBodyResponses::reset(registersAgain: true);
 
         parent::tearDown();

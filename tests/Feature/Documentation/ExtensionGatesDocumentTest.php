@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Support\Facades\DB;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharesGates;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
@@ -12,12 +13,13 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [SharesGates::class])]
 class ExtensionGatesDocumentTest extends DocumentationTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        FirstGates::reset();
         FirstGates::$gates = ['share'];
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage']]);
@@ -25,14 +27,6 @@ class ExtensionGatesDocumentTest extends DocumentationTestCase
             ['id' => 1, 'stage_code' => 'main', 'title' => 'Opening night', 'summary' => null, 'price' => 12.5, 'seats' => 300, 'featured' => true, 'starts_on' => '2026-07-01', 'starts_at' => null, 'status' => 'on_sale', 'level' => 3, 'settings' => '[]', 'secret' => null, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00'],
             ['id' => 2, 'stage_code' => 'main', 'title' => 'Closing night', 'summary' => null, 'price' => null, 'seats' => 500, 'featured' => false, 'starts_on' => '2026-07-03', 'starts_at' => null, 'status' => 'planned', 'level' => 1, 'settings' => '[]', 'secret' => null, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00'],
         ]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        FirstGates::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

@@ -8,6 +8,7 @@ use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FieldVoucherController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PriceEngineRestriction;
@@ -21,6 +22,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class NarrowedEngineGrammarTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     private const string NUMBER = '{"name":"number","type":"integer","operators":["=","!=",">",">=","<","<=","in","not in"]}';
 
     private const string PRICE = '{"name":"price","type":"number","operators":["=","!=",">",">=","<","<=","in","not in"]}';
@@ -35,15 +38,6 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
         parent::setUp();
 
         config(['scout.driver' => 'collection', 'rest.extensions' => [MaskingFields::class]]);
-        MaskingFields::reset();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        MaskingFields::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

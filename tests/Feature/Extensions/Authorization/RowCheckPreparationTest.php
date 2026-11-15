@@ -11,6 +11,7 @@ use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\EscalateTickets;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\PreparedTicketController;
@@ -19,7 +20,6 @@ use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ScannedTicket;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentedPreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LatePreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PreparingExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RowCheckLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondPreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SubjectTicketPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\CachedTicketResource;
@@ -33,24 +33,17 @@ use PHPUnit\Framework\Attributes\Test;
 
 class RowCheckPreparationTest extends HelpdeskTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        RowCheckLog::reset();
         EscalateTickets::reset();
         PreparedTicketResource::$received = [];
         ScannedTicket::$scans = 0;
         Rest::resource('prepared-tickets', PreparedTicketController::class)->register();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        RowCheckLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

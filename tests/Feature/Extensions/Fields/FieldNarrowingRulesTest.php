@@ -10,6 +10,7 @@ use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Fields\FieldReduction;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFieldsNamedB;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherMaskingFields;
@@ -25,6 +26,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class FieldNarrowingRulesTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
     use SeedsCatalog;
 
     private const array BOTH = [MaskingFields::class, OtherMaskingFields::class];
@@ -44,19 +46,8 @@ class FieldNarrowingRulesTest extends PackageTestCase
     {
         parent::setUp();
 
-        MaskingFields::reset();
-        OtherMaskingFields::reset();
         config(['rest.extensions' => [MaskingFields::class]]);
         $this->seedCatalog();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        MaskingFields::reset();
-        OtherMaskingFields::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Mutations\WrittenRow;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Deletion\Stubs\SecondaryDocument;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
@@ -20,7 +21,6 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Feature\Transactions\Stubs\Interruptions;
 use Lomkit\Rest\Tests\Feature\Transactions\Stubs\RetriedDocumentController;
-use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -29,6 +29,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('app.debug', false)]
 final class RetriedWriteExtensionsTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
+
     private const array MUTATE = ['mutate' => [
         ['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Final report']],
         ['operation' => 'create', 'attributes' => ['title' => 'Agenda']],
@@ -69,9 +71,6 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
         $this->beforeApplicationDestroyed(function (): void {
             Schema::connection('secondary')->dropIfExists('documents');
         });
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
         Interruptions::reset([]);
         config(['rest.extensions' => [RecordingGuard::class, RecordingWriteObserver::class]]);
 
@@ -88,16 +87,6 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
 
             EventLog::$lines[] = "{$verb} {$event->connectionName}";
         });
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
-
-        parent::tearDown();
     }
 
     /** @return array<string, array{string, string, array<string, mixed>, int, list<string>, Closure(?int): array<string, mixed>}> */

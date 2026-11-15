@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
 use Lomkit\Rest\Metrics\CacheScope;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstCacheContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TenantCacheContext;
 use Lomkit\Rest\Tests\Feature\Metrics\SalesTestCase;
@@ -21,6 +22,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('cache.serializable_classes', false)]
 class CacheContextMetricsTest extends SalesTestCase
 {
+    use ResetsExtensionStubs;
+
     /** @var array<string, int> */
     private array $written = [];
 
@@ -31,7 +34,6 @@ class CacheContextMetricsTest extends SalesTestCase
     {
         parent::setUp();
 
-        FirstCacheContext::reset();
         FirstCacheContext::$resources = [MetricOrderResource::class];
         $this->actingAs(new GenericUser(['id' => 1, 'team_id' => 1]));
         Event::listen(KeyWritten::class, function (KeyWritten $event): void {
@@ -42,14 +44,6 @@ class CacheContextMetricsTest extends SalesTestCase
         DB::listen(function (QueryExecuted $query): void {
             $this->statements += preg_match('/from\s+orders\b/i', str_replace(['"', '`'], '', $query->sql));
         });
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        FirstCacheContext::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

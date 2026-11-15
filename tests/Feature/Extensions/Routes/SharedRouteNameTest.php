@@ -6,6 +6,7 @@ use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AppStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutesProvider;
@@ -20,20 +21,11 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\RivalAclExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\SecondAclProvider;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 
 final class SharedRouteNameTest extends PackageTestCase
 {
-    #[Before]
-    #[After]
-    public function resetTheStubs(): void
-    {
-        StampRoutes::reset();
-        OtherStampRoutes::reset();
-        ExtensionLog::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function getPackageProviders($app): array

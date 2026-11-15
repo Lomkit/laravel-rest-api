@@ -7,6 +7,7 @@ use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AclExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\FirstAclProvider;
@@ -14,18 +15,11 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\RivalAclExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\SecondAclProvider;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 
 final class SharedNameTest extends PackageTestCase
 {
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function getPackageProviders($app): array

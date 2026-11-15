@@ -11,6 +11,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Rest as RestFactory;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AclExtension;
@@ -23,23 +24,16 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
 use Orchestra\Testbench\Attributes\WithConfig;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 
 final class ExtensionRegistrationTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
+
     private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
 
     /** @var list<InvalidExtensionException> */
     private array $refusals = [];
-
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
 
     #[Test]
     public function it_resolves_the_registration_store_when_the_package_registers(): void

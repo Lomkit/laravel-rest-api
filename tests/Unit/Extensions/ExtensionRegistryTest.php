@@ -10,6 +10,7 @@ use Lomkit\Rest\Extensions\ExtensionList;
 use Lomkit\Rest\Extensions\ExtensionRegistry;
 use Lomkit\Rest\Extensions\Kinds\ExtensionKind;
 use Lomkit\Rest\Extensions\NamedExtensions;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Fixtures\Catalog\CategoryResource;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
@@ -21,8 +22,6 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotesResources;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ProductsOnlyExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ShelvesExtension;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
@@ -31,12 +30,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ExtensionRegistryTest extends TestCase
 {
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[Test]
     public function it_touches_nothing_without_extensions(): void

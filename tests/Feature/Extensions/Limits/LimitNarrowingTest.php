@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\ResourceLimits;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CappedBookLimitsResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstNarrowing;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondNarrowing;
@@ -20,26 +21,12 @@ use PHPUnit\Framework\Attributes\Test;
 
 class LimitNarrowingTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function fixtures(): array
     {
         return [new Library];
-    }
-
-    #[\Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        self::reset();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        self::reset();
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -238,11 +225,5 @@ class LimitNarrowingTest extends PackageTestCase
     private static function values(ResourceLimits $limits): array
     {
         return [$limits->allowed, $limits->defaultLimit, $limits->includeLimit, $limits->maxTotal];
-    }
-
-    private static function reset(): void
-    {
-        FirstNarrowing::$narrow = null;
-        SecondNarrowing::$narrow = null;
     }
 }

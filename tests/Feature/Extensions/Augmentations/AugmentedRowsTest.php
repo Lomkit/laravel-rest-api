@@ -15,6 +15,7 @@ use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AliasFieldAuthorResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentationLog;
@@ -41,6 +42,7 @@ use ReflectionProperty;
 class AugmentedRowsTest extends PackageTestCase
 {
     use CapturesQueries;
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function fixtures(): array
@@ -53,7 +55,6 @@ class AugmentedRowsTest extends PackageTestCase
     {
         parent::setUp();
 
-        AugmentationLog::reset();
         Rest::resource('path-authors', PathAuthorController::class)->register();
         Rest::resource('path-posts', PathPostController::class)->register();
         DB::table('authors')->insert([
@@ -65,15 +66,6 @@ class AugmentedRowsTest extends PackageTestCase
             ['id' => 2, 'author_id' => 1, 'title' => 'Hidden', 'status' => 'published', 'views' => 2, 'published_on' => '2026-01-01'],
             ['id' => 3, 'author_id' => 2, 'title' => 'Compilers', 'status' => 'published', 'views' => 3, 'published_on' => '2026-01-01'],
         ]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        AugmentationLog::reset();
-        MaskingFields::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

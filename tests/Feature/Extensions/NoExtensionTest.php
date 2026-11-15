@@ -10,6 +10,7 @@ use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CountedFieldsProductResource;
 use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
@@ -19,20 +20,13 @@ use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Lomkit\Rest\Text\TextBackend;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 
 final class NoExtensionTest extends PackageTestCase
 {
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function fixtures(): array

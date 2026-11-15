@@ -13,6 +13,7 @@ use Lomkit\Rest\Events\ActionOperated;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\WrittenRow;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\ArchiveUser;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ArchiveDocumentsByOne;
@@ -39,6 +40,7 @@ use RuntimeException;
 #[WithConfig('app.debug', false)]
 final class ObservedWritesTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
     use WritesDocuments;
 
     #[\Override]
@@ -47,14 +49,6 @@ final class ObservedWritesTest extends PackageTestCase
         parent::setUp();
 
         $this->registerWrittenDocuments(RecordingWriteObserver::class);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        $this->resetWriteLogs();
-
-        parent::tearDown();
     }
 
     #[Test]

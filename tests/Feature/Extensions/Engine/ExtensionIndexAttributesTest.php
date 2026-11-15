@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions\Engine;
 
 use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedTeamIndexExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
@@ -13,21 +14,14 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class ExtensionIndexAttributesTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        EngineLog::reset();
         config(['rest.extensions' => [RedTeamIndexExtension::class]]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        EngineLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

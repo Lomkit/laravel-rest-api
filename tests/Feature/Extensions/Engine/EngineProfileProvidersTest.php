@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Engine;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Extensions\Contexts\EngineProfileContext;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CollectionEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EarlyForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
@@ -23,19 +24,19 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class EngineProfileProvidersTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        EngineLog::reset();
         ForeignProfile::reset();
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        EngineLog::reset();
         ForeignProfile::reset();
 
         parent::tearDown();

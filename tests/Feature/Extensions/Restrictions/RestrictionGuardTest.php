@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Query\QueryPart;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ClausedExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictedAuthorController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictedAuthorResource;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -23,6 +23,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [ClausedExtension::class])]
 class RestrictionGuardTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function fixtures(): array
     {
@@ -34,22 +36,11 @@ class RestrictionGuardTest extends PackageTestCase
     {
         parent::setUp();
 
-        RestrictionLog::reset();
-        ClausedExtension::$clause = null;
         Rest::resource('restricted-authors', RestrictedAuthorController::class)->register();
         DB::table('authors')->insert([
             ['id' => 1, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'api_token' => 'token-1', 'deleted_at' => null],
             ['id' => 2, 'first_name' => 'Alan', 'last_name' => 'Turing', 'api_token' => 'token-2', 'deleted_at' => '2026-01-01 00:00:00'],
         ]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        RestrictionLog::reset();
-        ClausedExtension::$clause = null;
-
-        parent::tearDown();
     }
 
     /** @param Closure(Builder<Model>): mixed $clause */

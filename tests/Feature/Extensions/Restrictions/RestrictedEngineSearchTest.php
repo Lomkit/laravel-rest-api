@@ -6,6 +6,7 @@ use Illuminate\Auth\GenericUser;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EarlyRedRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GuestlessExtension;
@@ -28,22 +29,20 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class RestrictedEngineSearchTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        RestrictionLog::reset();
         ForeignProfile::reset();
-        SqlForeignEngineProfiles::$skipsRows = false;
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        RestrictionLog::reset();
         ForeignProfile::reset();
-        SqlForeignEngineProfiles::$skipsRows = false;
 
         parent::tearDown();
     }

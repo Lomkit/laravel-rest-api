@@ -9,12 +9,12 @@ use Laravel\Scout\ScoutServiceProvider;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedEverywhereExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedRowsExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\RouteBoundVoucherController;
@@ -38,13 +38,13 @@ use Symfony\Component\Console\Output\BufferedOutput;
 #[WithConfig('auth.guards.sanctum', ['driver' => 'session', 'provider' => 'users'])]
 final class CheckEngineRestrictionTest extends ScaffoldingTestCase
 {
+    use ResetsExtensionStubs;
     use RunsTheQuickStart;
 
     #[Before]
     #[After]
     public function resetTheLog(): void
     {
-        RestrictionLog::reset();
         RouteBoundVoucherResource::$textCalls = 0;
     }
 

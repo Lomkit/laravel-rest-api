@@ -21,6 +21,7 @@ use Lomkit\Rest\Exceptions\WriteRefused;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\MutationNode;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\ArchiveUser;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ArchiveDocumentsByOne;
@@ -49,6 +50,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('app.debug', false)]
 final class GuardedWritesTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
     use WritesDocuments;
 
     #[\Override]
@@ -63,7 +65,6 @@ final class GuardedWritesTest extends PackageTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        $this->resetWriteLogs();
         WrittenDocumentResource::$confirming = false;
 
         parent::tearDown();

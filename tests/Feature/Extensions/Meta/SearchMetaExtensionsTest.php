@@ -12,6 +12,7 @@ use Illuminate\Support\Fluent;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Exceptions\MissingColumnException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ColumnSearchMeta;
@@ -40,6 +41,8 @@ use SplObjectStorage;
 
 final class SearchMetaExtensionsTest extends HelpdeskTestCase
 {
+    use ResetsExtensionStubs;
+
     private const array SEARCH = ['search' => [
         'filters' => [['field' => 'status', 'value' => 'open']],
         'sorts' => [['field' => 'id', 'direction' => 'asc']],
@@ -58,7 +61,6 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     {
         parent::setUp();
 
-        MetaLog::reset();
         $this->travelTo('2026-11-15 10:00:00');
         DB::table('teams')->insert([
             ['id' => 1, 'name' => 'Billing', 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00'],
@@ -74,14 +76,6 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->lead = new GenericUser(['id' => TicketPolicy::LEAD]);
         $this->actingAs($this->lead);
         config(['rest.extensions' => [QuotaSearchMeta::class, RegionSearchMeta::class]]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        MetaLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

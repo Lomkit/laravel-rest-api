@@ -8,6 +8,7 @@ use Lomkit\Rest\Exceptions\MissingColumnException;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingReadObserver;
@@ -21,7 +22,6 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserverNamedSecond;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamReadingObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
-use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
@@ -31,6 +31,8 @@ use RuntimeException;
 
 final class ObservedReadsTest extends HelpdeskTestCase
 {
+    use ResetsExtensionStubs;
+
     private const array SEARCH = ['search' => [
         'filters' => [['field' => 'status', 'value' => 'open']],
         'includes' => [['relation' => 'team']],
@@ -61,10 +63,6 @@ final class ObservedReadsTest extends HelpdeskTestCase
     {
         parent::setUp();
 
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
-        MaskingFields::reset();
         $this->travelTo('2026-11-08 10:00:00');
         $this->ids = array_map(fn (Ticket $ticket): int => $ticket->getKey(), $this->seedTickets());
         $this->billing = Team::query()
@@ -74,17 +72,6 @@ final class ObservedReadsTest extends HelpdeskTestCase
         $this->lead = new GenericUser(['id' => TicketPolicy::LEAD]);
         $this->actingAs($this->lead);
         config(['rest.extensions' => [RecordingReadObserver::class]]);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
-        MaskingFields::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

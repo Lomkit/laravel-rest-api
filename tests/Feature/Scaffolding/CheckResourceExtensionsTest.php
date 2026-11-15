@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource;
 use Lomkit\Rest\Tests\Fixtures\Atlas\JournalController;
@@ -30,8 +31,6 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedMetaCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedRowsExtension;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -39,6 +38,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 #[WithConfig('auth.guards.sanctum', ['driver' => 'session', 'provider' => 'users'])]
 final class CheckResourceExtensionsTest extends ScaffoldingTestCase
 {
+    use ResetsExtensionStubs;
     use RunsTheQuickStart;
 
     private const string COLUMN_PROBLEM = 'The [columns] extension '.ColumnCheckExtension::class.' reports '.TripResource::class.': the trips table has no tenant_id column.';
@@ -46,13 +46,6 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     private const string RESTRICTED_JOURNAL_PROBLEM = 'Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource does not override perimeterQuery(): only the extensions [atlas] restrict its rows. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when the rows that these extensions leave are meant for every user who passes viewAny.';
 
     private const string JOURNAL_PROBLEM = 'Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource does not override perimeterQuery(): every row is visible to users who pass viewAny. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when every row is meant for these users.';
-
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
 
     #[Test]
     #[WithConfig('rest.extensions', [ColumnCheckExtension::class])]

@@ -7,11 +7,9 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\ArchiveUser;
 use Lomkit\Rest\Tests\Feature\Deletion\Concerns\SeedsDocuments;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrittenDocumentController;
 use Lomkit\Rest\Tests\Fixtures\Archive\Archive;
 use Lomkit\Rest\Tests\Fixtures\Archive\Document;
-use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 
 trait WritesDocuments
 {
@@ -52,7 +50,6 @@ trait WritesDocuments
     /** @param class-string $extension */
     private function registerWrittenDocuments(string $extension): void
     {
-        $this->resetWriteLogs();
         config(['rest.extensions' => [$extension]]);
         Rest::resource('written-documents', WrittenDocumentController::class)
             ->withSoftDeletes()
@@ -60,13 +57,6 @@ trait WritesDocuments
         ArchiveUser::create(['id' => 1, 'name' => 'Ada', 'email' => 'ada@example.com', 'password' => 'secret']);
         $this->grace = ArchiveUser::create(['id' => 2, 'name' => 'Grace', 'email' => 'grace@example.com', 'password' => 'secret']);
         $this->actingAs($this->grace);
-    }
-
-    private function resetWriteLogs(): void
-    {
-        ExtensionLog::reset();
-        EventLog::reset();
-        WriteLog::reset();
     }
 
     /** @return array{operations: list<array{operation: string, key: int}>} */

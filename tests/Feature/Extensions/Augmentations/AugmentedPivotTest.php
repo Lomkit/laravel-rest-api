@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Augmentations;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MountedInstrumentController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MountedInstrumentResource;
@@ -17,6 +18,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [FirstAugmentation::class])]
 class AugmentedPivotTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function fixtures(): array
     {
@@ -38,14 +41,6 @@ class AugmentedPivotTest extends PackageTestCase
         DB::table('instruments')->insert(['id' => 1, 'name' => 'Scope']);
         DB::table('sensors')->insert(['id' => 2, 'name' => 'Probe']);
         DB::table('instrument_sensor')->insert(['instrument_id' => 1, 'sensor_id' => 2, 'wiring' => '{"pins":[1]}']);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        FirstAugmentation::$augment = null;
-
-        parent::tearDown();
     }
 
     #[Test]

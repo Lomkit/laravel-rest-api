@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Query\QueryPart;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GuestlessExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\JoiningRowsExtension;
@@ -24,21 +25,14 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class DatabaseEngineRestrictionTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        RestrictionLog::reset();
         config(['scout.driver' => 'database']);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        RestrictionLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

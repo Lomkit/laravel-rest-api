@@ -10,6 +10,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Relations\MorphTo;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\MorphTargets\Stubs\DeclaredLabelController;
 use Lomkit\Rest\Tests\Feature\MorphTargets\Stubs\DeclaredLabelResource;
@@ -22,6 +23,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 class MorphToDeclarationTest extends MorphTargetsTestCase
 {
+    use ResetsExtensionStubs;
+
     /** @var list<class-string<Resource>|null> */
     private array $received = [];
 
@@ -37,7 +40,6 @@ class MorphToDeclarationTest extends MorphTargetsTestCase
     protected function tearDown(): void
     {
         DeclaredLabelResource::$declare = null;
-        MaskingFields::reset();
 
         parent::tearDown();
     }

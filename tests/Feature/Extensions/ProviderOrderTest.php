@@ -7,6 +7,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Rest;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BootingExtensionProvider;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
@@ -21,18 +22,18 @@ use PHPUnit\Framework\Attributes\Test;
 
 final class ProviderOrderTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
+
     #[Before]
     public function forgetTheFacadeRoot(): void
     {
         EarlyExtensionProvider::$root = null;
-        ExtensionLog::reset();
     }
 
     #[After]
     public function clearTheFacadeRoot(): void
     {
         EarlyExtensionProvider::$root = null;
-        ExtensionLog::reset();
     }
 
     #[\Override]

@@ -7,6 +7,7 @@ use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\BadlyNamedStampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherStampRoutes;
@@ -19,24 +20,14 @@ use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketController;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RenamableExtension;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 final class RouteExtensionNamesTest extends HelpdeskTestCase
 {
-    private const string STAMP = StampsRequests::class.':a';
+    use ResetsExtensionStubs;
 
-    #[Before]
-    #[After]
-    public function resetTheStubs(): void
-    {
-        StampRoutes::reset();
-        OtherStampRoutes::reset();
-        ExtensionLog::reset();
-        RoutedStampNamedLimits::$built = 0;
-    }
+    private const string STAMP = StampsRequests::class.':a';
 
     #[Test]
     public function it_reads_no_name_of_an_entry_of_another_kind(): void

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\ExtensionList;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripController;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AbstractNotingExtension;
@@ -26,8 +27,6 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\UnresolvableExtension;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
 use Orchestra\Testbench\Attributes\WithConfig;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -35,18 +34,12 @@ use Symfony\Component\Console\Output\BufferedOutput;
 #[WithConfig('auth.guards.sanctum', ['driver' => 'session', 'provider' => 'users'])]
 final class CheckExtensionsTest extends ScaffoldingTestCase
 {
+    use ResetsExtensionStubs;
     use RunsTheQuickStart;
 
     private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
 
     private const string IDLE_ACL = 'The [rest.disabled_extensions] config lists '.AclExtension::class.', but no extension of this class is registered or configured, so it disables nothing. Remove it, or list the exact class that the package registers.';
-
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
 
     #[Test]
     #[WithConfig('rest.extensions', [CountingExtension::class])]

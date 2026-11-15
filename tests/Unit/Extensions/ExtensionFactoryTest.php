@@ -9,6 +9,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\ExtensionFactory;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\InjectedExtension;
@@ -16,21 +17,14 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\KindlessExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\MarkerOnlyExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UnresolvableExtension;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class ExtensionFactoryTest extends TestCase
 {
-    private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
+    use ResetsExtensionStubs;
 
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
+    private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
 
     #[Test]
     public function it_builds_an_extension_with_the_services_of_its_constructor(): void

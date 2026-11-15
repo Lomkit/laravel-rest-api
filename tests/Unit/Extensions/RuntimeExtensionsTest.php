@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Unit\Extensions;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AbstractNotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
@@ -14,8 +15,6 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotesResources;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RenamableExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingNameExtension;
-use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -23,16 +22,11 @@ use RuntimeException;
 
 final class RuntimeExtensionsTest extends TestCase
 {
+    use ResetsExtensionStubs;
+
     private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
 
     private const string SOURCE = 'Rest::registerExtensions()';
-
-    #[Before]
-    #[After]
-    public function resetTheLog(): void
-    {
-        ExtensionLog::reset();
-    }
 
     #[Test]
     public function it_keeps_each_registration_once_in_its_order(): void

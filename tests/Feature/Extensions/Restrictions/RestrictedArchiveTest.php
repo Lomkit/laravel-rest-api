@@ -8,9 +8,9 @@ use Lomkit\Rest\Actions\QueuedAction;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\KeyedDocumentController;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Fixtures\Archive\Archive;
 use Lomkit\Rest\Tests\Fixtures\Archive\Document;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -23,27 +23,12 @@ class RestrictedArchiveTest extends PackageTestCase
 {
     use AssertsExactErrors;
     use CapturesQueries;
+    use ResetsExtensionStubs;
 
     #[\Override]
     protected function fixtures(): array
     {
         return [new Archive];
-    }
-
-    #[\Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        RestrictionLog::reset();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        RestrictionLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

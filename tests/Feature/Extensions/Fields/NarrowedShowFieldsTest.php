@@ -9,6 +9,7 @@ use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Fields\FieldReduction;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Fixtures\Accounts\Accounts;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
@@ -23,6 +24,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', [MaskingFields::class])]
 class NarrowedShowFieldsTest extends PackageTestCase
 {
+    use ResetsExtensionStubs;
+
     private int $opening = 0;
 
     #[\Override]
@@ -37,20 +40,11 @@ class NarrowedShowFieldsTest extends PackageTestCase
         parent::setUp();
 
         Carbon::setTestNow('2026-03-01 09:00:00');
-        MaskingFields::reset();
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage']]);
         $this->opening = DB::table('shows')->insertGetId(['stage_code' => 'main', 'title' => 'Opening night', 'price' => 20, 'seats' => 300, 'level' => 1, 'starts_on' => '2026-07-01', 'starts_at' => '2026-02-20 20:00:00', 'status' => 'on_sale', 'updated_at' => '2026-02-01 08:00:00']);
         DB::table('shows')->insert(['stage_code' => 'main', 'title' => 'Closing night', 'price' => 35, 'seats' => 100, 'level' => 2, 'starts_on' => '2026-07-03', 'starts_at' => '2026-02-21 20:00:00', 'status' => 'planned', 'updated_at' => '2026-02-01 08:00:00']);
         DB::table('notes')->insert(['id' => 1, 'notable_type' => Show::class, 'notable_id' => (string) $this->opening, 'body' => 'Sold out soon']);
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        MaskingFields::reset();
-
-        parent::tearDown();
     }
 
     #[Test]

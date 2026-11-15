@@ -14,6 +14,7 @@ use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CheapEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ComparedPriceVoucherController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
@@ -45,6 +46,8 @@ use RuntimeException;
 #[Group('scout')]
 class EngineRestrictionTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     private RecordingCollectionEngine $engine;
 
     #[\Override]
@@ -52,19 +55,8 @@ class EngineRestrictionTest extends EngineSearchTestCase
     {
         parent::setUp();
 
-        EngineLog::reset();
-        ExtensionLog::reset();
         $this->engine = new RecordingCollectionEngine;
         $this->useEngine($this->engine);
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        EngineLog::reset();
-        ExtensionLog::reset();
-
-        parent::tearDown();
     }
 
     #[Test]
