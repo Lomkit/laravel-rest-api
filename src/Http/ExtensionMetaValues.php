@@ -51,7 +51,7 @@ final readonly class ExtensionMetaValues
     }
 
     /** @param Closure(string, string): InvalidMetaExtensionException $refuse */
-    private static function ensureEncodable(mixed $value, string $path, int $depth, Closure $refuse): void
+    private static function ensureEncodable(mixed $value, string $path, int $depth, Closure $refuse, bool $serialized = false): void
     {
         if ($value instanceof Model || $value instanceof EloquentCollection || $value instanceof JsonResource) {
             throw $refuse($path, get_debug_type($value));
@@ -68,10 +68,18 @@ final readonly class ExtensionMetaValues
         $children = self::children($value);
 
         if ($children === null && $value instanceof JsonSerializable) {
+            if ($depth <= self::DEPTH) {
+                self::ensureEncodable($value->jsonSerialize(), $path, $depth + 1, $refuse, true);
+            }
+
             return;
         }
 
         if ($children === null) {
+            if ($serialized) {
+                return;
+            }
+
             throw $refuse($path, get_debug_type($value));
         }
 
@@ -80,7 +88,7 @@ final readonly class ExtensionMetaValues
         }
 
         foreach ($children as $key => $child) {
-            self::ensureEncodable($child, "{$path}.{$key}", $depth + 1, $refuse);
+            self::ensureEncodable($child, "{$path}.{$key}", $depth + 1, $refuse, $serialized);
         }
     }
 

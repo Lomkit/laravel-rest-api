@@ -22,6 +22,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionDetailsMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionDetailsMetaNamedArea;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnencodableMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueDetailsMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrappedMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
@@ -168,6 +169,26 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     #[Test]
     #[DataProvider('jsonResources')]
     public function it_refuses_a_json_resource_in_the_details_meta(Closure $value, string $path, string $type): void
+    {
+        MetaLog::$value = $value();
+        config(['rest.extensions' => [ValueDetailsMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', "value.value.{$path}", $type));
+
+        $this->getJson('/meta-tickets');
+    }
+
+    /** @return array<string, array{Closure(): mixed, string, class-string}> */
+    public static function wrapped(): array
+    {
+        return WrappedMeta::cases();
+    }
+
+    /** @param Closure(): mixed $value */
+    #[Test]
+    #[DataProvider('wrapped')]
+    public function it_refuses_a_model_or_a_resource_that_a_json_serializable_value_holds_in_the_details_meta(Closure $value, string $path, string $type): void
     {
         MetaLog::$value = $value();
         config(['rest.extensions' => [ValueDetailsMeta::class]]);

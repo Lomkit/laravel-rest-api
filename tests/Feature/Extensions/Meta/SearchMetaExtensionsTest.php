@@ -8,6 +8,7 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Fluent;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Exceptions\MissingColumnException;
 use Lomkit\Rest\Facades\Rest;
@@ -15,6 +16,7 @@ use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ColumnSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\JsonResourceMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaDto;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaShape;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaStatus;
@@ -27,6 +29,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionSearchMetaNamedArea;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnencodableMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueSearchMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrappedMeta;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedAbilities;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedInstructions;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
@@ -369,6 +372,37 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $reason));
 
         $this->postJson('/meta-tickets/search', self::SEARCH);
+    }
+
+    /** @return array<string, array{Closure(): mixed, string, class-string}> */
+    public static function wrapped(): array
+    {
+        return WrappedMeta::cases();
+    }
+
+    /** @param Closure(): mixed $value */
+    #[Test]
+    #[DataProvider('wrapped')]
+    public function it_refuses_a_model_or_a_resource_that_a_json_serializable_value_holds(Closure $value, string $path, string $type): void
+    {
+        MetaLog::$value = $value();
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', "value.value.{$path}", $type));
+
+        $this->postJson('/meta-tickets/search', self::SEARCH);
+    }
+
+    #[Test]
+    public function it_renders_json_serializable_wrappers_of_plain_values(): void
+    {
+        MetaLog::$value = ['wrapper' => new Fluent(['plan' => 'pro', 'ratio' => 0.5]), 'dto' => new MetaDto(new MetaDto(['n' => 1]))];
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
+
+        $content = (string) $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->getContent();
+
+        $this->assertStringContainsString('"value":{"value":{"wrapper":{"plan":"pro","ratio":0.5},"dto":{"data":{"data":{"n":1}}}}}', $content);
     }
 
     #[Test]
