@@ -50,7 +50,7 @@ final readonly class ResourceDetails
             'gates' => fn (): array => $this->resource->isGatingEnabled() ? $this->definition->gates()->names() : [],
             'confirmations' => fn (): array => $this->resource->confirmations(),
             'authorizations' => fn (): array => $this->authorizations->jsonSerialize(),
-            'meta' => fn (): object => (object) $this->resource->detailsMeta(),
+            'meta' => fn (): object => DetailsMeta::of($this->resource),
         ];
     }
 

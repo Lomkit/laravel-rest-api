@@ -2,12 +2,16 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 
+use Lomkit\Rest\Extensions\Contexts\DetailsMetaContext;
 use Lomkit\Rest\Extensions\Contexts\SearchMetaContext;
 
 final class MetaLog
 {
     /** @var list<SearchMetaContext> */
     public static array $search = [];
+
+    /** @var list<DetailsMetaContext> */
+    public static array $details = [];
 
     /** @var array<string, mixed>|null */
     public static ?array $searchMeta = null;
@@ -20,6 +24,7 @@ final class MetaLog
     public static function reset(): void
     {
         self::$search = [];
+        self::$details = [];
         self::$searchMeta = null;
         self::$detailsMeta = null;
         self::$value = null;
