@@ -6,6 +6,9 @@ use BackedEnum;
 use Closure;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\AbstractCursorPaginator;
+use Illuminate\Pagination\AbstractPaginator;
+use Illuminate\Support\Enumerable;
 use JsonException;
 use JsonSerializable;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
@@ -50,7 +53,7 @@ final readonly class ExtensionMetaValues
             throw $refuse($path, get_debug_type($value));
         }
 
-        if ($value === null || is_bool($value) || is_int($value) || is_string($value) || $value instanceof JsonSerializable || $value instanceof BackedEnum) {
+        if ($value === null || is_bool($value) || is_int($value) || is_string($value) || $value instanceof BackedEnum) {
             return;
         }
 
@@ -58,7 +61,11 @@ final readonly class ExtensionMetaValues
             return;
         }
 
-        $children = is_array($value) ? $value : ($value instanceof stdClass ? get_object_vars($value) : null);
+        $children = self::children($value);
+
+        if ($children === null && $value instanceof JsonSerializable) {
+            return;
+        }
 
         if ($children === null) {
             throw $refuse($path, get_debug_type($value));
@@ -71,6 +78,18 @@ final readonly class ExtensionMetaValues
         foreach ($children as $key => $child) {
             self::ensureEncodable($child, "{$path}.{$key}", $depth + 1, $refuse);
         }
+    }
+
+    /** @return array<array-key, mixed>|null */
+    private static function children(mixed $value): ?array
+    {
+        return match (true) {
+            is_array($value) => $value,
+            $value instanceof stdClass => get_object_vars($value),
+            $value instanceof Enumerable => $value->all(),
+            $value instanceof AbstractPaginator, $value instanceof AbstractCursorPaginator => $value->items(),
+            default => null,
+        };
     }
 
     /**

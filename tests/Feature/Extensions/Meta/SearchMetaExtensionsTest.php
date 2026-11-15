@@ -246,6 +246,39 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->postJson('/meta-tickets/search', self::SEARCH);
     }
 
+    #[Test]
+    public function it_refuses_a_model_inside_a_plain_collection_in_the_meta(): void
+    {
+        MetaLog::$value = ['tickets' => collect([new Ticket(['title' => 'Printer jam'])])];
+        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.tickets.0', Ticket::class));
+
+        $this->postJson('/meta-tickets/search', self::SEARCH);
+    }
+
+    #[Test]
+    public function it_refuses_the_models_of_an_eloquent_collection_turned_into_a_plain_one(): void
+    {
+        MetaLog::$value = ['tickets' => (new EloquentCollection([new Ticket(['title' => 'Printer jam'])]))->toBase()];
+        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.tickets.0', Ticket::class));
+
+        $this->postJson('/meta-tickets/search', self::SEARCH);
+    }
+
+    #[Test]
+    public function it_renders_a_plain_collection_of_values(): void
+    {
+        MetaLog::$value = ['titles' => collect(['Printer jam', 'Printer toner'])];
+        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+
+        $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->assertJsonPath('meta.value', ['value' => ['titles' => ['Printer jam', 'Printer toner']]]);
+    }
+
     /** @return array<string, array{mixed, string}> */
     public static function notJson(): array
     {
