@@ -7,7 +7,6 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Fields\FieldReduction;
@@ -41,7 +40,6 @@ class FieldNarrowingRulesTest extends PackageTestCase
     {
         parent::setUp();
 
-        Applicability::flush();
         MaskingFields::reset();
         OtherMaskingFields::reset();
         config(['rest.extensions' => ['mask' => MaskingFields::class]]);
@@ -53,7 +51,6 @@ class FieldNarrowingRulesTest extends PackageTestCase
     {
         MaskingFields::reset();
         OtherMaskingFields::reset();
-        Applicability::flush();
 
         parent::tearDown();
     }

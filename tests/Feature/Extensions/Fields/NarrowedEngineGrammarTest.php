@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FieldVoucherController;
@@ -36,7 +35,6 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
         parent::setUp();
 
         config(['scout.driver' => 'collection', 'rest.extensions' => ['mask' => MaskingFields::class]]);
-        Applicability::flush();
         MaskingFields::reset();
     }
 
@@ -44,7 +42,6 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
     protected function tearDown(): void
     {
         MaskingFields::reset();
-        Applicability::flush();
 
         parent::tearDown();
     }

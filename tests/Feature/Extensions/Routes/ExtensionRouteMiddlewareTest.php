@@ -10,7 +10,6 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Exceptions\InvalidRouteExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\RouteMiddlewareContext;
 use Lomkit\Rest\Extensions\Kinds\AddsRouteMiddleware;
 use Lomkit\Rest\Facades\Rest;
@@ -62,7 +61,6 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
         OtherStampRoutes::reset();
         StampsRequests::$stamps = [];
         ExtensionLog::reset();
-        Applicability::flush();
     }
 
     #[After]
@@ -74,7 +72,6 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
         OtherStampRoutes::reset();
         StampsRequests::$stamps = [];
         ExtensionLog::reset();
-        Applicability::flush();
     }
 
     #[Test]
@@ -300,7 +297,6 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
 
         $this->useCompiledRoutes();
         config(['rest.extensions' => []]);
-        Applicability::flush();
 
         $this->assertSame([EnforceExpectsJson::class, self::STAMP], $this->routeNamed('routed-tickets.search')->middleware());
         $this->actingAs(new GenericUser(['id' => 1]))->postJson('/routed-tickets/search')->assertOk();

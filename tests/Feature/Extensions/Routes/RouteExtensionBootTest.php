@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Routes;
 
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
@@ -22,7 +21,6 @@ class RouteExtensionBootTest extends HelpdeskTestCase
     public function resetTheStubs(): void
     {
         StampRoutes::reset();
-        Applicability::flush();
     }
 
     #[\Override]

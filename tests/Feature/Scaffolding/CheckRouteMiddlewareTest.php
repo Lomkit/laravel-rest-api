@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GuardRoutes;
@@ -30,7 +29,6 @@ final class CheckRouteMiddlewareTest extends ScaffoldingTestCase
     {
         GuardRoutes::$middleware = ['auth'];
         GuardRoutes::$resources = [StageResource::class];
-        Applicability::flush();
     }
 
     #[Test]

@@ -7,7 +7,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Fields\FieldReduction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
@@ -38,7 +37,6 @@ class NarrowedShowFieldsTest extends PackageTestCase
         parent::setUp();
 
         Carbon::setTestNow('2026-03-01 09:00:00');
-        Applicability::flush();
         MaskingFields::reset();
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage']]);
         $this->opening = DB::table('shows')->insertGetId(['stage_code' => 'main', 'title' => 'Opening night', 'price' => 20, 'seats' => 300, 'level' => 1, 'starts_on' => '2026-07-01', 'starts_at' => '2026-02-20 20:00:00', 'status' => 'on_sale', 'updated_at' => '2026-02-01 08:00:00']);
@@ -51,7 +49,6 @@ class NarrowedShowFieldsTest extends PackageTestCase
     protected function tearDown(): void
     {
         MaskingFields::reset();
-        Applicability::flush();
 
         parent::tearDown();
     }

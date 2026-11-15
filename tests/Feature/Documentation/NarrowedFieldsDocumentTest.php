@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Support\Facades\DB;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
@@ -20,7 +19,6 @@ class NarrowedFieldsDocumentTest extends DocumentationTestCase
         parent::setUp();
 
         MaskingFields::reset();
-        Applicability::flush();
         MaskingFields::$narrow = static function (FieldsContext $context): void {
             if ($context->resource instanceof ShowResource) {
                 $context->hide('price');
@@ -41,7 +39,6 @@ class NarrowedFieldsDocumentTest extends DocumentationTestCase
     protected function tearDown(): void
     {
         MaskingFields::reset();
-        Applicability::flush();
 
         parent::tearDown();
     }
@@ -51,7 +48,6 @@ class NarrowedFieldsDocumentTest extends DocumentationTestCase
     {
         $narrowed = $this->document();
         config(['rest.extensions' => []]);
-        Applicability::flush();
 
         $this->assertSame(json_encode($this->document()), json_encode($narrowed));
         $this->assertSame([], MaskingFields::$contexts);

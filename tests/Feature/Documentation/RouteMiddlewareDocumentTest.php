@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GuardRoutes;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
@@ -10,14 +9,6 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.extensions', ['guard' => GuardRoutes::class])]
 class RouteMiddlewareDocumentTest extends DocumentationTestCase
 {
-    #[\Override]
-    protected function tearDown(): void
-    {
-        Applicability::flush();
-
-        parent::tearDown();
-    }
-
     #[Test]
     public function it_documents_the_authentication_that_an_extension_adds(): void
     {

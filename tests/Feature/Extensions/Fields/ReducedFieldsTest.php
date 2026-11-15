@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Authorization\ActingUser;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Fields\Integer;
@@ -44,7 +43,6 @@ class ReducedFieldsTest extends PackageTestCase
     {
         parent::setUp();
 
-        Applicability::flush();
         MaskingFields::reset();
         MaskingFields::$narrow = static function (FieldsContext $context): void {
             if ($context->user !== null && $context->resource::class === ProductResource::class) {
@@ -66,7 +64,6 @@ class ReducedFieldsTest extends PackageTestCase
     protected function tearDown(): void
     {
         MaskingFields::reset();
-        Applicability::flush();
 
         parent::tearDown();
     }

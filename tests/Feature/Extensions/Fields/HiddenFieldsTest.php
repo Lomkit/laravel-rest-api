@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Lomkit\Rest\Exceptions\SearchRunException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
@@ -44,7 +43,6 @@ class HiddenFieldsTest extends PackageTestCase
     {
         parent::setUp();
 
-        Applicability::flush();
         MaskingFields::reset();
         MaskingFields::$narrow = static function (FieldsContext $context): void {
             if ($context->user !== null && $context->resource instanceof ProductResource) {
@@ -63,7 +61,6 @@ class HiddenFieldsTest extends PackageTestCase
     protected function tearDown(): void
     {
         MaskingFields::reset();
-        Applicability::flush();
         Model::shouldBeStrict(false);
 
         parent::tearDown();
