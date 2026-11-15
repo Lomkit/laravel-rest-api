@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Unit\Authorization;
 
 use Lomkit\Rest\Authorization\CacheContext;
+use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -36,5 +37,26 @@ class CacheContextValuesTest extends TestCase
         $this->expectExceptionObject(InvalidResourceException::invalidCacheContext(self::RESOURCE, 'weight'));
 
         CacheContext::of(['weight' => 1.5], self::RESOURCE);
+    }
+
+    #[Test]
+    public function it_merges_and_sorts_extension_items(): void
+    {
+        $context = CacheContext::of(['team' => 7, 'locale' => 'fr'], self::RESOURCE, ['tenant.id' => 3, 'acl.rules' => 'v1', 'acl.weight' => 1.5]);
+
+        $this->assertSame(['acl.rules' => 'v1', 'acl.weight' => 1.5, 'locale' => 'fr', 'team' => 7, 'tenant.id' => 3], $context->values);
+        $this->assertSame(serialize(['acl.rules' => 'v1', 'acl.weight' => 1.5, 'locale' => 'fr', 'team' => 7, 'tenant.id' => 3]), $context->serialized());
+    }
+
+    #[Test]
+    public function it_refuses_an_item_key_that_the_resource_returns(): void
+    {
+        try {
+            CacheContext::of(['acl.rules' => 1], self::RESOURCE, ['acl.rules' => 'v1']);
+            $this->fail('The key was not refused.');
+        } catch (InvalidAuthorizationExtensionException $exception) {
+            $this->assertEquals(InvalidAuthorizationExtensionException::contextKeyTaken('acl', self::RESOURCE, 'acl.rules'), $exception);
+            $this->assertTrue($exception->namesExtension('acl'));
+        }
     }
 }
