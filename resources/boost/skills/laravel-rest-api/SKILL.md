@@ -2019,9 +2019,9 @@ final class PlanRoutesExtension extends Extension implements AddsRouteMiddleware
 
 ### Refusing writes (`GuardsWrites`)
 
-App: `'quota' => \Vendor\Plans\WriteQuotaExtension::class` in `rest.extensions`.
+App: `\Vendor\Plans\WriteQuotaExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(WriteQuotaExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\WriteGuardContext;
@@ -2030,6 +2030,12 @@ use Lomkit\Rest\Extensions\Kinds\GuardsWrites;
 
 final class WriteQuotaExtension extends Extension implements GuardsWrites
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
     public function __construct(private readonly WriteQuota $quota) {}
 
     #[\Override]
@@ -2042,15 +2048,15 @@ final class WriteQuotaExtension extends Extension implements GuardsWrites
 }
 ```
 
-- Guarantees: a request kind, a veto only. It runs at the head of each write transaction, after the entry checks, the row checks and the confirmation: `mutate` (after the checks of its entries, before `mutatingAll()`), `destroy`, `restore` and `forceDestroy` (before `destroyingAll()` and its twins), and each transaction of an action: each chunk and each row with `ActionTransaction::Row` (after `beforeRow()`), in the request or in the queued worker; each chunk of a `Whole` run inside its single transaction, in the request (a `Whole` action is never queued); with `ActionTransaction::None`, before each `handle()`. A chunk is guarded after the `skipUnauthorized()` filter, with the rows that `handle()` receives. `$context->endpoint` is the `Endpoint`, `$context->user` the user (`null` for a guest, the user of the job in a worker), `$context->entries` the `MutationNode` list of a `mutate`, `$context->rows` a list (never `null`) of copies of the stored rows of the transaction (for an action, the rows of the chunk or of the row, `Whole` included), `$context->action` and `$context->fields` those of an action. `refuse($message, $status = 403, $headers = [])` throws `Lomkit\Rest\Exceptions\WriteRefused`: the transaction rolls back and is not run again, nothing is written, no write event is dispatched, and the client gets `{"message": "..."}` with the status and the headers, such as `$context->refuse('The archive is under maintenance.', 503, ['Retry-After' => '600'])` or a `429` with `Retry-After`. The status is `403`, another client error status from `400` to `499` (`423`, `429`), or `503`. `WriteRefused::$extension` names the extension and `$reason` holds the text the client receives; its exception message is the package's own, `The [quota] extension refused the write.`, so a text that names a lock is never taken for a deadlock. Extensions run in name order and the first refusal answers. On `mutate`, the extensions are asked once for each resource that the request reaches, the resource of the endpoint first, then the related resources of nested entries in the order of the request: `$context->resource` is that resource, `$context->entries` the nodes of the request that write or link its rows (each with its own `relations`), and `$context->rows` copies of its stored rows, with the rows that a `sync` detaches because its keys leave them out. An extension that applies only to a related resource refuses a nested write too. The link checks of a row that the mutation creates (the `attach` or `detach` ability of a relation, when its parent or its related row is created) need the key of that row, so they run later, when it is written: the guard is asked before them, and its refusal answers before their `403`. It never runs under Precognition, which stops before the controller.
-- Forbids: side effects. A deadlock retry (`rest.transactions.attempts`) runs it again with a new context, so it reads and decides: it writes nothing, counts nothing and calls no service that does. Saving a row: the rows are copies that the package never saves, but `save()` on a copy writes it, inside the transaction. `409`, `422` and `428` throw `Lomkit\Rest\Exceptions\InvalidWriteExtensionException`, naming the extension: the package answers them with another body (conflicts, validation errors, confirmations), so refuse with `423` or `429`. A status outside 400 to 499 other than `503` throws it too. The rows are copies of the stored rows and can hold the columns of the fields that `NarrowsFields` hides: keep them out of what the extension sends elsewhere.
+- Guarantees: a request kind, a veto only. It runs at the head of each write transaction, after the entry checks, the row checks and the confirmation: `mutate` (after the checks of its entries, before `mutatingAll()`), `destroy`, `restore` and `forceDestroy` (before `destroyingAll()` and its twins), and each transaction of an action: each chunk and each row with `ActionTransaction::Row` (after `beforeRow()`), in the request or in the queued worker; each chunk of a `Whole` run inside its single transaction, in the request (a `Whole` action is never queued); with `ActionTransaction::None`, before each `handle()`. A chunk is guarded after the `skipUnauthorized()` filter, with the rows that `handle()` receives. `$context->endpoint` is the `Endpoint`, `$context->user` the user (`null` for a guest, the user of the job in a worker), `$context->entries` the `MutationNode` list of a `mutate`, `$context->rows` a list (never `null`) of copies of the stored rows of the transaction (for an action, the rows of the chunk or of the row, `Whole` included), `$context->action` and `$context->fields` those of an action. `refuse($message, $status = 403, $headers = [])` throws `Lomkit\Rest\Exceptions\WriteRefused`: the transaction rolls back and is not run again, nothing is written, no write event is dispatched, and the client gets `{"message": "..."}` with the status and the headers, such as `$context->refuse('The archive is under maintenance.', 503, ['Retry-After' => '600'])` or a `429` with `Retry-After`. The status is `403`, another client error status from `400` to `499` (`423`, `429`), or `503`. `WriteRefused::$extension` holds the extension name and `$reason` holds the text the client receives; its exception message is the package's own, `The [quota] extension refused the write.`, so a text that names a lock is never taken for a deadlock. Extensions run in name order and the first refusal answers. On `mutate`, the extensions are asked once for each resource that the request reaches, the resource of the endpoint first, then the related resources of nested entries in the order of the request: `$context->resource` is that resource, `$context->entries` the nodes of the request that write or link its rows (each with its own `relations`), and `$context->rows` copies of its stored rows, with the rows that a `sync` detaches because its keys leave them out. An extension that applies only to a related resource refuses a nested write too. The link checks of a row that the mutation creates (the `attach` or `detach` ability of a relation, when its parent or its related row is created) need the key of that row, so they run later, when it is written: the guard is asked before them, and its refusal answers before their `403`. It never runs under Precognition, which stops before the controller.
+- Forbids: side effects. A deadlock retry (`rest.transactions.attempts`) runs it again with a new context, so it reads and decides: it writes nothing, counts nothing and calls no service that does. Saving a row: the rows are copies that the package never saves, but `save()` on a copy writes it, inside the transaction. `409`, `422` and `428` throw `Lomkit\Rest\Exceptions\InvalidWriteExtensionException`, which names the extension by its name and its registered class, the resource and the endpoint, and `concerns($class)` tells whether it is about that class: the package answers them with another body (conflicts, validation errors, confirmations), so refuse with `423` or `429`. A status outside 400 to 499 other than `503` throws it too. The rows are copies of the stored rows and can hold the columns of the fields that `NarrowsFields` hides: keep them out of what the extension sends elsewhere.
 - An action that commits each chunk or row keeps the transactions committed before a refusal, as with any failure. With `ActionTransaction::None`, the `handle()` calls that ran before a refusal stay written. With `ActionTransaction::Row`, `beforeRow()` runs before the guard, outside the transaction: a refusal does not undo it. A queued action is guarded in the request for each chunk, with the user of the request, and its jobs are queued only once every chunk passed, after `operated()` (a `BatchableAction` dispatches its batch at the end, as without extensions): a refusal answers the client and queues nothing. Each job is guarded again in the worker, where a refusal fails the job at once, whatever its `$tries` (Laravel does not report it: read `failed_jobs`). With the `sync` driver, a refusal in the job reaches the client; the `deferred` and `background` drivers run the job after the response, so a refusal there fails it as in a worker.
 
 ### Observing writes (`ObservesWrites`)
 
-App: `'history' => \Vendor\History\WriteHistoryExtension::class` in `rest.extensions`.
+App: `\Vendor\History\WriteHistoryExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(WriteHistoryExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\WriteObservationContext;
@@ -2059,6 +2065,12 @@ use Lomkit\Rest\Extensions\Kinds\ObservesWrites;
 
 final class WriteHistoryExtension extends Extension implements ObservesWrites
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'history';
+    }
+
     public function __construct(private readonly HistoryStore $history) {}
 
     #[\Override]
@@ -2074,9 +2086,9 @@ final class WriteHistoryExtension extends Extension implements ObservesWrites
 
 ### Observing reads (`ObservesReads`)
 
-App: `'usage' => \Vendor\Plans\ReadUsageExtension::class` in `rest.extensions`.
+App: `\Vendor\Plans\ReadUsageExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(ReadUsageExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\ReadObservationContext;
@@ -2085,6 +2097,12 @@ use Lomkit\Rest\Extensions\Kinds\ObservesReads;
 
 final class ReadUsageExtension extends Extension implements ObservesReads
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'usage';
+    }
+
     public function __construct(private readonly UsageMeter $usage) {}
 
     #[\Override]
