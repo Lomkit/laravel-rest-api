@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions\Meta;
 
 use ArrayObject;
+use Closure;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Lomkit\Rest\Authorization\ActingUser;
@@ -11,6 +12,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\JsonResourceMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketResource;
@@ -147,6 +149,26 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', 'value.value.list.0', Ticket::class));
+
+        $this->getJson('/meta-tickets');
+    }
+
+    /** @return array<string, array{Closure(): mixed, string, class-string}> */
+    public static function jsonResources(): array
+    {
+        return JsonResourceMeta::cases();
+    }
+
+    /** @param Closure(): mixed $value */
+    #[Test]
+    #[DataProvider('jsonResources')]
+    public function it_refuses_a_json_resource_in_the_details_meta(Closure $value, string $path, string $type): void
+    {
+        MetaLog::$value = $value();
+        config(['rest.extensions' => ['value' => ValueDetailsMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', "value.value.{$path}", $type));
 
         $this->getJson('/meta-tickets');
     }

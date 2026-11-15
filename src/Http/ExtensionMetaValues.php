@@ -6,6 +6,7 @@ use BackedEnum;
 use Closure;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Pagination\AbstractCursorPaginator;
 use Illuminate\Pagination\AbstractPaginator;
 use Illuminate\Support\Enumerable;
@@ -49,7 +50,7 @@ final readonly class ExtensionMetaValues
     /** @param Closure(string, string): InvalidMetaExtensionException $refuse */
     private static function ensureEncodable(mixed $value, string $path, int $depth, Closure $refuse): void
     {
-        if ($value instanceof Model || $value instanceof EloquentCollection) {
+        if ($value instanceof Model || $value instanceof EloquentCollection || $value instanceof JsonResource) {
             throw $refuse($path, get_debug_type($value));
         }
 

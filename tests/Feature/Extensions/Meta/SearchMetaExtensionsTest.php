@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions\Meta;
 
 use ArrayObject;
+use Closure;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ColumnSearchMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\JsonResourceMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaShape;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaStatus;
@@ -266,6 +268,26 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.tickets.0', Ticket::class));
+
+        $this->postJson('/meta-tickets/search', self::SEARCH);
+    }
+
+    /** @return array<string, array{Closure(): mixed, string, class-string}> */
+    public static function jsonResources(): array
+    {
+        return JsonResourceMeta::cases();
+    }
+
+    /** @param Closure(): mixed $value */
+    #[Test]
+    #[DataProvider('jsonResources')]
+    public function it_refuses_a_json_resource_in_the_meta(Closure $value, string $path, string $type): void
+    {
+        MetaLog::$value = $value();
+        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', "value.value.{$path}", $type));
 
         $this->postJson('/meta-tickets/search', self::SEARCH);
     }
