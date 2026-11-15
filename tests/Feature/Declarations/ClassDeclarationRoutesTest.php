@@ -11,6 +11,7 @@ use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
+use Lomkit\Rest\Http\Routing\RouteExtensions;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeclarationLog;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketController;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketResource;
@@ -140,11 +141,14 @@ class ClassDeclarationRoutesTest extends DeclarationTestCase
         $this->assertSame([], DeclarationLog::$built);
         $this->assertSame([
             RuntimeExtensions::class,
+            RouteExtensions::class,
             'request',
             RuntimeExtensions::class,
             DeskTicketResource::class,
             RuntimeExtensions::class,
+            RouteExtensions::class,
             RuntimeExtensions::class,
+            RouteExtensions::class,
             'request',
             RuntimeExtensions::class,
             'Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource',

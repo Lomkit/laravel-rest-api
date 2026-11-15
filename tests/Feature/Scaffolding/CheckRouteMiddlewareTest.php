@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
@@ -41,6 +42,20 @@ final class CheckRouteMiddlewareTest extends ScaffoldingTestCase
         $this->expose();
 
         $this->assertStringNotContainsString('is not behind an authentication middleware', $this->check());
+    }
+
+    #[Test]
+    public function it_checks_the_routes_beside_an_invalid_entry_of_another_kind(): void
+    {
+        config(['rest.extensions' => ['guard' => GuardRoutes::class, 'broken' => 'Missing\\Extension']]);
+        GuardRoutes::$middleware = ['auth:sanctum'];
+        GuardRoutes::$resources = [TripResource::class];
+        $this->expose();
+
+        $output = $this->check();
+
+        $this->assertStringContainsString(rtrim(InvalidExtensionException::notAClass('broken', 'Missing\\Extension')->getMessage(), '.'), $output);
+        $this->assertStringNotContainsString('is not behind an authentication middleware', $output);
     }
 
     #[Test]

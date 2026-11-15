@@ -8,7 +8,6 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\AddsRouteMiddleware;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Http\RestContext;
 
 /** @internal */
 final readonly class ExtensionMiddleware
@@ -30,18 +29,15 @@ final readonly class ExtensionMiddleware
     }
 
     /**
+     * @param  array<string, Extension&AddsRouteMiddleware>  $extensions
      * @param  class-string<Resource>  $resource
      * @param  class-string<Controller>  $controller
      */
-    public static function of(RestContext $context, string $resource, string $controller): self
+    public static function of(array $extensions, string $resource, string $controller): self
     {
-        $extensions = $context->extensions()->applicable($resource, AddsRouteMiddleware::class);
-
         if ($extensions === []) {
             return self::none();
         }
-
-        ksort($extensions);
 
         return new self($resource, $controller, $extensions);
     }

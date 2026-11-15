@@ -26,6 +26,7 @@ use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketController;
 use Lomkit\Rest\Tests\Feature\Routing\Stubs\RoutedTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
+use Lomkit\Rest\Tests\Fixtures\Extensions\KindlessExtension;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -320,14 +321,54 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_builds_every_extension_at_each_registration_beside_a_route_extension(): void
+    public function it_builds_only_route_extensions_once_for_every_registration(): void
     {
         config(['rest.extensions' => ['stamp' => StampRoutes::class, 'counting' => CountingExtension::class]]);
 
         Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
         Rest::resource('routed-tickets-again', RoutedTicketController::class)->only('search')->register();
 
-        $this->assertSame([CountingExtension::class, CountingExtension::class], ExtensionLog::$built);
+        $this->assertSame([], ExtensionLog::$built);
+        $this->assertSame(1, StampRoutes::$built);
+        $this->assertSame([EnforceExpectsJson::class, self::STAMP], $this->routeNamed('routed-tickets.search')->middleware());
+        $this->assertSame([EnforceExpectsJson::class, self::STAMP], $this->routeNamed('routed-tickets-again.search')->middleware());
+    }
+
+    /** @param Closure(): array<array-key, mixed> $entry */
+    #[Test]
+    #[DataProvider('invalidEntries')]
+    public function it_registers_routes_beside_an_invalid_entry_of_another_kind(Closure $entry): void
+    {
+        config(['rest.extensions' => ['stamp' => StampRoutes::class, ...$entry()]]);
+
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+
+        $this->assertSame([EnforceExpectsJson::class, self::STAMP], $this->routeNamed('routed-tickets.search')->middleware());
+        $this->assertSame([], ExtensionLog::$built);
+    }
+
+    /** @return array<string, array{Closure(): array<array-key, mixed>}> */
+    public static function invalidEntries(): array
+    {
+        return [
+            'a missing class' => [static fn (): array => ['broken' => 'Missing\Extension']],
+            'an unnamed entry' => [static fn (): array => [0 => CountingExtension::class]],
+            'not an extension' => [static fn (): array => ['broken' => stdClass::class]],
+            'an instance' => [static fn (): array => ['broken' => new stdClass]],
+            'an invalid name' => [static fn (): array => ['Bad-Name' => CountingExtension::class]],
+            'a class without a kind' => [static fn (): array => ['broken' => KindlessExtension::class]],
+        ];
+    }
+
+    #[Test]
+    public function it_refuses_on_request_an_invalid_entry_that_the_routes_skip(): void
+    {
+        config(['rest.extensions' => ['stamp' => StampRoutes::class, 'broken' => 'Missing\Extension']]);
+        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
+
+        $this->expectExceptionObject(InvalidExtensionException::notAClass('broken', 'Missing\Extension'));
+
+        $this->withoutExceptionHandling()->postJson('/routed-tickets/search');
     }
 
     #[Test]
