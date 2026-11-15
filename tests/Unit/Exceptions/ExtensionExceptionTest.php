@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Unit\Exceptions;
 
 use Lomkit\Rest\Exceptions\ExtensionException;
+use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
@@ -43,6 +44,19 @@ class ExtensionExceptionTest extends TestCase
             method_exists(InvalidEngineExtensionException::class, 'notAClass'),
             $exception->concerns('App\Rest\FirstExtension'),
             $exception->concerns('first'),
+        ]);
+    }
+
+    #[Test]
+    public function it_gives_the_authorization_extension_exception_the_shared_base_only(): void
+    {
+        $exception = InvalidAuthorizationExtensionException::changedRows('acl', 'App\Rest\PostResource', 'view');
+
+        $this->assertSame([true, false, false, true], [
+            is_a($exception, ExtensionException::class),
+            is_a($exception, InvalidExtensionException::class),
+            method_exists(InvalidAuthorizationExtensionException::class, 'missingName'),
+            $exception->namesExtension('acl'),
         ]);
     }
 

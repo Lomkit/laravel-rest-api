@@ -2,7 +2,7 @@
 
 namespace Lomkit\Rest\Exceptions;
 
-final class InvalidAuthorizationExtensionException extends InvalidExtensionException
+final class InvalidAuthorizationExtensionException extends ExtensionException
 {
     public static function changedRows(string $name, string $resource, string $ability): self
     {
