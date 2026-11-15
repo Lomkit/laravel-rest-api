@@ -37,11 +37,12 @@ class ExtensionExceptionTest extends TestCase
     {
         $exception = InvalidEngineExtensionException::repeatedIndexAttribute('first', 'App\Rest\FirstExtension', 'App\Rest\PostResource', 'owner_id');
 
-        $this->assertSame([true, false, false, true], [
+        $this->assertSame([true, false, false, true, false], [
             is_a($exception, ExtensionException::class),
             is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidEngineExtensionException::class, 'missingName'),
-            $exception->namesExtension('first'),
+            method_exists(InvalidEngineExtensionException::class, 'notAClass'),
+            $exception->concerns('App\Rest\FirstExtension'),
+            $exception->concerns('first'),
         ]);
     }
 
@@ -52,7 +53,7 @@ class ExtensionExceptionTest extends TestCase
 
         $exception = InvalidEngineExtensionException::refusedEngineCondition('owner', 'App\Rest\OwnerExtension', 'App\Rest\PostResource', $reason);
 
-        $this->assertSame([$reason, true], [$exception->getPrevious(), $exception->namesExtension('owner')]);
+        $this->assertSame([$reason, true, false], [$exception->getPrevious(), $exception->concerns('App\Rest\OwnerExtension'), $exception->concerns('owner')]);
     }
 
     #[Test]

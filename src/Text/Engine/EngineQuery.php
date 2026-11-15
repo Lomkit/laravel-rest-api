@@ -122,7 +122,7 @@ final class EngineQuery
     public function restrictRows(ExtensionRestrictions $rows): bool
     {
         if ($this->restricted !== null) {
-            throw InvalidEngineQueryException::repeatedRowRestriction($this->index->searchedClass(), $this->restricted->names());
+            throw InvalidEngineQueryException::repeatedRowRestriction($this->index->searchedClass(), $this->restricted->extensions());
         }
 
         if (! $this->index->profile instanceof AppliesRowRestrictions) {

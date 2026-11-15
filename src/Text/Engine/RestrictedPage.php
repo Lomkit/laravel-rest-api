@@ -30,9 +30,9 @@ final readonly class RestrictedPage
         return $result;
     }
 
-    /** @return list<string> */
-    public function names(): array
+    /** @return non-empty-list<array{string, string}> */
+    public function extensions(): array
     {
-        return $this->rows->names();
+        return $this->rows->extensions();
     }
 }

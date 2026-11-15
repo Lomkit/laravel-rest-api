@@ -176,7 +176,8 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
             'The [first] extension '.FirstIndexExtension::class.' declares for '.TeamVoucherResource::class.' the index attribute [team], which the perimeter() list of its ScoutEngine already declares with another field type or list marker. Index attributes keep their real name: declare it the same way, index it under another name for one of them, or leave '.TeamVoucherResource::class.' out of the extension with appliesTo().',
             InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, TeamVoucherResource::class, 'team', ResourceIndexList::Perimeter)->getMessage(),
         );
-        $this->assertTrue(InvalidEngineExtensionException::repeatedIndexAttribute('first', FirstIndexExtension::class, VoucherResource::class, 'owner_id')->namesExtension('first'));
+        $repeated = InvalidEngineExtensionException::repeatedIndexAttribute('first', FirstIndexExtension::class, VoucherResource::class, 'owner_id');
+        $this->assertSame([true, false], [$repeated->concerns(FirstIndexExtension::class), $repeated->concerns('first')]);
     }
 
     #[Test]

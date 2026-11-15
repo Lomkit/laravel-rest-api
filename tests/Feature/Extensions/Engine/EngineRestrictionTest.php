@@ -316,7 +316,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
         config(['scout.driver' => 'database', 'rest.extensions' => [HiddenRowsExtension::class, RowReplacingExtension::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidEngineQueryException::repeatedRowRestriction(VoucherResource::class, ['hidden']));
+        $this->expectExceptionObject(InvalidEngineQueryException::repeatedRowRestriction(VoucherResource::class, [['hidden', HiddenRowsExtension::class]]));
 
         $this->search('vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'rr.replace-rows']]]);
     }
@@ -325,8 +325,8 @@ class EngineRestrictionTest extends EngineSearchTestCase
     public function it_names_the_resource_and_the_extensions_of_a_repeated_row_restriction(): void
     {
         $this->assertSame(
-            'The engine query of '.VoucherResource::class.' already carries the row restrictions of the extensions [hidden, red], and the package passes them once per engine query. Restrict the engine query with where(), whereIn() or whereNotIn() in ScoutEngine::perimeter() or in an instruction instead of restrictRows().',
-            InvalidEngineQueryException::repeatedRowRestriction(VoucherResource::class, ['hidden', 'red'])->getMessage(),
+            'The engine query of '.VoucherResource::class.' already carries the row restrictions of the [hidden] extension '.HiddenRowsExtension::class.' and the [red] extension '.RedRowsExtension::class.', and the package passes them once per engine query. Restrict the engine query with where(), whereIn() or whereNotIn() in ScoutEngine::perimeter() or in an instruction instead of restrictRows().',
+            InvalidEngineQueryException::repeatedRowRestriction(VoucherResource::class, [['red', RedRowsExtension::class], ['hidden', HiddenRowsExtension::class]])->getMessage(),
         );
     }
 
@@ -350,7 +350,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
             'The [owner] extension '.OwnerEngineRestriction::class.' restricts the engine search of '.VoucherResource::class.' with a condition that the engine query refuses: The engine query has no attribute [owner]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.',
             $exception->getMessage(),
         );
-        $this->assertTrue($exception->namesExtension('owner'));
+        $this->assertSame([true, false], [$exception->concerns(OwnerEngineRestriction::class), $exception->concerns('owner')]);
     }
 
     #[Test]

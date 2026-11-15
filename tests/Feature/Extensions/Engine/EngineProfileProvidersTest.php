@@ -103,10 +103,13 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
     #[Test]
     public function it_names_both_extensions_the_engine_and_the_ways_out(): void
     {
+        $exception = InvalidEngineExtensionException::conflictingProfiles(ForeignEngine::class, VoucherResource::class, 'a', ForeignEngineProfiles::class, 'b', RivalEngineProfiles::class);
+
         $this->assertSame(
-            'The [a] extension '.ForeignEngineProfiles::class.' and the [b] extension '.RivalEngineProfiles::class.' both provide the engine profile of ['.ForeignEngine::class.'] for '.VoucherResource::class.'. Let one of them provide it: return null from engineProfile() of the other for this engine, or disable one of them in rest.extensions.',
-            InvalidEngineExtensionException::conflictingProfiles(ForeignEngine::class, VoucherResource::class, 'a', ForeignEngineProfiles::class, 'b', RivalEngineProfiles::class)->getMessage(),
+            'The [a] extension '.ForeignEngineProfiles::class.' and the [b] extension '.RivalEngineProfiles::class.' both provide the engine profile of ['.ForeignEngine::class.'] for '.VoucherResource::class.'. Let one of them provide it: return null from engineProfile() of the other for this engine, or add one of them to the [rest.disabled_extensions] config.',
+            $exception->getMessage(),
         );
+        $this->assertSame([true, false], [$exception->concerns(RivalEngineProfiles::class), $exception->concerns('b')]);
     }
 
     #[Test]
