@@ -33,7 +33,8 @@ final readonly class EngineRestrictions
 
     public function applyTo(EngineQuery $query): void
     {
-        $context = new EngineRestrictionContext(new EngineRestriction($query), $this->resource, $this->resource->context()->actingUser()->user);
+        $user = $this->resource->context()->actingUser()->user;
+        $context = new EngineRestrictionContext(new EngineRestriction($query), $this->resource, $user, $query->profile()->matchesStringLists());
 
         foreach ($this->engine as $extension) {
             $extension->restrictEngine($context);

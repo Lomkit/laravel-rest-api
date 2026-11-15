@@ -6,7 +6,7 @@ final class InvalidEngineExtensionException extends InvalidExtensionException
 {
     public static function notAnIndexAttribute(string $name, string $class, string $resource, int $index, string $type): self
     {
-        return self::about($name, "The [{$name}] extension {$class} declares for {$resource} an index attribute of type [{$type}] at position {$index}. Return fields, such as Integer::make('tenant_id').");
+        return self::about($name, "The [{$name}] extension {$class} declares for {$resource} an index attribute of type [{$type}] at position {$index}. Return fields, such as Integer::make('tenant_id'), or StringListAttribute::make('readers') for a list of strings.");
     }
 
     public static function invalidIndexAttributeName(string $name, string $class, string $resource, string $attribute): self
@@ -16,7 +16,7 @@ final class InvalidEngineExtensionException extends InvalidExtensionException
 
     public static function unsupportedIndexAttributeType(string $name, string $class, string $resource, string $attribute, string $type): self
     {
-        return self::about($name, "The [{$name}] extension {$class} declares for {$resource} the index attribute [{$attribute}] as [{$type}]. Index attributes are ID, Integer, Number, Boolean, Text or Enum fields; declare a timestamp as an Integer.");
+        return self::about($name, "The [{$name}] extension {$class} declares for {$resource} the index attribute [{$attribute}] as [{$type}]. Index attributes are ID, Integer, Number, Boolean, Text or Enum fields, or a StringListAttribute; declare a timestamp as an Integer.");
     }
 
     public static function callbackIndexAttribute(string $name, string $class, string $resource, string $attribute): self
@@ -37,6 +37,11 @@ final class InvalidEngineExtensionException extends InvalidExtensionException
     public static function indexAttributeTaken(string $name, string $class, string $resource, string $attribute, string $owner): self
     {
         return self::about($name, "The [{$name}] extension {$class} declares for {$resource} the index attribute [{$attribute}], which {$owner} already declares. Index attributes keep their real name: index the attribute under another name for one of them, or leave {$resource} out of the extension with appliesTo().");
+    }
+
+    public static function unsupportedStringList(string $name, string $class, string $resource, string $attribute, string $engine): self
+    {
+        return self::about($name, "The [{$name}] extension {$class} declares for {$resource} the list attribute [{$attribute}], but the engine [{$engine}] compares single values only. Match lists of strings on Algolia, Meilisearch or Typesense, or declare a single-valued attribute.");
     }
 
     public static function conflictingProfiles(string $engine, string $resource, string $first, string $firstClass, string $second, string $secondClass): self

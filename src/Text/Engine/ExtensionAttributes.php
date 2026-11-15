@@ -19,11 +19,15 @@ final readonly class ExtensionAttributes
         $attributes = [];
         $owners = [];
 
-        foreach ($target->extensions->declarations() as $name => [$class, $declared]) {
+        foreach ($target->extensions->declarations($profile) as $name => [$class, $declared]) {
             $declarer = IndexDeclarer::extension($target->resource, $name, $class);
             $own = [];
 
             foreach (array_values($declared) as $index => $entry) {
+                if ($entry instanceof StringListAttribute && ! $profile->matchesStringLists()) {
+                    throw InvalidEngineExtensionException::unsupportedStringList($name, $class, $target->resource, $entry->name, $profile->name());
+                }
+
                 $attribute = self::attribute($target, $profile, $declarer, $entry) ?? throw InvalidEngineExtensionException::notAnIndexAttribute($name, $class, $target->resource, $index, get_debug_type($entry));
                 $attributeName = $attribute->field->name;
 
@@ -56,6 +60,10 @@ final readonly class ExtensionAttributes
 
     private static function attribute(TextTarget $target, EngineProfile $profile, IndexDeclarer $declarer, mixed $entry): ?IndexAttribute
     {
+        if ($entry instanceof StringListAttribute) {
+            return IndexAttributeRules::stringList($entry, $target->model, $profile, $declarer);
+        }
+
         if (! $entry instanceof Field) {
             return null;
         }

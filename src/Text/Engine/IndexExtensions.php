@@ -28,9 +28,9 @@ final class IndexExtensions
     }
 
     /** @return array<string, array{class-string, array<mixed>}> */
-    public function declarations(): array
+    public function declarations(EngineProfile $profile): array
     {
-        return $this->declarations ??= $this->declare();
+        return $this->declarations ??= $this->declare($profile);
     }
 
     public function profile(object $engine): ?EngineProfile
@@ -61,7 +61,7 @@ final class IndexExtensions
     }
 
     /** @return array<string, array{class-string, array<mixed>}> */
-    private function declare(): array
+    private function declare(EngineProfile $profile): array
     {
         if ($this->resource === null || $this->context === null) {
             return [];
@@ -74,7 +74,7 @@ final class IndexExtensions
         }
 
         ksort($extensions);
-        $context = new IndexAttributesContext($this->resource);
+        $context = new IndexAttributesContext($this->resource, $profile->matchesStringLists());
         $declarations = [];
 
         foreach ($extensions as $name => $extension) {

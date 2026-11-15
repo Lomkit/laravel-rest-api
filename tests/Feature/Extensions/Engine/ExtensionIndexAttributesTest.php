@@ -74,8 +74,8 @@ class ExtensionIndexAttributesTest extends EngineSearchTestCase
 
         $context = EngineLog::$contexts[0];
         $this->assertInstanceOf(IndexAttributesContext::class, $context);
-        $this->assertSame(VoucherResource::class, $context->resource);
-        $this->assertSame(['resource'], array_map(
+        $this->assertSame([VoucherResource::class, false], [$context->resource, $context->matchesStringLists]);
+        $this->assertSame(['resource', 'matchesStringLists'], array_map(
             fn (ReflectionProperty $property): string => $property->getName(),
             (new ReflectionClass(IndexAttributesContext::class))->getProperties(ReflectionProperty::IS_PUBLIC),
         ));

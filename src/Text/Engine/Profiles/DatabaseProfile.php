@@ -78,4 +78,10 @@ final readonly class DatabaseProfile implements EngineProfile
     {
         return PHP_INT_MAX;
     }
+
+    #[\Override]
+    public function matchesStringLists(): bool
+    {
+        return false;
+    }
 }

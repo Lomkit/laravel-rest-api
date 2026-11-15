@@ -81,4 +81,10 @@ final readonly class MeilisearchProfile implements EngineProfile
 
         return is_int($maximum) && $maximum >= 0 ? $maximum : null;
     }
+
+    #[\Override]
+    public function matchesStringLists(): bool
+    {
+        return true;
+    }
 }

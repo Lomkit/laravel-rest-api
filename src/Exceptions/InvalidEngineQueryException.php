@@ -11,6 +11,11 @@ final class InvalidEngineQueryException extends LogicException
         return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.");
     }
 
+    public static function conflictingListMemberships(string $attribute): self
+    {
+        return new self("The engine query keeps the rows whose list attribute [{$attribute}] shares a value with each of two lists, and neither list holds the other. The engine matches one list per attribute: restrict [{$attribute}] with one list, or with lists that hold one another.");
+    }
+
     public static function unsupportedOperator(string $attribute, string $operator): self
     {
         return new self("The engine query does not compare the attribute [{$attribute}] with the operator [{$operator}].");

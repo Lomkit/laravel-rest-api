@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\Boolean;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\Field;
@@ -42,6 +43,19 @@ final readonly class IndexAttributeRules
         return $operators === []
             ? throw $declarer->unfilterable($field->name)
             : new IndexAttribute($field, array_values($operators), $profile->literal());
+    }
+
+    public static function stringList(StringListAttribute $attribute, Model $model, EngineProfile $profile, IndexDeclarer $declarer): IndexAttribute
+    {
+        self::ensureName($attribute->name, $declarer);
+
+        $field = Text::make($attribute->name)->boundTo($model);
+        $supported = $profile->operators($field);
+        $operators = array_filter([FilterOperator::In, FilterOperator::NotIn], fn (FilterOperator $operator): bool => in_array($operator, $supported, true));
+
+        return $operators === []
+            ? throw $declarer->unfilterable($attribute->name)
+            : new IndexAttribute($field, array_values($operators), $profile->literal(), list: true);
     }
 
     private static function ensureName(string $name, IndexDeclarer $declarer): void

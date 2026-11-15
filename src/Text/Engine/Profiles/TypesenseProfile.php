@@ -97,4 +97,10 @@ final readonly class TypesenseProfile implements EngineProfile
 
         return config('scout.typesense.model-settings.'.$model::class.'.search-parameters.query_by');
     }
+
+    #[\Override]
+    public function matchesStringLists(): bool
+    {
+        return true;
+    }
 }

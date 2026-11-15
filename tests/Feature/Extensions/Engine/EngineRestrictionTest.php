@@ -251,7 +251,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $methods = array_map(fn (ReflectionMethod $method): string => $method->getName(), (new ReflectionClass(EngineRestriction::class))->getMethods(ReflectionMethod::IS_PUBLIC));
 
         $this->assertSame(['where', 'whereIn', 'whereNotIn', 'matchNothing'], array_values(array_diff($methods, ['__construct'])));
-        $this->assertSame(['query', 'resource', 'user'], array_map(
+        $this->assertSame(['query', 'resource', 'user', 'matchesStringLists'], array_map(
             fn (ReflectionProperty $property): string => $property->getName(),
             (new ReflectionClass(EngineRestrictionContext::class))->getProperties(ReflectionProperty::IS_PUBLIC),
         ));

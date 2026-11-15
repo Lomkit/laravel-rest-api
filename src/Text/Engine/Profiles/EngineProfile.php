@@ -37,4 +37,6 @@ interface EngineProfile
     public function reachable(ScoutModel $model): ?int;
 
     public function literal(): EngineLiteral;
+
+    public function matchesStringLists(): bool;
 }

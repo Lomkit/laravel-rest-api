@@ -11,5 +11,8 @@ final readonly class IndexAttributesContext
      *
      * @param  class-string<Resource>  $resource
      */
-    public function __construct(public string $resource) {}
+    public function __construct(
+        public string $resource,
+        public bool $matchesStringLists,
+    ) {}
 }

@@ -94,4 +94,10 @@ final readonly class AlgoliaProfile implements EngineProfile
 
         return is_object($client) && method_exists($client, 'getSettings') ? $client->getSettings() : null;
     }
+
+    #[\Override]
+    public function matchesStringLists(): bool
+    {
+        return true;
+    }
 }

@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Text\Engine;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
+use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
 final class IndexConditions
@@ -25,13 +26,15 @@ final class IndexConditions
     }
 
     /** @param list<int|float|string|bool> $values */
-    public function include(string $attribute, array $values): void
+    public function include(string $attribute, array $values, bool $list = false): void
     {
         $current = $this->memberships[$attribute] ?? null;
 
-        $this->memberships[$attribute] = $current === null
-            ? self::unique($values)
-            : array_values(array_filter($current, fn (int|float|string|bool $value): bool => in_array($value, $values, true)));
+        $this->memberships[$attribute] = match (true) {
+            $current === null => self::unique($values),
+            $list => self::narrower($attribute, $current, self::unique($values)),
+            default => array_values(array_filter($current, fn (int|float|string|bool $value): bool => in_array($value, $values, true))),
+        };
     }
 
     /** @param list<int|float|string|bool> $values */
@@ -68,6 +71,35 @@ final class IndexConditions
         foreach ($this->exclusions as $attribute => $values) {
             $builder->whereNotIn($attribute, $values);
         }
+    }
+
+    /**
+     * @param  list<int|float|string|bool>  $current
+     * @param  list<int|float|string|bool>  $values
+     * @return list<int|float|string|bool>
+     */
+    private static function narrower(string $attribute, array $current, array $values): array
+    {
+        return match (true) {
+            self::holds($values, $current) => $current,
+            self::holds($current, $values) => $values,
+            default => throw InvalidEngineQueryException::conflictingListMemberships($attribute),
+        };
+    }
+
+    /**
+     * @param  list<int|float|string|bool>  $outer
+     * @param  list<int|float|string|bool>  $inner
+     */
+    private static function holds(array $outer, array $inner): bool
+    {
+        foreach ($inner as $value) {
+            if (! in_array($value, $outer, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

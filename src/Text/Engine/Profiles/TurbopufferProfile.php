@@ -71,4 +71,10 @@ final readonly class TurbopufferProfile implements EngineProfile
     {
         return PHP_INT_MAX;
     }
+
+    #[\Override]
+    public function matchesStringLists(): bool
+    {
+        return false;
+    }
 }

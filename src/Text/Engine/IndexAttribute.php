@@ -15,6 +15,7 @@ final readonly class IndexAttribute implements JsonSerializable
         public Field $field,
         public array $operators,
         public EngineLiteral $literal = new PlainLiteral,
+        public bool $list = false,
     ) {}
 
     public function supports(FilterOperator $operator): bool

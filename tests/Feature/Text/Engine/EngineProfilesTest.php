@@ -68,6 +68,28 @@ class EngineProfilesTest extends EngineTestCase
     }
 
     #[Test]
+    #[DataProvider('listMatches')]
+    public function it_states_which_engines_match_string_lists(string $engine, bool $matches): void
+    {
+        $this->assertSame($matches, EngineProfiles::for($this->engine($engine), VoucherResource::class)->matchesStringLists());
+    }
+
+    /** @return array<string, array{class-string, bool}> */
+    public static function listMatches(): array
+    {
+        return [
+            'collection' => [CollectionEngine::class, false],
+            'database' => [DatabaseEngine::class, false],
+            'meilisearch' => [FakeMeilisearchEngine::class, true],
+            'typesense' => [FakeTypesenseEngine::class, true],
+            'algolia 3' => [FakeAlgolia3Engine::class, true],
+            'algolia 4' => [FakeAlgolia4Engine::class, true],
+            'turbopuffer' => [FakeTurbopufferEngine::class, false],
+            'null' => [NullEngine::class, false],
+        ];
+    }
+
+    #[Test]
     #[DataProvider('unboundedEngines')]
     public function it_reaches_every_hit_of_an_engine_without_pagination_limit(string $engine): void
     {

@@ -6,6 +6,7 @@ use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\TextQuery;
 
 final class EngineQuery
@@ -56,7 +57,9 @@ final class EngineQuery
     /** @param array<mixed> $values */
     public function whereIn(string $attribute, array $values): static
     {
-        $this->conditions->include($attribute, $this->members($attribute, FilterOperator::In, $values));
+        $declared = $this->attribute($attribute);
+
+        $this->conditions->include($attribute, $this->members($declared, FilterOperator::In, $values), $declared->list);
 
         return $this;
     }
@@ -64,7 +67,7 @@ final class EngineQuery
     /** @param array<mixed> $values */
     public function whereNotIn(string $attribute, array $values): static
     {
-        $this->conditions->exclude($attribute, $this->members($attribute, FilterOperator::NotIn, $values));
+        $this->conditions->exclude($attribute, $this->members($this->attribute($attribute), FilterOperator::NotIn, $values));
 
         return $this;
     }
@@ -113,6 +116,12 @@ final class EngineQuery
         return $this;
     }
 
+    /** @internal */
+    public function profile(): EngineProfile
+    {
+        return $this->index->profile;
+    }
+
     public function reachable(): ?int
     {
         if ($this->conditions->matchesNothing()) {
@@ -136,12 +145,10 @@ final class EngineQuery
      * @param  array<mixed>  $values
      * @return list<int|float|string|bool>
      */
-    private function members(string $attribute, FilterOperator $operator, array $values): array
+    private function members(IndexAttribute $declared, FilterOperator $operator, array $values): array
     {
-        $declared = $this->attribute($attribute);
-
         if (! $declared->supports($operator)) {
-            throw InvalidEngineQueryException::unsupportedOperator($attribute, $operator->value);
+            throw InvalidEngineQueryException::unsupportedOperator($declared->field->name, $operator->value);
         }
 
         return array_map(fn (mixed $value): int|float|string|bool => $declared->value($value), array_values($values));

@@ -12,5 +12,6 @@ final readonly class EngineRestrictionContext
         public EngineRestriction $query,
         public Resource $resource,
         public ?Authenticatable $user,
+        public bool $matchesStringLists,
     ) {}
 }
