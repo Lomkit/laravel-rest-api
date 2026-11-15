@@ -40,10 +40,11 @@ final readonly class MetaSchema
         if (! Overrides::method($resource, 'detailsMeta', Resource::class)) {
             return $properties === []
                 ? Schemas::closed([], description: 'Empty: the resource adds no keys with detailsMeta()')
-                : Schemas::closed($properties, description: 'The keys that extensions add, each under the name of the extension, for the user of the request');
+                : Schemas::closed($properties, array_keys($properties), 'The keys that extensions add, each under the name of the extension, for the user of the request');
         }
 
         $meta = Schemas::object($properties);
+        $meta->setRequired(array_keys($properties));
         $meta->additionalProperties(new MixedType);
         $meta->setDescription($properties === []
             ? 'The keys that detailsMeta() of the resource returns for the user of the request'

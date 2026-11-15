@@ -85,13 +85,15 @@ final readonly class PageSchema
             $properties[SearchMeta::INSTRUCTIONS] = self::instructions();
         }
 
-        $properties = [...$properties, ...MetaSchema::search($resource)];
+        $extensions = MetaSchema::search($resource);
+        $properties = [...$properties, ...$extensions];
 
         if (! Overrides::method($resource, 'searchMeta', Resource::class)) {
-            return Schemas::closed($properties);
+            return Schemas::closed($properties, array_keys($extensions));
         }
 
         $meta = Schemas::object($properties);
+        $meta->setRequired(array_keys($extensions));
         $meta->additionalProperties(new MixedType);
         $meta->setDescription('Also holds the keys that searchMeta() of the resource returns for the page');
 

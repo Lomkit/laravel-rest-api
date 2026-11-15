@@ -21,9 +21,9 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
 {
     private const string GATE = '{"$ref":"#\/components\/schemas\/RestGateAnswer"}';
 
-    private const string PAGE_META = '{"type":"object","properties":{"gates":{"type":"object","description":"Present when the search lists the create gate","properties":{"authorized_to_create":'.self::GATE.'}},"quota":{"type":"object","description":"Added by the [quota] extension for the page","properties":{"remaining":{"type":"integer"}},"required":["remaining"],"additionalProperties":false},"region":{"type":"object","description":"Added by the [region] extension for the page","additionalProperties":{}}},"additionalProperties":false}';
+    private const string PAGE_META = '{"type":"object","properties":{"gates":{"type":"object","description":"Present when the search lists the create gate","properties":{"authorized_to_create":'.self::GATE.'}},"quota":{"type":"object","description":"Added by the [quota] extension for the page","properties":{"remaining":{"type":"integer"}},"required":["remaining"],"additionalProperties":false},"region":{"type":"object","description":"Added by the [region] extension for the page","additionalProperties":{}}},"required":["quota","region"],"additionalProperties":false}';
 
-    private const string DETAILS_META = '{"type":"object","description":"The keys that extensions add, each under the name of the extension, for the user of the request","properties":{"quota":{"type":"object","description":"Added by the [quota] extension for the user of the request","properties":{"plan":{"type":"string"}},"required":["plan"],"additionalProperties":false},"region":{"type":"object","description":"Added by the [region] extension for the user of the request","additionalProperties":{}}},"additionalProperties":false}';
+    private const string DETAILS_META = '{"type":"object","description":"The keys that extensions add, each under the name of the extension, for the user of the request","properties":{"quota":{"type":"object","description":"Added by the [quota] extension for the user of the request","properties":{"plan":{"type":"string"}},"required":["plan"],"additionalProperties":false},"region":{"type":"object","description":"Added by the [region] extension for the user of the request","additionalProperties":{}}},"required":["quota","region"],"additionalProperties":false}';
 
     #[\Override]
     protected function setUp(): void
@@ -57,7 +57,8 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
         $validator = new OpenApiValidator;
 
         $this->assertSame([], $validator->schemaErrors($document, $pointer, ['quota' => ['remaining' => 3], 'region' => new stdClass]));
-        $this->assertSame([], $validator->schemaErrors($document, $pointer, (object) []));
+        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, (object) []));
+        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['quota' => ['remaining' => 3]]));
         $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['quota' => ['remaining' => 'three']]));
         $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['quota' => ['remaining' => 3, 'used' => 1]]));
         $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['listed' => 2]));
@@ -69,6 +70,7 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
         $meta = $this->document()['components']['schemas']['ShowPaginated']['properties']['meta'];
 
         $this->assertSame(['gates', 'instructions', 'quota'], array_keys($meta['properties']));
+        $this->assertSame(['quota'], $meta['required']);
         $this->assertSame('Also holds the keys that searchMeta() of the resource returns for the page', $meta['description']);
         $this->assertEquals(new stdClass, $meta['additionalProperties']);
         $this->assertSame('{"type":"object","description":"Added by the [quota] extension for the page","properties":{"remaining":{"type":"integer"}},"required":["remaining"],"additionalProperties":false}', json_encode($meta['properties']['quota']));
@@ -81,7 +83,7 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
 
         $this->assertSame(self::DETAILS_META, json_encode($schemas['StageDetails']['properties']['data']['properties']['meta']));
         $this->assertSame(
-            '{"type":"object","description":"The keys that detailsMeta() of the resource returns for the user of the request, then the keys that extensions add, each under the name of the extension","properties":{"quota":{"type":"object","description":"Added by the [quota] extension for the user of the request","properties":{"plan":{"type":"string"}},"required":["plan"],"additionalProperties":false}},"additionalProperties":{}}',
+            '{"type":"object","description":"The keys that detailsMeta() of the resource returns for the user of the request, then the keys that extensions add, each under the name of the extension","properties":{"quota":{"type":"object","description":"Added by the [quota] extension for the user of the request","properties":{"plan":{"type":"string"}},"required":["plan"],"additionalProperties":false}},"required":["quota"],"additionalProperties":{}}',
             json_encode($schemas['ShowDetails']['properties']['data']['properties']['meta']),
         );
     }
