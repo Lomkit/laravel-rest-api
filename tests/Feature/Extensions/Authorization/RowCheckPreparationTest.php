@@ -371,6 +371,21 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         }
     }
 
+    #[Test]
+    public function it_answers_an_error_and_renders_no_row_when_an_extension_changes_a_row_during_a_search(): void
+    {
+        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        $this->seedTickets();
+        PreparingExtension::$prepare = static function (PendingChecks $checks): void {
+            $checks->rows->firstOrFail()->setAttribute('title', 'Changed');
+        };
+
+        $response = $this->postJson('/api/tickets/search', ['search' => ['gates' => ['update'], 'sorts' => [['field' => 'id']]]]);
+
+        $response->assertStatus(500)->assertExactJson(['message' => 'Server Error']);
+        $this->assertSame(['viewAny'], array_values(array_filter($this->tickets->calls, fn (string $call): bool => ! str_starts_with($call, 'ext '))));
+    }
+
     /** @return iterable<string, array{Closure(PendingChecks): mixed}> */
     public static function rowChanges(): iterable
     {
