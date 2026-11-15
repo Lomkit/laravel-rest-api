@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Mutations;
 
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Relation;
 
 final class OperationLog
@@ -13,9 +14,18 @@ final class OperationLog
     /** @var list<OperationEntry> */
     private array $open = [];
 
+    /** @var list<MutationNode> */
+    private array $nodes = [];
+
+    /** @var list<WrittenRow> */
+    private array $written = [];
+
+    public function __construct(private readonly bool $recordsRows = false) {}
+
     public function begin(MutationNode $node): void
     {
         $parent = $this->current();
+        $this->nodes[] = $node;
 
         if ($parent === null) {
             $entry = OperationEntry::of($node);
@@ -31,6 +41,7 @@ final class OperationLog
     public function end(): void
     {
         array_pop($this->open);
+        array_pop($this->nodes);
     }
 
     public function within(Relation $relation): void
@@ -43,9 +54,13 @@ final class OperationLog
         $this->current()?->rewind();
     }
 
-    public function wrote(Model $model): Model
+    public function wrote(Model $model, ?Resource $resource = null): Model
     {
         $this->current()?->wrote($model);
+
+        if ($this->recordsRows && $resource !== null && $this->nodes !== []) {
+            $this->written[] = new WrittenRow($resource, $this->nodes[array_key_last($this->nodes)], $model);
+        }
 
         return $model;
     }
@@ -54,6 +69,12 @@ final class OperationLog
     public function entries(): array
     {
         return $this->entries;
+    }
+
+    /** @return list<WrittenRow> */
+    public function written(): array
+    {
+        return $this->written;
     }
 
     private function current(): ?OperationEntry
