@@ -1787,7 +1787,7 @@ The app indexes the key on the model: `toSearchableArray()` returns `'readers' =
 - Lists of strings: `whereIn('readers', [...])` keeps the rows that share at least one value with the list, `whereNotIn()` the rows that share none (an empty list included). `where()` is refused on a list. Two `whereIn()` lists on one list attribute keep the narrower one when one holds the other, and throw `Lomkit\Rest\Exceptions\ConflictingListsException` otherwise, naming the extensions that set them. An instruction must not set a list on an attribute that an extension restricts: a list from an instruction that neither holds nor is held by the list already kept answers `422` on `search.instructions.N`, since the client chose the instruction. A list can be declared on every engine; comparing it (`whereIn()`, `whereNotIn()`) on an engine whose profile does not implement `MatchesStringLists` throws `InvalidEngineQueryException`, so check `$context->matchesStringLists` before comparing it. Index schema per engine:
   - Algolia: `attributesForFaceting` holds `filterOnly(readers)`.
   - Meilisearch: `filterableAttributes` holds `readers`.
-  - Typesense: a collection field `['name' => 'readers', 'type' => 'string[]']`.
+  - Typesense: a collection field `['name' => 'readers', 'type' => 'string[]']`. `whereNotIn()` sends `readers:!=[...]`, checked with Typesense Server 29.0 and 30.1; check an older server before you rely on it.
   - Another engine compares single values only: do not compare the list there (and `toSearchableArray()` must not send a list to the `database` engine, which turns every key into a column).
 
 ### Providing engine profiles (`ProvidesEngineProfiles`)
