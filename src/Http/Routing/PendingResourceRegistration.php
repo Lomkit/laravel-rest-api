@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Routing\RouteCollection;
 use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
+use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Http\Controllers\Controller;
 
 final class PendingResourceRegistration
@@ -122,6 +123,7 @@ final class PendingResourceRegistration
     public function register(): RouteCollection
     {
         $this->settled = true;
+        $this->container->make(RuntimeExtensions::class)->freeze();
 
         $routes = new EndpointRoutes($this->name, $this->controller, ResourceVerbs::current(), $this->names, $this->middleware, $this->endpointMiddleware, $this->container);
 

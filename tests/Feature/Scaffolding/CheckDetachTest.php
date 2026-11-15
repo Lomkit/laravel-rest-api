@@ -48,7 +48,8 @@ class CheckDetachTest extends ScaffoldingTestCase
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
             ."  actions ... 1 action checks each row\n"
             ."  relations ... FAILED\n"
-            .'  ⇂ '.rtrim(self::COUNTRY_PROBLEM, '.')."\n",
+            .'  ⇂ '.rtrim(self::COUNTRY_PROBLEM, '.')."\n"
+            ."  extensions ... none registered\n",
             $output,
         );
     }
@@ -60,7 +61,7 @@ class CheckDetachTest extends ScaffoldingTestCase
 
         $output = $this->check(0, KeptTripController::class);
 
-        $this->assertStringEndsWith("  relations ... no relation accepts detach\n", $output);
+        $this->assertStringEndsWith("  relations ... no relation accepts detach\n  extensions ... none registered\n", $output);
     }
 
     #[Test]
@@ -75,7 +76,7 @@ class CheckDetachTest extends ScaffoldingTestCase
 
         $output = $this->check(0, TripController::class);
 
-        $this->assertStringEndsWith("  relations ... 1 relation accepts detach\n", $output);
+        $this->assertStringEndsWith("  relations ... 1 relation accepts detach\n  extensions ... none registered\n", $output);
     }
 
     #[Test]
@@ -102,7 +103,8 @@ class CheckDetachTest extends ScaffoldingTestCase
 
         $this->assertStringEndsWith(
             "  relations ... no relation accepts detach, 1 skipped\n"
-            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n",
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n"
+            ."  extensions ... none registered\n",
             $output,
         );
     }

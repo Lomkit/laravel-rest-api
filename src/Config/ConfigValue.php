@@ -12,9 +12,9 @@ final readonly class ConfigValue
         private mixed $value,
     ) {}
 
-    public static function of(Repository $config, string $key): self
+    public static function of(Repository $config, string $key, mixed $absent = null): self
     {
-        return new self($key, $config->get($key));
+        return new self($key, $config->get($key, $absent));
     }
 
     public static function at(string $key, mixed $value): self
@@ -62,6 +62,16 @@ final readonly class ConfigValue
         }
 
         throw InvalidConfigException::mustBe($this->key, 'null or a non-empty string');
+    }
+
+    /** @return list<mixed> */
+    public function list(string $entries): array
+    {
+        if (is_array($this->value) && array_is_list($this->value)) {
+            return $this->value;
+        }
+
+        throw InvalidConfigException::mustBe($this->key, "a list of {$entries}");
     }
 
     /**

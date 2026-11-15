@@ -12,6 +12,8 @@ use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Lomkit\Rest\Authorization\DecisionStamps;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Config\ConfigValue;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Resource;
@@ -27,7 +29,6 @@ class Rest
     public function __construct(
         private readonly ResourceRegistrar $registrar,
         private readonly Repository $config,
-        private readonly Factory $cache,
         private readonly Container $container,
     ) {}
 
@@ -63,6 +64,18 @@ class Rest
         DecisionStamps::renew($this->decisions(), null);
     }
 
+    /** @param class-string<Extension> $class */
+    public function registerExtension(string $class): void
+    {
+        $this->container->make(RuntimeExtensions::class)->register($class);
+    }
+
+    /** @param list<class-string<Extension>> $classes */
+    public function registerExtensions(array $classes): void
+    {
+        $this->container->make(RuntimeExtensions::class)->registerAll($classes);
+    }
+
     /** @return list<string> */
     private function packageMiddleware(): array
     {
@@ -75,6 +88,6 @@ class Rest
 
     private function decisions(): Cache
     {
-        return $this->cache->store(ConfigValue::of($this->config, 'rest.authorizations.cache.store')->nullableString());
+        return $this->container->make(Factory::class)->store(ConfigValue::of($this->config, 'rest.authorizations.cache.store')->nullableString());
     }
 }

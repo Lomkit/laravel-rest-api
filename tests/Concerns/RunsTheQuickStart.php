@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Console\Check\DeclarationCheck;
 use Lomkit\Rest\Console\Check\DetachCheck;
+use Lomkit\Rest\Console\Check\ExtensionCheck;
 use Lomkit\Rest\Console\Check\PerimeterCheck;
 use Lomkit\Rest\Console\QuickStart\ExposureCheck;
 use Lomkit\Rest\Tests\Fixtures\Blog\FakeApiInstallCommand;
@@ -135,9 +136,10 @@ trait RunsTheQuickStart
             $declarations = $this->app->make(DeclarationCheck::class)->run($controllers);
             $rows = $this->app->make(PerimeterCheck::class)->run($controllers, $declarations);
             $links = $this->app->make(DetachCheck::class)->run($controllers);
-            $report = (string) json_encode([...$access->toArray(), ...$declarations->toArray(), ...$rows->toArray(), ...$links->toArray()], JSON_UNESCAPED_SLASHES);
+            $extensions = $this->app->make(ExtensionCheck::class)->run();
+            $report = (string) json_encode([...$access->toArray(), ...$declarations->toArray(), ...$rows->toArray(), ...$links->toArray(), ...$extensions->toArray()], JSON_UNESCAPED_SLASHES);
 
-            return Process::result($report, '', $access->passed() && $declarations->passed() && $rows->passed() && $links->passed() ? 0 : 1);
+            return Process::result($report, '', $access->passed() && $declarations->passed() && $rows->passed() && $links->passed() && $extensions->passed() ? 0 : 1);
         }]);
     }
 

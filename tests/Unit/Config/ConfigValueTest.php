@@ -155,6 +155,24 @@ class ConfigValueTest extends TestCase
         ConfigValue::at('rest.gates.names', ['authorized_to_view' => 'can_view'])->strings(self::NAMES);
     }
 
+    #[Test]
+    public function it_reads_a_list_as_is(): void
+    {
+        $extensions = ['Vendor\Acl\AccessControlExtension', false];
+
+        $this->assertSame($extensions, ConfigValue::at('rest.extensions', $extensions)->list('extension class names'));
+        $this->assertSame([], ConfigValue::at('rest.extensions', [])->list('extension class names'));
+    }
+
+    #[Test]
+    #[DataProvider('notLists')]
+    public function it_names_the_key_of_a_value_that_is_not_a_list(mixed $value): void
+    {
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.extensions] option must be a list of extension class names.'));
+
+        ConfigValue::at('rest.extensions', $value)->list('extension class names');
+    }
+
     /** @return array<string, array{mixed, bool}> */
     public static function booleans(): array
     {
@@ -237,6 +255,18 @@ class ConfigValueTest extends TestCase
             'a string' => ['authorized_to_view'],
             'null' => [null],
             'a list' => [['can_view', 'can_create']],
+        ];
+    }
+
+    /** @return array<string, array{mixed}> */
+    public static function notLists(): array
+    {
+        return [
+            'null' => [null],
+            'a string' => ['acl'],
+            'an integer' => [1],
+            'a map by name' => [['acl' => 'Vendor\Acl\AccessControl']],
+            'a list with a gap' => [[1 => 'Vendor\Acl\AccessControl']],
         ];
     }
 }
