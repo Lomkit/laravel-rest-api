@@ -18,9 +18,9 @@ class ExtensionExceptionTest extends TestCase
     public function it_offers_no_registry_factory_on_a_kind_exception(): void
     {
         $this->assertSame([false, false, false], [
-            method_exists(InvalidQueryExtensionException::class, 'missingName'),
-            method_exists(InvalidQueryExtensionException::class, 'notAClass'),
-            method_exists(InvalidQueryExtensionException::class, 'unnamedEntry'),
+            method_exists(InvalidQueryExtensionException::class, 'notAnExtension'),
+            method_exists(InvalidQueryExtensionException::class, 'invalidName'),
+            method_exists(InvalidQueryExtensionException::class, 'sharedName'),
         ]);
     }
 

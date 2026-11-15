@@ -7,7 +7,7 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\DeclaresInstructions;
 use Lomkit\Rest\Instructions\Instruction;
 
-class BrokenInstructionsExtension extends Extension implements DeclaresInstructions
+final class BrokenInstructionsExtension extends Extension implements DeclaresInstructions
 {
     /** @var class-string<Instruction> */
     public static string $entry = Instruction::class;

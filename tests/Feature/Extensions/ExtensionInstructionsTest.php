@@ -12,6 +12,7 @@ use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AbstractInstruction;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AlphaMarkedInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ArchiveInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\BrokenInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CollidingAuthorController;
@@ -22,6 +23,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OneMarkedInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TwinInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TwoMarkedInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WithArchivedInstruction;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ZuluMarkedInstructionsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\FailingExtension;
 use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorController;
 use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
@@ -179,6 +181,27 @@ class ExtensionInstructionsTest extends PackageTestCase
         return [
             'in name order' => [[ArchiveInstructionsExtension::class, MarkedInstructionsExtension::class]],
             'in reverse order' => [[MarkedInstructionsExtension::class, ArchiveInstructionsExtension::class]],
+        ];
+    }
+
+    /** @param list<class-string> $extensions */
+    #[Test]
+    #[DataProvider('crossedOrders')]
+    public function it_lists_the_instructions_by_extension_name_not_by_class_name(array $extensions): void
+    {
+        config(['rest.extensions' => $extensions]);
+
+        $response = $this->getJson('/api/posts?with=instructions');
+
+        $response->assertOk()->assertJsonPath('data.instructions.*.uriKey', ['highlight-posts', 'in-status', 'alpha.marked', 'zulu.marked']);
+    }
+
+    /** @return array<string, array{list<class-string>}> */
+    public static function crossedOrders(): array
+    {
+        return [
+            'in class name order' => [[AlphaMarkedInstructionsExtension::class, ZuluMarkedInstructionsExtension::class]],
+            'in extension name order' => [[ZuluMarkedInstructionsExtension::class, AlphaMarkedInstructionsExtension::class]],
         ];
     }
 
