@@ -22,7 +22,8 @@ final readonly class ExtensionSearchMeta
     /** @return array<string, Extension&AddsSearchMeta> */
     public static function extensions(Resource $resource): array
     {
-        $extensions = $resource->context()->extensions()->applicable($resource::class, AddsSearchMeta::class);
+        $registry = $resource->context()->extensions();
+        $extensions = $registry->applicable($resource::class, AddsSearchMeta::class);
 
         if ($extensions === []) {
             return [];
@@ -30,13 +31,13 @@ final readonly class ExtensionSearchMeta
 
         $gatesKey = $resource->context()->config()->gatesKey;
 
-        foreach ($extensions as $name => $extension) {
+        foreach (array_keys($extensions) as $name) {
             if ($name === SearchMeta::INSTRUCTIONS) {
-                throw InvalidMetaExtensionException::instructionsName($name, $extension::class, $resource::class);
+                throw InvalidMetaExtensionException::instructionsName($name, $registry->classOf($name), $resource::class);
             }
 
             if ($name === $gatesKey) {
-                throw InvalidMetaExtensionException::gatesKeyName($name, $extension::class, $resource::class);
+                throw InvalidMetaExtensionException::gatesKeyName($name, $registry->classOf($name), $resource::class);
             }
         }
 

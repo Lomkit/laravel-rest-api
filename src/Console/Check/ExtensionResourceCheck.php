@@ -56,8 +56,8 @@ final readonly class ExtensionResourceCheck
     /** @param class-string<Resource> $resource */
     private static function check(ExtensionResourceReport $report, ExtensionRegistry $registry, string $name, Extension&ChecksResources $extension, string $resource): ExtensionResourceReport
     {
-        $class = $extension::class;
-        $undecided = UndecidedExtension::problem($registry, $name, $extension, $resource);
+        $class = $registry->classOf($name);
+        $undecided = UndecidedExtension::problem($registry, $name, $resource);
 
         if ($undecided !== null) {
             return $report->withProblem($undecided);

@@ -157,6 +157,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::keyTaken('quota', QuotaSearchMeta::class, MetaTicketResource::class, 'searchMeta'));
+        $this->expectExceptionMessage('The resource ['.MetaTicketResource::class.'] returns the key [quota] from searchMeta(), which holds the meta that the [quota] extension '.QuotaSearchMeta::class.' adds. Rename the key in searchMeta() of the resource, or give the extension another name: return it from '.QuotaSearchMeta::class.'::name(), or list a subclass of '.QuotaSearchMeta::class.' that overrides name() in the [rest.extensions] config and '.QuotaSearchMeta::class.' in the [rest.disabled_extensions] config.');
 
         try {
             $this->postJson('/meta-tickets/search', self::SEARCH);
@@ -174,9 +175,9 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $resource = MetaTicketResource::class;
 
         return [
-            'the default gates key' => [$gates, null, "The [gates] extension {$gates} adds search meta to {$resource} under its name, which is the key of the gates in the meta of a search page (rest.gates.key). Register the extension under another name, or set rest.gates.key to another name."],
-            'the instructions key' => [$instructions, null, "The [instructions] extension {$instructions} adds search meta to {$resource} under its name, which is the key of the instruction meta of a search page. Register the extension under another name."],
-            'a configured gates key' => [$abilities, 'abilities', "The [abilities] extension {$abilities} adds search meta to {$resource} under its name, which is the key of the gates in the meta of a search page (rest.gates.key). Register the extension under another name, or set rest.gates.key to another name."],
+            'the default gates key' => [$gates, null, "The [gates] extension {$gates} adds search meta to {$resource} under its name, which is the key of the gates in the meta of a search page (rest.gates.key). Set rest.gates.key to another name, or give the extension another name: return it from {$gates}::name(), or list a subclass of {$gates} that overrides name() in the [rest.extensions] config and {$gates} in the [rest.disabled_extensions] config."],
+            'the instructions key' => [$instructions, null, "The [instructions] extension {$instructions} adds search meta to {$resource} under its name, which is the key of the instruction meta of a search page. Give the extension another name: return it from {$instructions}::name(), or list a subclass of {$instructions} that overrides name() in the [rest.extensions] config and {$instructions} in the [rest.disabled_extensions] config."],
+            'a configured gates key' => [$abilities, 'abilities', "The [abilities] extension {$abilities} adds search meta to {$resource} under its name, which is the key of the gates in the meta of a search page (rest.gates.key). Set rest.gates.key to another name, or give the extension another name: return it from {$abilities}::name(), or list a subclass of {$abilities} that overrides name() in the [rest.extensions] config and {$abilities} in the [rest.disabled_extensions] config."],
         ];
     }
 
@@ -233,6 +234,45 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $path, $type));
 
         $this->postJson('/meta-tickets/search', self::SEARCH);
+    }
+
+    #[Test]
+    public function it_names_the_registered_class_of_a_meta_extension_bound_to_a_subclass(): void
+    {
+        $bound = new class extends ValueSearchMeta {};
+        $this->app->bind(ValueSearchMeta::class, static fn (): ValueSearchMeta => $bound);
+        MetaLog::$value = new ArrayObject;
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
+        $this->withoutExceptionHandling();
+        $expected = InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value', ArrayObject::class)->getMessage();
+        $exception = null;
+
+        try {
+            $this->postJson('/meta-tickets/search', self::SEARCH);
+        } catch (InvalidMetaExtensionException $caught) {
+            $exception = $caught;
+        }
+
+        $this->assertSame([$expected, true, false], [$exception?->getMessage(), $exception?->concerns(ValueSearchMeta::class), $exception?->concerns($bound::class)]);
+    }
+
+    #[Test]
+    public function it_names_the_registered_class_of_a_meta_extension_named_after_a_package_key_and_bound_to_a_subclass(): void
+    {
+        $bound = new class extends PageCountMetaExtensionNamedInstructions {};
+        $this->app->bind(PageCountMetaExtensionNamedInstructions::class, static fn (): PageCountMetaExtensionNamedInstructions => $bound);
+        config(['rest.extensions' => [PageCountMetaExtensionNamedInstructions::class]]);
+        $this->withoutExceptionHandling();
+        $expected = InvalidMetaExtensionException::instructionsName('instructions', PageCountMetaExtensionNamedInstructions::class, MetaTicketResource::class)->getMessage();
+        $exception = null;
+
+        try {
+            $this->postJson('/meta-tickets/search', self::SEARCH);
+        } catch (InvalidMetaExtensionException $caught) {
+            $exception = $caught;
+        }
+
+        $this->assertSame([$expected, true, false], [$exception?->getMessage(), $exception?->concerns(PageCountMetaExtensionNamedInstructions::class), $exception?->concerns($bound::class)]);
     }
 
     #[Test]

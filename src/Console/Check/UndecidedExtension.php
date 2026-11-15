@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Console\Check;
 
-use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\ExtensionRegistry;
 use Lomkit\Rest\Extensions\Kinds\ExtensionKind;
 use Lomkit\Rest\Http\Resource;
@@ -12,12 +11,12 @@ use Throwable;
 final readonly class UndecidedExtension
 {
     /** @param class-string<Resource> $resource */
-    public static function problem(ExtensionRegistry $registry, string $name, Extension $extension, string $resource): ?string
+    public static function problem(ExtensionRegistry $registry, string $name, string $resource): ?string
     {
         try {
             $registry->appliesTo($name, $resource);
         } catch (Throwable $exception) {
-            return "The [{$name}] extension ".$extension::class." throws while it tells whether it applies to {$resource}: {$exception->getMessage()}";
+            return "The [{$name}] extension {$registry->classOf($name)} throws while it tells whether it applies to {$resource}: {$exception->getMessage()}";
         }
 
         return null;
@@ -29,8 +28,8 @@ final readonly class UndecidedExtension
      */
     public static function first(ExtensionRegistry $registry, string $kind, string $resource): ?string
     {
-        foreach ($registry->ofKind($kind) as $name => $extension) {
-            $problem = self::problem($registry, $name, $extension, $resource);
+        foreach (array_keys($registry->ofKind($kind)) as $name) {
+            $problem = self::problem($registry, $name, $resource);
 
             if ($problem !== null) {
                 return $problem;

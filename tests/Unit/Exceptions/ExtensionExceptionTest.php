@@ -115,10 +115,11 @@ class ExtensionExceptionTest extends TestCase
     {
         $exception = InvalidMetaExtensionException::instructionsName('instructions', 'App\Rest\PlanMeta', 'App\Rest\PostResource');
 
-        $this->assertSame([true, false, false, true], [
+        $this->assertSame([true, false, false, true, false], [
             is_a($exception, ExtensionException::class),
             is_a($exception, InvalidExtensionException::class),
             method_exists(InvalidMetaExtensionException::class, 'missingName'),
+            $exception->concerns('App\Rest\PlanMeta'),
             $exception->concerns('instructions'),
         ]);
     }
@@ -128,10 +129,11 @@ class ExtensionExceptionTest extends TestCase
     {
         $exception = InvalidDocumentationExtensionException::statusOutOfRange('quota', 'App\Rest\QuotaDocs', 'api.posts.mutate', 302);
 
-        $this->assertSame([true, false, false, true], [
+        $this->assertSame([true, false, false, true, false], [
             is_a($exception, ExtensionException::class),
             is_a($exception, InvalidExtensionException::class),
             method_exists(InvalidDocumentationExtensionException::class, 'missingName'),
+            $exception->concerns('App\Rest\QuotaDocs'),
             $exception->concerns('quota'),
         ]);
     }

@@ -62,8 +62,8 @@ final class EngineReach
         $registry = $this->context->extensions();
         $names = [];
 
-        foreach ($registry->ofKind(RestrictsQueries::class) as $name => $extension) {
-            if (UndecidedExtension::problem($registry, $name, $extension, $resource::class) === null && $registry->appliesTo($name, $resource::class)) {
+        foreach (array_keys($registry->ofKind(RestrictsQueries::class)) as $name) {
+            if (UndecidedExtension::problem($registry, $name, $resource::class) === null && $registry->appliesTo($name, $resource::class)) {
                 $names[] = $name;
             }
         }

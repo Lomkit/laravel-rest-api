@@ -9,7 +9,7 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\DocumentsExtension;
 use Lomkit\Rest\Tests\Fixtures\Festival\StageResource;
 
-final class SchemaOnlyMeta extends Extension implements DocumentsExtension
+class SchemaOnlyMeta extends Extension implements DocumentsExtension
 {
     #[\Override]
     public static function name(): string

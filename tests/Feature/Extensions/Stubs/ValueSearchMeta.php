@@ -6,7 +6,7 @@ use Lomkit\Rest\Extensions\Contexts\SearchMetaContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\AddsSearchMeta;
 
-final class ValueSearchMeta extends Extension implements AddsSearchMeta
+class ValueSearchMeta extends Extension implements AddsSearchMeta
 {
     #[\Override]
     public static function name(): string

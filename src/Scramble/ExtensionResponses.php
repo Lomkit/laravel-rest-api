@@ -30,7 +30,8 @@ final class ExtensionResponses
     public static function document(Operation $operation, DocumentationContext $context): void
     {
         $resource = $context->resource;
-        $extensions = $resource->context()->extensions()->applicable($resource::class, DocumentsExtension::class);
+        $registry = $resource->context()->extensions();
+        $extensions = $registry->applicable($resource::class, DocumentsExtension::class);
 
         if ($extensions === []) {
             return;
@@ -41,7 +42,7 @@ final class ExtensionResponses
         $authenticates = $context->authenticates();
 
         foreach ($extensions as $name => $extension) {
-            $extension->documentOperation(new OperationDocumentationContext($name, $extension::class, $resource::class, $context->endpoint, $declaration, $authenticates, $responses));
+            $extension->documentOperation(new OperationDocumentationContext($name, $registry->classOf($name), $resource::class, $context->endpoint, $declaration, $authenticates, $responses));
         }
 
         $responses->sort();

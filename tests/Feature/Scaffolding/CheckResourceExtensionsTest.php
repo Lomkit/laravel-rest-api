@@ -72,6 +72,24 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
+    #[WithConfig('rest.extensions', [ColumnCheckExtension::class, UndecidedCheckExtension::class])]
+    public function it_names_the_registered_class_of_checking_extensions_bound_to_subclasses(): void
+    {
+        $columns = new class extends ColumnCheckExtension {};
+        $undecided = new class extends UndecidedCheckExtension {};
+        $this->app->bind(ColumnCheckExtension::class, static fn (): ColumnCheckExtension => $columns);
+        $this->app->bind(UndecidedCheckExtension::class, static fn (): UndecidedCheckExtension => $undecided);
+        $this->expose('trips', TripController::class);
+
+        $report = $this->report(1, TripController::class);
+
+        $this->assertSame([
+            self::COLUMN_PROBLEM,
+            'The [undecided] extension '.UndecidedCheckExtension::class.' throws while it tells whether it applies to '.TripResource::class.': The config table is missing.',
+        ], $report['extension_checks']['problems'] ?? null);
+    }
+
+    #[Test]
     #[WithConfig('rest.extensions', [PassingCheckExtension::class])]
     public function it_counts_the_checks_that_pass(): void
     {

@@ -102,6 +102,24 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
         $this->document();
     }
 
+    #[Test]
+    public function it_names_the_registered_class_of_a_documenting_extension_bound_to_a_subclass(): void
+    {
+        $bound = new class extends ForbiddenResponses {};
+        $this->app->bind(ForbiddenResponses::class, static fn (): ForbiddenResponses => $bound);
+        config(['rest.extensions' => [ForbiddenResponses::class], 'app.debug' => false]);
+        $expected = InvalidDocumentationExtensionException::statusTaken('forbidden', ForbiddenResponses::class, 'api/stages/search', 403, 'the package')->getMessage();
+        $exception = null;
+
+        try {
+            $this->document();
+        } catch (InvalidDocumentationExtensionException $caught) {
+            $exception = $caught;
+        }
+
+        $this->assertSame([$expected, true, false], [$exception?->getMessage(), $exception?->concerns(ForbiddenResponses::class), $exception?->concerns($bound::class)]);
+    }
+
     /** @return array<string, array{list<class-string>, string, class-string, string, class-string}> */
     public static function rivals(): array
     {

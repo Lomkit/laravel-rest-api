@@ -159,6 +159,24 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
     }
 
     #[Test]
+    public function it_names_the_registered_class_of_a_meta_schema_without_the_meta_kind_bound_to_a_subclass(): void
+    {
+        $bound = new class extends SchemaOnlyMeta {};
+        $this->app->bind(SchemaOnlyMeta::class, static fn (): SchemaOnlyMeta => $bound);
+        config(['rest.extensions' => [SchemaOnlyMeta::class], 'app.debug' => false]);
+        $expected = InvalidDocumentationExtensionException::metaWithoutKind('schema', SchemaOnlyMeta::class, StageResource::class, AddsSearchMeta::class)->getMessage();
+        $exception = null;
+
+        try {
+            $this->document();
+        } catch (InvalidDocumentationExtensionException $caught) {
+            $exception = $caught;
+        }
+
+        $this->assertSame([$expected, true, false], [$exception?->getMessage(), $exception?->concerns(SchemaOnlyMeta::class), $exception?->concerns($bound::class)]);
+    }
+
+    #[Test]
     public function it_refuses_an_extension_named_after_a_key_of_the_package_in_the_document(): void
     {
         config(['rest.extensions' => [RegionStageMetaNamedInstructions::class], 'app.debug' => false]);

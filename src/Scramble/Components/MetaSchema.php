@@ -70,14 +70,15 @@ final readonly class MetaSchema
     /** @return array<string, MetaSchemaRecord> */
     private static function records(Resource $resource): array
     {
-        $extensions = $resource->context()->extensions()->applicable($resource::class, DocumentsExtension::class);
+        $registry = $resource->context()->extensions();
+        $extensions = $registry->applicable($resource::class, DocumentsExtension::class);
         $records = [];
 
         foreach ($extensions as $name => $extension) {
             $record = new MetaSchemaRecord;
             $extension->documentMeta(new MetaDocumentationContext($resource::class, $record));
-            self::ensureAdded($record->search, $name, $extension, $resource, AddsSearchMeta::class);
-            self::ensureAdded($record->details, $name, $extension, $resource, AddsDetailsMeta::class);
+            self::ensureAdded($record->search, $name, $registry->classOf($name), $extension, $resource, AddsSearchMeta::class);
+            self::ensureAdded($record->details, $name, $registry->classOf($name), $extension, $resource, AddsDetailsMeta::class);
             $records[$name] = $record;
         }
 
@@ -85,10 +86,10 @@ final readonly class MetaSchema
     }
 
     /** @param class-string<AddsSearchMeta|AddsDetailsMeta> $kind */
-    private static function ensureAdded(?ObjectType $schema, string $name, Extension $extension, Resource $resource, string $kind): void
+    private static function ensureAdded(?ObjectType $schema, string $name, string $class, Extension $extension, Resource $resource, string $kind): void
     {
         if ($schema !== null && ! $extension instanceof $kind) {
-            throw InvalidDocumentationExtensionException::metaWithoutKind($name, $extension::class, $resource::class, $kind);
+            throw InvalidDocumentationExtensionException::metaWithoutKind($name, $class, $resource::class, $kind);
         }
     }
 

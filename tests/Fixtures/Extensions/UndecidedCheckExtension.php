@@ -8,7 +8,7 @@ use Lomkit\Rest\Extensions\Kinds\ChecksResources;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripResource;
 use RuntimeException;
 
-final class UndecidedCheckExtension extends Extension implements ChecksResources
+class UndecidedCheckExtension extends Extension implements ChecksResources
 {
     #[\Override]
     public static function name(): string

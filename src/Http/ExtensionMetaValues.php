@@ -32,15 +32,18 @@ final readonly class ExtensionMetaValues
     public static function collect(Resource $resource, string $method, array $own, array $extensions, Closure $values): array
     {
         $added = [];
+        $registry = $resource->context()->extensions();
 
         foreach ($extensions as $name => $extension) {
+            $class = $registry->classOf($name);
+
             if (array_key_exists($name, $own)) {
-                throw InvalidMetaExtensionException::keyTaken($name, $extension::class, $resource::class, $method);
+                throw InvalidMetaExtensionException::keyTaken($name, $class, $resource::class, $method);
             }
 
             $meta = $values($extension);
-            self::ensureEncodable($meta, $name, 1, fn (string $path, string $type): InvalidMetaExtensionException => InvalidMetaExtensionException::notEncodable($name, $extension::class, $resource::class, $method, $path, $type));
-            self::ensureJson($meta, fn (string $reason): InvalidMetaExtensionException => InvalidMetaExtensionException::notJson($name, $extension::class, $resource::class, $method, $reason));
+            self::ensureEncodable($meta, $name, 1, fn (string $path, string $type): InvalidMetaExtensionException => InvalidMetaExtensionException::notEncodable($name, $class, $resource::class, $method, $path, $type));
+            self::ensureJson($meta, fn (string $reason): InvalidMetaExtensionException => InvalidMetaExtensionException::notJson($name, $class, $resource::class, $method, $reason));
             $added[$name] = (object) $meta;
         }
 
