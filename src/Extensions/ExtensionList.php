@@ -7,87 +7,73 @@ use Lomkit\Rest\Exceptions\InvalidExtensionException;
 /** @internal */
 final readonly class ExtensionList
 {
+    public const string CONFIG = 'The [rest.extensions] config';
+
+    public const string DISABLED = 'The [rest.disabled_extensions] config';
+
     /**
      * @param  list<ExtensionEntry>  $entries
      * @param  list<InvalidExtensionException>  $refused
+     * @param  list<string>  $idle
      */
     private function __construct(
         public array $entries,
         public array $refused,
+        public array $idle,
     ) {}
 
     /**
-     * @param  array<array-key, mixed>  $configured
-     * @param  array<string, non-empty-list<string>>  $registered
+     * @param  list<mixed>  $configured
+     * @param  list<mixed>  $disabled
+     * @param  list<string>  $registered
      */
-    public static function merge(array $configured, array $registered): self
+    public static function of(array $configured, array $disabled, array $registered): self
     {
         $entries = [];
         $refused = [];
+        $idle = [];
 
-        foreach ($registered as $name => $classes) {
-            $entries[$name] = new ExtensionEntry($name, count($classes) === 1 ? $classes[0] : null, ExtensionOrigin::Runtime, false, $classes);
+        foreach ($registered as $class) {
+            $entries[$class] = new ExtensionEntry($class, ExtensionOrigin::Runtime);
         }
 
-        foreach ($configured as $name => $value) {
-            try {
-                $entry = self::configured($name, $value, $entries[$name] ?? null);
-            } catch (InvalidExtensionException $exception) {
-                $refused[] = $exception;
-
-                continue;
-            }
-
-            $entries[$entry->name] = $entry;
+        foreach (self::classes(self::CONFIG, $configured, $refused) as $class) {
+            $entries[$class] = new ExtensionEntry($class, ExtensionOrigin::Config);
         }
 
-        foreach ($registered as $name => $classes) {
-            if ($entries[$name]->conflicts()) {
-                $refused[] = InvalidExtensionException::sharedName($name, $classes);
+        foreach (self::classes(self::DISABLED, $disabled, $refused) as $class) {
+            if (isset($entries[$class])) {
+                $entries[$class] = $entries[$class]->disable();
+            } elseif (! in_array($class, $idle, true)) {
+                $idle[] = $class;
             }
         }
 
-        return new self(array_values($entries), $refused);
+        return new self(array_values($entries), $refused, $idle);
     }
 
-    /** @return array<string, string> */
-    public function enabled(): array
+    public function named(): NamedExtensions
     {
-        if ($this->refused !== []) {
-            throw $this->refused[0];
-        }
+        return NamedExtensions::of($this->entries, $this->refused);
+    }
 
-        $enabled = [];
+    /**
+     * @param  list<mixed>  $values
+     * @param  list<InvalidExtensionException>  $refused
+     * @return list<string>
+     */
+    private static function classes(string $source, array $values, array &$refused): array
+    {
+        $classes = [];
 
-        foreach ($this->entries as $entry) {
-            if (! $entry->disabled && $entry->class !== null) {
-                $enabled[$entry->name] = $entry->class;
+        foreach ($values as $value) {
+            if (is_string($value)) {
+                $classes[] = $value;
+            } else {
+                $refused[] = is_object($value) ? InvalidExtensionException::instanceGiven($source, $value::class) : InvalidExtensionException::notAClassName($source, get_debug_type($value));
             }
         }
 
-        return $enabled;
-    }
-
-    private static function configured(int|string $name, mixed $value, ?ExtensionEntry $registered): ExtensionEntry
-    {
-        if (! is_string($name)) {
-            throw is_string($value) ? InvalidExtensionException::missingName($value) : InvalidExtensionException::unnamedEntry($name, $value);
-        }
-
-        ExtensionName::ensureValid($name);
-
-        if ($value === false) {
-            return new ExtensionEntry($name, $registered?->class, $registered->origin ?? ExtensionOrigin::Config, true, $registered->runtime ?? []);
-        }
-
-        if (is_object($value)) {
-            throw InvalidExtensionException::instanceGiven($name, $value::class);
-        }
-
-        if (! is_string($value)) {
-            throw InvalidExtensionException::notAClass($name, get_debug_type($value));
-        }
-
-        return new ExtensionEntry($name, $value, ExtensionOrigin::Config, false, $registered->runtime ?? []);
+        return $classes;
     }
 }

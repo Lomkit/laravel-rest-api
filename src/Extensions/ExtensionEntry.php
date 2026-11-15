@@ -5,22 +5,20 @@ namespace Lomkit\Rest\Extensions;
 /** @internal */
 final readonly class ExtensionEntry
 {
-    /** @param list<string> $runtime */
     public function __construct(
-        public string $name,
-        public ?string $class,
+        public string $class,
         public ExtensionOrigin $origin,
-        public bool $disabled,
-        public array $runtime = [],
+        public bool $disabled = false,
+        public ?string $name = null,
     ) {}
 
-    public function conflicts(): bool
+    public function disable(): self
     {
-        return $this->origin === ExtensionOrigin::Runtime && ! $this->disabled && count($this->runtime) > 1;
+        return new self($this->class, $this->origin, true);
     }
 
-    public function disablesNothing(): bool
+    public function named(string $name): self
     {
-        return $this->disabled && $this->runtime === [];
+        return new self($this->class, $this->origin, $this->disabled, $name);
     }
 }

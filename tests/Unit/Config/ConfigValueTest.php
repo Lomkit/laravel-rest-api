@@ -156,20 +156,21 @@ class ConfigValueTest extends TestCase
     }
 
     #[Test]
-    public function it_reads_a_map_as_is(): void
+    public function it_reads_a_list_as_is(): void
     {
-        $extensions = ['acl' => 'Vendor\Acl\AccessControlExtension', 0 => false];
+        $extensions = ['Vendor\Acl\AccessControlExtension', false];
 
-        $this->assertSame($extensions, ConfigValue::at('rest.extensions', $extensions)->map('extension names to class names or false'));
+        $this->assertSame($extensions, ConfigValue::at('rest.extensions', $extensions)->list('extension class names'));
+        $this->assertSame([], ConfigValue::at('rest.extensions', [])->list('extension class names'));
     }
 
     #[Test]
-    #[DataProvider('notArrays')]
-    public function it_names_the_key_of_a_value_that_is_not_an_array(mixed $value): void
+    #[DataProvider('notLists')]
+    public function it_names_the_key_of_a_value_that_is_not_a_list(mixed $value): void
     {
-        $this->expectExceptionObject(new InvalidConfigException('The [rest.extensions] option must be a map of extension names to class names or false.'));
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.extensions] option must be a list of extension class names.'));
 
-        ConfigValue::at('rest.extensions', $value)->map('extension names to class names or false');
+        ConfigValue::at('rest.extensions', $value)->list('extension class names');
     }
 
     /** @return array<string, array{mixed, bool}> */
@@ -258,12 +259,14 @@ class ConfigValueTest extends TestCase
     }
 
     /** @return array<string, array{mixed}> */
-    public static function notArrays(): array
+    public static function notLists(): array
     {
         return [
             'null' => [null],
             'a string' => ['acl'],
             'an integer' => [1],
+            'a map by name' => [['acl' => 'Vendor\Acl\AccessControl']],
+            'a list with a gap' => [[1 => 'Vendor\Acl\AccessControl']],
         ];
     }
 }

@@ -14,6 +14,6 @@ final class EarlyExtensionProvider extends ServiceProvider
     {
         self::$root = Rest::getFacadeRoot();
 
-        Rest::registerExtension('early', NotingExtension::class);
+        Rest::registerExtension(NotingExtension::class);
     }
 }

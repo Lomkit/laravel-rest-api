@@ -7,6 +7,12 @@ use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 
 final class ProductsOnlyExtension extends Extension implements NotesResources
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'products';
+    }
+
     public function __construct()
     {
         ExtensionLog::$built[] = self::class;

@@ -21,35 +21,31 @@ final readonly class ExtensionCheck
     public function run(): ExtensionReport
     {
         $report = new ExtensionReport;
+        $config = $this->container->make(Repository::class);
+        [$configured, $report] = self::listed($config, RestConfig::EXTENSIONS, $report);
+        [$disabled, $report] = self::listed($config, RestConfig::DISABLED_EXTENSIONS, $report);
 
-        try {
-            $configured = RestConfig::from($this->container->make(Repository::class))->extensions;
-        } catch (InvalidConfigException $exception) {
-            $configured = [];
-            $report = $report->withProblem($exception->getMessage());
-        }
-
-        $registered = $this->container->make(RuntimeExtensions::class)->all();
-        $list = ExtensionList::merge($configured, $registered);
+        $list = ExtensionList::of($configured, $disabled, $this->container->make(RuntimeExtensions::class)->all());
+        $named = $list->named();
         $factory = new ExtensionFactory($this->container);
 
-        foreach ($list->refused as $exception) {
+        foreach ($named->refused as $exception) {
             $report = $report->withProblem($exception->getMessage());
         }
 
-        foreach ($list->entries as $entry) {
+        foreach ($list->idle as $class) {
+            $report = $report->withNote(self::idle($class));
+        }
+
+        foreach ($named->entries as $entry) {
             $report = $report->withEntry($entry);
 
-            if ($entry->disablesNothing()) {
-                $report = $report->withNote(self::idle($entry->name));
-            }
-
-            if ($entry->disabled || $entry->class === null) {
+            if ($entry->disabled || in_array($entry->name, $named->shared, true)) {
                 continue;
             }
 
             try {
-                $factory->make($entry->name, $entry->class);
+                $factory->make($entry->class);
             } catch (Throwable $exception) {
                 $report = $report->withProblem(self::problem($entry, $exception));
             }
@@ -58,14 +54,24 @@ final readonly class ExtensionCheck
         return $report;
     }
 
-    private static function idle(string $name): string
+    /** @return array{list<mixed>, ExtensionReport} */
+    private static function listed(Repository $config, string $key, ExtensionReport $report): array
     {
-        return "The [{$name}] entry of the [rest.extensions] config is false, but no extension is registered under this name, so it disables nothing. Remove it, or use the name that the package registers.";
+        try {
+            return [RestConfig::extensionClasses($config, $key), $report];
+        } catch (InvalidConfigException $exception) {
+            return [[], $report->withProblem($exception->getMessage())];
+        }
+    }
+
+    private static function idle(string $class): string
+    {
+        return "The [rest.disabled_extensions] config lists {$class}, but no extension of this class is registered or configured, so it disables nothing. Remove it, or list the exact class that the package registers.";
     }
 
     private static function problem(ExtensionEntry $entry, Throwable $exception): string
     {
-        if ($exception instanceof InvalidExtensionException && $exception->namesExtension($entry->name)) {
+        if ($exception instanceof InvalidExtensionException && $exception->concerns($entry->class)) {
             return $exception->getMessage();
         }
 

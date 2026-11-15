@@ -11,10 +11,20 @@ final readonly class ExtensionName
 
     private const string PATTERN = '/^[a-z][a-z0-9]*(?:_[a-z0-9]+)*\z/';
 
-    public static function ensureValid(string $name): void
+    /** @param class-string<Extension> $class */
+    public static function of(string $class): string
     {
-        if (strlen($name) > self::MAX_LENGTH || preg_match(self::PATTERN, $name) !== 1) {
-            throw InvalidExtensionException::invalidName($name);
+        $name = $class::name();
+
+        if (! self::matches($name)) {
+            throw InvalidExtensionException::invalidName($class, $name);
         }
+
+        return $name;
+    }
+
+    public static function matches(string $name): bool
+    {
+        return strlen($name) <= self::MAX_LENGTH && preg_match(self::PATTERN, $name) === 1;
     }
 }

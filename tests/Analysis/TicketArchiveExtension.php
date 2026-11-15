@@ -10,6 +10,12 @@ final class TicketArchiveExtension extends Extension implements TicketDeskKind
     public function __construct(private readonly Repository $config) {}
 
     #[\Override]
+    public static function name(): string
+    {
+        return 'archive';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === TicketDeskResource::class;

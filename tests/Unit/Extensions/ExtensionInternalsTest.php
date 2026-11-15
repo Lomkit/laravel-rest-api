@@ -4,12 +4,14 @@ namespace Lomkit\Rest\Tests\Unit\Extensions;
 
 use Lomkit\Rest\Console\Check\ExtensionCheck;
 use Lomkit\Rest\Console\Check\ExtensionReport;
+use Lomkit\Rest\Extensions\ExtensionClass;
 use Lomkit\Rest\Extensions\ExtensionEntry;
 use Lomkit\Rest\Extensions\ExtensionFactory;
 use Lomkit\Rest\Extensions\ExtensionList;
 use Lomkit\Rest\Extensions\ExtensionName;
 use Lomkit\Rest\Extensions\ExtensionOrigin;
 use Lomkit\Rest\Extensions\ExtensionRegistry;
+use Lomkit\Rest\Extensions\NamedExtensions;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -39,6 +41,8 @@ final class ExtensionInternalsTest extends TestCase
             'the runtime store' => [RuntimeExtensions::class],
             'the merged list' => [ExtensionList::class],
             'an entry of the list' => [ExtensionEntry::class],
+            'the names of the list' => [NamedExtensions::class],
+            'the class rule' => [ExtensionClass::class],
             'the factory' => [ExtensionFactory::class],
             'the name rule' => [ExtensionName::class],
             'the origin of an entry' => [ExtensionOrigin::class],

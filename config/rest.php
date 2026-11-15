@@ -243,20 +243,36 @@ return [
     | Extensions
     |--------------------------------------------------------------------------
     |
-    | Extensions add behavior to every resource. Key each extension class
-    | by its name: 1 to 32 lowercase letters or digits, starting with a
-    | letter, words joined by single underscores. The name prefixes the
-    | keys it adds.
+    | Extensions add behavior to every resource. List the extension
+    | classes of the app here. Each class declares its own name in its
+    | static name() method, and the name prefixes the keys it adds.
+    | A package registers its own extensions with
+    | Rest::registerExtension(); a class listed here and registered by a
+    | package counts once.
     |
-    | A package can register its extensions with Rest::registerExtension().
-    | This list has the last word: false disables an extension of that
-    | name, and another class replaces it. It is read again for each
-    | context (a request, a queued action, Rest::search()), while runtime
-    | registrations are fixed once the application has booted. Run php
-    | artisan rest:check to list the extensions with their origin.
+    | This list is read again for each context (a request, a queued
+    | action, Rest::search()), while runtime registrations are fixed once
+    | the application has booted. Run php artisan rest:check to list the
+    | extensions with their name and origin.
     |
     */
 
     'extensions' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Disabled Extensions
+    |--------------------------------------------------------------------------
+    |
+    | The extension classes listed here are never built, whether a package
+    | registers them or the list above holds them. The exact class is
+    | compared: a subclass stays enabled. To replace a package extension,
+    | list a subclass of it above and the package class here; the
+    | subclass keeps its name. Two enabled classes with one name are
+    | refused until one of them is listed here.
+    |
+    */
+
+    'disabled_extensions' => [],
 
 ];

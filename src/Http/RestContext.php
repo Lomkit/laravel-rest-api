@@ -83,7 +83,7 @@ final class RestContext
 
     public function extensions(): ExtensionRegistry
     {
-        return $this->extensions ??= ExtensionRegistry::of($this->config()->extensions, $this->registrations->all(), $this->container);
+        return $this->extensions ??= ExtensionRegistry::of($this->config()->extensions, $this->config()->disabledExtensions, $this->registrations->all(), $this->container);
     }
 
     public function limits(): Limits

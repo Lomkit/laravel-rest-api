@@ -10,6 +10,6 @@ final class SecondAclProvider extends ServiceProvider
     #[\Override]
     public function register(): void
     {
-        Rest::registerExtension('acl', CountingExtension::class);
+        Rest::registerExtension(RivalAclExtension::class);
     }
 }

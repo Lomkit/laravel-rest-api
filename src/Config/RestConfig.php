@@ -6,6 +6,10 @@ use Illuminate\Contracts\Config\Repository;
 
 final readonly class RestConfig
 {
+    public const string EXTENSIONS = 'rest.extensions';
+
+    public const string DISABLED_EXTENSIONS = 'rest.disabled_extensions';
+
     private const array GATE_NAMES = [
         'authorized_to_view',
         'authorized_to_create',
@@ -17,7 +21,8 @@ final readonly class RestConfig
 
     /**
      * @param  array<string, string>  $gateNames
-     * @param  array<array-key, mixed>  $extensions
+     * @param  list<mixed>  $extensions
+     * @param  list<mixed>  $disabledExtensions
      */
     public function __construct(
         public bool $strict,
@@ -30,6 +35,7 @@ final readonly class RestConfig
         public int $transactionAttempts,
         public string $moreKey,
         public array $extensions,
+        public array $disabledExtensions,
     ) {}
 
     public static function from(Repository $config): self
@@ -44,7 +50,14 @@ final readonly class RestConfig
             selectColumns: ConfigValue::of($config, 'rest.search.select_columns')->boolean(),
             transactionAttempts: ConfigValue::of($config, 'rest.transactions.attempts')->integer(1),
             moreKey: ConfigValue::of($config, 'rest.search.more_key')->string(),
-            extensions: ConfigValue::of($config, 'rest.extensions', [])->map('extension names to class names or false'),
+            extensions: self::extensionClasses($config, self::EXTENSIONS),
+            disabledExtensions: self::extensionClasses($config, self::DISABLED_EXTENSIONS),
         );
+    }
+
+    /** @return list<mixed> */
+    public static function extensionClasses(Repository $config, string $key): array
+    {
+        return ConfigValue::of($config, $key, [])->list('extension class names');
     }
 }

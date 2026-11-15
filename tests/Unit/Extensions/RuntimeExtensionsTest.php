@@ -3,10 +3,16 @@
 namespace Lomkit\Rest\Tests\Unit\Extensions;
 
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
+use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
+use Lomkit\Rest\Tests\Fixtures\Extensions\AbstractNotingExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
+use Lomkit\Rest\Tests\Fixtures\Extensions\NotAnExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\NotesResources;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\RenamableExtension;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -15,6 +21,10 @@ use PHPUnit\Framework\TestCase;
 
 final class RuntimeExtensionsTest extends TestCase
 {
+    private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
+
+    private const string SOURCE = 'Rest::registerExtensions()';
+
     #[Before]
     #[After]
     public function resetTheLog(): void
@@ -27,75 +37,58 @@ final class RuntimeExtensionsTest extends TestCase
     {
         $extensions = new RuntimeExtensions;
 
-        $extensions->register('noting', NotingExtension::class);
-        $extensions->register('counting', CountingExtension::class);
+        $extensions->register(NotingExtension::class);
+        $extensions->register(CountingExtension::class);
 
-        $this->assertSame(['noting' => [NotingExtension::class], 'counting' => [CountingExtension::class]], $extensions->all());
+        $this->assertSame([NotingExtension::class, CountingExtension::class], $extensions->all());
     }
 
     #[Test]
-    public function it_registers_a_map_of_classes_by_name(): void
+    public function it_registers_a_list_of_classes(): void
     {
         $extensions = new RuntimeExtensions;
-        $extensions->register('first', CountingExtension::class);
+        $extensions->register(CountingExtension::class);
 
-        $extensions->registerAll(['noting' => NotingExtension::class, 'counting' => CountingExtension::class]);
+        $extensions->registerAll([NotingExtension::class, BothKindsExtension::class]);
 
-        $this->assertSame([
-            'first' => [CountingExtension::class],
-            'noting' => [NotingExtension::class],
-            'counting' => [CountingExtension::class],
-        ], $extensions->all());
+        $this->assertSame([CountingExtension::class, NotingExtension::class, BothKindsExtension::class], $extensions->all());
     }
 
     #[Test]
-    public function it_records_a_second_class_under_a_registered_name(): void
+    public function it_counts_the_same_class_once(): void
     {
         $extensions = new RuntimeExtensions;
-        $extensions->register('noting', NotingExtension::class);
+        $extensions->register(NotingExtension::class);
 
-        $extensions->register('noting', CountingExtension::class);
+        $extensions->register(NotingExtension::class);
+        $extensions->registerAll([NotingExtension::class, NotingExtension::class]);
 
-        $this->assertSame(['noting' => [NotingExtension::class, CountingExtension::class]], $extensions->all());
+        $this->assertSame([NotingExtension::class], $extensions->all());
     }
 
     #[Test]
-    public function it_accepts_the_same_class_twice_under_one_name_silently(): void
+    public function it_reads_the_name_from_the_class_at_registration(): void
     {
         $extensions = new RuntimeExtensions;
-        $extensions->register('noting', NotingExtension::class);
 
-        $extensions->register('noting', NotingExtension::class);
-        $extensions->registerAll(['noting' => NotingExtension::class]);
+        $extensions->register(RenamableExtension::class);
 
-        $this->assertSame(['noting' => [NotingExtension::class]], $extensions->all());
-    }
-
-    #[Test]
-    public function it_records_a_map_entry_under_a_registered_name(): void
-    {
-        $extensions = new RuntimeExtensions;
-        $extensions->register('noting', NotingExtension::class);
-
-        $extensions->registerAll(['noting' => CountingExtension::class, 'counting' => CountingExtension::class]);
-
-        $this->assertSame([
-            'noting' => [NotingExtension::class, CountingExtension::class],
-            'counting' => [CountingExtension::class],
-        ], $extensions->all());
+        $this->assertSame([RenamableExtension::class], ExtensionLog::$named);
+        $this->assertSame([RenamableExtension::class], $extensions->all());
     }
 
     #[Test]
     #[DataProvider('invalidNames')]
-    public function it_refuses_a_name_that_breaks_the_name_rule(string $name): void
+    public function it_refuses_a_class_whose_name_breaks_the_name_rule(string $name): void
     {
         $extensions = new RuntimeExtensions;
+        RenamableExtension::$given = $name;
 
         try {
-            $extensions->register($name, NotingExtension::class);
+            $extensions->register(RenamableExtension::class);
             $this->fail("The name [{$name}] was accepted.");
         } catch (InvalidExtensionException $exception) {
-            $this->assertEquals(InvalidExtensionException::invalidName($name), $exception);
+            $this->assertEquals(InvalidExtensionException::invalidName(RenamableExtension::class, $name), $exception);
             $this->assertSame([], $extensions->all());
         }
     }
@@ -104,12 +97,12 @@ final class RuntimeExtensionsTest extends TestCase
     public function it_accepts_a_name_of_32_characters_with_digits_and_underscores(): void
     {
         $extensions = new RuntimeExtensions;
-        $name = str_repeat('a', 30).'_1';
+        RenamableExtension::$given = str_repeat('a', 30).'_1';
 
-        $extensions->register($name, NotingExtension::class);
+        $extensions->register(RenamableExtension::class);
 
-        $this->assertSame(32, strlen($name));
-        $this->assertSame([$name => [NotingExtension::class]], $extensions->all());
+        $this->assertSame(32, strlen(RenamableExtension::$given));
+        $this->assertSame([RenamableExtension::class], $extensions->all());
     }
 
     #[Test]
@@ -117,48 +110,53 @@ final class RuntimeExtensionsTest extends TestCase
     {
         $extensions = new RuntimeExtensions;
 
-        $extensions->registerAll(['row_lock_2' => NotingExtension::class, 'a1_b2' => CountingExtension::class]);
+        foreach (['row_lock_2', 'a1_b2'] as $name) {
+            RenamableExtension::$given = $name;
+            $extensions->registerAll([RenamableExtension::class]);
+        }
 
-        $this->assertSame(['row_lock_2' => [NotingExtension::class], 'a1_b2' => [CountingExtension::class]], $extensions->all());
+        $this->assertSame([RenamableExtension::class], $extensions->all());
     }
 
     #[Test]
-    public function it_explains_the_name_rule(): void
+    public function it_explains_the_name_rule_and_names_the_class(): void
     {
         $this->assertSame(
-            'The extension name [acl__x] is invalid. A name has 1 to 32 lowercase letters or digits, starts with a letter and joins words with single underscores, such as [acl] or [row_lock]: it prefixes the keys that the extension adds, and two underscores separate it from them.',
-            InvalidExtensionException::invalidName('acl__x')->getMessage(),
+            RenamableExtension::class.'::name() returns [acl__x], which is not a valid extension name. A name has 1 to 32 lowercase letters or digits, starts with a letter and joins words with single underscores, such as [acl] or [row_lock]: it prefixes the keys that the extension adds, and two underscores separate it from them.'
+            ." Return a name such as 'acl' from ".RenamableExtension::class.'::name().',
+            InvalidExtensionException::invalidName(RenamableExtension::class, 'acl__x')->getMessage(),
         );
     }
 
+    /** @param class-string $class */
     #[Test]
-    public function it_refuses_a_map_entry_without_a_name(): void
-    {
-        $this->expectExceptionObject(InvalidExtensionException::missingName(NotingExtension::class));
-
-        (new RuntimeExtensions)->registerAll([NotingExtension::class]);
-    }
-
-    #[Test]
-    public function it_names_the_index_of_a_map_entry_without_a_name_or_class(): void
+    #[DataProvider('uncheckedClasses')]
+    public function it_checks_the_class_before_it_reads_the_name(string $class, InvalidExtensionException $refusal): void
     {
         $extensions = new RuntimeExtensions;
 
-        try {
-            $extensions->registerAll([1]);
-            $this->fail('The entry was accepted.');
-        } catch (InvalidExtensionException $exception) {
-            $this->assertEquals(InvalidExtensionException::unnamedEntry(0, 1), $exception);
-            $this->assertSame(
-                "The extension entry at index [0] is [int] and has no name. Key the class name of each extension by its name, such as 'acl' => AccessControlExtension::class, in the [rest.extensions] config or in Rest::registerExtensions(); only the config accepts 'acl' => false, to disable an extension.",
-                $exception->getMessage(),
-            );
-            $this->assertSame([], $extensions->all());
+        foreach ([fn () => $extensions->register($class), fn () => $extensions->registerAll([NotingExtension::class, $class])] as $registration) {
+            try {
+                $registration();
+                $this->fail("The class [{$class}] was accepted.");
+            } catch (InvalidExtensionException $exception) {
+                $this->assertEquals($refusal, $exception);
+            }
         }
+
+        $this->assertSame([], $extensions->all());
     }
 
     #[Test]
-    public function it_asks_for_a_name_and_the_class_name_of_an_unnamed_instance(): void
+    public function it_explains_each_class_refusal(): void
+    {
+        $this->assertSame('The extension ['.self::MISSING.'] is not a class. Give the name of a class that extends '.Extension::class.'.', InvalidExtensionException::notAClass(self::MISSING)->getMessage());
+        $this->assertSame('The extension '.NotAnExtension::class.' does not extend '.Extension::class.'. Extend it.', InvalidExtensionException::notAnExtension(NotAnExtension::class)->getMessage());
+        $this->assertSame('The extension '.AbstractNotingExtension::class.' is abstract or cannot be instantiated. Register a concrete class.', InvalidExtensionException::notInstantiable(AbstractNotingExtension::class)->getMessage());
+    }
+
+    #[Test]
+    public function it_asks_for_the_list_form_instead_of_an_instance(): void
     {
         $extensions = new RuntimeExtensions;
 
@@ -166,58 +164,52 @@ final class RuntimeExtensionsTest extends TestCase
             $extensions->registerAll([new NotingExtension]);
             $this->fail('The instance was accepted.');
         } catch (InvalidExtensionException $exception) {
-            $this->assertEquals(InvalidExtensionException::unnamedEntry(0, new NotingExtension), $exception);
+            $this->assertEquals(InvalidExtensionException::instanceGiven(self::SOURCE, NotingExtension::class), $exception);
             $this->assertSame(
-                'The extension entry at index [0] is an instance of '.NotingExtension::class." and has no name. Key its class name by the extension name, such as 'acl' => ".NotingExtension::class.'::class, in the [rest.extensions] config or in Rest::registerExtensions().',
+                'Rest::registerExtensions() holds an instance of '.NotingExtension::class.'. Give its class name in the list, such as ['.NotingExtension::class.'::class]: the container builds each extension once per context, and an instance would outlive the context.',
                 $exception->getMessage(),
             );
+            $this->assertSame([], $extensions->all());
         }
     }
 
     #[Test]
     #[DataProvider('notClassNames')]
-    public function it_refuses_a_map_value_that_is_not_a_class_name(mixed $value, string $type): void
+    public function it_asks_for_the_list_form_instead_of_a_value_that_is_not_a_class_name(mixed $value, string $type): void
     {
         $extensions = new RuntimeExtensions;
 
         try {
-            $extensions->registerAll(['noting' => $value]);
+            $extensions->registerAll([NotingExtension::class, $value]);
             $this->fail('The value was accepted.');
         } catch (InvalidExtensionException $exception) {
-            $this->assertEquals(InvalidExtensionException::notAClass('noting', $type), $exception);
-            $this->assertSame([], $extensions->all());
-        }
-    }
-
-    #[Test]
-    public function it_asks_for_the_class_name_of_an_instance(): void
-    {
-        $extensions = new RuntimeExtensions;
-
-        try {
-            $extensions->registerAll(['noting' => new NotingExtension]);
-            $this->fail('The instance was accepted.');
-        } catch (InvalidExtensionException $exception) {
-            $this->assertEquals(InvalidExtensionException::instanceGiven('noting', NotingExtension::class), $exception);
+            $this->assertEquals(InvalidExtensionException::notAClassName(self::SOURCE, $type), $exception);
             $this->assertSame(
-                'The [noting] extension is an instance of '.NotingExtension::class.'. Register its class name, '.NotingExtension::class.'::class: the container builds each extension once per context, and an instance would outlive the context.',
+                "Rest::registerExtensions() holds [{$type}], which is not a class name. Give a list of extension class names, such as [AccessControlExtension::class].",
                 $exception->getMessage(),
             );
             $this->assertSame([], $extensions->all());
         }
     }
 
+    /** @param array<array-key, mixed> $classes */
     #[Test]
-    public function it_keeps_nothing_from_a_map_with_one_refused_entry(): void
+    #[DataProvider('notLists')]
+    public function it_asks_for_the_list_form_instead_of_an_array_that_is_not_a_list(array $classes): void
     {
         $extensions = new RuntimeExtensions;
 
         try {
-            $extensions->registerAll(['noting' => NotingExtension::class, 'Counting' => CountingExtension::class]);
-            $this->fail('The map was accepted.');
+            $extensions->registerAll($classes);
+            $this->fail('The array was accepted.');
         } catch (InvalidExtensionException $exception) {
-            $this->assertEquals(InvalidExtensionException::invalidName('Counting'), $exception);
+            $this->assertEquals(InvalidExtensionException::notAList(self::SOURCE), $exception);
+            $this->assertSame(
+                'Rest::registerExtensions() takes a list of extension class names, such as [AccessControlExtension::class]: each extension class declares its own name.',
+                $exception->getMessage(),
+            );
             $this->assertSame([], $extensions->all());
+            $this->assertSame([], ExtensionLog::$named);
         }
     }
 
@@ -225,39 +217,40 @@ final class RuntimeExtensionsTest extends TestCase
     public function it_refuses_a_registration_once_frozen(): void
     {
         $extensions = new RuntimeExtensions;
-        $extensions->register('noting', NotingExtension::class);
+        $extensions->register(NotingExtension::class);
         $extensions->freeze();
 
         try {
-            $extensions->register('counting', CountingExtension::class);
+            $extensions->register(RenamableExtension::class);
             $this->fail('The registration was accepted.');
         } catch (InvalidExtensionException $exception) {
-            $this->assertEquals(InvalidExtensionException::lateRegistration('counting', CountingExtension::class), $exception);
+            $this->assertEquals(InvalidExtensionException::lateRegistration(RenamableExtension::class), $exception);
         }
 
         try {
-            $extensions->registerAll(['counting' => CountingExtension::class]);
+            $extensions->registerAll([CountingExtension::class]);
             $this->fail('The registration was accepted.');
         } catch (InvalidExtensionException $exception) {
-            $this->assertEquals(InvalidExtensionException::lateRegistration('counting', CountingExtension::class), $exception);
+            $this->assertEquals(InvalidExtensionException::lateRegistration(CountingExtension::class), $exception);
         }
 
-        $this->assertSame(['noting' => [NotingExtension::class]], $extensions->all());
+        $this->assertSame([NotingExtension::class], $extensions->all());
+        $this->assertSame([], ExtensionLog::$named);
     }
 
     #[Test]
-    public function it_advises_register_over_boot_in_a_late_registration(): void
+    public function it_names_the_class_in_a_late_registration(): void
     {
         $extensions = new RuntimeExtensions;
         $extensions->freeze();
 
         $this->expectExceptionMessage(
-            'The [noting] extension '.NotingExtension::class.' is registered after the application booted, or after the package built its first context or registered its first Rest::resource() route: the runtime extension list no longer changes then.'
+            'The extension '.NotingExtension::class.' is registered after the application booted, or after the package built its first context or registered its first Rest::resource() route: the runtime extension list no longer changes then.'
             .' Register extensions from the register() method of a service provider, which runs before the routes in any provider order.'
             .' Register from boot() only before every provider that declares Rest::resource() routes in its own boot().',
         );
 
-        $extensions->register('noting', NotingExtension::class);
+        $extensions->register(NotingExtension::class);
     }
 
     /** @return array<string, array{string}> */
@@ -279,12 +272,35 @@ final class RuntimeExtensionsTest extends TestCase
         ];
     }
 
+    /** @return array<string, array{string, InvalidExtensionException}> */
+    public static function uncheckedClasses(): array
+    {
+        return [
+            'a missing class' => [self::MISSING, InvalidExtensionException::notAClass(self::MISSING)],
+            'a kind interface' => [NotesResources::class, InvalidExtensionException::notAClass(NotesResources::class)],
+            'a class that is not an extension' => [NotAnExtension::class, InvalidExtensionException::notAnExtension(NotAnExtension::class)],
+            'the extension base class' => [Extension::class, InvalidExtensionException::notAnExtension(Extension::class)],
+            'an abstract class without name()' => [AbstractNotingExtension::class, InvalidExtensionException::notInstantiable(AbstractNotingExtension::class)],
+        ];
+    }
+
     /** @return array<string, array{mixed, string}> */
     public static function notClassNames(): array
     {
         return [
             'false' => [false, 'bool'],
             'null' => [null, 'null'],
+            'an integer' => [1, 'int'],
+            'a nested list' => [[NotingExtension::class], 'array'],
+        ];
+    }
+
+    /** @return array<string, array{array<array-key, mixed>}> */
+    public static function notLists(): array
+    {
+        return [
+            'a map by name' => [['acl' => 'Vendor\Acl\AccessControl']],
+            'a list with a gap' => [[1 => NotingExtension::class]],
         ];
     }
 }

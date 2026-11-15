@@ -9,6 +9,6 @@ final class BootingExtensionProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        Rest::registerExtensions(['booted' => CountingExtension::class]);
+        Rest::registerExtensions([CountingExtension::class]);
     }
 }

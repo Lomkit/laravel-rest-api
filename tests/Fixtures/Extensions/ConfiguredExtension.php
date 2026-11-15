@@ -9,6 +9,12 @@ final class ConfiguredExtension extends Extension implements NotesResources
 {
     public const string RESOURCES = 'extension_fixtures.applies_to';
 
+    #[\Override]
+    public static function name(): string
+    {
+        return 'configured';
+    }
+
     public function __construct(private readonly Repository $config)
     {
         ExtensionLog::$built[] = self::class;

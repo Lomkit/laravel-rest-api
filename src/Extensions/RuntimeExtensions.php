@@ -9,42 +9,41 @@ use Lomkit\Rest\Exceptions\InvalidExtensionException;
 #[Singleton]
 final class RuntimeExtensions
 {
-    /** @var array<string, non-empty-list<string>> */
+    private const string SOURCE = 'Rest::registerExtensions()';
+
+    /** @var list<class-string<Extension>> */
     private array $classes = [];
 
     private bool $frozen = false;
 
-    public function register(string $name, string $class): void
+    public function register(string $class): void
     {
-        $this->ensureAccepted($name, $class);
-
-        $this->add($name, $class);
+        $this->add($this->accepted($class));
     }
 
     /** @param array<array-key, mixed> $classes */
     public function registerAll(array $classes): void
     {
+        if (! array_is_list($classes)) {
+            throw InvalidExtensionException::notAList(self::SOURCE);
+        }
+
         $accepted = [];
 
-        foreach ($classes as $name => $class) {
-            if (! is_string($name)) {
-                throw is_string($class) ? InvalidExtensionException::missingName($class) : InvalidExtensionException::unnamedEntry($name, $class);
-            }
-
+        foreach ($classes as $class) {
             if (is_object($class)) {
-                throw InvalidExtensionException::instanceGiven($name, $class::class);
+                throw InvalidExtensionException::instanceGiven(self::SOURCE, $class::class);
             }
 
             if (! is_string($class)) {
-                throw InvalidExtensionException::notAClass($name, get_debug_type($class));
+                throw InvalidExtensionException::notAClassName(self::SOURCE, get_debug_type($class));
             }
 
-            $this->ensureAccepted($name, $class);
-            $accepted[$name] = $class;
+            $accepted[] = $this->accepted($class);
         }
 
-        foreach ($accepted as $name => $class) {
-            $this->add($name, $class);
+        foreach ($accepted as $class) {
+            $this->add($class);
         }
     }
 
@@ -53,27 +52,30 @@ final class RuntimeExtensions
         $this->frozen = true;
     }
 
-    /** @return array<string, non-empty-list<string>> */
+    /** @return list<class-string<Extension>> */
     public function all(): array
     {
         return $this->classes;
     }
 
-    private function ensureAccepted(string $name, string $class): void
+    /** @return class-string<Extension> */
+    private function accepted(string $class): string
     {
         if ($this->frozen) {
-            throw InvalidExtensionException::lateRegistration($name, $class);
+            throw InvalidExtensionException::lateRegistration($class);
         }
 
-        ExtensionName::ensureValid($name);
+        $class = ExtensionClass::ensureValid($class);
+        ExtensionName::of($class);
+
+        return $class;
     }
 
-    private function add(string $name, string $class): void
+    /** @param class-string<Extension> $class */
+    private function add(string $class): void
     {
-        if (in_array($class, $this->classes[$name] ?? [], true)) {
-            return;
+        if (! in_array($class, $this->classes, true)) {
+            $this->classes[] = $class;
         }
-
-        $this->classes[$name][] = $class;
     }
 }

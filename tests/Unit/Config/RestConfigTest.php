@@ -38,6 +38,7 @@ class RestConfigTest extends TestCase
         $this->assertSame(1, $config->transactionAttempts);
         $this->assertSame('@more', $config->moreKey);
         $this->assertSame([], $config->extensions);
+        $this->assertSame([], $config->disabledExtensions);
         $this->assertSame([
             'authorized_to_view' => 'authorized_to_view',
             'authorized_to_create' => 'authorized_to_create',
@@ -124,15 +125,16 @@ class RestConfigTest extends TestCase
     }
 
     #[Test]
-    public function it_reads_a_missing_extensions_key_as_no_extension(): void
+    public function it_reads_missing_extension_keys_as_no_extension(): void
     {
         $config = $this->packageConfig();
         $rest = $config->get('rest');
         $this->assertIsArray($rest);
-        unset($rest['extensions']);
+        unset($rest['extensions'], $rest['disabled_extensions']);
         $config->set('rest', $rest);
 
         $this->assertSame([], RestConfig::from($config)->extensions);
+        $this->assertSame([], RestConfig::from($config)->disabledExtensions);
     }
 
     #[Test]
@@ -166,8 +168,11 @@ class RestConfigTest extends TestCase
             'transaction attempts that are not a number' => ['rest.transactions.attempts', 'abc', 'The [rest.transactions.attempts] option must be an integer of 1 or more.'],
             'null transaction attempts' => ['rest.transactions.attempts', null, 'The [rest.transactions.attempts] option must be an integer of 1 or more.'],
             'the more key' => ['rest.search.more_key', '', 'The [rest.search.more_key] option must be a non-empty string.'],
-            'the extensions' => ['rest.extensions', 'acl', 'The [rest.extensions] option must be a map of extension names to class names or false.'],
-            'null extensions' => ['rest.extensions', null, 'The [rest.extensions] option must be a map of extension names to class names or false.'],
+            'the extensions' => ['rest.extensions', 'acl', 'The [rest.extensions] option must be a list of extension class names.'],
+            'null extensions' => ['rest.extensions', null, 'The [rest.extensions] option must be a list of extension class names.'],
+            'extensions by name' => ['rest.extensions', ['acl' => 'Vendor\Acl\AccessControl'], 'The [rest.extensions] option must be a list of extension class names.'],
+            'the disabled extensions' => ['rest.disabled_extensions', 'acl', 'The [rest.disabled_extensions] option must be a list of extension class names.'],
+            'disabled extensions by class' => ['rest.disabled_extensions', ['Vendor\Acl\AccessControl' => true], 'The [rest.disabled_extensions] option must be a list of extension class names.'],
         ];
     }
 

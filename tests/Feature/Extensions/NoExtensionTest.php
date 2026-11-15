@@ -52,11 +52,12 @@ final class NoExtensionTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_answers_with_a_cached_config_that_has_no_extensions_key(): void
+    public function it_answers_with_a_cached_config_that_has_no_extension_keys(): void
     {
         $rest = $this->app['config']->get('rest');
         $this->assertIsArray($rest);
-        $this->app['config']->set('rest', Arr::except($rest, 'extensions'));
+        $this->assertSame([], $rest['disabled_extensions']);
+        $this->app['config']->set('rest', Arr::except($rest, ['extensions', 'disabled_extensions']));
         Category::forceCreate(['id' => 1, 'name' => 'Lighting']);
         Product::forceCreate(['id' => 1, 'category_id' => 1, 'name' => 'Desk lamp', 'price' => 39]);
 

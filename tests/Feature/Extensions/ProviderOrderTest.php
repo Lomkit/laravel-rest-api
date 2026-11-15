@@ -52,7 +52,7 @@ final class ProviderOrderTest extends PackageTestCase
     {
         $context = new RestContext(RestRequest::create('/api/products/search', 'POST'), $this->app);
 
-        $this->assertSame(['early', 'later', 'booted'], array_keys($context->extensions()->all()));
+        $this->assertSame(['noting', 'both', 'counting'], array_keys($context->extensions()->all()));
         $this->assertSame([NotingExtension::class, BothKindsExtension::class, CountingExtension::class], ExtensionLog::$built);
     }
 
@@ -62,10 +62,6 @@ final class ProviderOrderTest extends PackageTestCase
         $store = $this->app->make(RuntimeExtensions::class);
 
         $this->assertSame($store, $this->app->make(RuntimeExtensions::class));
-        $this->assertSame([
-            'early' => [NotingExtension::class],
-            'later' => [BothKindsExtension::class],
-            'booted' => [CountingExtension::class],
-        ], $store->all());
+        $this->assertSame([NotingExtension::class, BothKindsExtension::class, CountingExtension::class], $store->all());
     }
 }

@@ -14,23 +14,24 @@ final class ExtensionRegistry
     /** @var array<string, array<class-string<Resource>, bool>> */
     private array $answers = [];
 
-    /** @param array<string, string> $classes */
+    /** @param array<string, class-string<Extension>> $classes */
     private function __construct(
         private readonly array $classes,
         private readonly Container $container,
     ) {}
 
     /**
-     * @param  array<array-key, mixed>  $configured
-     * @param  array<string, non-empty-list<string>>  $registered
+     * @param  list<mixed>  $configured
+     * @param  list<mixed>  $disabled
+     * @param  list<string>  $registered
      */
-    public static function of(array $configured, array $registered, Container $container): self
+    public static function of(array $configured, array $disabled, array $registered, Container $container): self
     {
-        if ($configured === [] && $registered === []) {
+        if ($configured === [] && $disabled === [] && $registered === []) {
             return new self([], $container);
         }
 
-        return new self(ExtensionList::merge($configured, $registered)->enabled(), $container);
+        return new self(ExtensionList::of($configured, $disabled, $registered)->named()->enabled(), $container);
     }
 
     /** @return array<string, Extension> */
@@ -76,7 +77,7 @@ final class ExtensionRegistry
         $built = [];
 
         foreach ($this->classes as $name => $class) {
-            $built[$name] = $factory->make($name, $class);
+            $built[$name] = $factory->make($class);
         }
 
         return $built;

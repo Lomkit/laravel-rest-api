@@ -11,8 +11,8 @@ final class TicketDeskExtensions extends ServiceProvider
     #[\Override]
     public function register(): void
     {
-        Rest::registerExtension('archive', TicketArchiveExtension::class);
-        Rest::registerExtensions(['desk_archive' => TicketArchiveExtension::class]);
+        Rest::registerExtension(TicketArchiveExtension::class);
+        Rest::registerExtensions([TicketArchiveExtension::class]);
     }
 
     /** @return array<string, string> */

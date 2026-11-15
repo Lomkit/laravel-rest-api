@@ -42,7 +42,7 @@ final class ExtensionFactoryTest extends TestCase
         $config = new ConfigRepository(['app' => ['name' => 'Shop']]);
         $container->instance(Repository::class, $config);
 
-        $extension = (new ExtensionFactory($container))->make('injected', InjectedExtension::class);
+        $extension = (new ExtensionFactory($container))->make(InjectedExtension::class);
 
         $this->assertInstanceOf(InjectedExtension::class, $extension);
         $this->assertSame($config, $extension->config);
@@ -52,7 +52,7 @@ final class ExtensionFactoryTest extends TestCase
     #[Test]
     public function it_refuses_a_class_that_does_not_exist(): void
     {
-        $this->expectExceptionObject(InvalidExtensionException::notAClass('acl', self::MISSING));
+        $this->expectExceptionObject(InvalidExtensionException::notAClass(self::MISSING));
 
         $this->make(self::MISSING);
     }
@@ -60,7 +60,7 @@ final class ExtensionFactoryTest extends TestCase
     #[Test]
     public function it_refuses_a_kind_interface_given_as_the_class(): void
     {
-        $this->expectExceptionObject(InvalidExtensionException::notAClass('acl', NotesResources::class));
+        $this->expectExceptionObject(InvalidExtensionException::notAClass(NotesResources::class));
 
         $this->make(NotesResources::class);
     }
@@ -68,7 +68,7 @@ final class ExtensionFactoryTest extends TestCase
     #[Test]
     public function it_refuses_a_class_that_does_not_extend_extension(): void
     {
-        $this->expectExceptionObject(InvalidExtensionException::notAnExtension('acl', NotAnExtension::class));
+        $this->expectExceptionObject(InvalidExtensionException::notAnExtension(NotAnExtension::class));
 
         $this->make(NotAnExtension::class);
     }
@@ -76,7 +76,7 @@ final class ExtensionFactoryTest extends TestCase
     #[Test]
     public function it_refuses_the_extension_base_class(): void
     {
-        $this->expectExceptionObject(InvalidExtensionException::notAnExtension('acl', Extension::class));
+        $this->expectExceptionObject(InvalidExtensionException::notAnExtension(Extension::class));
 
         $this->make(Extension::class);
     }
@@ -84,7 +84,7 @@ final class ExtensionFactoryTest extends TestCase
     #[Test]
     public function it_refuses_an_extension_that_implements_no_kind(): void
     {
-        $this->expectExceptionObject(InvalidExtensionException::noKind('acl', KindlessExtension::class));
+        $this->expectExceptionObject(InvalidExtensionException::noKind(KindlessExtension::class));
 
         $this->make(KindlessExtension::class);
     }
@@ -92,7 +92,7 @@ final class ExtensionFactoryTest extends TestCase
     #[Test]
     public function it_refuses_an_extension_that_implements_only_the_kind_marker(): void
     {
-        $this->expectExceptionObject(InvalidExtensionException::noKind('acl', MarkerOnlyExtension::class));
+        $this->expectExceptionObject(InvalidExtensionException::noKind(MarkerOnlyExtension::class));
 
         $this->make(MarkerOnlyExtension::class);
     }
@@ -100,7 +100,7 @@ final class ExtensionFactoryTest extends TestCase
     #[Test]
     public function it_refuses_an_abstract_extension(): void
     {
-        $this->expectExceptionObject(InvalidExtensionException::notInstantiable('acl', AbstractNotingExtension::class));
+        $this->expectExceptionObject(InvalidExtensionException::notInstantiable(AbstractNotingExtension::class));
 
         $this->make(AbstractNotingExtension::class);
     }
@@ -111,9 +111,9 @@ final class ExtensionFactoryTest extends TestCase
         $container = new Container;
         $container->bind(NotingExtension::class, fn (): CountingExtension => new CountingExtension);
 
-        $this->expectExceptionObject(InvalidExtensionException::foreignBinding('acl', NotingExtension::class, CountingExtension::class));
+        $this->expectExceptionObject(InvalidExtensionException::foreignBinding(NotingExtension::class, CountingExtension::class));
 
-        (new ExtensionFactory($container))->make('acl', NotingExtension::class);
+        (new ExtensionFactory($container))->make(NotingExtension::class);
     }
 
     #[Test]
@@ -125,29 +125,33 @@ final class ExtensionFactoryTest extends TestCase
     }
 
     #[Test]
-    public function it_names_the_extension_in_each_refusal(): void
+    public function it_names_the_class_in_each_refusal(): void
     {
         $refusals = [
-            InvalidExtensionException::invalidName('acl'),
-            InvalidExtensionException::sharedName('acl', [NotingExtension::class, CountingExtension::class]),
-            InvalidExtensionException::lateRegistration('acl', NotingExtension::class),
-            InvalidExtensionException::notAClass('acl', self::MISSING),
-            InvalidExtensionException::notAnExtension('acl', NotAnExtension::class),
-            InvalidExtensionException::noKind('acl', KindlessExtension::class),
-            InvalidExtensionException::notInstantiable('acl', AbstractNotingExtension::class),
-            InvalidExtensionException::foreignBinding('acl', NotingExtension::class, CountingExtension::class),
+            NotingExtension::class => [
+                InvalidExtensionException::lateRegistration(NotingExtension::class),
+                InvalidExtensionException::foreignBinding(NotingExtension::class, CountingExtension::class),
+                InvalidExtensionException::instanceGiven('Rest::registerExtensions()', NotingExtension::class),
+            ],
+            self::MISSING => [InvalidExtensionException::notAClass(self::MISSING)],
+            NotAnExtension::class => [InvalidExtensionException::notAnExtension(NotAnExtension::class)],
+            KindlessExtension::class => [InvalidExtensionException::noKind(KindlessExtension::class), InvalidExtensionException::invalidName(KindlessExtension::class, 'Acl')],
+            AbstractNotingExtension::class => [InvalidExtensionException::notInstantiable(AbstractNotingExtension::class)],
         ];
 
-        foreach ($refusals as $refusal) {
-            $this->assertTrue($refusal->namesExtension('acl'));
-            $this->assertFalse($refusal->namesExtension('tenant'));
+        foreach ($refusals as $class => $exceptions) {
+            foreach ($exceptions as $exception) {
+                $this->assertTrue($exception->concerns($class));
+                $this->assertFalse($exception->concerns(CountingExtension::class));
+                $this->assertStringContainsString($class, $exception->getMessage());
+            }
         }
 
-        $this->assertFalse(InvalidExtensionException::missingName(NotingExtension::class)->namesExtension('acl'));
+        $this->assertFalse(InvalidExtensionException::sharedName('acl', [NotingExtension::class, CountingExtension::class])->concerns(NotingExtension::class));
     }
 
     private function make(string $class): Extension
     {
-        return (new ExtensionFactory(new Container))->make('acl', $class);
+        return (new ExtensionFactory(new Container))->make($class);
     }
 }

@@ -7,10 +7,10 @@ use Lomkit\Rest\Extensions\RuntimeExtensions;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\RestServiceProvider;
-use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\AclExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\FirstAclProvider;
-use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\RivalAclExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\SecondAclProvider;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -34,40 +34,39 @@ final class SharedNameTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_boots_with_a_name_that_two_packages_register(): void
+    public function it_boots_with_two_packages_whose_classes_share_a_name(): void
     {
-        $this->assertSame(['acl' => [NotingExtension::class, CountingExtension::class]], $this->app->make(RuntimeExtensions::class)->all());
+        $this->assertSame([AclExtension::class, RivalAclExtension::class], $this->app->make(RuntimeExtensions::class)->all());
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['acl' => false, 'counting' => CountingExtension::class])]
-    public function it_lets_the_config_keep_none_and_rename_one(): void
-    {
-        $extensions = $this->context()->extensions()->all();
-
-        $this->assertSame(['counting'], array_keys($extensions));
-        $this->assertSame([CountingExtension::class], ExtensionLog::$built);
-    }
-
-    #[Test]
-    #[WithConfig('rest.extensions', ['acl' => NotingExtension::class])]
-    public function it_lets_the_config_keep_one_class(): void
+    #[WithConfig('rest.disabled_extensions', [RivalAclExtension::class])]
+    public function it_lets_the_config_disable_one_of_the_classes(): void
     {
         $extensions = $this->context()->extensions()->all();
 
         $this->assertSame(['acl'], array_keys($extensions));
-        $this->assertInstanceOf(NotingExtension::class, $extensions['acl']);
-        $this->assertSame([NotingExtension::class], ExtensionLog::$built);
+        $this->assertInstanceOf(AclExtension::class, $extensions['acl']);
+        $this->assertSame([AclExtension::class], ExtensionLog::$built);
     }
 
     #[Test]
-    public function it_refuses_an_unsettled_name_when_the_registry_is_built(): void
+    public function it_refuses_two_classes_with_one_name_when_the_registry_is_built(): void
     {
         $context = $this->context();
 
-        $this->expectExceptionObject(InvalidExtensionException::sharedName('acl', [NotingExtension::class, CountingExtension::class]));
-
-        $context->extensions();
+        try {
+            $context->extensions();
+            $this->fail('The shared name was accepted.');
+        } catch (InvalidExtensionException $exception) {
+            $this->assertEquals(InvalidExtensionException::sharedName('acl', [AclExtension::class, RivalAclExtension::class]), $exception);
+            $this->assertSame(
+                'The extensions '.AclExtension::class.' and '.RivalAclExtension::class.' share the name [acl].'
+                .' Add one of them to the [rest.disabled_extensions] config, or extend one of them and override name() to give it another name.',
+                $exception->getMessage(),
+            );
+            $this->assertSame([], ExtensionLog::$built);
+        }
     }
 
     private function context(): RestContext

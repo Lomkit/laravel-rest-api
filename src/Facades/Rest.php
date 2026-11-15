@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Lomkit\Rest\Search\Run\PendingSearch search(class-string<\Lomkit\Rest\Http\Resource> $resource)
  * @method static void forgetAuthorizationsFor(\Illuminate\Contracts\Auth\Authenticatable $user)
  * @method static void forgetAuthorizations()
- * @method static void registerExtension(string $name, class-string<\Lomkit\Rest\Extensions\Extension> $class)
- * @method static void registerExtensions(array<string, class-string<\Lomkit\Rest\Extensions\Extension>> $classes)
+ * @method static void registerExtension(class-string<\Lomkit\Rest\Extensions\Extension> $class)
+ * @method static void registerExtensions(list<class-string<\Lomkit\Rest\Extensions\Extension>> $classes)
  *
  * @see \Lomkit\Rest\Rest
  */

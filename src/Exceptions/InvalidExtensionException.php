@@ -12,83 +12,75 @@ final class InvalidExtensionException extends LogicException
 {
     private ?string $extension = null;
 
-    public static function missingName(string $entry): self
-    {
-        return new self("The extension [{$entry}] has no name. Key it by its name, such as 'acl' => [{$entry}], in the [rest.extensions] config or in Rest::registerExtensions().");
-    }
-
-    public static function unnamedEntry(int $index, mixed $value): self
-    {
-        if (is_object($value)) {
-            $class = $value::class;
-
-            return new self("The extension entry at index [{$index}] is an instance of {$class} and has no name. Key its class name by the extension name, such as 'acl' => {$class}::class, in the [rest.extensions] config or in Rest::registerExtensions().");
-        }
-
-        $type = get_debug_type($value);
-
-        return new self("The extension entry at index [{$index}] is [{$type}] and has no name. Key the class name of each extension by its name, such as 'acl' => AccessControlExtension::class, in the [rest.extensions] config or in Rest::registerExtensions(); only the config accepts 'acl' => false, to disable an extension.");
-    }
-
-    public static function invalidName(string $name): self
+    public static function invalidName(string $class, string $name): self
     {
         $length = ExtensionName::MAX_LENGTH;
 
-        return self::about($name, "The extension name [{$name}] is invalid. A name has 1 to {$length} lowercase letters or digits, starts with a letter and joins words with single underscores, such as [acl] or [row_lock]: it prefixes the keys that the extension adds, and two underscores separate it from them.");
+        return self::about($class, "{$class}::name() returns [{$name}], which is not a valid extension name. A name has 1 to {$length} lowercase letters or digits, starts with a letter and joins words with single underscores, such as [acl] or [row_lock]: it prefixes the keys that the extension adds, and two underscores separate it from them. Return a name such as 'acl' from {$class}::name().");
     }
 
     /** @param non-empty-list<string> $classes */
     public static function sharedName(string $name, array $classes): self
     {
-        $registered = Arr::join($classes, ', ', ' and ');
+        $named = Arr::join($classes, ', ', ' and ');
 
-        return self::about($name, "The [{$name}] extension name is registered by several packages, as {$registered}. Settle it in the [rest.extensions] config: '{$name}' => {$classes[0]}::class keeps one, '{$name}' => false keeps none, and the other class can take another name there.");
+        return new self("The extensions {$named} share the name [{$name}]. Add one of them to the [rest.disabled_extensions] config, or extend one of them and override name() to give it another name.");
     }
 
-    public static function lateRegistration(string $name, string $class): self
+    public static function lateRegistration(string $class): self
     {
-        return self::about($name, "The [{$name}] extension {$class} is registered after the application booted, or after the package built its first context or registered its first Rest::resource() route: the runtime extension list no longer changes then. Register extensions from the register() method of a service provider, which runs before the routes in any provider order. Register from boot() only before every provider that declares Rest::resource() routes in its own boot().");
+        return self::about($class, "The extension {$class} is registered after the application booted, or after the package built its first context or registered its first Rest::resource() route: the runtime extension list no longer changes then. Register extensions from the register() method of a service provider, which runs before the routes in any provider order. Register from boot() only before every provider that declares Rest::resource() routes in its own boot().");
     }
 
-    public static function notAClass(string $name, string $entry): self
+    public static function notAList(string $source): self
     {
-        return self::about($name, "The [{$name}] extension is [{$entry}], which is not a class. Give the name of a class that extends ".Extension::class.'; only the [rest.extensions] config accepts false, to disable the extension.');
+        return new self("{$source} takes a list of extension class names, such as [AccessControlExtension::class]: each extension class declares its own name.");
     }
 
-    public static function instanceGiven(string $name, string $class): self
+    public static function notAClassName(string $source, string $type): self
     {
-        return self::about($name, "The [{$name}] extension is an instance of {$class}. Register its class name, {$class}::class: the container builds each extension once per context, and an instance would outlive the context.");
+        return new self("{$source} holds [{$type}], which is not a class name. Give a list of extension class names, such as [AccessControlExtension::class].");
     }
 
-    public static function notAnExtension(string $name, string $class): self
+    public static function instanceGiven(string $source, string $class): self
     {
-        return self::about($name, "The [{$name}] extension {$class} does not extend ".Extension::class.'. Extend it.');
+        return self::about($class, "{$source} holds an instance of {$class}. Give its class name in the list, such as [{$class}::class]: the container builds each extension once per context, and an instance would outlive the context.");
     }
 
-    public static function noKind(string $name, string $class): self
+    public static function notAClass(string $class): self
     {
-        return self::about($name, "The [{$name}] extension {$class} implements no extension kind. Implement at least one interface that extends ".ExtensionKind::class.'.');
+        return self::about($class, "The extension [{$class}] is not a class. Give the name of a class that extends ".Extension::class.'.');
     }
 
-    public static function notInstantiable(string $name, string $class): self
+    public static function notAnExtension(string $class): self
     {
-        return self::about($name, "The [{$name}] extension {$class} is abstract or cannot be instantiated. Register a concrete class.");
+        return self::about($class, "The extension {$class} does not extend ".Extension::class.'. Extend it.');
     }
 
-    public static function foreignBinding(string $name, string $class, string $bound): self
+    public static function notInstantiable(string $class): self
     {
-        return self::about($name, "The container builds [{$bound}] for {$class}, the [{$name}] extension: bind {$class} to itself or to a class that extends it.");
+        return self::about($class, "The extension {$class} is abstract or cannot be instantiated. Register a concrete class.");
     }
 
-    public function namesExtension(string $name): bool
+    public static function noKind(string $class): self
     {
-        return $this->extension === $name;
+        return self::about($class, "The extension {$class} implements no extension kind. Implement at least one interface that extends ".ExtensionKind::class.'.');
     }
 
-    private static function about(string $name, string $message): self
+    public static function foreignBinding(string $class, string $bound): self
+    {
+        return self::about($class, "The container builds [{$bound}] for the extension {$class}: bind {$class} to itself or to a class that extends it.");
+    }
+
+    public function concerns(string $class): bool
+    {
+        return $this->extension === $class;
+    }
+
+    private static function about(string $class, string $message): self
     {
         $exception = new self($message);
-        $exception->extension = $name;
+        $exception->extension = $class;
 
         return $exception;
     }

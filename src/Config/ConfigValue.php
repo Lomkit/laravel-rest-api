@@ -64,14 +64,14 @@ final readonly class ConfigValue
         throw InvalidConfigException::mustBe($this->key, 'null or a non-empty string');
     }
 
-    /** @return array<array-key, mixed> */
-    public function map(string $entries): array
+    /** @return list<mixed> */
+    public function list(string $entries): array
     {
-        if (is_array($this->value)) {
+        if (is_array($this->value) && array_is_list($this->value)) {
             return $this->value;
         }
 
-        throw InvalidConfigException::mustBe($this->key, "a map of {$entries}");
+        throw InvalidConfigException::mustBe($this->key, "a list of {$entries}");
     }
 
     /**

@@ -65,12 +65,12 @@ class Rest
     }
 
     /** @param class-string<Extension> $class */
-    public function registerExtension(string $name, string $class): void
+    public function registerExtension(string $class): void
     {
-        $this->container->make(RuntimeExtensions::class)->register($name, $class);
+        $this->container->make(RuntimeExtensions::class)->register($class);
     }
 
-    /** @param array<string, class-string<Extension>> $classes */
+    /** @param list<class-string<Extension>> $classes */
     public function registerExtensions(array $classes): void
     {
         $this->container->make(RuntimeExtensions::class)->registerAll($classes);

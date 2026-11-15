@@ -10,6 +10,6 @@ final class LaterExtensionProvider extends ServiceProvider
     #[\Override]
     public function register(): void
     {
-        Rest::registerExtension('later', BothKindsExtension::class);
+        Rest::registerExtension(BothKindsExtension::class);
     }
 }
