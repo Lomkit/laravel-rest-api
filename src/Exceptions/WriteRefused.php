@@ -7,10 +7,10 @@ use Illuminate\Http\JsonResponse;
 
 final class WriteRefused extends HttpResponseException
 {
-    public function __construct(public readonly string $extension, string $message, int $status)
+    public function __construct(public readonly string $extension, public readonly string $reason, int $status)
     {
-        parent::__construct(new JsonResponse(['message' => $message], $status));
+        parent::__construct(new JsonResponse(['message' => $reason], $status));
 
-        $this->message = $message;
+        $this->message = "The [{$extension}] extension refused the write.";
     }
 }

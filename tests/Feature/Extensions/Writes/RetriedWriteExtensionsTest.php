@@ -252,6 +252,23 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
             ->all());
     }
 
+    #[Test]
+    public function it_runs_a_refusal_whose_text_names_a_lock_once(): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        WriteLog::$refuseAt = 1;
+        WriteLog::$refusal = 'The database is locked for the night.';
+        WriteLog::$status = 423;
+
+        $this->deleteJson('/retried-documents', ['resources' => [1, 3]])
+            ->assertStatus(423)
+            ->assertExactJson(['message' => 'The database is locked for the night.']);
+
+        $this->assertSame(['begin secondary', 'guard destroy 1,3', 'rollback secondary'], EventLog::$lines);
+        $this->assertCount(1, WriteLog::$guards);
+        $this->assertSame(['Annual report', 'Roadmap', 'Minutes'], SecondaryDocument::query()->orderBy('id')->pluck('title')->all());
+    }
+
     /** @return array{operations: list<array{operation: string, key: int}>} */
     private static function operations(int $agenda): array
     {

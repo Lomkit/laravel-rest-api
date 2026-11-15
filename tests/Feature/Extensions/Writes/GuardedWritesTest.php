@@ -333,6 +333,22 @@ final class GuardedWritesTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_answers_a_refusal_whose_text_names_a_lock(): void
+    {
+        WriteLog::$refuseAt = 1;
+        WriteLog::$refusal = 'The database is locked for the night.';
+        WriteLog::$status = 423;
+        $this->seedDocuments(null, null);
+
+        $this->deleteJson('/written-documents', ['resources' => [1, 2]])
+            ->assertStatus(423)
+            ->assertExactJson(['message' => 'The database is locked for the night.']);
+
+        $this->assertCount(1, WriteLog::$guards);
+        $this->assertSame([[1, null], [2, null]], $this->rows());
+    }
+
+    #[Test]
     public function it_keeps_the_transactions_committed_before_a_refusal(): void
     {
         WriteLog::$refuseAt = 2;
@@ -566,7 +582,7 @@ final class GuardedWritesTest extends PackageTestCase
         config(['rest.extensions' => ['quota' => QuotaGuard::class]]);
         $failures = [];
         Event::listen(JobFailed::class, function (JobFailed $event) use (&$failures): void {
-            $failures[] = [$event->exception::class, $event->exception->getMessage()];
+            $failures[] = [$event->exception::class, $event->exception->getMessage(), $event->exception instanceof WriteRefused ? $event->exception->reason : null];
         });
         $this->seedDocuments(null, null);
 
@@ -574,7 +590,7 @@ final class GuardedWritesTest extends PackageTestCase
         $this->app['auth']->forgetGuards();
         $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
 
-        $this->assertSame([[WriteRefused::class, 'The monthly quota is reached.']], $failures);
+        $this->assertSame([[WriteRefused::class, 'The [quota] extension refused the write.', 'The monthly quota is reached.']], $failures);
         $this->assertDatabaseCount('jobs', 1);
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
     }
