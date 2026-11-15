@@ -5,6 +5,8 @@ namespace Lomkit\Rest\Authorization;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use LogicException;
+use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 
 /** @internal */
@@ -19,6 +21,9 @@ final class CollectedVersions
     /** @var array<string, true> */
     private array $uncacheable = [];
 
+    /** @var array{string, string}|null */
+    private ?array $extension = null;
+
     /** @param Collection<int, Model> $rows */
     public function __construct(
         private readonly string $resource,
@@ -31,12 +36,21 @@ final class CollectedVersions
         }
     }
 
+    public function from(string $name, string $class): void
+    {
+        $this->extension = [$name, $class];
+    }
+
     public function add(Model $row, string $key, DateTimeInterface|int|string $version): void
     {
-        $id = $this->rows[spl_object_id($row)] ?? throw InvalidResourceException::unknownVersionedRow($this->resource, $this->ability, $row::class);
+        $id = $this->rows[spl_object_id($row)] ?? throw $this->unknownRow($row);
 
         if (preg_match(CacheContributions::KEY, $key) !== 1) {
-            throw InvalidResourceException::invalidVersionKey($this->resource, $key);
+            throw $this->invalidKey($key);
+        }
+
+        if ($this->extension !== null) {
+            $key = $this->extension[0].CacheContributions::SEPARATOR.$key;
         }
 
         if ($version instanceof DateTimeInterface) {
@@ -64,5 +78,19 @@ final class CollectedVersions
         }
 
         return new DependentVersions($parts);
+    }
+
+    private function unknownRow(Model $row): LogicException
+    {
+        return $this->extension === null
+            ? InvalidResourceException::unknownVersionedRow($this->resource, $this->ability, $row::class)
+            : InvalidAuthorizationExtensionException::unknownVersionedRow($this->extension[0], $this->extension[1], $this->resource, $this->ability, $row::class);
+    }
+
+    private function invalidKey(string $key): LogicException
+    {
+        return $this->extension === null
+            ? InvalidResourceException::invalidVersionKey($this->resource, $key)
+            : InvalidAuthorizationExtensionException::invalidVersionKey($this->extension[0], $this->extension[1], $this->resource, $key);
     }
 }
