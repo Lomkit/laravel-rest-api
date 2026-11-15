@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Writes;
 
+use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Event;
@@ -63,8 +64,6 @@ final class GuardedWritesTest extends PackageTestCase
         ['operation' => 'create', 'attributes' => ['title' => 'Minutes']],
     ]];
 
-    private const array OPERATIONS = ['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => 3]]];
-
     private const array DOCUMENTS = ['data' => [
         ['id' => 1, 'title' => 'Annual report', 'archived' => false],
         ['id' => 2, 'title' => 'Budget', 'archived' => false],
@@ -115,7 +114,7 @@ final class GuardedWritesTest extends PackageTestCase
         $this->seedDocuments(null, null);
         EventLog::listen();
 
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::OPERATIONS);
+        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::operations($this->minutes()));
 
         $this->assertSame([
             'begin level 2',
@@ -462,24 +461,24 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
     }
 
-    /** @return array<string, array{string, string, array<string, mixed>, array<string, mixed>}> */
+    /** @return array<string, array{string, string, array<string, mixed>, Closure(?int): array<string, mixed>}> */
     public static function precognitiveWrites(): array
     {
         return [
-            'mutate' => ['POST', '/written-documents/mutate', self::MUTATE, self::OPERATIONS],
-            'destroy' => ['DELETE', '/written-documents', ['resources' => [1, 2]], self::DOCUMENTS],
-            'action' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []], self::IMPACTED],
+            'mutate' => ['POST', '/written-documents/mutate', self::MUTATE, fn (int $minutes): array => self::operations($minutes)],
+            'destroy' => ['DELETE', '/written-documents', ['resources' => [1, 2]], fn (): array => self::DOCUMENTS],
+            'action' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []], fn (): array => self::IMPACTED],
         ];
     }
 
     /**
      * @param  array<string, mixed>  $body
-     * @param  array<string, mixed>  $answer
+     * @param  Closure(?int): array<string, mixed>  $answer
      */
     #[Test]
     #[DataProvider('precognitiveWrites')]
     #[WithConfig('rest.precognition.enabled', true)]
-    public function it_never_guards_under_precognition(string $method, string $uri, array $body, array $answer): void
+    public function it_never_guards_under_precognition(string $method, string $uri, array $body, Closure $answer): void
     {
         $this->seedDocuments(null, null);
 
@@ -489,7 +488,7 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertSame([[1, null], [2, null]], $this->rows());
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
 
-        $this->json($method, $uri, $body)->assertOk()->assertExactJson($answer);
+        $this->json($method, $uri, $body)->assertOk()->assertExactJson($answer($this->minutes()));
 
         $this->assertNotSame([], WriteLog::$guards);
     }
@@ -598,6 +597,19 @@ final class GuardedWritesTest extends PackageTestCase
     private static function confirmation(string $message, string $signature): array
     {
         return ['message' => $message, 'confirmation' => ['token' => "1794132300.{$signature}", 'expires_at' => '2026-11-08T10:05:00Z', 'data' => []]];
+    }
+
+    /** @return array{operations: list<array{operation: string, key: int}>} */
+    private static function operations(int $minutes): array
+    {
+        return ['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => $minutes]]];
+    }
+
+    private function minutes(): ?int
+    {
+        return Document::withTrashed()
+            ->where('title', 'Minutes')
+            ->value('id');
     }
 
     /** @return list<string> */

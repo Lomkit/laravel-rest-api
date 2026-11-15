@@ -11,6 +11,12 @@ trait SeedsDocuments
         foreach (array_values($deletedAt) as $index => $at) {
             Document::query()->insert(['id' => $index + 1, 'title' => ['Annual report', 'Budget', 'Charter'][$index] ?? 'Report '.($index + 1), 'deleted_at' => $at]);
         }
+
+        $connection = Document::query()->getConnection();
+
+        if ($connection->getDriverName() === 'pgsql') {
+            $connection->statement("select setval(pg_get_serial_sequence('documents', 'id'), (select max(id) from documents))");
+        }
     }
 
     /** @return list<array{int, ?string}> */

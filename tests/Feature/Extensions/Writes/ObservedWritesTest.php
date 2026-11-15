@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Writes;
 
+use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -49,8 +50,6 @@ final class ObservedWritesTest extends PackageTestCase
         ['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Annual summary']],
         ['operation' => 'create', 'attributes' => ['title' => 'Minutes']],
     ]];
-
-    private const array OPERATIONS = ['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => 3]]];
 
     private const array DOCUMENTS = ['data' => [
         ['id' => 1, 'title' => 'Annual report', 'archived' => false],
@@ -100,8 +99,10 @@ final class ObservedWritesTest extends PackageTestCase
         $this->seedDocuments(null, null);
         EventLog::listen();
 
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::OPERATIONS);
+        $response = $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk();
 
+        $minutes = $this->minutes();
+        $response->assertExactJson(self::operations($minutes));
         $this->assertSame([
             'begin level 2',
             'mutatingAll update,create',
@@ -109,17 +110,17 @@ final class ObservedWritesTest extends PackageTestCase
             'sql insert documents',
             'mutatedAll 2',
             'commit level 1',
-            'observe mutate update:1,create:3',
+            "observe mutate update:1,create:{$minutes}",
         ], $this->writeLines());
         $context = WriteLog::$writes[0];
         $this->assertCount(1, WriteLog::$writes);
         $this->assertInstanceOf(WrittenDocumentResource::class, $context->resource);
         $this->assertSame(Endpoint::Mutate, $context->endpoint);
         $this->assertSame(2, $context->user?->getAuthIdentifier());
-        $this->assertSame([['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => 3]], $context->operations);
+        $this->assertSame(self::operations($minutes)['operations'], $context->operations);
         $this->assertSame([
             [WrittenDocumentResource::class, MutationOperation::Update, ['title' => 'Annual summary'], 1, 'Annual summary'],
-            [WrittenDocumentResource::class, MutationOperation::Create, ['title' => 'Minutes'], 3, 'Minutes'],
+            [WrittenDocumentResource::class, MutationOperation::Create, ['title' => 'Minutes'], $minutes, 'Minutes'],
         ], array_map(fn (WrittenRow $row): array => [$row->resource::class, $row->entry->operation, $row->entry->attributes, $row->model->getKey(), $row->model->getAttribute('title')], $context->written ?? []));
         $this->assertNull($context->rows);
         $this->assertNull($context->action);
@@ -277,7 +278,7 @@ final class ObservedWritesTest extends PackageTestCase
     /** @return array<string, array{array<string, class-string>, list<string>}> */
     public static function failingOrders(): array
     {
-        $recorded = 'observe mutate update:1,create:3';
+        $recorded = 'observe mutate update:1,create:#';
 
         return [
             'failing last' => [['history' => RecordingWriteObserver::class, 'webhooks' => FailingWriteObserver::class], [$recorded, 'observe failing']],
@@ -298,15 +299,15 @@ final class ObservedWritesTest extends PackageTestCase
         config(['rest.extensions' => $extensions]);
         $this->seedDocuments(null, null);
 
-        $this->postJson('/written-documents/mutate', self::MUTATE)
-            ->assertOk()
-            ->assertExactJson(self::OPERATIONS);
+        $response = $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk();
 
-        $this->assertSame($lines, $this->observedLines());
+        $minutes = $this->minutes();
+        $response->assertExactJson(self::operations($minutes));
+        $this->assertSame(str_replace('#', (string) $minutes, $lines), $this->observedLines());
         Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'The history store is offline.');
         Exceptions::assertReportedCount(1);
         $this->assertCount(1, WriteLog::$writes);
-        $this->assertSame([[1, 'Annual summary', false], [2, 'Budget', false], [3, 'Minutes', false]], $this->documents());
+        $this->assertSame([[1, 'Annual summary', false], [2, 'Budget', false], [$minutes, 'Minutes', false]], $this->documents());
     }
 
     #[Test]
@@ -319,7 +320,7 @@ final class ObservedWritesTest extends PackageTestCase
         $this->seedDocuments(null, null);
         DB::beginTransaction();
 
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::OPERATIONS);
+        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::operations($this->minutes()));
 
         $this->assertSame([], WriteLog::$writes);
         DB::commit();
@@ -333,30 +334,30 @@ final class ObservedWritesTest extends PackageTestCase
         $this->seedDocuments(null, null);
         DB::beginTransaction();
 
-        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::OPERATIONS);
+        $this->postJson('/written-documents/mutate', self::MUTATE)->assertOk()->assertExactJson(self::operations($this->minutes()));
         DB::rollBack();
 
         $this->assertSame([], WriteLog::$writes);
         $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
     }
 
-    /** @return array<string, array{string, string, array<string, mixed>, int, array<string, mixed>}> */
+    /** @return array<string, array{string, string, array<string, mixed>, int, Closure(?int): array<string, mixed>}> */
     public static function scheduledWrites(): array
     {
         return [
-            'mutate' => ['POST', '/written-documents/mutate', self::MUTATE, 1, self::OPERATIONS],
-            'destroy' => ['DELETE', '/written-documents', ['resources' => [1, 2]], 1, self::DOCUMENTS],
-            'action chunks' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []], 2, self::IMPACTED],
+            'mutate' => ['POST', '/written-documents/mutate', self::MUTATE, 1, fn (int $minutes): array => self::operations($minutes)],
+            'destroy' => ['DELETE', '/written-documents', ['resources' => [1, 2]], 1, fn (): array => self::DOCUMENTS],
+            'action chunks' => ['POST', '/written-documents/actions/archive-documents-by-one', ['search' => []], 2, fn (): array => self::IMPACTED],
         ];
     }
 
     /**
      * @param  array<string, mixed>  $body
-     * @param  array<string, mixed>  $answer
+     * @param  Closure(?int): array<string, mixed>  $answer
      */
     #[Test]
     #[DataProvider('scheduledWrites')]
-    public function it_schedules_nothing_without_an_observer(string $method, string $uri, array $body, int $transactions, array $answer): void
+    public function it_schedules_nothing_without_an_observer(string $method, string $uri, array $body, int $transactions, Closure $answer): void
     {
         $this->seedDocuments(null, null);
 
@@ -399,27 +400,41 @@ final class ObservedWritesTest extends PackageTestCase
         $mutated = $this->postJson('/written-documents/mutate', ['mutate' => [['operation' => 'create', 'attributes' => ['title' => 'Minutes']]], 'response' => ['fields' => ['id', 'title']]]);
 
         $destroyed->assertOk()->assertExactJson(self::DOCUMENTS);
-        $mutated->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => 3]], 'records' => [['id' => 3, 'title' => 'Minutes', 'archived' => false]]]);
-        $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false], [3, 'Minutes', false]], $this->documents());
+        $minutes = $this->minutes();
+        $mutated->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $minutes]], 'records' => [['id' => $minutes, 'title' => 'Minutes', 'archived' => false]]]);
+        $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false], [$minutes, 'Minutes', false]], $this->documents());
     }
 
     /**
      * @param  array<string, class-string>  $extensions
      * @param  array<string, mixed>  $body
-     * @param  array<string, mixed>  $answer
+     * @param  Closure(?int): array<string, mixed>  $answer
      */
-    private function scheduledCallbacks(array $extensions, string $method, string $uri, array $body, array $answer): int
+    private function scheduledCallbacks(array $extensions, string $method, string $uri, array $body, Closure $answer): int
     {
         config(['rest.extensions' => $extensions]);
         DB::beginTransaction();
 
         try {
-            $this->json($method, $uri, $body)->assertOk()->assertExactJson($answer);
+            $this->json($method, $uri, $body)->assertOk()->assertExactJson($answer($this->minutes()));
 
             return count($this->app['db.transactions']->callbackApplicableTransactions()->last()->getCallbacks());
         } finally {
             DB::rollBack();
         }
+    }
+
+    /** @return array{operations: list<array{operation: string, key: int}>} */
+    private static function operations(int $minutes): array
+    {
+        return ['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'create', 'key' => $minutes]]];
+    }
+
+    private function minutes(): ?int
+    {
+        return Document::withTrashed()
+            ->where('title', 'Minutes')
+            ->value('id');
     }
 
     /** @return list<string> */

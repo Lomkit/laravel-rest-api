@@ -19,6 +19,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamReadingObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -33,20 +34,6 @@ final class ObservedReadsTest extends HelpdeskTestCase
         'limit' => 10,
     ]];
 
-    private const array PAGE = [
-        'current_page' => 1,
-        'data' => [
-            ['id' => 1, 'status' => 'open', 'team' => ['id' => 1, 'name' => 'Billing'], 'team_id' => 1, 'title' => 'Printer jam'],
-            ['id' => 3, 'status' => 'open', 'team' => ['id' => 1, 'name' => 'Billing'], 'team_id' => 1, 'title' => 'Printer toner'],
-        ],
-        'from' => 1,
-        'last_page' => 1,
-        'meta' => [],
-        'per_page' => 10,
-        'to' => 2,
-        'total' => 2,
-    ];
-
     private const array DETAILS = ['data' => [
         'fields' => [
             ['name' => 'id', 'label' => null, 'type' => 'id', 'nullable' => false],
@@ -60,6 +47,11 @@ final class ObservedReadsTest extends HelpdeskTestCase
 
     private GenericUser $lead;
 
+    /** @var array<string, int> */
+    private array $ids = [];
+
+    private int $billing;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -69,7 +61,10 @@ final class ObservedReadsTest extends HelpdeskTestCase
         EventLog::reset();
         WriteLog::reset();
         $this->travelTo('2026-11-08 10:00:00');
-        $this->seedTickets();
+        $this->ids = array_map(fn (Ticket $ticket): int => $ticket->getKey(), $this->seedTickets());
+        $this->billing = Team::query()
+            ->where('name', 'Billing')
+            ->value('id');
         Rest::resource('observed-tickets', ObservedTicketController::class)->register();
         $this->lead = new GenericUser(['id' => TicketPolicy::LEAD]);
         $this->actingAs($this->lead);
@@ -89,16 +84,16 @@ final class ObservedReadsTest extends HelpdeskTestCase
     #[Test]
     public function it_notifies_a_search_after_its_page_is_computed(): void
     {
-        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson(self::PAGE);
+        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson($this->page());
 
-        $this->assertSame(['searching', 'searched 1,3 of 2', 'read search 1 Printer jam,3 Printer toner of 2'], EventLog::$lines);
+        $this->assertSame(['searching', "searched {$this->ids['Printer jam']},{$this->ids['Printer toner']} of 2", "read search {$this->ids['Printer jam']} Printer jam,{$this->ids['Printer toner']} Printer toner of 2"], EventLog::$lines);
         $context = WriteLog::$reads[0];
         $this->assertCount(1, WriteLog::$reads);
         $this->assertInstanceOf(ObservedTicketResource::class, $context->resource);
         $this->assertSame(Endpoint::Search, $context->endpoint);
         $this->assertSame($this->lead, $context->user);
         $this->assertSame([2, 1, 10], [$context->total, $context->page, $context->perPage]);
-        $this->assertSame([[1, 'Billing'], [3, 'Billing']], array_map(fn (Model $row): array => [$row->getKey(), $row->getRelation('team')?->getAttribute('name')], $context->rows));
+        $this->assertSame([[$this->ids['Printer jam'], 'Billing'], [$this->ids['Printer toner'], 'Billing']], array_map(fn (Model $row): array => [$row->getKey(), $row->getRelation('team')?->getAttribute('name')], $context->rows));
         $this->assertNull($context->metric);
         $this->assertNull($context->result);
         $this->assertNull($context->details);
@@ -121,7 +116,7 @@ final class ObservedReadsTest extends HelpdeskTestCase
 
         Rest::search(ObservedTicketResource::class)->as($other)->payload(self::SEARCH['search'])->{$method}();
 
-        $this->assertSame(['searching', 'searched 1,3 of 2', 'read search 1 Printer jam,3 Printer toner of 2'], EventLog::$lines);
+        $this->assertSame(['searching', "searched {$this->ids['Printer jam']},{$this->ids['Printer toner']} of 2", "read search {$this->ids['Printer jam']} Printer jam,{$this->ids['Printer toner']} Printer toner of 2"], EventLog::$lines);
         $this->assertSame($other, WriteLog::$reads[0]->user);
     }
 
@@ -130,7 +125,7 @@ final class ObservedReadsTest extends HelpdeskTestCase
     {
         $rows = Rest::search(ObservedTicketResource::class)->as($this->lead)->payload(self::SEARCH['search'])->lazy()->all();
 
-        $this->assertSame([1, 3], array_column($rows, 'id'));
+        $this->assertSame([$this->ids['Printer jam'], $this->ids['Printer toner']], array_column($rows, 'id'));
         $this->assertSame([], WriteLog::$reads);
     }
 
@@ -196,7 +191,7 @@ final class ObservedReadsTest extends HelpdeskTestCase
 
         $page = Rest::search(ObservedTicketResource::class)->as($this->lead)->payload(self::SEARCH['search'])->page();
 
-        $this->assertSame([[1, 'Printer jam', 'Billing'], [3, 'Printer toner', 'Billing']], array_map(
+        $this->assertSame([[$this->ids['Printer jam'], 'Printer jam', 'Billing'], [$this->ids['Printer toner'], 'Printer toner', 'Billing']], array_map(
             fn (Model $row): array => [$row->getKey(), $row->getAttribute('title'), $row->getRelation('team')?->getAttribute('name')],
             $page->items(),
         ));
@@ -232,9 +227,9 @@ final class ObservedReadsTest extends HelpdeskTestCase
     {
         config(['rest.extensions' => $extensions]);
 
-        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson(self::PAGE);
+        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson($this->page());
 
-        $this->assertSame(['read search 1 Printer jam,3 Printer toner of 2'], array_values(array_filter(EventLog::$lines, fn (string $line): bool => str_starts_with($line, 'read'))));
+        $this->assertSame(["read search {$this->ids['Printer jam']} Printer jam,{$this->ids['Printer toner']} Printer toner of 2"], array_values(array_filter(EventLog::$lines, fn (string $line): bool => str_starts_with($line, 'read'))));
         $this->assertSame([['Billing'], ['Billing']], array_map(fn (Model $row): array => [$row->getRelation('team')?->getAttribute('name')], WriteLog::$reads[0]->rows));
     }
 
@@ -264,11 +259,31 @@ final class ObservedReadsTest extends HelpdeskTestCase
     {
         config(['rest.extensions' => ['reads' => TeamReadingObserver::class]]);
 
-        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson(self::PAGE);
+        $this->postJson('/observed-tickets/search', self::SEARCH)->assertOk()->assertExactJson($this->page());
         $narrowed = $this->postJson('/observed-tickets/search', ['search' => ['selects' => [['field' => 'title']], 'sorts' => [['field' => 'id', 'direction' => 'asc']]]]);
 
         $narrowed->assertStatus(500);
         $this->assertInstanceOf(MissingColumnException::class, $narrowed->exception);
-        $this->assertSame(['read team 1', 'read team 1'], array_values(array_filter(EventLog::$lines, fn (string $line): bool => str_starts_with($line, 'read'))));
+        $this->assertSame(["read team {$this->billing}", "read team {$this->billing}"], array_values(array_filter(EventLog::$lines, fn (string $line): bool => str_starts_with($line, 'read'))));
+    }
+
+    /** @return array<string, mixed> */
+    private function page(): array
+    {
+        $team = ['id' => $this->billing, 'name' => 'Billing'];
+
+        return [
+            'current_page' => 1,
+            'data' => [
+                ['id' => $this->ids['Printer jam'], 'status' => 'open', 'team' => $team, 'team_id' => $this->billing, 'title' => 'Printer jam'],
+                ['id' => $this->ids['Printer toner'], 'status' => 'open', 'team' => $team, 'team_id' => $this->billing, 'title' => 'Printer toner'],
+            ],
+            'from' => 1,
+            'last_page' => 1,
+            'meta' => [],
+            'per_page' => 10,
+            'to' => 2,
+            'total' => 2,
+        ];
     }
 }
