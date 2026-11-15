@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Http;
 
 use BackedEnum;
 use Closure;
+use JsonException;
 use JsonSerializable;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Extensions\Extension;
@@ -12,6 +13,8 @@ use stdClass;
 /** @internal */
 final readonly class ExtensionMetaValues
 {
+    public const int DEPTH = 256;
+
     /**
      * @template TExtension of Extension
      *
@@ -30,7 +33,8 @@ final readonly class ExtensionMetaValues
             }
 
             $meta = $values($extension);
-            self::ensureEncodable($meta, $name, fn (string $path, string $type): InvalidMetaExtensionException => InvalidMetaExtensionException::notEncodable($name, $extension::class, $resource::class, $method, $path, $type));
+            self::ensureEncodable($meta, $name, 1, fn (string $path, string $type): InvalidMetaExtensionException => InvalidMetaExtensionException::notEncodable($name, $extension::class, $resource::class, $method, $path, $type));
+            self::ensureJson($meta, fn (string $reason): InvalidMetaExtensionException => InvalidMetaExtensionException::notJson($name, $extension::class, $resource::class, $method, $reason));
             $added[$name] = (object) $meta;
         }
 
@@ -38,7 +42,7 @@ final readonly class ExtensionMetaValues
     }
 
     /** @param Closure(string, string): InvalidMetaExtensionException $refuse */
-    private static function ensureEncodable(mixed $value, string $path, Closure $refuse): void
+    private static function ensureEncodable(mixed $value, string $path, int $depth, Closure $refuse): void
     {
         if ($value === null || is_bool($value) || is_int($value) || is_string($value) || $value instanceof JsonSerializable || $value instanceof BackedEnum) {
             return;
@@ -54,8 +58,25 @@ final readonly class ExtensionMetaValues
             throw $refuse($path, get_debug_type($value));
         }
 
+        if ($depth > self::DEPTH) {
+            return;
+        }
+
         foreach ($children as $key => $child) {
-            self::ensureEncodable($child, "{$path}.{$key}", $refuse);
+            self::ensureEncodable($child, "{$path}.{$key}", $depth + 1, $refuse);
+        }
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $meta
+     * @param  Closure(string): InvalidMetaExtensionException  $refuse
+     */
+    private static function ensureJson(array $meta, Closure $refuse): void
+    {
+        try {
+            json_encode($meta, JSON_THROW_ON_ERROR, self::DEPTH);
+        } catch (JsonException $exception) {
+            throw $refuse($exception->getMessage());
         }
     }
 }

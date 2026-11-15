@@ -18,6 +18,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaDetailsMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionDetailsMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnencodableMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueDetailsMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
@@ -138,6 +139,38 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', 'value.value.list.0', 'ArrayObject'));
 
         $this->getJson('/meta-tickets');
+    }
+
+    /** @return array<string, array{mixed, string}> */
+    public static function notJson(): array
+    {
+        return UnencodableMeta::cases();
+    }
+
+    #[Test]
+    #[DataProvider('notJson')]
+    public function it_refuses_a_details_value_that_json_refuses_naming_the_extension(mixed $value, string $reason): void
+    {
+        MetaLog::$value = $value;
+        config(['rest.extensions' => ['value' => ValueDetailsMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', $reason));
+
+        $this->getJson('/meta-tickets');
+    }
+
+    #[Test]
+    #[DataProvider('notJson')]
+    public function it_refuses_a_value_that_json_refuses_in_the_json_of_a_resource(mixed $value, string $reason): void
+    {
+        MetaLog::$value = $value;
+        config(['rest.extensions' => ['value' => ValueDetailsMeta::class]]);
+        $context = new RestContext(RestRequest::create('/meta-tickets', 'GET'), $this->app, ActingUser::of('web', null));
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', $reason));
+
+        json_encode($context->resource(MetaTicketResource::class));
     }
 
     #[Test]

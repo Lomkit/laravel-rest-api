@@ -21,6 +21,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamSearchMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnencodableMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueSearchMeta;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -218,6 +219,25 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $path, $type));
+
+        $this->postJson('/meta-tickets/search', self::SEARCH);
+    }
+
+    /** @return array<string, array{mixed, string}> */
+    public static function notJson(): array
+    {
+        return UnencodableMeta::cases();
+    }
+
+    #[Test]
+    #[DataProvider('notJson')]
+    public function it_refuses_a_value_that_json_refuses_naming_the_extension(mixed $value, string $reason): void
+    {
+        MetaLog::$value = $value;
+        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $reason));
 
         $this->postJson('/meta-tickets/search', self::SEARCH);
     }

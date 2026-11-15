@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Exceptions;
 
+use Lomkit\Rest\Http\ExtensionMetaValues;
+
 final class InvalidMetaExtensionException extends InvalidExtensionException
 {
     public static function gatesKeyName(string $name, string $class, string $resource): self
@@ -22,5 +24,10 @@ final class InvalidMetaExtensionException extends InvalidExtensionException
     public static function notEncodable(string $name, string $class, string $resource, string $method, string $path, string $type): self
     {
         return self::about($name, "The [{$name}] extension {$class} returns {$type} at [{$path}] from {$method}() for {$resource}, which the response cannot encode as JSON. Return null, booleans, integers, finite floats, strings, arrays, stdClass, backed enums or JsonSerializable objects.");
+    }
+
+    public static function notJson(string $name, string $class, string $resource, string $method, string $reason): self
+    {
+        return self::about($name, "The [{$name}] extension {$class} returns meta from {$method}() for {$resource} that JSON cannot encode: {$reason}. Return valid UTF-8 strings, finite numbers and values nested at most ".ExtensionMetaValues::DEPTH.' levels deep, also from jsonSerialize().');
     }
 }
