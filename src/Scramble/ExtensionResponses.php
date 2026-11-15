@@ -46,6 +46,7 @@ final class ExtensionResponses
         }
 
         $responses->sort();
+        $context->components->ensureResponsesUnchanged();
     }
 
     public function add(string $extension, string $class, int $status, string $name, string $description, Type $body): void

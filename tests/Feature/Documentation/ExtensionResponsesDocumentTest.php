@@ -17,6 +17,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MovingResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RivalQuotaResponses;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharedBodyResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ShiftingResponses;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Festival\ArchiveShows;
@@ -40,6 +41,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     protected function tearDown(): void
     {
         MetaLog::reset();
+        SharedBodyResponses::reset(registersAgain: true);
         Applicability::flush();
 
         parent::tearDown();
@@ -149,6 +151,28 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
         config(['rest.extensions' => ['shifting' => ShiftingResponses::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationException::componentTaken('response', 'shifting.Exceeded', ShiftingResponses::class, ShiftingResponses::class));
+
+        $this->document();
+    }
+
+    #[Test]
+    public function it_refuses_a_registered_body_changed_then_registered_again(): void
+    {
+        SharedBodyResponses::reset(registersAgain: true);
+        config(['rest.extensions' => ['shared' => SharedBodyResponses::class], 'app.debug' => false]);
+
+        $this->expectExceptionObject(InvalidDocumentationException::componentTaken('response', 'shared.Refused', SharedBodyResponses::class, SharedBodyResponses::class));
+
+        $this->document();
+    }
+
+    #[Test]
+    public function it_refuses_a_registered_body_changed_by_a_later_operation(): void
+    {
+        SharedBodyResponses::reset(registersAgain: false);
+        config(['rest.extensions' => ['shared' => SharedBodyResponses::class], 'app.debug' => false]);
+
+        $this->expectExceptionObject(InvalidDocumentationException::componentChanged('response', 'shared.Refused', SharedBodyResponses::class));
 
         $this->document();
     }

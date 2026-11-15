@@ -17,6 +17,8 @@ final readonly class ComponentRegistry
 {
     public const string OWNER = 'lomkit.owner';
 
+    private const string CONTENT = 'lomkit.content';
+
     public function __construct(
         private Components $components,
     ) {}
@@ -27,6 +29,7 @@ final readonly class ComponentRegistry
 
         if ($existing === null) {
             $response->setAttribute(self::OWNER, $owner);
+            $response->setAttribute(self::CONTENT, self::content($response));
 
             return $this->components->add(new Reference('responses', $name, $this->components), $response);
         }
@@ -40,13 +43,33 @@ final readonly class ComponentRegistry
         return new Reference('responses', $name, $this->components);
     }
 
+    public function ensureResponsesUnchanged(): void
+    {
+        foreach ($this->components->responses as $name => $response) {
+            $registered = $response instanceof Response ? $response->getAttribute(self::CONTENT) : null;
+
+            if (is_string($registered) && $registered !== self::content($response)) {
+                $owner = $response->getAttribute(self::OWNER, 'the application');
+
+                throw InvalidDocumentationException::componentChanged('response', $name, is_string($owner) ? $owner : 'the application');
+            }
+        }
+    }
+
     private static function same(Response|Reference $existing, Response $response): bool
     {
         if ($existing instanceof Response && $existing->code !== $response->code) {
             return false;
         }
 
-        return json_encode($existing->serializeAs31()) === json_encode($response->serializeAs31());
+        $registered = $existing instanceof Response ? $existing->getAttribute(self::CONTENT) : null;
+
+        return (is_string($registered) ? $registered : self::content($existing)) === self::content($response);
+    }
+
+    private static function content(Response|Reference $response): string
+    {
+        return (string) json_encode($response->serializeAs31());
     }
 
     /** @param Closure(): Type $build */
