@@ -69,7 +69,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     #[Test]
     public function it_reports_a_restriction_that_an_engine_search_cannot_apply(): void
     {
-        $this->useForeignEngine(['red' => RedRowsExtension::class]);
+        $this->useForeignEngine([RedRowsExtension::class]);
         $problem = InvalidTextSearchException::unrestrictedEngine(CheckedVoucherResource::class, 'red', RedRowsExtension::class, ForeignEngine::class)->getMessage();
 
         [$exitCode, $rows] = $this->rows();
@@ -84,7 +84,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     public function it_reports_a_restriction_on_a_custom_engine_text_search(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('plain-engine-vouchers', PlainEngineVoucherController::class)->middleware('auth:sanctum')->register());
-        config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        config(['rest.extensions' => [HiddenRowsExtension::class]]);
         $problem = InvalidTextSearchException::unrestrictedEngine(PlainEngineVoucherResource::class, 'hidden', HiddenRowsExtension::class, PlainProfile::NAME)->getMessage();
 
         $exitCode = Artisan::call('rest:check', ['controllers' => [PlainEngineVoucherController::class], '--json' => true], $output = new BufferedOutput);
@@ -95,7 +95,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     #[Test]
     public function it_reports_nothing_on_the_database_engine(): void
     {
-        config(['scout.driver' => 'database', 'rest.extensions' => ['red' => RedRowsExtension::class]]);
+        config(['scout.driver' => 'database', 'rest.extensions' => [RedRowsExtension::class]]);
 
         $this->assertSame([0, ['perimeter' => [CheckedVoucherResource::class], 'without_perimeter' => [], 'problems' => []]], $this->rows());
     }
@@ -103,7 +103,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     #[Test]
     public function it_reports_nothing_for_a_restriction_that_also_restricts_the_engine(): void
     {
-        $this->useForeignEngine(['red' => RedEverywhereExtension::class]);
+        $this->useForeignEngine([RedEverywhereExtension::class]);
 
         $this->assertSame([0, ['perimeter' => [CheckedVoucherResource::class], 'without_perimeter' => [], 'problems' => []]], $this->rows());
     }
@@ -111,7 +111,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     #[Test]
     public function it_reports_the_restriction_when_the_engine_cannot_be_resolved(): void
     {
-        config(['scout.driver' => 'missing', 'rest.extensions' => ['red' => RedRowsExtension::class]]);
+        config(['scout.driver' => 'missing', 'rest.extensions' => [RedRowsExtension::class]]);
 
         [$exitCode, $rows] = $this->rows();
 
@@ -122,7 +122,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     #[Test]
     public function it_leaves_a_broken_extension_list_to_the_extensions_section(): void
     {
-        $this->useForeignEngine(['red' => RedRowsExtension::class, 'broken' => 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension']);
+        $this->useForeignEngine([RedRowsExtension::class, 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension']);
 
         $exitCode = Artisan::call('rest:check', ['controllers' => [CheckedVoucherController::class], '--json' => true], $output = new BufferedOutput);
         $report = json_decode($output->fetch(), true);
@@ -147,7 +147,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     public function it_reports_a_text_search_that_throws_in_the_console(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('route-bound-vouchers', RouteBoundVoucherController::class)->middleware('auth:sanctum')->register());
-        config(['scout.driver' => 'collection', 'rest.extensions' => ['red' => RedRowsExtension::class]]);
+        config(['scout.driver' => 'collection', 'rest.extensions' => [RedRowsExtension::class]]);
 
         $exitCode = Artisan::call('rest:check', ['controllers' => [RouteBoundVoucherController::class], '--json' => true], $output = new BufferedOutput);
 
@@ -158,11 +158,11 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
         );
     }
 
-    /** @param array<string, string> $extensions */
+    /** @param list<string> $extensions */
     private function useForeignEngine(array $extensions): void
     {
         $this->app->make(EngineManager::class)->extend('foreign', fn (): ForeignEngine => new ForeignEngine);
-        config(['scout.driver' => 'foreign', 'rest.extensions' => ['foreign' => ForeignEngineProfiles::class, ...$extensions]]);
+        config(['scout.driver' => 'foreign', 'rest.extensions' => [ForeignEngineProfiles::class, ...$extensions]]);
     }
 
     /** @return array{int, mixed} */

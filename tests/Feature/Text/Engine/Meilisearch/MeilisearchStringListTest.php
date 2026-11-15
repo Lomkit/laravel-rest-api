@@ -28,7 +28,7 @@ class MeilisearchStringListTest extends MeilisearchTestCase
         $this->indexes->configure($this->index, ['filterableAttributes' => ['number', 'price', 'active', 'code', 'team', 'title', '__soft_deleted', 'readers']]);
         ReaderVoucher::withTrashed()->get()->searchable();
         $this->settle();
-        config(['rest.extensions' => ['readers' => ReadersExtension::class]]);
+        config(['rest.extensions' => [ReadersExtension::class]]);
     }
 
     #[\Override]

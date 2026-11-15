@@ -12,6 +12,12 @@ use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 final class NoSqlDatabaseProfiles extends Extension implements ProvidesEngineProfiles
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'nosql';
+    }
+
+    #[\Override]
     public function engineProfile(EngineProfileContext $context): ?EngineProfile
     {
         return $context->engine instanceof DatabaseEngine ? new NoSqlDatabaseProfile(new DatabaseProfile($context->engine)) : null;

@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 final class TitledRowsExtension extends Extension implements RestrictsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'titled';
+    }
+
+    #[\Override]
     public function restrict(RestrictionContext $context): void
     {
         $context->query

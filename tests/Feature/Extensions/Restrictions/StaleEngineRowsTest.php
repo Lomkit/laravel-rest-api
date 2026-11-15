@@ -32,7 +32,7 @@ class StaleEngineRowsTest extends EngineSearchTestCase
 
         $this->received = $this->app->instance(ReceivedFields::class, new ReceivedFields);
         $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => ['foreign' => ForeignEngineProfiles::class, 'red' => RedEverywhereExtension::class]]);
+        config(['rest.extensions' => [ForeignEngineProfiles::class, RedEverywhereExtension::class]]);
     }
 
     #[Test]

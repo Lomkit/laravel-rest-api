@@ -52,7 +52,7 @@ class EngineCapabilitiesTest extends EngineSearchTestCase
     #[Test]
     public function it_refuses_a_restriction_on_a_profile_without_row_restrictions(): void
     {
-        config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        config(['rest.extensions' => [HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(PlainEngineVoucherResource::class, 'hidden', HiddenRowsExtension::class, PlainProfile::NAME));

@@ -6,6 +6,7 @@ use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Extensions\Contexts\EngineProfileContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CollectionEngineProfiles;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EarlyForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RivalEngineProfiles;
@@ -57,7 +58,7 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
     public function it_searches_an_engine_with_the_profile_an_extension_provides(): void
     {
         $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => ['foreign' => ForeignEngineProfiles::class]]);
+        config(['rest.extensions' => [ForeignEngineProfiles::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'limit' => 10]);
 
@@ -68,7 +69,7 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
     #[Test]
     public function it_lets_an_extension_replace_the_profile_of_a_scout_engine(): void
     {
-        config(['rest.extensions' => ['collection' => CollectionEngineProfiles::class]]);
+        config(['rest.extensions' => [CollectionEngineProfiles::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
@@ -76,7 +77,7 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
         $this->assertSame([[50, 1, null]], ForeignProfile::$pages);
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('rivals')]
     public function it_refuses_two_extensions_that_claim_one_engine_in_any_order(array $extensions): void
@@ -85,17 +86,17 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
         config(['rest.extensions' => $extensions]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidEngineExtensionException::conflictingProfiles(ForeignEngine::class, VoucherResource::class, 'a', ForeignEngineProfiles::class, 'b', RivalEngineProfiles::class));
+        $this->expectExceptionObject(InvalidEngineExtensionException::conflictingProfiles(ForeignEngine::class, VoucherResource::class, 'a', EarlyForeignEngineProfiles::class, 'b', RivalEngineProfiles::class));
 
         $this->search('vouchers', ['text' => ['value' => 'report']]);
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>}> */
     public static function rivals(): array
     {
         return [
-            'in name order' => [['a' => ForeignEngineProfiles::class, 'b' => RivalEngineProfiles::class]],
-            'in reverse order' => [['b' => RivalEngineProfiles::class, 'a' => ForeignEngineProfiles::class]],
+            'in name order' => [[EarlyForeignEngineProfiles::class, RivalEngineProfiles::class]],
+            'in reverse order' => [[RivalEngineProfiles::class, EarlyForeignEngineProfiles::class]],
         ];
     }
 
@@ -112,7 +113,7 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
     public function it_checks_a_provided_profile_like_a_built_in_one(): void
     {
         $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => ['unsorted' => UnsortedForeignEngineProfiles::class]]);
+        config(['rest.extensions' => [UnsortedForeignEngineProfiles::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidTextSearchException::unsortableEngine(VoucherResource::class, ForeignEngine::class));
@@ -123,7 +124,7 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
     #[Test]
     public function it_keeps_the_built_in_profile_when_no_extension_claims_the_engine(): void
     {
-        config(['rest.extensions' => ['foreign' => ForeignEngineProfiles::class]]);
+        config(['rest.extensions' => [ForeignEngineProfiles::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
@@ -137,7 +138,7 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
     {
         $engine = new ForeignEngine;
         $this->useEngine($engine);
-        config(['rest.extensions' => ['foreign' => ForeignEngineProfiles::class]]);
+        config(['rest.extensions' => [ForeignEngineProfiles::class]]);
 
         $this->search('vouchers', ['text' => ['value' => 'report']])->assertOk();
 
@@ -153,7 +154,7 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
     #[Test]
     public function it_skips_a_provider_that_does_not_apply(): void
     {
-        config(['rest.extensions' => ['unapplied' => UnappliedEngineProfiles::class]]);
+        config(['rest.extensions' => [UnappliedEngineProfiles::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 

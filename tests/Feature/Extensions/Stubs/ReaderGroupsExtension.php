@@ -10,6 +10,12 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherResource;
 final class ReaderGroupsExtension extends Extension implements RestrictsEngineQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'groups';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === ReaderVoucherResource::class;

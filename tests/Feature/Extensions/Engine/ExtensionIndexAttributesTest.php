@@ -21,7 +21,7 @@ class ExtensionIndexAttributesTest extends EngineSearchTestCase
         parent::setUp();
 
         EngineLog::reset();
-        config(['rest.extensions' => ['idx' => RedTeamIndexExtension::class]]);
+        config(['rest.extensions' => [RedTeamIndexExtension::class]]);
     }
 
     #[\Override]

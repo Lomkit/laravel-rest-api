@@ -7,8 +7,14 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 
-final class RedRowsExtension extends Extension implements RestrictsQueries
+class RedRowsExtension extends Extension implements RestrictsQueries
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'red';
+    }
+
     #[\Override]
     public function appliesTo(string $resource): bool
     {

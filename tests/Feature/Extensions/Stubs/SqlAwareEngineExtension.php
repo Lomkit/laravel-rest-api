@@ -11,6 +11,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 final class SqlAwareEngineExtension extends Extension implements RestrictsEngineQueries, RestrictsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'aware';
+    }
+
+    #[\Override]
     public function restrict(RestrictionContext $context): void
     {
         $context->query->where($context->query->qualifyColumn('team'), 'red');

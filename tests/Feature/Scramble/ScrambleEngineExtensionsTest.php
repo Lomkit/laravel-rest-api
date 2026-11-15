@@ -51,7 +51,7 @@ class ScrambleEngineExtensionsTest extends ScrambleTestCase
     public function it_keeps_extension_attributes_out_of_the_openapi_document(): void
     {
         $without = json_encode(app(Generator::class)(), JSON_THROW_ON_ERROR);
-        config(['rest.extensions' => ['first' => FirstIndexExtension::class]]);
+        config(['rest.extensions' => [FirstIndexExtension::class]]);
 
         $with = json_encode(app(Generator::class)(), JSON_THROW_ON_ERROR);
 

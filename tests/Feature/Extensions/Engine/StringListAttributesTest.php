@@ -50,7 +50,7 @@ class StringListAttributesTest extends EngineSearchTestCase
         ReadersExtension::$groups = null;
         Route::prefix('api')->group(fn () => Rest::resource('reader-vouchers', ReaderVoucherController::class)->register());
         config([
-            'rest.extensions' => ['readers' => ReadersExtension::class],
+            'rest.extensions' => [ReadersExtension::class],
             'scout.typesense.model-settings.'.ReaderVoucher::class.'.search-parameters.query_by' => 'title',
         ]);
     }
@@ -186,7 +186,7 @@ class StringListAttributesTest extends EngineSearchTestCase
     public function it_names_the_two_extensions_whose_lists_neither_holds(): void
     {
         $this->useEngine(new FakeTypesenseEngine);
-        config(['rest.extensions' => ['readers' => ReadersExtension::class, 'groups' => ReaderGroupsExtension::class]]);
+        config(['rest.extensions' => [ReadersExtension::class, ReaderGroupsExtension::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
         $this->withoutExceptionHandling();
         $exception = ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('groups', ReaderGroupsExtension::class), new RestrictingExtension('readers', ReadersExtension::class));
@@ -201,7 +201,7 @@ class StringListAttributesTest extends EngineSearchTestCase
     public function it_answers_422_to_an_instruction_list_that_conflicts_with_an_extension(): void
     {
         $this->useEngine(new FakeTypesenseEngine);
-        config(['rest.extensions' => ['readers' => ReadersExtension::class, 'ri' => ReaderInstructionsExtension::class]]);
+        config(['rest.extensions' => [ReadersExtension::class, ReaderInstructionsExtension::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
 
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'ri.bob']]]);
@@ -280,7 +280,7 @@ class StringListAttributesTest extends EngineSearchTestCase
     #[Test]
     public function it_serves_every_engine_with_one_extension(): void
     {
-        config(['rest.extensions' => ['readers' => AdaptiveReadersExtension::class]]);
+        config(['rest.extensions' => [AdaptiveReadersExtension::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
         $typesense = new FilterCapturingTypesenseEngine;
 

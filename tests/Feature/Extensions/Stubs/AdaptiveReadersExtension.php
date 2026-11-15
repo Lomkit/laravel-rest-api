@@ -15,6 +15,12 @@ use Lomkit\Rest\Text\Engine\StringListAttribute;
 final class AdaptiveReadersExtension extends Extension implements DeclaresIndexAttributes, RestrictsEngineQueries, RestrictsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'readers';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === ReaderVoucherResource::class;

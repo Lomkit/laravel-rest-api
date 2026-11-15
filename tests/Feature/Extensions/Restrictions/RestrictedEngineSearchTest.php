@@ -7,12 +7,13 @@ use Laravel\Scout\Engines\DatabaseEngine;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EarlyRedRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GuestlessExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LateRedEverywhereExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\NoSqlDatabaseProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedEverywhereExtension;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RestrictionLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SkippingForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SqlForeignEngineProfiles;
@@ -52,7 +53,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_refuses_a_text_search_through_an_engine_that_applies_no_sql_restriction(): void
     {
         $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => ['foreign' => ForeignEngineProfiles::class, 'hidden' => HiddenRowsExtension::class]]);
+        config(['rest.extensions' => [ForeignEngineProfiles::class, HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, ForeignEngine::class));
@@ -64,7 +65,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_refuses_an_action_on_the_results_of_such_a_search(): void
     {
         $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => ['foreign' => ForeignEngineProfiles::class, 'hidden' => HiddenRowsExtension::class]]);
+        config(['rest.extensions' => [ForeignEngineProfiles::class, HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, ForeignEngine::class));
@@ -84,7 +85,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     #[Test]
     public function it_restricts_a_text_search_on_the_database_engine(): void
     {
-        config(['scout.driver' => 'database', 'rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        config(['scout.driver' => 'database', 'rest.extensions' => [HiddenRowsExtension::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
@@ -116,40 +117,40 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     #[Test]
     public function it_accepts_a_restriction_that_also_restricts_the_engine(): void
     {
-        config(['rest.extensions' => ['red' => RedEverywhereExtension::class]]);
+        config(['rest.extensions' => [RedEverywhereExtension::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([5, 1, 3], 3));
     }
 
-    /** @param array<string, class-string<Extension>> $extensions */
+    /** @param list<class-string<Extension>> $extensions */
     #[Test]
     #[DataProvider('orders')]
     public function it_names_the_first_unreached_extension_by_name_in_any_order(array $extensions): void
     {
         $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => [...$extensions, 'foreign' => ForeignEngineProfiles::class]]);
+        config(['rest.extensions' => [...$extensions, ForeignEngineProfiles::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'a', RedRowsExtension::class, ForeignEngine::class));
+        $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'a', EarlyRedRowsExtension::class, ForeignEngine::class));
 
         $this->search('vouchers', ['text' => ['value' => 'report']]);
     }
 
-    /** @return array<string, array{array<string, class-string<Extension>>}> */
+    /** @return array<string, array{list<class-string<Extension>>}> */
     public static function orders(): array
     {
         return [
-            'in name order' => [['a' => RedRowsExtension::class, 'b' => HiddenRowsExtension::class, 'c' => RedEverywhereExtension::class]],
-            'in reverse order' => [['c' => RedEverywhereExtension::class, 'b' => HiddenRowsExtension::class, 'a' => RedRowsExtension::class]],
+            'in name order' => [[EarlyRedRowsExtension::class, LateRedEverywhereExtension::class, HiddenRowsExtension::class]],
+            'in reverse order' => [[HiddenRowsExtension::class, LateRedEverywhereExtension::class, EarlyRedRowsExtension::class]],
         ];
     }
 
     #[Test]
     public function it_refuses_the_database_engine_when_its_profile_applies_no_sql_restriction(): void
     {
-        config(['scout.driver' => 'database', 'rest.extensions' => ['hidden' => HiddenRowsExtension::class, 'nosql' => NoSqlDatabaseProfiles::class]]);
+        config(['scout.driver' => 'database', 'rest.extensions' => [HiddenRowsExtension::class, NoSqlDatabaseProfiles::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, DatabaseEngine::class));
@@ -161,7 +162,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_hands_the_restrictions_to_a_profile_that_applies_them_on_another_engine(): void
     {
         $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => ['guestless' => GuestlessExtension::class, 'sql' => SqlForeignEngineProfiles::class]]);
+        config(['rest.extensions' => [GuestlessExtension::class, SqlForeignEngineProfiles::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
@@ -174,7 +175,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_restricts_the_engine_on_an_attribute_that_the_perimeter_declares_the_same_way(): void
     {
         $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => ['foreign' => ForeignEngineProfiles::class, 'red' => RedEverywhereExtension::class]]);
+        config(['rest.extensions' => [ForeignEngineProfiles::class, RedEverywhereExtension::class]]);
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red', 'blue']]));
 
         $response = $this->search('team-vouchers', ['text' => ['value' => 'report']]);
@@ -187,7 +188,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_refuses_a_profile_that_claims_sql_restrictions_without_applying_them(): void
     {
         $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => ['guestless' => GuestlessExtension::class, 'skipping' => SkippingForeignEngineProfiles::class]]);
+        config(['rest.extensions' => [GuestlessExtension::class, SkippingForeignEngineProfiles::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidEngineQueryException::unappliedRowRestriction(VoucherResource::class, RestrictingForeignProfile::class, ForeignEngine::class));

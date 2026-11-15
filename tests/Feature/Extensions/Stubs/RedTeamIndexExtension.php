@@ -13,6 +13,12 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 final class RedTeamIndexExtension extends Extension implements DeclaresIndexAttributes, DeclaresInstructions
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'idx';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === VoucherResource::class;

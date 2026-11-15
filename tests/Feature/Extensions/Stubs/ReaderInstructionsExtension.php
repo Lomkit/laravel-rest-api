@@ -10,6 +10,12 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherResource;
 final class ReaderInstructionsExtension extends Extension implements DeclaresInstructions
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'ri';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === ReaderVoucherResource::class;

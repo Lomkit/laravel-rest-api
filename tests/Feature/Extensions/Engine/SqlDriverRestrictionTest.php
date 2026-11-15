@@ -18,7 +18,7 @@ class SqlDriverRestrictionTest extends EngineSearchTestCase
         parent::setUp();
 
         RestrictionLog::reset();
-        config(['scout.driver' => 'collection', 'rest.extensions' => ['red' => RedRowsExtension::class]]);
+        config(['scout.driver' => 'collection', 'rest.extensions' => [RedRowsExtension::class]]);
     }
 
     #[\Override]

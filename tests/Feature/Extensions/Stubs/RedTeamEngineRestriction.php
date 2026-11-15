@@ -10,6 +10,12 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\TeamVoucherResource;
 final class RedTeamEngineRestriction extends Extension implements RestrictsEngineQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'red';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === TeamVoucherResource::class;

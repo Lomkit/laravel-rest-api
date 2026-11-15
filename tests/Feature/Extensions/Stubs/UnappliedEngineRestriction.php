@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
 final class UnappliedEngineRestriction extends Extension implements RestrictsEngineQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'unapplied';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return false;

@@ -13,6 +13,12 @@ use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 final class SkippingForeignEngineProfiles extends Extension implements ProvidesEngineProfiles
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'skipping';
+    }
+
+    #[\Override]
     public function engineProfile(EngineProfileContext $context): ?EngineProfile
     {
         return $context->engine instanceof ForeignEngine ? new RestrictingForeignProfile(new ForeignProfile($context->engine), skipsRows: true) : null;

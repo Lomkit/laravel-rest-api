@@ -39,7 +39,7 @@ final class CheckUnsearchableEngineTest extends ScaffoldingTestCase
     public function it_reports_a_restriction_on_an_engine_search_that_cannot_resolve_its_engine(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('indexed-books', IndexedBookController::class)->middleware('auth:sanctum')->register());
-        config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        config(['rest.extensions' => [HiddenRowsExtension::class]]);
         $reason = InvalidTextSearchException::unsearchableModel(IndexedBookResource::class, Book::class);
 
         $exitCode = Artisan::call('rest:check', ['controllers' => [IndexedBookController::class], '--json' => true], $output = new BufferedOutput);

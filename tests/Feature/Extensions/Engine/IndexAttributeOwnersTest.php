@@ -66,28 +66,26 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
         $text->capabilities($this->target(TeamVoucherResource::class));
     }
 
-    /** @param list<string> $order */
+    /** @param list<class-string> $order */
     #[Test]
     #[DataProvider('orders')]
     public function it_refuses_an_attribute_that_another_extension_declares_with_another_type_in_any_order(array $order): void
     {
-        $extensions = ['first' => FirstIndexExtension::class, 'second' => SecondIndexExtension::class];
         DeclaredIndexExtension::$declared = [FirstIndexExtension::class => [Integer::make('owner_id')], SecondIndexExtension::class => [Text::make('owner_id')]];
-        config(['rest.extensions' => array_combine($order, array_map(fn (string $name): string => $extensions[$name], $order))]);
+        config(['rest.extensions' => $order]);
 
         $this->expectExceptionObject(InvalidEngineExtensionException::indexAttributeTakenByExtension('second', SecondIndexExtension::class, VoucherResource::class, 'owner_id', 'first', FirstIndexExtension::class));
 
         $this->capabilities($this->open());
     }
 
-    /** @param list<string> $order */
+    /** @param list<class-string> $order */
     #[Test]
     #[DataProvider('orders')]
     public function it_accepts_one_attribute_declared_alike_by_two_extensions_in_any_order(array $order): void
     {
-        $extensions = ['first' => FirstIndexExtension::class, 'second' => SecondIndexExtension::class];
         DeclaredIndexExtension::$declared = [FirstIndexExtension::class => [Integer::make('owner_id')], SecondIndexExtension::class => [Integer::make('owner_id')]];
-        config(['rest.extensions' => array_combine($order, array_map(fn (string $name): string => $extensions[$name], $order))]);
+        config(['rest.extensions' => $order]);
 
         $grammar = $this->capabilities($this->open(['number']))->engine;
 
@@ -120,12 +118,12 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
         $this->capabilities($this->open());
     }
 
-    /** @return array<string, array{list<string>}> */
+    /** @return array<string, array{list<class-string>}> */
     public static function orders(): array
     {
         return [
-            'in name order' => [['first', 'second']],
-            'in reverse order' => [['second', 'first']],
+            'in name order' => [[FirstIndexExtension::class, SecondIndexExtension::class]],
+            'in reverse order' => [[SecondIndexExtension::class, FirstIndexExtension::class]],
         ];
     }
 
@@ -201,6 +199,6 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
             DeclaredIndexExtension::$declared[$classes[$name]] = $attributes;
         }
 
-        config(['rest.extensions' => array_intersect_key($classes, $declared)]);
+        config(['rest.extensions' => array_values(array_intersect_key($classes, $declared))]);
     }
 }

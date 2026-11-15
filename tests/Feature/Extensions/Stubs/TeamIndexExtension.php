@@ -13,6 +13,12 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 final class TeamIndexExtension extends Extension implements DeclaresIndexAttributes, RestrictsEngineQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'team';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === VoucherResource::class;

@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
 final class CheapEngineRestriction extends Extension implements RestrictsEngineQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'cheap';
+    }
+
+    #[\Override]
     public function restrictEngine(EngineRestrictionContext $context): void
     {
         $context->query->where('price', '<', 35);

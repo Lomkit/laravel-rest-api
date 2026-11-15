@@ -12,6 +12,12 @@ use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 final class CollectionEngineProfiles extends Extension implements ProvidesEngineProfiles
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'collection';
+    }
+
+    #[\Override]
     public function engineProfile(EngineProfileContext $context): ?EngineProfile
     {
         return $context->engine instanceof CollectionEngine ? new ForeignProfile($context->engine) : null;

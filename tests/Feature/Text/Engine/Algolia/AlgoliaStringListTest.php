@@ -24,7 +24,7 @@ class AlgoliaStringListTest extends AlgoliaTestCase
         EngineLog::reset();
         ReadersExtension::$excludes = false;
         ReadersExtension::$groups = null;
-        config(['rest.extensions' => ['readers' => ReadersExtension::class]]);
+        config(['rest.extensions' => [ReadersExtension::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
     }
 

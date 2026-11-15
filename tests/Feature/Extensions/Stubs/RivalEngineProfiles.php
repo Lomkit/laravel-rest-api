@@ -12,6 +12,12 @@ use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 final class RivalEngineProfiles extends Extension implements ProvidesEngineProfiles
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'b';
+    }
+
+    #[\Override]
     public function engineProfile(EngineProfileContext $context): ?EngineProfile
     {
         EngineLog::$calls[] = 'RivalEngineProfiles';

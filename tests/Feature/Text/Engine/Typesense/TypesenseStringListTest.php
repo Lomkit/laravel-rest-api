@@ -38,7 +38,7 @@ class TypesenseStringListTest extends TypesenseTestCase
         ReadersExtension::$groups = null;
         $this->collections->drop($this->collection);
         ReaderVoucher::withTrashed()->get()->searchable();
-        config(['rest.extensions' => ['readers' => ReadersExtension::class]]);
+        config(['rest.extensions' => [ReadersExtension::class]]);
     }
 
     #[\Override]

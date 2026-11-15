@@ -12,6 +12,12 @@ use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 final class UnsortedForeignEngineProfiles extends Extension implements ProvidesEngineProfiles
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'unsorted';
+    }
+
+    #[\Override]
     public function engineProfile(EngineProfileContext $context): ?EngineProfile
     {
         return $context->engine instanceof ForeignEngine ? new ForeignProfile($context->engine, sortKeys: 0) : null;

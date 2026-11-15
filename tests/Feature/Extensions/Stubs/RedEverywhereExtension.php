@@ -12,8 +12,14 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 
-final class RedEverywhereExtension extends Extension implements DeclaresIndexAttributes, RestrictsEngineQueries, RestrictsQueries
+class RedEverywhereExtension extends Extension implements DeclaresIndexAttributes, RestrictsEngineQueries, RestrictsQueries
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'red';
+    }
+
     #[\Override]
     public function appliesTo(string $resource): bool
     {

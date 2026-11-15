@@ -74,7 +74,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_restricts_an_engine_search_of_a_resource_without_perimeter(): void
     {
-        config(['rest.extensions' => ['team' => TeamIndexExtension::class]]);
+        config(['rest.extensions' => [TeamIndexExtension::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
@@ -85,7 +85,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_restricts_after_the_perimeter_and_before_the_client_filters(): void
     {
-        config(['rest.extensions' => ['red' => RedTeamEngineRestriction::class]]);
+        config(['rest.extensions' => [RedTeamEngineRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['blue', 'red']]));
 
         $response = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'filters' => [['field' => 'number', 'operator' => 'in', 'value' => [1, 4]]]]);
@@ -98,7 +98,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     public function it_applies_the_extension_between_the_perimeter_and_the_client(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('compared-price-vouchers', ComparedPriceVoucherController::class)->register());
-        config(['rest.extensions' => ['cheap' => CheapEngineRestriction::class]]);
+        config(['rest.extensions' => [CheapEngineRestriction::class]]);
 
         $response = $this->search('compared-price-vouchers', [
             'text' => ['value' => 'report'],
@@ -111,7 +111,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $this->assertSame([['>', 0], ['<', 35], ['>=', 1], ['<', 30]], array_map(fn (array $where): array => [$where['operator'], $where['value']], $wheres));
     }
 
-    /** @param array<string, class-string<Extension>> $extensions */
+    /** @param list<class-string<Extension>> $extensions */
     #[Test]
     #[DataProvider('orders')]
     public function it_gives_the_same_conditions_and_rows_in_any_extension_order(array $extensions): void
@@ -132,19 +132,19 @@ class EngineRestrictionTest extends EngineSearchTestCase
         );
     }
 
-    /** @return array<string, array{array<string, class-string<Extension>>}> */
+    /** @return array<string, array{list<class-string<Extension>>}> */
     public static function orders(): array
     {
         return [
-            'in name order' => [['a' => NumberEngineRestriction::class, 'b' => PriceEngineRestriction::class]],
-            'in reverse order' => [['b' => PriceEngineRestriction::class, 'a' => NumberEngineRestriction::class]],
+            'in name order' => [[NumberEngineRestriction::class, PriceEngineRestriction::class]],
+            'in reverse order' => [[PriceEngineRestriction::class, NumberEngineRestriction::class]],
         ];
     }
 
     #[Test]
     public function it_keeps_a_value_an_extension_excludes_out_of_a_client_filter(): void
     {
-        config(['rest.extensions' => ['b' => PriceEngineRestriction::class]]);
+        config(['rest.extensions' => [PriceEngineRestriction::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [['field' => 'number', 'operator' => 'in', 'value' => [4, 5]]]]);
 
@@ -155,7 +155,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_narrows_a_client_in_filter_to_the_values_of_the_extension(): void
     {
-        config(['rest.extensions' => ['a' => NumberEngineRestriction::class]]);
+        config(['rest.extensions' => [NumberEngineRestriction::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [['field' => 'number', 'operator' => 'in', 'value' => [2, 3]]]]);
 
@@ -166,7 +166,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_returns_an_empty_page_without_calling_the_engine_for_a_guest(): void
     {
-        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
@@ -178,7 +178,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_runs_an_action_on_no_row_for_a_guest(): void
     {
-        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
 
         $response = $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
@@ -190,7 +190,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_runs_an_action_on_no_row_for_a_guest_when_the_engine_does_not_report_its_limit(): void
     {
-        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
         $this->useEngine(new PagedMeilisearchEngine(new SettingsClient(fn (): never => throw new RuntimeException('The key cannot read the settings.'))));
 
         $response = $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
@@ -202,7 +202,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_searches_for_a_user_that_the_extension_lets_through(): void
     {
-        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
 
         $response = $this->actingAs(new GenericUser(['id' => 1]))->search('vouchers', ['text' => ['value' => 'report']]);
 
@@ -212,7 +212,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_gives_the_extension_the_gate_user_of_rest_search_as(): void
     {
-        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
         $user = new GenericUser(['id' => 7]);
         $checked = [];
         Gate::before(function (?Authenticatable $gateUser) use (&$checked): ?bool {
@@ -232,7 +232,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_gives_the_extension_the_user_of_the_request(): void
     {
-        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
         $user = new GenericUser(['id' => 3]);
 
         $this->actingAs($user)->search('vouchers', ['text' => ['value' => 'report']])->assertOk();
@@ -243,7 +243,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_restricts_the_targets_of_an_action_once(): void
     {
-        config(['rest.extensions' => ['team' => TeamIndexExtension::class]]);
+        config(['rest.extensions' => [TeamIndexExtension::class]]);
 
         $response = $this->postJson('/api/vouchers/actions/retitle-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
@@ -257,7 +257,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     public function it_still_requires_the_index_perimeter_declaration(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('unbounded-vouchers', UnboundedVoucherController::class)->register());
-        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidTextSearchException::missingPerimeter(UnboundedVoucherResource::class));
@@ -278,7 +278,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     }
 
     /**
-     * @param  array<string, class-string<Extension>>  $extensions
+     * @param  list<class-string<Extension>>  $extensions
      * @param  array{bool, bool, bool}  $expected
      */
     #[Test]
@@ -298,22 +298,22 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $this->assertSame($expected, [$context->matchesStringLists, $context->rowsRestrictedInSql, $context->comparesColumns]);
     }
 
-    /** @return array<string, array{?string, array<string, class-string<Extension>>, array{bool, bool, bool}}> */
+    /** @return array<string, array{?string, list<class-string<Extension>>, array{bool, bool, bool}}> */
     public static function capabilities(): array
     {
         return [
-            'the collection engine' => [null, ['guestless' => GuestlessEngineExtension::class], [false, false, true]],
-            'the database engine without SQL restriction' => ['database', ['guestless' => GuestlessEngineExtension::class], [false, false, true]],
-            'the database engine with the SQL restriction of another extension' => ['database', ['guestless' => GuestlessEngineExtension::class, 'red' => RedRowsExtension::class], [false, false, true]],
-            'the database engine with its own SQL restriction' => ['database', ['aware' => SqlAwareEngineExtension::class], [false, true, true]],
-            'the collection engine with its own SQL restriction' => [null, ['aware' => SqlAwareEngineExtension::class], [false, true, true]],
+            'the collection engine' => [null, [GuestlessEngineExtension::class], [false, false, true]],
+            'the database engine without SQL restriction' => ['database', [GuestlessEngineExtension::class], [false, false, true]],
+            'the database engine with the SQL restriction of another extension' => ['database', [GuestlessEngineExtension::class, RedRowsExtension::class], [false, false, true]],
+            'the database engine with its own SQL restriction' => ['database', [SqlAwareEngineExtension::class], [false, true, true]],
+            'the collection engine with its own SQL restriction' => [null, [SqlAwareEngineExtension::class], [false, true, true]],
         ];
     }
 
     #[Test]
     public function it_keeps_the_rows_of_the_extensions_from_an_instruction(): void
     {
-        config(['scout.driver' => 'database', 'rest.extensions' => ['hidden' => HiddenRowsExtension::class, 'rr' => RowReplacingExtension::class]]);
+        config(['scout.driver' => 'database', 'rest.extensions' => [HiddenRowsExtension::class, RowReplacingExtension::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidEngineQueryException::repeatedRowRestriction(VoucherResource::class, ['hidden']));
@@ -333,7 +333,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_refuses_an_attribute_that_the_index_does_not_declare(): void
     {
-        config(['rest.extensions' => ['owner' => OwnerEngineRestriction::class]]);
+        config(['rest.extensions' => [OwnerEngineRestriction::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidEngineExtensionException::refusedEngineCondition('owner', OwnerEngineRestriction::class, VoucherResource::class, InvalidEngineQueryException::undeclaredAttribute('owner')));
@@ -374,7 +374,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_skips_an_extension_that_does_not_apply(): void
     {
-        config(['rest.extensions' => ['unapplied' => UnappliedEngineRestriction::class]]);
+        config(['rest.extensions' => [UnappliedEngineRestriction::class]]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
@@ -385,7 +385,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
     #[Test]
     public function it_runs_no_engine_restriction_without_text(): void
     {
-        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+        config(['rest.extensions' => [GuestlessEngineExtension::class]]);
 
         $this->search('vouchers', ['filters' => [['field' => 'title', 'value' => 'Budget']]])->assertOk()->assertJsonPath('data.*.title', ['Budget']);
 
@@ -407,7 +407,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
 
         $this->assertSame([[], [], []], [$resolved, ExtensionLog::$built, EngineLog::$calls]);
 
-        config(['rest.extensions' => ['team' => TeamIndexExtension::class]]);
+        config(['rest.extensions' => [TeamIndexExtension::class]]);
 
         $this->search('vouchers', ['text' => ['value' => 'report']])->assertOk();
 

@@ -12,6 +12,12 @@ use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 final class UnappliedEngineProfiles extends Extension implements ProvidesEngineProfiles
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'unapplied';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource !== VoucherResource::class;

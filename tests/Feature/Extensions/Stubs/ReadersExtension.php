@@ -12,6 +12,12 @@ use Lomkit\Rest\Text\Engine\StringListAttribute;
 
 final class ReadersExtension extends Extension implements DeclaresIndexAttributes, RestrictsEngineQueries
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'readers';
+    }
+
     public static bool $excludes = false;
 
     /** @var list<string>|null */

@@ -16,6 +16,12 @@ use Lomkit\Rest\Text\Engine\StringListAttribute;
 final class TicketEngineExtension extends Extension implements DeclaresIndexAttributes, ProvidesEngineProfiles, RestrictsEngineQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'ticket_engine';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === TicketDeskResource::class;

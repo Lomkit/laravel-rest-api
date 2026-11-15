@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
 final class GuestlessEngineExtension extends Extension implements RestrictsEngineQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'guestless';
+    }
+
+    #[\Override]
     public function restrictEngine(EngineRestrictionContext $context): void
     {
         EngineLog::$calls[] = class_basename($context->resource);
