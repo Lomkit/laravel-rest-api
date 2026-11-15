@@ -383,6 +383,39 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         yield 'a row of the list' => [static fn (PendingChecks $checks): Collection => $checks->rows->put(0, new Ticket(['title' => 'Other']))];
     }
 
+    /** @param Closure(Model): mixed $change */
+    #[Test]
+    #[DataProvider('writeSettingChanges')]
+    public function it_refuses_an_extension_that_changes_where_a_destroyed_row_is_written(Closure $change): void
+    {
+        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        ['Printer jam' => $jam, 'Password reset' => $reset] = $this->seedTickets();
+        PreparingExtension::$prepare = static function (PendingChecks $checks) use ($change): void {
+            $checks->rows->each($change);
+        };
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('prep', TicketResource::class, 'delete'));
+
+        try {
+            $this->actingAs(new GenericUser(['id' => TicketPolicy::LEAD]))->deleteJson('/api/tickets', ['resources' => [$jam->id, $reset->id]]);
+        } finally {
+            $this->assertSame(4, Ticket::query()->count());
+            $this->assertSame(2, Team::query()->count());
+        }
+    }
+
+    /** @return iterable<string, array{Closure(Model): mixed}> */
+    public static function writeSettingChanges(): iterable
+    {
+        yield 'whether the row exists' => [static function (Model $row): void {
+            $row->exists = false;
+        }];
+        yield 'the table of the row' => [static fn (Model $row): Model => $row->setTable('teams')];
+        yield 'the connection of the row' => [static fn (Model $row): Model => $row->setConnection('other')];
+        yield 'the key name of the row' => [static fn (Model $row): Model => $row->setKeyName('team_id')];
+    }
+
     #[Test]
     public function it_lets_an_extension_read_the_rows_and_load_a_relation_that_was_not_loaded(): void
     {

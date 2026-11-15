@@ -11,12 +11,14 @@ final readonly class RowState
     private const array CAST_CACHES = ['classCastCache', 'attributeCastCache'];
 
     /**
+     * @param  list<mixed>  $settings
      * @param  array<string, mixed>  $original
      * @param  array<string, mixed>  $attributes
      * @param  array<array-key, mixed>  $relations
      */
     private function __construct(
         private Model $row,
+        private array $settings,
         private array $original,
         private array $attributes,
         private array $relations,
@@ -30,7 +32,7 @@ final readonly class RowState
             $relations = array_intersect_key($relations, $start->relations);
         }
 
-        return new self($row, $row->getRawOriginal(), self::stored($row, self::castKeys($row)), $relations);
+        return new self($row, self::settings($row), $row->getRawOriginal(), self::stored($row, self::castKeys($row)), $relations);
     }
 
     public function row(): Model
@@ -40,7 +42,7 @@ final readonly class RowState
 
     public function keeps(Model $row): bool
     {
-        if ($row !== $this->row || $row->getRawOriginal() !== $this->original) {
+        if ($row !== $this->row || self::settings($row) !== $this->settings || $row->getRawOriginal() !== $this->original) {
             return false;
         }
 
@@ -53,6 +55,12 @@ final readonly class RowState
         }
 
         return $this->keepsAttributes($row);
+    }
+
+    /** @return list<mixed> */
+    private static function settings(Model $row): array
+    {
+        return [$row->exists, $row->getTable(), $row->getConnectionName(), $row->getKeyName(), $row->usesTimestamps(), $row->getCasts()];
     }
 
     private function keepsAttributes(Model $row): bool

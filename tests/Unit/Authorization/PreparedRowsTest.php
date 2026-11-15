@@ -2,7 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Unit\Authorization;
 
+use Closure;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Authorization\PreparedRows;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
@@ -15,6 +17,35 @@ use PHPUnit\Framework\TestCase;
 
 class PreparedRowsTest extends TestCase
 {
+    /** @param Closure(Model): mixed $change */
+    #[Test]
+    #[DataProvider('settingChanges')]
+    public function it_refuses_a_row_whose_write_settings_change(Closure $change): void
+    {
+        $checks = $this->checks();
+        $rows = PreparedRows::of($checks->rows);
+
+        $change($checks->rows->firstOrFail());
+
+        $this->expectExceptionObject(InvalidAuthorizationExtensionException::changedRows('acl', TicketResource::class, 'view'));
+        $rows->ensureUnchanged('acl', $checks);
+    }
+
+    /** @return iterable<string, array{Closure(Model): mixed}> */
+    public static function settingChanges(): iterable
+    {
+        yield 'whether it exists' => [static function (Model $row): void {
+            $row->exists = false;
+        }];
+        yield 'its table' => [static fn (Model $row): Model => $row->setTable('teams')];
+        yield 'its connection' => [static fn (Model $row): Model => $row->setConnection('other')];
+        yield 'its key name' => [static fn (Model $row): Model => $row->setKeyName('team_id')];
+        yield 'its casts' => [static fn (Model $row): Model => $row->mergeCasts(['team_id' => 'string'])];
+        yield 'its timestamps' => [static function (Model $row): void {
+            $row->timestamps = false;
+        }];
+    }
+
     #[Test]
     public function it_keeps_a_row_whose_cast_attribute_is_read(): void
     {
@@ -151,7 +182,12 @@ class PreparedRowsTest extends TestCase
 
     private function checks(): PendingChecks
     {
-        $row = (new PreparedDocument)->newFromBuilder(['id' => 1, 'team_id' => 3, 'meta' => '{"a": 1}', 'settings' => '{"a": 1}']);
+        $row = (new PreparedDocument)->newFromBuilder([
+            'id' => 1,
+            'team_id' => 3,
+            'meta' => '{"a": 1}',
+            'settings' => '{"a": 1}',
+        ]);
 
         return new PendingChecks(new TicketResource, 'view', new Collection([$row]), null);
     }
