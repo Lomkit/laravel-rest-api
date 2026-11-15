@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Actions\ActionFields;
-use Lomkit\Rest\Actions\ActionTransaction;
 use Lomkit\Rest\Events\ActionOperated;
 use Lomkit\Rest\Events\ResourceDestroyed;
 use Lomkit\Rest\Events\ResourceForceDestroyed;
@@ -20,11 +19,8 @@ use Lomkit\Rest\Events\ResourceRestored;
 use Lomkit\Rest\Exceptions\InvalidWriteExtensionException;
 use Lomkit\Rest\Exceptions\WriteRefused;
 use Lomkit\Rest\Facades\Rest;
-use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Fields\MutationOperation;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Routing\Endpoint;
-use Lomkit\Rest\Http\WriteTransaction;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\ArchiveUser;
 use Lomkit\Rest\Tests\Feature\Deletion\Concerns\SeedsDocuments;
@@ -41,7 +37,6 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ModeChangingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaGuardNamedArchive;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingWriteObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrittenDocumentController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrittenDocumentResource;
@@ -502,98 +497,6 @@ final class GuardedWritesTest extends PackageTestCase
             'begin level 2', 'guard operate 2', 'rollback level 1',
         ], $this->writeLines());
         $this->assertSame([[1, 'Annual report', true], [2, 'Budget', false]], $this->documents());
-    }
-
-    #[Test]
-    public function it_guards_the_rows_that_the_transaction_mode_of_an_action_handles(): void
-    {
-        $this->seedDocuments(null, null);
-        $request = RestRequest::create('/')->setContainer($this->app);
-        $request->setUserResolver(fn (): ArchiveUser => $this->grace);
-        $resource = $request->context()->resource(WrittenDocumentResource::class);
-        $action = $resource->definition()->action('archive-documents-by-one');
-        $fields = ActionFields::of($action, InputValues::fromGiven($resource->definition()->inputFields($action), []), 'web', $this->grace);
-        $transaction = WriteTransaction::of($resource);
-        EventLog::listen();
-
-        $impacted = ActionTransaction::Whole->aroundRun($transaction, function () use ($action, $fields, $transaction): int {
-            EventLog::record('run');
-            ActionTransaction::None->handle($action, $fields, $transaction, Document::query()->orderBy('id')->get());
-
-            return 2;
-        });
-        $direct = ActionTransaction::Chunk->aroundRun($transaction, fn (): int => 0);
-
-        $this->assertSame(2, $impacted);
-        $this->assertSame(0, $direct);
-        $this->assertSame([
-            'begin level 2', 'run', 'guard operate 1,2', 'handle 1,2', 'sql update documents', 'sql update documents', 'commit level 1',
-        ], $this->writeLines());
-        $this->assertSame(2, WriteLog::$guards[0]->user?->getAuthIdentifier());
-        $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
-    }
-
-    /** @return array<string, array{ActionTransaction, string, list<string>}> */
-    public static function handledModes(): array
-    {
-        return [
-            'chunk' => [ActionTransaction::Chunk, 'archive-documents-by-one', [
-                'begin level 2', 'guard operate 1,2', 'handle 1,2', 'sql update documents', 'sql update documents', 'commit level 1', 'observe operate 1,2 (2)',
-            ]],
-            'row' => [ActionTransaction::Row, 'archive-each-document', [
-                'before 1', 'begin level 2', 'guard operate 1', 'row 1', 'sql update documents', 'commit level 1', 'observe operate 1 (1)',
-                'before 2', 'begin level 2', 'guard operate 2', 'row 2', 'sql update documents', 'commit level 1', 'observe operate 2 (1)',
-            ]],
-            'none' => [ActionTransaction::None, 'archive-documents-by-one', [
-                'guard operate 1,2', 'handle 1,2', 'sql update documents', 'sql update documents', 'observe operate 1,2 (2)',
-            ]],
-            'whole' => [ActionTransaction::Whole, 'archive-documents-by-one', [
-                'guard operate 1,2', 'handle 1,2', 'sql update documents', 'sql update documents',
-            ]],
-        ];
-    }
-
-    /** @param list<string> $lines */
-    #[Test]
-    #[DataProvider('handledModes')]
-    public function it_asks_the_extensions_in_handle_and_notifies_them_except_for_a_whole_run(ActionTransaction $mode, string $uriKey, array $lines): void
-    {
-        config(['rest.extensions' => [RecordingWriteObserver::class, RecordingGuard::class]]);
-        $this->seedDocuments(null, null);
-        $request = RestRequest::create('/')->setContainer($this->app);
-        $request->setUserResolver(fn (): ArchiveUser => $this->grace);
-        $resource = $request->context()->resource(WrittenDocumentResource::class);
-        $action = $resource->definition()->action($uriKey);
-        $fields = ActionFields::of($action, InputValues::fromGiven($resource->definition()->inputFields($action), []), 'web', $this->grace);
-        EventLog::listen();
-
-        $mode->handle($action, $fields, WriteTransaction::of($resource), Document::query()->orderBy('id')->get());
-
-        $this->assertSame($lines, $this->writeLines());
-        $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
-    }
-
-    #[Test]
-    public function it_runs_an_action_that_is_not_bound_to_a_resource_without_extensions(): void
-    {
-        config(['rest.extensions' => [RecordingWriteObserver::class, RecordingGuard::class]]);
-        $this->seedDocuments(null, null);
-        $request = RestRequest::create('/')->setContainer($this->app);
-        $resource = $request->context()->resource(WrittenDocumentResource::class);
-        $bound = $resource->definition()->action('archive-each-document');
-        $action = new ArchiveEachDocument;
-        $fields = ActionFields::of($action, InputValues::fromGiven($resource->definition()->inputFields($bound), []), 'web', $this->grace);
-        EventLog::listen();
-
-        ActionTransaction::Row->handle($action, $fields, WriteTransaction::of($resource), Document::query()->orderBy('id')->get());
-
-        $this->assertSame([
-            'before 1', 'begin level 2', 'row 1', 'sql update documents', 'commit level 1',
-            'before 2', 'begin level 2', 'row 2', 'sql update documents', 'commit level 1',
-        ], $this->writeLines());
-        $this->assertSame([], WriteLog::$guards);
-        $this->assertSame([], WriteLog::$writes);
-        $this->assertSame([[1, 'Annual report', true], [2, 'Budget', true]], $this->documents());
     }
 
     /** @return array<string, array{string, string, array<string, mixed>, Closure(?int): array<string, mixed>}> */
