@@ -1572,7 +1572,7 @@ final class TenantExtension extends Extension implements RestrictsQueries
 - Qualify columns with `$context->query->qualifyColumn()`: pivot reads join another table.
 - A restriction may run several times in one request, and again on each attempt of a write transaction: keep it free of side effects.
 - Write where clauses only. Laravel drops a global scope or an `afterQuery()` callback added to the Eloquent builder of a nested group before the check can see it, and neither is applied.
-- Search engines: on the Scout `database` and `collection` drivers, the restriction applies in the SQL of the engine query, with an exact total; the `null` driver returns no row. On every engine, the rows of a page are read again by key through the restriction, so a row changed since indexing is dropped. On another engine, implement `RestrictsEngineQueries` too, or a text search of the resource throws `InvalidTextSearchException` (`rest:check` reports it); its message also offers to leave the resource out with `appliesTo()` or to disable the extension with `'name' => false` in `rest.extensions`.
+- Search engines: on the Scout `database` and `collection` drivers, the restriction applies in the SQL of the engine query, with an exact total; the `null` driver returns no row. On every engine, the rows of a page are read again by key through the restriction, so a row changed since indexing is dropped. On another engine, implement `RestrictsEngineQueries` too, or a text search of the resource throws `InvalidTextSearchException` (`rest:check` reports it); its message also offers to leave the resource out with `appliesTo()` or to add the extension class to `rest.disabled_extensions`.
 
 ### Adding to rendered rows (`AugmentsQueries`)
 
@@ -1685,9 +1685,9 @@ final class ArchiveExtension extends Extension implements DeclaresInstructions
 
 ### Restricting engine searches (`RestrictsEngineQueries`)
 
-App: `'tenant' => \Vendor\Tenancy\TenantExtension::class` in `rest.extensions`.
+App: `\Vendor\Tenancy\TenantExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(TenantExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\{EngineRestrictionContext, IndexAttributesContext, RestrictionContext};
@@ -1698,6 +1698,12 @@ use Lomkit\Rest\Fields\Integer;
 final class TenantExtension extends Extension implements DeclaresIndexAttributes, RestrictsEngineQueries, RestrictsQueries
 {
     public function __construct(private readonly CurrentTenant $tenant) {}
+
+    #[\Override]
+    public static function name(): string
+    {
+        return 'tenant';
+    }
 
     #[\Override]
     public function restrict(RestrictionContext $context): void
@@ -1738,16 +1744,16 @@ final class TenantExtension extends Extension implements DeclaresIndexAttributes
 An app whose `ScoutEngine::perimeter()` already declares `Integer::make('tenant_id')` keeps working with this extension: the same declaration is accepted, and the one of the resource is used. A `Text::make('tenant_id')` there is refused, since the two declarations diverge.
 
 - Guarantees: runs once per engine query, after `ScoutEngine::perimeter()` and before the filters, sorts and instructions of the client, for searches, `Rest::search()` pages and actions on search results, also behind `withoutPerimeter()`. Its conditions are AND-ed with the perimeter, the client and the other extensions, in any extension order: `whereIn()` lists intersect, `whereNotIn()` lists add up, so a client filter cannot bring back a value it excludes. `matchNothing()` returns an empty page without calling the engine, and an action then runs on no row. `$context->user` is the user that the Gate checks (also under `Rest::search()->as($user)`), `null` for a guest.
-- Forbids: anything but `where()`, `whereIn()`, `whereNotIn()` and `matchNothing()`: no `or`, no sort, no engine option. It filters on the `filterable()` and `perimeter()` attributes of the resource and on the attributes that extensions declare (`DeclaresIndexAttributes`); another name, or a condition that the engine query refuses, throws `InvalidEngineExtensionException`, which names the extension, quotes the refusal and keeps it as its previous exception. Every method, `matchNothing()` included, returns the restriction. It never stands for `perimeter()` or `withoutPerimeter()`, which a `ScoutEngine` still requires.
-- With `RestrictsQueries` on the same class: on the Scout `database` and `collection` drivers, the restriction applies in the SQL of the engine query, with an exact total, and `$context->rowsRestrictedInSql` is `true`, so the engine restriction may return at once. It is `false` for an extension that does not implement `RestrictsQueries` itself, even when another extension restricts the rows in SQL. On another engine `restrictEngine()` restricts the search, and the rows of the page are read again by key through the `RestrictsQueries` restrictions (never through `perimeterQuery()`), also for actions on search results and in the worker of a queued action: a row that the index still matches but the restriction now excludes is dropped, so a page can hold fewer rows than its size while the total stays the one of the engine. Make both say the same. A `RestrictsQueries` extension without this kind makes the text searches of the resource throw `InvalidTextSearchException` on any engine whose profile does not apply SQL restrictions. The `null` driver returns no row and is never refused.
+- Forbids: anything but `where()`, `whereIn()`, `whereNotIn()` and `matchNothing()`: no `or`, no sort, no engine option. It filters on the `filterable()` and `perimeter()` attributes of the resource and on the attributes that extensions declare (`DeclaresIndexAttributes`); another name, or a condition that the engine query refuses, throws `InvalidEngineExtensionException`, which names the extension (its name and its class), quotes the refusal and keeps it as its previous exception. Every method, `matchNothing()` included, returns the restriction. It never stands for `perimeter()` or `withoutPerimeter()`, which a `ScoutEngine` still requires.
+- With `RestrictsQueries` on the same class: on the Scout `database` and `collection` drivers, the restriction applies in the SQL of the engine query, with an exact total, and `$context->rowsRestrictedInSql` is `true`, so the engine restriction may return at once. It is `false` for an extension that does not implement `RestrictsQueries` itself, even when another extension restricts the rows in SQL. On another engine `restrictEngine()` restricts the search, and the rows of the page are read again by key through the `RestrictsQueries` restrictions (never through `perimeterQuery()`), also for actions on search results and in the worker of a queued action: a row that the index still matches but the restriction now excludes is dropped, so a page can hold fewer rows than its size while the total stays the one of the engine. Make both say the same. A `RestrictsQueries` extension without this kind makes the text searches of the resource throw `InvalidTextSearchException` on any engine whose profile does not apply SQL restrictions; the message names the extension and its class, and offers to add the class to `rest.disabled_extensions`. The `null` driver returns no row and is never refused.
 - `$context->comparesColumns` is `true` when Scout compares each condition with a column of the model table (the `collection` and `database` drivers, or a profile that implements `ComparesColumns`): name only columns there, or return at once when `$context->rowsRestrictedInSql` is `true`.
 - `$context->matchesStringLists` says whether the engine matches lists of strings.
 
 ### Declaring index attributes (`DeclaresIndexAttributes`)
 
-App: `'readers' => \Vendor\Sharing\ReadersExtension::class` in `rest.extensions`.
+App: `\Vendor\Sharing\ReadersExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(ReadersExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\{EngineRestrictionContext, IndexAttributesContext};
@@ -1757,6 +1763,12 @@ use Lomkit\Rest\Text\Engine\StringListAttribute;
 
 final class ReadersExtension extends Extension implements DeclaresIndexAttributes, RestrictsEngineQueries
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'readers';
+    }
+
     #[\Override]
     public function indexAttributes(IndexAttributesContext $context): array
     {
@@ -1782,7 +1794,7 @@ final class ReadersExtension extends Extension implements DeclaresIndexAttribute
 The app indexes the key on the model: `toSearchableArray()` returns `'readers' => ['12', 'group-3']`. On an engine without lists, this example shows no row.
 
 - Guarantees: a static kind. It receives `$context->resource` (a class name) and `$context->matchesStringLists`, no user, and runs once per request and resource. Return fields (`ID`, `Integer`, `Number`, `Boolean`, `Text`, `Enum`) or `StringListAttribute::make('readers')` (`Lomkit\Rest\Text\Engine\StringListAttribute`). The attributes keep their real index name, never prefixed. `restrictEngine()`, `ScoutEngine::perimeter()` and `handleEngine()` of instructions can filter on them; clients never can: they stay out of the client grammar (a filter on one is a `422`), `/details` and the OpenAPI document. Same rules as `filterable()`: name pattern, `__soft_deleted` reserved, field types, no `filterUsing()` or `sortUsing()`, operators of the field and of the engine.
-- Forbids: a name that `filterable()` declares, a name that `perimeter()` or another extension declares with another field type or list marker, and the same name twice in one extension: `Lomkit\Rest\Exceptions\InvalidEngineExtensionException` names both owners. The same declaration in `perimeter()` or in another extension is accepted: the one of `perimeter()`, else of the first extension by name, is used.
+- Forbids: a name that `filterable()` declares, a name that `perimeter()` or another extension declares with another field type or list marker, and the same name twice in one extension: `Lomkit\Rest\Exceptions\InvalidEngineExtensionException` names both owners, each extension by its name and its class. The same declaration in `perimeter()` or in another extension is accepted: the one of `perimeter()`, else of the first extension by name, is used.
 - The package cannot check that the model indexes these keys: add them to `toSearchableArray()` and to the index settings.
 - Lists of strings: `whereIn('readers', [...])` keeps the rows that share at least one value with the list, `whereNotIn()` the rows that share none (an empty list included). `where()` is refused on a list. Two `whereIn()` lists on one list attribute keep the narrower one when one holds the other, and throw `Lomkit\Rest\Exceptions\ConflictingListsException` otherwise, naming the extensions that set them. An instruction must not set a list on an attribute that an extension restricts: a list from an instruction that neither holds nor is held by the list already kept answers `422` on `search.instructions.N`, since the client chose the instruction. A list can be declared on every engine; comparing it (`whereIn()`, `whereNotIn()`) on an engine whose profile does not implement `MatchesStringLists` throws `InvalidEngineQueryException` (`InvalidEngineExtensionException` when an extension compares it), so check `$context->matchesStringLists` before comparing it. Index schema per engine:
   - Algolia: `attributesForFaceting` holds `filterOnly(readers)`.
@@ -1792,9 +1804,9 @@ The app indexes the key on the model: `toSearchableArray()` returns `'readers' =
 
 ### Providing engine profiles (`ProvidesEngineProfiles`)
 
-App: `'opensearch' => \Vendor\OpenSearch\OpenSearchExtension::class` in `rest.extensions`.
+App: `\Vendor\OpenSearch\OpenSearchExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(OpenSearchExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\EngineProfileContext;
@@ -1805,6 +1817,12 @@ use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 final class OpenSearchExtension extends Extension implements ProvidesEngineProfiles
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'opensearch';
+    }
+
+    #[\Override]
     public function engineProfile(EngineProfileContext $context): ?EngineProfile
     {
         return $context->engine instanceof OpenSearchEngine ? new OpenSearchProfile($context->engine) : null;
@@ -1814,7 +1832,7 @@ final class OpenSearchExtension extends Extension implements ProvidesEngineProfi
 
 - Guarantees: a static kind. It receives `$context->resource` and `$context->engine` only, no user; answer without side effects, and `null` for an engine it does not know. The package asks it before its built-in profiles, so it can also replace the profile of a built-in engine. The provided profile goes through the same checks as a built-in one (`ensureUsableBy()`, operators, sorts, page size, window, owned options, string lists).
 - `EngineProfile` has the methods of 3.5. Optional interfaces of `Lomkit\Rest\Text\Engine\Profiles` add capabilities, checked with `instanceof`: `MatchesStringLists` (the engine matches lists of strings), `ComparesColumns` (Scout compares conditions with the columns of the model table) and `AppliesRowRestrictions` (the profile runs SQL). `AppliesRowRestrictions::restrictedPage()` receives a `Lomkit\Rest\Text\Engine\RowRestriction` and applies it to the Eloquent query it runs, so `RestrictsQueries` extensions work on that engine without `RestrictsEngineQueries`. It is only called when such a restriction applies; `page()` serves the other searches. A `restrictedPage()` that returns without calling `apply()` throws `InvalidEngineQueryException`; the package checks the call, not that the page came from the restricted query, so run that query.
-- Forbids: two extensions that provide a profile for one engine: `InvalidEngineExtensionException` names both and the engine class.
+- Forbids: two extensions that provide a profile for one engine: `InvalidEngineExtensionException` names both, by name and class, and the engine class; return `null` from one of them for this engine, or add one class to `rest.disabled_extensions`.
 
 ## Artisan commands shipped by the package
 
