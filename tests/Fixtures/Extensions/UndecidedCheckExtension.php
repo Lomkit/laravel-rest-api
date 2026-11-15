@@ -11,6 +11,12 @@ use RuntimeException;
 final class UndecidedCheckExtension extends Extension implements ChecksResources
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'undecided';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         if ($resource === TripResource::class) {

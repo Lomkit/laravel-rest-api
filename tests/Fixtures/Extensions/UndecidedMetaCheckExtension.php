@@ -13,6 +13,12 @@ use RuntimeException;
 final class UndecidedMetaCheckExtension extends Extension implements AddsSearchMeta, ChecksResources
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'plans';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         if ($resource === TripResource::class) {

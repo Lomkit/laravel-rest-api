@@ -10,6 +10,12 @@ use RuntimeException;
 final class ThrowingCheckExtension extends Extension implements ChecksResources
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'throwing';
+    }
+
+    #[\Override]
     public function checkResource(ResourceCheckContext $context): void
     {
         $context->problem('the schema is read once.');

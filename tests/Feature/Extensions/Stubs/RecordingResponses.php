@@ -10,6 +10,12 @@ use Lomkit\Rest\Extensions\Kinds\DocumentsExtension;
 final class RecordingResponses extends Extension implements DocumentsExtension
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'recording';
+    }
+
+    #[\Override]
     public function documentOperation(OperationDocumentationContext $context): void
     {
         MetaLog::$operations[] = $context;

@@ -8,6 +8,8 @@ use Lomkit\Rest\Extensions\Kinds\AddsDetailsMeta;
 use Lomkit\Rest\Extensions\Kinds\AddsSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaStageMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionStageMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionStageMetaNamedArea;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionStageMetaNamedInstructions;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SchemaOnlyMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SearchOnlyMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharedSchemaMeta;
@@ -16,7 +18,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 use stdClass;
 
-#[WithConfig('rest.extensions', ['quota' => QuotaStageMeta::class, 'region' => RegionStageMeta::class])]
+#[WithConfig('rest.extensions', [QuotaStageMeta::class, RegionStageMeta::class])]
 class ExtensionMetaDocumentTest extends DocumentationTestCase
 {
     private const string GATE = '{"$ref":"#\/components\/schemas\/RestGateAnswer"}';
@@ -101,7 +103,7 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
     public function it_lists_the_extension_properties_in_name_order_whatever_the_config_order(): void
     {
         $first = $this->document()['components']['schemas'];
-        config(['rest.extensions' => ['region' => RegionStageMeta::class, 'quota' => QuotaStageMeta::class]]);
+        config(['rest.extensions' => [RegionStageMeta::class, QuotaStageMeta::class]]);
         $second = $this->document()['components']['schemas'];
 
         $this->assertSame(self::PAGE_META, json_encode($second['StagePaginated']['properties']['meta']));
@@ -110,9 +112,24 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
     }
 
     #[Test]
+    public function it_lists_the_extension_properties_in_name_order_whatever_the_class_order(): void
+    {
+        $keys = [];
+
+        foreach ([[QuotaStageMeta::class, RegionStageMetaNamedArea::class], [RegionStageMetaNamedArea::class, QuotaStageMeta::class]] as $extensions) {
+            config(['rest.extensions' => $extensions]);
+            $schemas = $this->document()['components']['schemas'];
+            $keys[] = array_keys($schemas['StagePaginated']['properties']['meta']['properties']);
+            $keys[] = array_keys($schemas['StageDetails']['properties']['data']['properties']['meta']['properties']);
+        }
+
+        $this->assertSame([['gates', 'area', 'quota'], ['area', 'quota'], ['gates', 'area', 'quota'], ['area', 'quota']], $keys);
+    }
+
+    #[Test]
     public function it_describes_a_schema_that_an_extension_shares_between_both_meta(): void
     {
-        config(['rest.extensions' => ['shared' => SharedSchemaMeta::class]]);
+        config(['rest.extensions' => [SharedSchemaMeta::class]]);
 
         $schemas = $this->document()['components']['schemas'];
 
@@ -124,7 +141,7 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_refuses_a_meta_schema_of_an_extension_without_the_meta_kind(): void
     {
-        config(['rest.extensions' => ['schema' => SchemaOnlyMeta::class], 'app.debug' => false]);
+        config(['rest.extensions' => [SchemaOnlyMeta::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationExtensionException::metaWithoutKind('schema', SchemaOnlyMeta::class, StageResource::class, AddsSearchMeta::class));
 
@@ -134,7 +151,7 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_refuses_a_details_meta_schema_of_an_extension_that_adds_only_search_meta(): void
     {
-        config(['rest.extensions' => ['search' => SearchOnlyMeta::class], 'app.debug' => false]);
+        config(['rest.extensions' => [SearchOnlyMeta::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationExtensionException::metaWithoutKind('search', SearchOnlyMeta::class, StageResource::class, AddsDetailsMeta::class));
 
@@ -144,9 +161,9 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_refuses_an_extension_named_after_a_key_of_the_package_in_the_document(): void
     {
-        config(['rest.extensions' => ['instructions' => RegionStageMeta::class], 'app.debug' => false]);
+        config(['rest.extensions' => [RegionStageMetaNamedInstructions::class], 'app.debug' => false]);
 
-        $this->expectExceptionObject(InvalidMetaExtensionException::instructionsName('instructions', RegionStageMeta::class, StageResource::class));
+        $this->expectExceptionObject(InvalidMetaExtensionException::instructionsName('instructions', RegionStageMetaNamedInstructions::class, StageResource::class));
 
         $this->document();
     }

@@ -8,6 +8,12 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 final class CheckedResponses extends DocumentedResponses
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'checked';
+    }
+
+    #[\Override]
     public function documentOperation(OperationDocumentationContext $context): void
     {
         MetaLog::$documented[] = [$context->documents(429), $context->documents(403)];

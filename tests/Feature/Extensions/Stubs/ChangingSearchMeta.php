@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\AddsSearchMeta;
 final class ChangingSearchMeta extends Extension implements AddsSearchMeta
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'changing';
+    }
+
+    #[\Override]
     public function searchMeta(SearchMetaContext $context): array
     {
         foreach ($context->rows as $row) {

@@ -24,6 +24,12 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 final class TicketResponsesExtension extends Extension implements AddsDetailsMeta, AddsSearchMeta, ChecksResources, DocumentsExtension
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'ticket_responses';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === TicketDeskResource::class;

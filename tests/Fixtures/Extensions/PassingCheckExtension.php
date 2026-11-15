@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\ChecksResources;
 final class PassingCheckExtension extends Extension implements ChecksResources
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'passing';
+    }
+
+    #[\Override]
     public function checkResource(ResourceCheckContext $context): void
     {
         ExtensionLog::$checked[] = $context->resource;

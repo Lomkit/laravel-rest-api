@@ -8,8 +8,14 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\AddsSearchMeta;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 
-final class QuotaSearchMeta extends Extension implements AddsSearchMeta
+class QuotaSearchMeta extends Extension implements AddsSearchMeta
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
     #[\Override]
     public function appliesTo(string $resource): bool
     {

@@ -12,6 +12,12 @@ use Lomkit\Rest\Tests\Fixtures\Festival\StageResource;
 final class SchemaOnlyMeta extends Extension implements DocumentsExtension
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'schema';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === StageResource::class;

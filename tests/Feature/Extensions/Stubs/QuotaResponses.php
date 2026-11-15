@@ -8,6 +8,12 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 final class QuotaResponses extends DocumentedResponses
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
+    #[\Override]
     public function documentOperation(OperationDocumentationContext $context): void
     {
         if (in_array($context->endpoint, [Endpoint::Search, Endpoint::Mutate], true)) {

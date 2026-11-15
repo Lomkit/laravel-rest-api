@@ -11,7 +11,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['quota' => QuotaStageMeta::class, 'region' => RegionStageMeta::class, 'refusals' => QuotaGuardResponses::class])]
+#[WithConfig('rest.extensions', [QuotaStageMeta::class, RegionStageMeta::class, QuotaGuardResponses::class])]
 class ExtensionMetaContractTest extends DocumentationTestCase
 {
     #[\Override]

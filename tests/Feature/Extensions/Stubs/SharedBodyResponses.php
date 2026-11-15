@@ -9,6 +9,12 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 
 final class SharedBodyResponses extends DocumentedResponses
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'shared';
+    }
+
     public static ?ObjectType $body = null;
 
     public static bool $registersAgain = true;

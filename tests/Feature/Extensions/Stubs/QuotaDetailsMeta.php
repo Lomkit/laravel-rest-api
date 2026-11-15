@@ -9,6 +9,12 @@ use Lomkit\Rest\Extensions\Kinds\AddsDetailsMeta;
 final class QuotaDetailsMeta extends Extension implements AddsDetailsMeta
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
+    #[\Override]
     public function detailsMeta(DetailsMetaContext $context): array
     {
         MetaLog::$details[] = $context;

@@ -13,11 +13,15 @@ use Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AtlasRowsExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\AtlasRowsExtensionNamedZones;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ColumnCheckExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\ColumnCheckExtensionNamedZones;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use Lomkit\Rest\Tests\Fixtures\Extensions\OtherAtlasRowsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedAbilities;
+use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedInstructions;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PassingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\TripCheckExtension;
@@ -51,7 +55,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['columns' => ColumnCheckExtension::class])]
+    #[WithConfig('rest.extensions', [ColumnCheckExtension::class])]
     public function it_reports_the_problem_of_an_extension_check(): void
     {
         $this->expose('trips', TripController::class);
@@ -68,7 +72,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['passing' => PassingCheckExtension::class])]
+    #[WithConfig('rest.extensions', [PassingCheckExtension::class])]
     public function it_counts_the_checks_that_pass(): void
     {
         $this->expose('trips', TripController::class);
@@ -83,7 +87,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['columns' => ColumnCheckExtension::class])]
+    #[WithConfig('rest.extensions', [ColumnCheckExtension::class])]
     public function it_runs_each_check_on_each_reached_resource_as_json(): void
     {
         $this->expose('trips', TripController::class);
@@ -101,7 +105,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['trips' => TripCheckExtension::class])]
+    #[WithConfig('rest.extensions', [TripCheckExtension::class])]
     public function it_checks_only_the_resources_that_an_extension_applies_to(): void
     {
         $this->expose('trips', TripController::class);
@@ -115,7 +119,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['throwing' => ThrowingCheckExtension::class])]
+    #[WithConfig('rest.extensions', [ThrowingCheckExtension::class])]
     public function it_reports_an_exception_of_a_check_as_a_problem(): void
     {
         $this->expose('trips', TripController::class);
@@ -141,7 +145,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['undecided' => UndecidedCheckExtension::class])]
+    #[WithConfig('rest.extensions', [UndecidedCheckExtension::class])]
     public function it_reports_an_exception_of_applies_to_as_a_problem(): void
     {
         $this->expose('trips', TripController::class);
@@ -163,19 +167,23 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $this->assertArrayHasKey('rows', $report);
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>, string, string, string}> */
     public static function orders(): array
     {
+        $throwing = 'The [throwing] extension '.ThrowingCheckExtension::class.' reports '.TripResource::class.': the schema is read once.';
+
         return [
-            'columns first' => [['columns' => ColumnCheckExtension::class, 'throwing' => ThrowingCheckExtension::class]],
-            'throwing first' => [['throwing' => ThrowingCheckExtension::class, 'columns' => ColumnCheckExtension::class]],
+            'columns first' => [[ColumnCheckExtension::class, ThrowingCheckExtension::class], 'columns', 'throwing', self::COLUMN_PROBLEM],
+            'throwing first' => [[ThrowingCheckExtension::class, ColumnCheckExtension::class], 'columns', 'throwing', self::COLUMN_PROBLEM],
+            'zones, an earlier class, last by name' => [[ColumnCheckExtensionNamedZones::class, ThrowingCheckExtension::class], 'throwing', 'zones', $throwing],
+            'throwing first in the config' => [[ThrowingCheckExtension::class, ColumnCheckExtensionNamedZones::class], 'throwing', 'zones', $throwing],
         ];
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
-    public function it_runs_the_checks_in_name_order_whatever_the_config_order(array $extensions): void
+    public function it_runs_the_checks_in_name_order_whatever_the_config_order(array $extensions, string $first, string $second, string $problem): void
     {
         config(['rest.extensions' => $extensions]);
         $this->expose('trips', TripController::class);
@@ -183,16 +191,16 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $report = $this->report(1, TripController::class);
 
         $this->assertSame([
-            ['extension' => 'columns', 'resource' => TripResource::class],
-            ['extension' => 'throwing', 'resource' => TripResource::class],
-            ['extension' => 'columns', 'resource' => CountryResource::class],
-            ['extension' => 'throwing', 'resource' => CountryResource::class],
+            ['extension' => $first, 'resource' => TripResource::class],
+            ['extension' => $second, 'resource' => TripResource::class],
+            ['extension' => $first, 'resource' => CountryResource::class],
+            ['extension' => $second, 'resource' => CountryResource::class],
         ], $report['extension_checks']['checked'] ?? null);
-        $this->assertSame(self::COLUMN_PROBLEM, $report['extension_checks']['problems'][0] ?? null);
+        $this->assertSame($problem, $report['extension_checks']['problems'][0] ?? null);
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['counting' => CountingExtension::class])]
+    #[WithConfig('rest.extensions', [CountingExtension::class])]
     public function it_prints_no_extension_check_line_without_a_checking_extension(): void
     {
         $this->expose('trips', TripController::class);
@@ -205,7 +213,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['columns' => ColumnCheckExtension::class, 'broken' => 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension'])]
+    #[WithConfig('rest.extensions', [ColumnCheckExtension::class, 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension'])]
     public function it_leaves_a_broken_extension_list_to_the_extensions_section(): void
     {
         $this->expose('trips', TripController::class);
@@ -217,19 +225,24 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $this->assertSame([], ExtensionLog::$checked);
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>, list<string>}> */
     public static function restrictions(): array
     {
         return [
-            'atlas first' => [['atlas' => AtlasRowsExtension::class, 'other' => OtherAtlasRowsExtension::class]],
-            'other first' => [['other' => OtherAtlasRowsExtension::class, 'atlas' => AtlasRowsExtension::class]],
+            'atlas first' => [[AtlasRowsExtension::class, OtherAtlasRowsExtension::class], ['atlas', 'other']],
+            'other first' => [[OtherAtlasRowsExtension::class, AtlasRowsExtension::class], ['atlas', 'other']],
+            'zones, an earlier class, last by name' => [[AtlasRowsExtensionNamedZones::class, OtherAtlasRowsExtension::class], ['other', 'zones']],
+            'other first in the config' => [[OtherAtlasRowsExtension::class, AtlasRowsExtensionNamedZones::class], ['other', 'zones']],
         ];
     }
 
-    /** @param array<string, class-string> $extensions */
+    /**
+     * @param  list<class-string>  $extensions
+     * @param  list<string>  $names
+     */
     #[Test]
     #[DataProvider('restrictions')]
-    public function it_names_the_extensions_that_restrict_the_rows_of_a_resource(array $extensions): void
+    public function it_names_the_extensions_that_restrict_the_rows_of_a_resource(array $extensions, array $names): void
     {
         config(['rest.extensions' => $extensions]);
         $this->expose('trips', TripController::class);
@@ -240,7 +253,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $this->assertStringContainsString(
             "  rows ... 1 resource with a perimeter, 1 marked #[WithoutPerimeter], 1 restricted by extensions\n"
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
-            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource ... restricted by atlas, other\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource ... restricted by ".implode(', ', $names)."\n"
             .'  actions ',
             $output,
         );
@@ -248,12 +261,12 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
             'perimeter' => [TripResource::class],
             'without_perimeter' => [CountryResource::class],
             'problems' => [],
-            'restricted' => [['resource' => TripResource::class, 'extensions' => ['atlas', 'other']]],
+            'restricted' => [['resource' => TripResource::class, 'extensions' => $names]],
         ], $report['rows']);
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['atlas' => AtlasRowsExtension::class])]
+    #[WithConfig('rest.extensions', [AtlasRowsExtension::class])]
     public function it_keeps_the_problem_of_a_restricted_resource_without_a_perimeter(): void
     {
         $this->expose('journals', JournalController::class);
@@ -276,7 +289,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['other' => OtherAtlasRowsExtension::class])]
+    #[WithConfig('rest.extensions', [OtherAtlasRowsExtension::class])]
     public function it_keeps_the_problem_of_a_resource_that_no_extension_restricts(): void
     {
         $this->expose('journals', JournalController::class);
@@ -292,12 +305,12 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['instructions' => PageCountMetaExtension::class])]
+    #[WithConfig('rest.extensions', [PageCountMetaExtensionNamedInstructions::class])]
     public function it_reports_a_meta_extension_named_like_the_instruction_meta_for_each_reached_resource(): void
     {
         $this->expose('trips', TripController::class);
-        $trips = InvalidMetaExtensionException::instructionsName('instructions', PageCountMetaExtension::class, TripResource::class)->getMessage();
-        $countries = InvalidMetaExtensionException::instructionsName('instructions', PageCountMetaExtension::class, CountryResource::class)->getMessage();
+        $trips = InvalidMetaExtensionException::instructionsName('instructions', PageCountMetaExtensionNamedInstructions::class, TripResource::class)->getMessage();
+        $countries = InvalidMetaExtensionException::instructionsName('instructions', PageCountMetaExtensionNamedInstructions::class, CountryResource::class)->getMessage();
 
         $output = $this->check(1, TripController::class);
         $report = $this->report(1, TripController::class);
@@ -313,7 +326,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
 
     #[Test]
     #[WithConfig('rest.gates.key', 'abilities')]
-    #[WithConfig('rest.extensions', ['abilities' => PageCountMetaExtension::class])]
+    #[WithConfig('rest.extensions', [PageCountMetaExtensionNamedAbilities::class])]
     public function it_reports_a_meta_extension_named_like_the_gates_key_for_each_reached_resource(): void
     {
         $this->expose('trips', TripController::class);
@@ -321,13 +334,13 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
         $report = $this->report(1, TripController::class);
 
         $this->assertSame(['checked' => [], 'problems' => [
-            InvalidMetaExtensionException::gatesKeyName('abilities', PageCountMetaExtension::class, TripResource::class)->getMessage(),
-            InvalidMetaExtensionException::gatesKeyName('abilities', PageCountMetaExtension::class, CountryResource::class)->getMessage(),
+            InvalidMetaExtensionException::gatesKeyName('abilities', PageCountMetaExtensionNamedAbilities::class, TripResource::class)->getMessage(),
+            InvalidMetaExtensionException::gatesKeyName('abilities', PageCountMetaExtensionNamedAbilities::class, CountryResource::class)->getMessage(),
         ]], $report['extension_checks']);
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['pages' => PageCountMetaExtension::class])]
+    #[WithConfig('rest.extensions', [PageCountMetaExtension::class])]
     public function it_passes_a_meta_extension_under_a_free_name(): void
     {
         $this->expose('trips', TripController::class);
@@ -340,7 +353,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['plans' => UndecidedMetaCheckExtension::class])]
+    #[WithConfig('rest.extensions', [UndecidedMetaCheckExtension::class])]
     public function it_reports_an_exception_of_applies_to_once_for_an_extension_of_several_checked_kinds(): void
     {
         $this->expose('trips', TripController::class);
@@ -354,7 +367,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['undecided' => UndecidedRowsExtension::class])]
+    #[WithConfig('rest.extensions', [UndecidedRowsExtension::class])]
     public function it_reports_an_exception_of_applies_to_of_a_row_restriction_as_a_problem(): void
     {
         $this->expose('trips', TripController::class);
@@ -374,7 +387,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.extensions', ['atlas' => AtlasRowsExtension::class, 'undecided' => UndecidedRowsExtension::class])]
+    #[WithConfig('rest.extensions', [AtlasRowsExtension::class, UndecidedRowsExtension::class])]
     public function it_names_the_decided_restrictions_beside_an_extension_whose_applies_to_throws(): void
     {
         $this->expose('trips', TripController::class);

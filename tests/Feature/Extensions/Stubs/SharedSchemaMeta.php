@@ -17,6 +17,12 @@ use Lomkit\Rest\Tests\Fixtures\Festival\StageResource;
 
 final class SharedSchemaMeta extends Extension implements AddsDetailsMeta, AddsSearchMeta, DocumentsExtension
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'shared';
+    }
+
     public static ?ObjectType $schema = null;
 
     #[\Override]

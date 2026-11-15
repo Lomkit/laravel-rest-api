@@ -21,10 +21,14 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaStatus;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaSearchMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaSearchMetaNamedGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionSearchMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionSearchMetaNamedArea;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnencodableMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueSearchMeta;
+use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedAbilities;
+use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedInstructions;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -66,7 +70,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         Rest::resource('meta-tickets', MetaTicketController::class)->register();
         $this->lead = new GenericUser(['id' => TicketPolicy::LEAD]);
         $this->actingAs($this->lead);
-        config(['rest.extensions' => ['quota' => QuotaSearchMeta::class, 'region' => RegionSearchMeta::class]]);
+        config(['rest.extensions' => [QuotaSearchMeta::class, RegionSearchMeta::class]]);
     }
 
     #[\Override]
@@ -121,25 +125,29 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         $this->assertFalse($context->search->filtersOn('title'));
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>, string}> */
     public static function orders(): array
     {
+        $quota = '"quota":{"remaining":98,"titles":["Printer jam","Printer toner"],"user":1}';
+
         return [
-            'quota first' => [['quota' => QuotaSearchMeta::class, 'region' => RegionSearchMeta::class]],
-            'region first' => [['region' => RegionSearchMeta::class, 'quota' => QuotaSearchMeta::class]],
+            'quota first' => [[QuotaSearchMeta::class, RegionSearchMeta::class], '"meta":{"count":2,'.$quota.',"region":{}}'],
+            'region first' => [[RegionSearchMeta::class, QuotaSearchMeta::class], '"meta":{"count":2,'.$quota.',"region":{}}'],
+            'area, a later class, first by name' => [[QuotaSearchMeta::class, RegionSearchMetaNamedArea::class], '"meta":{"count":2,"area":{},'.$quota.'}'],
+            'area first in the config' => [[RegionSearchMetaNamedArea::class, QuotaSearchMeta::class], '"meta":{"count":2,"area":{},'.$quota.'}'],
         ];
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
-    public function it_adds_the_meta_of_extensions_after_the_keys_of_the_resource_in_name_order(array $extensions): void
+    public function it_adds_the_meta_of_extensions_after_the_keys_of_the_resource_in_name_order(array $extensions, string $meta): void
     {
         config(['rest.extensions' => $extensions]);
 
         $content = (string) $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->getContent();
 
-        $this->assertStringContainsString('"meta":{"count":2,"quota":{"remaining":98,"titles":["Printer jam","Printer toner"],"user":1},"region":{}}', $content);
+        $this->assertStringContainsString($meta, $content);
     }
 
     #[Test]
@@ -157,28 +165,31 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
         }
     }
 
-    /** @return array<string, array{string, string|null, string}> */
+    /** @return array<string, array{class-string, string|null, string}> */
     public static function packageKeys(): array
     {
-        $class = RegionSearchMeta::class;
+        $gates = QuotaSearchMetaNamedGates::class;
+        $instructions = PageCountMetaExtensionNamedInstructions::class;
+        $abilities = PageCountMetaExtensionNamedAbilities::class;
         $resource = MetaTicketResource::class;
 
         return [
-            'the default gates key' => ['gates', null, "The [gates] extension {$class} adds search meta to {$resource} under its name, which is the key of the gates in the meta of a search page (rest.gates.key). Register the extension under another name, or set rest.gates.key to another name."],
-            'the instructions key' => ['instructions', null, "The [instructions] extension {$class} adds search meta to {$resource} under its name, which is the key of the instruction meta of a search page. Register the extension under another name."],
-            'a configured gates key' => ['abilities', 'abilities', "The [abilities] extension {$class} adds search meta to {$resource} under its name, which is the key of the gates in the meta of a search page (rest.gates.key). Register the extension under another name, or set rest.gates.key to another name."],
+            'the default gates key' => [$gates, null, "The [gates] extension {$gates} adds search meta to {$resource} under its name, which is the key of the gates in the meta of a search page (rest.gates.key). Register the extension under another name, or set rest.gates.key to another name."],
+            'the instructions key' => [$instructions, null, "The [instructions] extension {$instructions} adds search meta to {$resource} under its name, which is the key of the instruction meta of a search page. Register the extension under another name."],
+            'a configured gates key' => [$abilities, 'abilities', "The [abilities] extension {$abilities} adds search meta to {$resource} under its name, which is the key of the gates in the meta of a search page (rest.gates.key). Register the extension under another name, or set rest.gates.key to another name."],
         ];
     }
 
+    /** @param class-string $class */
     #[Test]
     #[DataProvider('packageKeys')]
-    public function it_refuses_an_extension_named_after_a_key_of_the_package(string $name, ?string $gatesKey, string $message): void
+    public function it_refuses_an_extension_named_after_a_key_of_the_package(string $class, ?string $gatesKey, string $message): void
     {
         if ($gatesKey !== null) {
             config(['rest.gates.key' => $gatesKey]);
         }
 
-        config(['rest.extensions' => [$name => RegionSearchMeta::class]]);
+        config(['rest.extensions' => [$class]]);
         $this->withoutExceptionHandling();
 
         $this->expectException(InvalidMetaExtensionException::class);
@@ -190,7 +201,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_accepts_an_extension_named_gates_when_the_gates_key_is_another(): void
     {
-        config(['rest.gates.key' => 'abilities', 'rest.extensions' => ['gates' => QuotaSearchMeta::class]]);
+        config(['rest.gates.key' => 'abilities', 'rest.extensions' => [QuotaSearchMetaNamedGates::class]]);
 
         $response = $this->postJson('/meta-tickets/search', self::SEARCH);
 
@@ -216,7 +227,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_value_that_json_cannot_encode(mixed $value, string $type, string $path): void
     {
         MetaLog::$value = $value;
-        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $path, $type));
@@ -228,7 +239,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_model_in_the_meta(): void
     {
         MetaLog::$value = ['ticket' => new Ticket(['title' => 'Printer jam'])];
-        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.ticket', Ticket::class));
@@ -240,7 +251,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_an_eloquent_collection_in_the_meta(): void
     {
         MetaLog::$value = ['tickets' => new EloquentCollection([new Ticket(['title' => 'Printer jam'])])];
-        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.tickets', EloquentCollection::class));
@@ -252,7 +263,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_model_inside_a_plain_collection_in_the_meta(): void
     {
         MetaLog::$value = ['tickets' => collect([new Ticket(['title' => 'Printer jam'])])];
-        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.tickets.0', Ticket::class));
@@ -264,7 +275,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_the_models_of_an_eloquent_collection_turned_into_a_plain_one(): void
     {
         MetaLog::$value = ['tickets' => (new EloquentCollection([new Ticket(['title' => 'Printer jam'])]))->toBase()];
-        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', 'value.value.tickets.0', Ticket::class));
@@ -284,7 +295,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_json_resource_in_the_meta(Closure $value, string $path, string $type): void
     {
         MetaLog::$value = $value();
-        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', "value.value.{$path}", $type));
@@ -296,7 +307,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_renders_a_plain_collection_of_values(): void
     {
         MetaLog::$value = ['titles' => collect(['Printer jam', 'Printer toner'])];
-        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
 
         $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->assertJsonPath('meta.value', ['value' => ['titles' => ['Printer jam', 'Printer toner']]]);
     }
@@ -312,7 +323,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_value_that_json_refuses_naming_the_extension(mixed $value, string $reason): void
     {
         MetaLog::$value = $value;
-        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueSearchMeta::class, MetaTicketResource::class, 'searchMeta', $reason));
@@ -324,7 +335,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public function it_renders_json_serializable_values(): void
     {
         MetaLog::$value = ['at' => now(), 'tags' => (object) ['a' => 1], 'ratio' => 0.5, 'status' => MetaStatus::Open, 'none' => null];
-        config(['rest.extensions' => ['value' => ValueSearchMeta::class]]);
+        config(['rest.extensions' => [ValueSearchMeta::class]]);
 
         $content = (string) $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->getContent();
 
@@ -334,7 +345,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_reads_only_the_columns_that_the_search_loaded(): void
     {
-        config(['rest.extensions' => ['teams' => ColumnSearchMeta::class]]);
+        config(['rest.extensions' => [ColumnSearchMeta::class]]);
 
         $this->postJson('/meta-tickets/search', self::SEARCH)->assertOk()->assertJsonPath('meta.teams', ['teams' => [1, 1]]);
         $narrowed = $this->postJson('/meta-tickets/search', ['search' => ['selects' => [['field' => 'title']], 'sorts' => [['field' => 'id', 'direction' => 'asc']]]]);
@@ -347,7 +358,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_copies_of_the_rows_to_each_extension(): void
     {
-        config(['rest.extensions' => ['changing' => ChangingSearchMeta::class, 'quota' => QuotaSearchMeta::class]]);
+        config(['rest.extensions' => [ChangingSearchMeta::class, QuotaSearchMeta::class]]);
 
         $response = $this->postJson('/meta-tickets/search', self::SEARCH);
 
@@ -370,7 +381,7 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_adds_no_meta_to_an_include_or_a_lazy_search(): void
     {
-        config(['rest.extensions' => ['teams' => TeamSearchMeta::class]]);
+        config(['rest.extensions' => [TeamSearchMeta::class]]);
         $search = [...self::SEARCH['search'], 'includes' => [['relation' => 'team']]];
 
         $this->postJson('/meta-tickets/search', ['search' => $search])->assertOk()->assertJsonPath('meta', ['count' => 2]);

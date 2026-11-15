@@ -8,8 +8,14 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 use Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripResource;
 
-final class AtlasRowsExtension extends Extension implements RestrictsQueries
+class AtlasRowsExtension extends Extension implements RestrictsQueries
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'atlas';
+    }
+
     #[\Override]
     public function appliesTo(string $resource): bool
     {

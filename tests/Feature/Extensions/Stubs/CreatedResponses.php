@@ -8,6 +8,12 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 final class CreatedResponses extends DocumentedResponses
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'created';
+    }
+
+    #[\Override]
     public function documentOperation(OperationDocumentationContext $context): void
     {
         if ($context->endpoint === Endpoint::Search) {

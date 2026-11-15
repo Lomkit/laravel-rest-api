@@ -11,6 +11,12 @@ use RuntimeException;
 final class UndecidedRowsExtension extends Extension implements RestrictsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'undecided';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         if ($resource === TripResource::class) {

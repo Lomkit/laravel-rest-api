@@ -9,8 +9,14 @@ use Lomkit\Rest\Extensions\Kinds\AddsDetailsMeta;
 use Lomkit\Rest\Extensions\Kinds\AddsSearchMeta;
 use Lomkit\Rest\Tests\Fixtures\Festival\StageResource;
 
-final class RegionStageMeta extends Extension implements AddsDetailsMeta, AddsSearchMeta
+class RegionStageMeta extends Extension implements AddsDetailsMeta, AddsSearchMeta
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'region';
+    }
+
     #[\Override]
     public function appliesTo(string $resource): bool
     {

@@ -10,6 +10,12 @@ use Lomkit\Rest\Tests\Fixtures\Atlas\TripResource;
 final class OtherAtlasRowsExtension extends Extension implements RestrictsQueries
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'other';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === TripResource::class;

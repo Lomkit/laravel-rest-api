@@ -10,6 +10,12 @@ use Lomkit\Rest\Tests\Fixtures\Atlas\TripResource;
 final class TripCheckExtension extends Extension implements ChecksResources
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'trips';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === TripResource::class;

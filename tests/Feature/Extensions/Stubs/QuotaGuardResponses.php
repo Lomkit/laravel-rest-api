@@ -10,6 +10,12 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 final class QuotaGuardResponses extends DocumentedResponses implements GuardsWrites
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'refusals';
+    }
+
+    #[\Override]
     public function guardWrite(WriteGuardContext $context): void
     {
         $context->refuse('The monthly quota is reached.', 429);

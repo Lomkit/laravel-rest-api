@@ -119,7 +119,7 @@ class ExtensionExceptionTest extends TestCase
             is_a($exception, ExtensionException::class),
             is_a($exception, InvalidExtensionException::class),
             method_exists(InvalidMetaExtensionException::class, 'missingName'),
-            $exception->namesExtension('instructions'),
+            $exception->concerns('instructions'),
         ]);
     }
 
@@ -132,7 +132,7 @@ class ExtensionExceptionTest extends TestCase
             is_a($exception, ExtensionException::class),
             is_a($exception, InvalidExtensionException::class),
             method_exists(InvalidDocumentationExtensionException::class, 'missingName'),
-            $exception->namesExtension('quota'),
+            $exception->concerns('quota'),
         ]);
     }
 

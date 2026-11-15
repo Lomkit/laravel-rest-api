@@ -19,6 +19,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaDetailsMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingReadObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionDetailsMeta;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionDetailsMetaNamedArea;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnencodableMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueDetailsMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
@@ -39,7 +40,7 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
         MetaLog::reset();
         WriteLog::reset();
         Rest::resource('meta-tickets', MetaTicketController::class)->register();
-        config(['rest.extensions' => ['quota' => QuotaDetailsMeta::class, 'region' => RegionDetailsMeta::class]]);
+        config(['rest.extensions' => [QuotaDetailsMeta::class, RegionDetailsMeta::class]]);
     }
 
     #[\Override]
@@ -96,26 +97,30 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
         $this->assertSame($user, MetaLog::$details[0]->user);
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>, string}> */
     public static function orders(): array
     {
+        $area = '"meta":{"plan":"pro","area":{},"quota":{"plan":"pro","user":1}}';
+
         return [
-            'quota first' => [['quota' => QuotaDetailsMeta::class, 'region' => RegionDetailsMeta::class]],
-            'region first' => [['region' => RegionDetailsMeta::class, 'quota' => QuotaDetailsMeta::class]],
+            'quota first' => [[QuotaDetailsMeta::class, RegionDetailsMeta::class], self::META],
+            'region first' => [[RegionDetailsMeta::class, QuotaDetailsMeta::class], self::META],
+            'area, a later class, first by name' => [[QuotaDetailsMeta::class, RegionDetailsMetaNamedArea::class], $area],
+            'area first in the config' => [[RegionDetailsMetaNamedArea::class, QuotaDetailsMeta::class], $area],
         ];
     }
 
-    /** @param array<string, class-string> $extensions */
+    /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('orders')]
-    public function it_orders_the_details_meta_by_name_whatever_the_config_order(array $extensions): void
+    public function it_orders_the_details_meta_by_name_whatever_the_config_order(array $extensions, string $meta): void
     {
         config(['rest.extensions' => $extensions]);
         $this->actingAs(new GenericUser(['id' => TicketPolicy::LEAD]));
 
         $content = (string) $this->getJson('/meta-tickets')->assertOk()->getContent();
 
-        $this->assertStringContainsString(self::META, $content);
+        $this->assertStringContainsString($meta, $content);
     }
 
     #[Test]
@@ -133,7 +138,7 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_details_value_that_json_cannot_encode(): void
     {
         MetaLog::$value = ['list' => [new ArrayObject]];
-        config(['rest.extensions' => ['value' => ValueDetailsMeta::class]]);
+        config(['rest.extensions' => [ValueDetailsMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', 'value.value.list.0', 'ArrayObject'));
@@ -145,7 +150,7 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_model_in_the_details_meta(): void
     {
         MetaLog::$value = ['list' => [new Ticket(['title' => 'Printer jam'])]];
-        config(['rest.extensions' => ['value' => ValueDetailsMeta::class]]);
+        config(['rest.extensions' => [ValueDetailsMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', 'value.value.list.0', Ticket::class));
@@ -165,7 +170,7 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_json_resource_in_the_details_meta(Closure $value, string $path, string $type): void
     {
         MetaLog::$value = $value();
-        config(['rest.extensions' => ['value' => ValueDetailsMeta::class]]);
+        config(['rest.extensions' => [ValueDetailsMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notEncodable('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', "value.value.{$path}", $type));
@@ -184,7 +189,7 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_details_value_that_json_refuses_naming_the_extension(mixed $value, string $reason): void
     {
         MetaLog::$value = $value;
-        config(['rest.extensions' => ['value' => ValueDetailsMeta::class]]);
+        config(['rest.extensions' => [ValueDetailsMeta::class]]);
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', $reason));
@@ -197,7 +202,7 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     public function it_refuses_a_value_that_json_refuses_in_the_json_of_a_resource(mixed $value, string $reason): void
     {
         MetaLog::$value = $value;
-        config(['rest.extensions' => ['value' => ValueDetailsMeta::class]]);
+        config(['rest.extensions' => [ValueDetailsMeta::class]]);
         $context = new RestContext(RestRequest::create('/meta-tickets', 'GET'), $this->app, ActingUser::of('web', null));
 
         $this->expectExceptionObject(InvalidMetaExtensionException::notJson('value', ValueDetailsMeta::class, MetaTicketResource::class, 'detailsMeta', $reason));
@@ -218,7 +223,7 @@ final class DetailsMetaExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_the_extension_meta_to_read_observers(): void
     {
-        config(['rest.extensions' => ['quota' => QuotaDetailsMeta::class, 'reads' => RecordingReadObserver::class]]);
+        config(['rest.extensions' => [QuotaDetailsMeta::class, RecordingReadObserver::class]]);
         $this->actingAs(new GenericUser(['id' => TicketPolicy::LEAD]));
 
         $this->getJson('/meta-tickets')->assertOk();

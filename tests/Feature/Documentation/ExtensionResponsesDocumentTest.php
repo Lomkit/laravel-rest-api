@@ -16,6 +16,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MovingResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RivalQuotaResponses;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RivalQuotaResponsesNamedLimits;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharedBodyResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ShiftingResponses;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
@@ -47,7 +48,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_adds_the_response_of_an_extension_to_an_operation(): void
     {
-        config(['rest.extensions' => ['quota' => QuotaResponses::class]]);
+        config(['rest.extensions' => [QuotaResponses::class]]);
 
         $document = $this->document();
 
@@ -63,10 +64,10 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
         $this->assertSame(['quota.Exceeded'], array_values(array_filter(array_keys($document['components']['responses']), fn (string $name): bool => str_starts_with($name, 'quota.'))));
     }
 
-    /** @return array<string, array{array<string, class-string>, array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>, list<class-string>}> */
     public static function orders(): array
     {
-        $quota = ['quota' => QuotaResponses::class, 'archived' => ArchivedResponses::class];
+        $quota = [QuotaResponses::class, ArchivedResponses::class];
 
         return [
             'quota first' => [$quota, array_reverse($quota)],
@@ -75,8 +76,8 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     }
 
     /**
-     * @param  array<string, class-string>  $extensions
-     * @param  array<string, class-string>  $reversed
+     * @param  list<class-string>  $extensions
+     * @param  list<class-string>  $reversed
      */
     #[Test]
     #[DataProvider('orders')]
@@ -94,30 +95,36 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_refuses_a_status_that_the_package_documents(): void
     {
-        config(['rest.extensions' => ['forbidden' => ForbiddenResponses::class], 'app.debug' => false]);
+        config(['rest.extensions' => [ForbiddenResponses::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationExtensionException::statusTaken('forbidden', ForbiddenResponses::class, 'api/stages/search', 403, 'the package'));
 
         $this->document();
     }
 
-    /** @return array<string, array{array<string, class-string>}> */
+    /** @return array<string, array{list<class-string>, string, class-string, string, class-string}> */
     public static function rivals(): array
     {
         return [
-            'quota first' => [['quota' => QuotaResponses::class, 'rival' => RivalQuotaResponses::class]],
-            'rival first' => [['rival' => RivalQuotaResponses::class, 'quota' => QuotaResponses::class]],
+            'quota first' => [[QuotaResponses::class, RivalQuotaResponses::class], 'rival', RivalQuotaResponses::class, 'quota', QuotaResponses::class],
+            'rival first' => [[RivalQuotaResponses::class, QuotaResponses::class], 'rival', RivalQuotaResponses::class, 'quota', QuotaResponses::class],
+            'limits, a later class, first by name' => [[QuotaResponses::class, RivalQuotaResponsesNamedLimits::class], 'quota', QuotaResponses::class, 'limits', RivalQuotaResponsesNamedLimits::class],
+            'limits first in the config' => [[RivalQuotaResponsesNamedLimits::class, QuotaResponses::class], 'quota', QuotaResponses::class, 'limits', RivalQuotaResponsesNamedLimits::class],
         ];
     }
 
-    /** @param array<string, class-string> $extensions */
+    /**
+     * @param  list<class-string>  $extensions
+     * @param  class-string  $class
+     * @param  class-string  $ownerClass
+     */
     #[Test]
     #[DataProvider('rivals')]
-    public function it_refuses_a_status_that_another_extension_documents(array $extensions): void
+    public function it_refuses_a_status_that_another_extension_documents(array $extensions, string $name, string $class, string $owner, string $ownerClass): void
     {
         config(['rest.extensions' => $extensions, 'app.debug' => false]);
 
-        $this->expectExceptionObject(InvalidDocumentationExtensionException::statusTaken('rival', RivalQuotaResponses::class, 'api/stages/search', 429, 'the [quota] extension '.QuotaResponses::class));
+        $this->expectExceptionObject(InvalidDocumentationExtensionException::statusTaken($name, $class, 'api/stages/search', 429, "the [{$owner}] extension {$ownerClass}"));
 
         $this->document();
     }
@@ -125,7 +132,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_refuses_a_status_outside_the_error_statuses(): void
     {
-        config(['rest.extensions' => ['created' => CreatedResponses::class], 'app.debug' => false]);
+        config(['rest.extensions' => [CreatedResponses::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationExtensionException::statusOutOfRange('created', CreatedResponses::class, 'api/stages/search', 201));
 
@@ -135,7 +142,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_refuses_a_response_name_that_is_not_letters_and_digits(): void
     {
-        config(['rest.extensions' => ['dotted' => DottedResponses::class], 'app.debug' => false]);
+        config(['rest.extensions' => [DottedResponses::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationExtensionException::invalidResponseName('dotted', DottedResponses::class, 'quota.reached'));
 
@@ -145,7 +152,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_refuses_one_response_name_with_two_contents(): void
     {
-        config(['rest.extensions' => ['shifting' => ShiftingResponses::class], 'app.debug' => false]);
+        config(['rest.extensions' => [ShiftingResponses::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationException::componentTaken('response', 'shifting.Exceeded', ShiftingResponses::class, ShiftingResponses::class));
 
@@ -156,7 +163,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     public function it_refuses_a_registered_body_changed_then_registered_again(): void
     {
         SharedBodyResponses::reset(registersAgain: true);
-        config(['rest.extensions' => ['shared' => SharedBodyResponses::class], 'app.debug' => false]);
+        config(['rest.extensions' => [SharedBodyResponses::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationException::componentTaken('response', 'shared.Refused', SharedBodyResponses::class, SharedBodyResponses::class));
 
@@ -167,7 +174,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     public function it_refuses_a_registered_body_changed_by_a_later_operation(): void
     {
         SharedBodyResponses::reset(registersAgain: false);
-        config(['rest.extensions' => ['shared' => SharedBodyResponses::class], 'app.debug' => false]);
+        config(['rest.extensions' => [SharedBodyResponses::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationException::componentChanged('response', 'shared.Refused', SharedBodyResponses::class));
 
@@ -177,7 +184,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_refuses_one_response_name_with_two_statuses(): void
     {
-        config(['rest.extensions' => ['moving' => MovingResponses::class], 'app.debug' => false]);
+        config(['rest.extensions' => [MovingResponses::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationException::componentTaken('response', 'moving.Refused', MovingResponses::class, MovingResponses::class));
 
@@ -187,7 +194,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_tells_whether_the_operation_documents_a_status(): void
     {
-        config(['rest.extensions' => ['checked' => CheckedResponses::class]]);
+        config(['rest.extensions' => [CheckedResponses::class]]);
 
         $this->document();
 
@@ -199,7 +206,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_passes_the_operation_to_the_extension(): void
     {
-        config(['rest.extensions' => ['recording' => RecordingResponses::class]]);
+        config(['rest.extensions' => [RecordingResponses::class]]);
 
         $document = $this->document();
 
@@ -218,7 +225,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     {
         config(['rest.extensions' => []]);
         $without = json_encode($this->document());
-        config(['rest.extensions' => ['counting' => CountingExtension::class]]);
+        config(['rest.extensions' => [CountingExtension::class]]);
 
         $this->assertSame($without, json_encode($this->document()));
     }
@@ -226,7 +233,7 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
     #[Test]
     public function it_documents_a_valid_openapi_document_with_extension_responses(): void
     {
-        config(['rest.extensions' => ['quota' => QuotaResponses::class, 'archived' => ArchivedResponses::class]]);
+        config(['rest.extensions' => [QuotaResponses::class, ArchivedResponses::class]]);
 
         $this->assertSame([], (new OpenApiValidator)->documentErrors($this->document()));
     }

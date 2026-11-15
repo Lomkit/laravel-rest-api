@@ -10,6 +10,12 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
 final class TeamSearchMeta extends Extension implements AddsSearchMeta
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'teams';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === TeamResource::class;

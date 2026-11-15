@@ -19,6 +19,12 @@ use Lomkit\Rest\Tests\Fixtures\Festival\StageResource;
 final class QuotaStageMeta extends Extension implements AddsDetailsMeta, AddsSearchMeta, DocumentsExtension
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return in_array($resource, [StageResource::class, ShowResource::class], true);

@@ -7,8 +7,14 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\ChecksResources;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripResource;
 
-final class ColumnCheckExtension extends Extension implements ChecksResources
+class ColumnCheckExtension extends Extension implements ChecksResources
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'columns';
+    }
+
     #[\Override]
     public function checkResource(ResourceCheckContext $context): void
     {

@@ -16,6 +16,12 @@ use Lomkit\Rest\Tests\Fixtures\Festival\StageResource;
 final class SearchOnlyMeta extends Extension implements AddsSearchMeta, DocumentsExtension
 {
     #[\Override]
+    public static function name(): string
+    {
+        return 'search';
+    }
+
+    #[\Override]
     public function appliesTo(string $resource): bool
     {
         return $resource === StageResource::class;
