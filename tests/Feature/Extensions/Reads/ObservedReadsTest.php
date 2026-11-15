@@ -5,12 +5,14 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Reads;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Exceptions\MissingColumnException;
+use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingReadObserver;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FailingReadObserver;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ObservedTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ObservedTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OpenTicketCount;
@@ -60,6 +62,7 @@ final class ObservedReadsTest extends HelpdeskTestCase
         ExtensionLog::reset();
         EventLog::reset();
         WriteLog::reset();
+        MaskingFields::reset();
         $this->travelTo('2026-11-08 10:00:00');
         $this->ids = array_map(fn (Ticket $ticket): int => $ticket->getKey(), $this->seedTickets());
         $this->billing = Team::query()
@@ -77,6 +80,7 @@ final class ObservedReadsTest extends HelpdeskTestCase
         ExtensionLog::reset();
         EventLog::reset();
         WriteLog::reset();
+        MaskingFields::reset();
 
         parent::tearDown();
     }
@@ -258,6 +262,18 @@ final class ObservedReadsTest extends HelpdeskTestCase
         $narrowed->assertStatus(500);
         $this->assertInstanceOf(MissingColumnException::class, $narrowed->exception);
         $this->assertSame(["read team {$this->billing}", "read team {$this->billing}"], array_values(array_filter(EventLog::$lines, fn (string $line): bool => str_starts_with($line, 'read'))));
+    }
+
+    #[Test]
+    public function it_hands_the_column_of_a_hidden_field_to_a_read_observer_without_rendering_it(): void
+    {
+        MaskingFields::$narrow = fn (FieldsContext $context) => $context->hide('status');
+        config(['rest.extensions' => ['mask' => MaskingFields::class, 'reads' => RecordingReadObserver::class]]);
+
+        $response = $this->postJson('/observed-tickets/search', ['search' => ['filters' => [['field' => 'id', 'value' => $this->ids['Printer jam']]]]])->assertOk();
+
+        $this->assertSame([['id' => $this->ids['Printer jam'], 'team_id' => $this->billing, 'title' => 'Printer jam']], $response->json('data'));
+        $this->assertSame([[$this->ids['Printer jam'], 'open']], array_map(fn (Model $row): array => [$row->getKey(), $row->getAttribute('status')], WriteLog::$reads[0]->rows ?? []));
     }
 
     /** @return array<string, mixed> */
