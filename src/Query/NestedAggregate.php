@@ -75,7 +75,7 @@ final readonly class NestedAggregate implements AggregateQuery
      */
     private function level(EloquentBuilder $query, Relation $middle, array $below, Closure $constraint): void
     {
-        $middle->applyPerimeter($query);
+        $middle->constrainToPerimeter($query);
 
         $next = array_shift($below);
 

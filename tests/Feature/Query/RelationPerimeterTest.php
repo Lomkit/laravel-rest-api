@@ -10,6 +10,8 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
+use Lomkit\Rest\Tests\Feature\Query\Stubs\PopularAuthorController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathAuthorController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathAuthorResource;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathPostController;
@@ -17,6 +19,7 @@ use Lomkit\Rest\Tests\Feature\Search\Stubs\Paths\PathPostResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
 class RelationPerimeterTest extends PackageTestCase
@@ -54,10 +57,49 @@ class RelationPerimeterTest extends PackageTestCase
         $context->authorizer()->plan([Check::onClass($context->resource(PathAuthorResource::class), 'viewAny')]);
         $query = Author::query();
 
-        $relation?->applyPerimeter($query);
+        $relation?->constrainToPerimeter($query);
 
         $this->assertSame(['Nested'], array_column($query->getQuery()->wheres, 'type'));
         $this->assertSame('select * from authors where (last_name != ?) and authors.deleted_at is null', $this->sql($query));
+    }
+
+    #[Test]
+    public function it_applies_the_bare_perimeter_in_apply_perimeter(): void
+    {
+        $context = new RestContext(RestRequest::create('/path-posts/search', 'POST'), $this->app);
+        $relation = $context->resource(PathPostResource::class)->definition()->relation('author');
+        $context->authorizer()->plan([Check::onClass($context->resource(PathAuthorResource::class), 'viewAny')]);
+        $query = Author::query();
+
+        $relation?->applyPerimeter($query);
+
+        $this->assertSame('select * from authors where last_name != ? and authors.deleted_at is null', $this->sql($query));
+    }
+
+    #[Test]
+    public function it_keeps_the_or_where_of_an_overridden_perimeter_inside_its_group(): void
+    {
+        $this->seedPopularPost();
+        $this->captureQueries();
+
+        $this->postJson('/popular-authors/search', ['search' => ['filters' => [['field' => 'posts.title', 'value' => 'Notes']]]])
+            ->assertOk()
+            ->assertExactJson(['current_page' => 1, 'data' => [['id' => 1, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'settings' => null]], 'from' => 1, 'last_page' => 1, 'per_page' => 50, 'to' => 1, 'total' => 1, 'meta' => []]);
+        $this->assertSame([[
+            'select authors.id, authors.first_name, authors.last_name, authors.settings from authors where (last_name != ?) and (exists (select * from posts where authors.id = posts.author_id and posts.title = ? and (title != ? or views > ?))) and authors.deleted_at is null order by authors.id desc limit 50 offset 0',
+            ['Hidden', 'Notes', 'Hidden', 1000],
+        ]], $this->readsOf('authors'));
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['hidden' => HiddenRowsExtension::class])]
+    public function it_applies_the_restrictions_after_an_overridden_perimeter(): void
+    {
+        $this->seedPopularPost();
+
+        $this->postJson('/popular-authors/search', ['search' => ['filters' => [['relation' => 'posts', 'exists' => true]]]])
+            ->assertOk()
+            ->assertJsonPath('data.*.id', [1]);
     }
 
     #[Test]
@@ -95,6 +137,13 @@ class RelationPerimeterTest extends PackageTestCase
             'select authors.id, authors.first_name, authors.last_name, authors.settings from authors where (last_name != ?) and (exists (select * from posts where authors.id = posts.author_id and posts.title = ? and (title != ?)) and exists (select * from posts where authors.id = posts.author_id and (title != ?))) and authors.deleted_at is null order by authors.id desc limit 50 offset 0',
             ['Hidden', 'Notes', 'Hidden', 'Hidden'],
         ]], $this->readsOf('authors'));
+    }
+
+    private function seedPopularPost(): void
+    {
+        Rest::resource('popular-authors', PopularAuthorController::class)->register();
+        DB::table('authors')->insert(['id' => 3, 'first_name' => 'Grace', 'last_name' => 'Hopper', 'api_token' => 'token-3']);
+        DB::table('posts')->insert(['id' => 3, 'author_id' => 3, 'title' => 'Hidden', 'status' => 'published', 'views' => 5000, 'published_on' => '2026-01-01']);
     }
 
     private function sql(Builder $query): string

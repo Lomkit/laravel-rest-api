@@ -40,7 +40,7 @@ final readonly class RelationConditionClause implements Clause
             }
 
             $this->through($query, $relations, 'and');
-            $relation->applyPerimeter($query);
+            $relation->constrainToPerimeter($query);
         };
 
         if ($relation instanceof PolymorphicRelation) {
@@ -57,6 +57,6 @@ final readonly class RelationConditionClause implements Clause
     {
         $this->path->field->filter($query, $this->operator, $this->value, 'and', $this->path->column($query->getModel()));
 
-        $relation->applyPerimeter($query);
+        $relation->constrainToPerimeter($query);
     }
 }

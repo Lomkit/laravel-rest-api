@@ -63,6 +63,6 @@ final readonly class MorphGroupClause implements Clause
 
         $this->types[$target->type]->apply($query);
 
-        $this->relation->applyPerimeter($query);
+        $this->relation->constrainToPerimeter($query);
     }
 }

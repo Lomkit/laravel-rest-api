@@ -35,6 +35,6 @@ final readonly class RelationSortClause implements Clause
     /** @param EloquentBuilder<Model> $query */
     private function perimeter(EloquentBuilder $query): void
     {
-        $this->relation->applyPerimeter($query);
+        $this->relation->constrainToPerimeter($query);
     }
 }

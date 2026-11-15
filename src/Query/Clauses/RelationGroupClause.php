@@ -34,6 +34,6 @@ final readonly class RelationGroupClause implements Clause
     {
         $this->filters->apply($query);
 
-        $this->relation->applyPerimeter($query);
+        $this->relation->constrainToPerimeter($query);
     }
 }

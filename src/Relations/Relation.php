@@ -55,9 +55,15 @@ class Relation
     }
 
     /** @param Builder<Model> $query */
+    final public function constrainToPerimeter(Builder $query): void
+    {
+        (new PerimeterClause($this->perimeterResource($query->getModel()), $this->applyPerimeter(...)))->apply($query);
+    }
+
+    /** @param Builder<Model> $query */
     public function applyPerimeter(Builder $query): void
     {
-        self::perimeter($this->resource(), $query);
+        self::perimeter($this->perimeterResource($query->getModel()), $query);
     }
 
     public function hasMultipleEntries(): bool
@@ -169,12 +175,17 @@ class Relation
         return $this->resource();
     }
 
+    protected function perimeterResource(Model $model): Resource
+    {
+        return $this->resource();
+    }
+
     /** @param Builder<Model> $query */
     protected static function perimeter(Resource $resource, Builder $query): void
     {
         $resource->context()->authorizer()->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
-        (new PerimeterClause($resource))->apply($query);
+        $resource->perimeterQuery($query);
     }
 
     protected function modelRelation(): mixed
