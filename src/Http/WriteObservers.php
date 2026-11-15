@@ -69,7 +69,6 @@ final readonly class WriteObservers
     private function calls(Resource $resource, Closure $context): array
     {
         $extensions = $this->resource->context()->extensions()->applicable($resource::class, ObservesWrites::class);
-        ksort($extensions);
         $user = $this->resource->context()->actingUser()->user;
         $calls = [];
 

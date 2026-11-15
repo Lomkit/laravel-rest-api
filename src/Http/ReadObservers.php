@@ -29,8 +29,6 @@ final readonly class ReadObservers
             return null;
         }
 
-        ksort($extensions);
-
         return new self($resource, $extensions);
     }
 

@@ -62,7 +62,6 @@ final readonly class WriteGuard
             return;
         }
 
-        ksort($extensions);
         $user = $context->actingUser()->user;
 
         foreach ($extensions as $name => $extension) {
