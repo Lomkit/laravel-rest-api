@@ -4,10 +4,15 @@ namespace Lomkit\Rest\Tests\Unit\Text;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Engines\NullEngine;
 use Lomkit\Rest\Exceptions\ConflictingListsException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTurbopufferEngine;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherResource;
 use Lomkit\Rest\Text\Engine\IndexConditions;
+use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+use Lomkit\Rest\Text\Engine\Profiles\NullProfile;
+use Lomkit\Rest\Text\Engine\Profiles\TurbopufferProfile;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -105,11 +110,52 @@ class IndexConditionsTest extends TestCase
         $this->assertSame(['readers' => ['ann', 'bob']], $this->applied($conditions)->whereNotIns);
     }
 
+    #[Test]
+    public function it_hands_the_list_conditions_to_a_profile_that_filters_lists_natively(): void
+    {
+        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions->include('number', [1, 2]);
+        $conditions->include('readers', ['ann'], true);
+        $conditions->exclude('team', ['blue']);
+        $conditions->exclude('labels', ['x', 'y'], true);
+
+        $builder = $this->applied($conditions, new TurbopufferProfile(new FakeTurbopufferEngine));
+
+        $this->assertSame(['number' => [1, 2]], $builder->whereIns);
+        $this->assertSame(['team' => ['blue']], $builder->whereNotIns);
+        $this->assertSame(['filters' => ['And', [['readers', 'ContainsAny', ['ann']], ['labels', 'NotContainsAny', ['x', 'y']]]]], $builder->options);
+    }
+
+    #[Test]
+    public function it_sends_a_single_list_condition_as_the_only_native_filter_beside_the_options(): void
+    {
+        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions->exclude('readers', ['ann'], true);
+        $builder = new Builder(new class extends Model {}, '');
+        $builder->options(['consistency' => ['level' => 'eventual']]);
+
+        $conditions->applyTo($builder, new TurbopufferProfile(new FakeTurbopufferEngine));
+
+        $this->assertSame([[], []], [$builder->whereIns, $builder->whereNotIns]);
+        $this->assertSame(['consistency' => ['level' => 'eventual'], 'filters' => ['readers', 'NotContainsAny', ['ann']]], $builder->options);
+    }
+
+    #[Test]
+    public function it_sets_no_native_filter_without_a_list_condition(): void
+    {
+        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions->include('number', [1]);
+
+        $builder = $this->applied($conditions, new TurbopufferProfile(new FakeTurbopufferEngine));
+
+        $this->assertSame([['number' => [1]], []], [$builder->whereIns, $builder->options]);
+    }
+
     /** @return Builder<Model> */
-    private function applied(IndexConditions $conditions): Builder
+    private function applied(IndexConditions $conditions, ?EngineProfile $profile = null): Builder
     {
         $builder = new Builder(new class extends Model {}, '');
-        $conditions->applyTo($builder);
+        $conditions->applyTo($builder, $profile ?? new NullProfile(new NullEngine));
 
         return $builder;
     }

@@ -26,7 +26,7 @@ final class ReadersExtension extends Extension implements DeclaresIndexAttribute
     #[\Override]
     public function appliesTo(string $resource): bool
     {
-        return $resource === ReaderVoucherResource::class;
+        return is_a($resource, ReaderVoucherResource::class, true);
     }
 
     #[\Override]
