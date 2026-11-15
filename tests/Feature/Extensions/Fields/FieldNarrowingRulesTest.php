@@ -13,6 +13,8 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Fields\FieldReduction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OtherMaskingFields;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PricelessProductController;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RuledProductController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\PricedCategoryController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
@@ -265,6 +267,61 @@ class FieldNarrowingRulesTest extends PackageTestCase
             ['id' => 1, 'name' => 'Lighting', 'featured_products' => [['id' => 2, 'category_id' => 1, 'name' => 'Floor lamp', 'pivot' => []]], '@more' => []],
             ['id' => 2, 'name' => 'Seating', 'featured_products' => [['id' => 3, 'category_id' => 2, 'name' => 'Stool', 'pivot' => []]], '@more' => []],
         ]);
+    }
+
+    #[Test]
+    public function it_drops_the_resource_rules_of_a_hidden_field(): void
+    {
+        $this->registerRuledRoutes();
+        MaskingFields::$narrow = static function (FieldsContext $context): void {
+            if ($context->resource instanceof ProductResource) {
+                $context->hide('price');
+            }
+        };
+
+        foreach ([
+            ['operation' => 'create', 'attributes' => ['category_id' => 1, 'name' => '']],
+            ['operation' => 'update', 'key' => 1, 'attributes' => ['price' => 'x']],
+        ] as $entry) {
+            $ruled = $this->actingAs(self::user())->postJson('/api/ruled-products/mutate', ['mutate' => [$entry]]);
+            $priceless = $this->actingAs(self::user())->postJson('/api/priceless-products/mutate', ['mutate' => [$entry]]);
+
+            $ruled->assertUnprocessable();
+            $this->assertSame($priceless->json(), $ruled->json());
+        }
+
+        $this->actingAs(self::user())->getJson('/api/ruled-products?with=rules')
+            ->assertOk()
+            ->assertJsonPath('data.rules', ['all' => [], 'create' => [], 'update' => []]);
+    }
+
+    #[Test]
+    public function it_keeps_the_resource_rules_of_a_read_only_field(): void
+    {
+        $this->registerRuledRoutes();
+        MaskingFields::$narrow = static fn (FieldsContext $context): mixed => $context->readOnly('price');
+
+        $details = $this->actingAs(self::user())->getJson('/api/ruled-products?with=rules');
+        $update = $this->actingAs(self::user())->postJson('/api/ruled-products/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => 1, 'attributes' => ['price' => 'x']],
+        ]]);
+
+        $details->assertOk()->assertJsonPath('data.rules', ['all' => ['price' => ['integer']], 'create' => ['price' => ['required']], 'update' => []]);
+        $update->assertUnprocessable()->assertExactJson([
+            'message' => 'The mutate.0.attributes.price field must be an integer. (and 1 more error)',
+            'errors' => [
+                'mutate.0.attributes.price' => ['The mutate.0.attributes.price field must be an integer.'],
+                'mutate.0.attributes' => ['The price key of the mutate.0.attributes field is not writable on update.'],
+            ],
+        ]);
+    }
+
+    private function registerRuledRoutes(): void
+    {
+        Route::prefix('api')->group(function (): void {
+            Rest::resource('ruled-products', RuledProductController::class)->register();
+            Rest::resource('priceless-products', PricelessProductController::class)->register();
+        });
     }
 
     private function narrowingException(): InvalidFieldExtensionException

@@ -46,6 +46,21 @@ final readonly class NarrowedFields
         return FieldSet::of($kept);
     }
 
+    /**
+     * @template TKey of array-key
+     *
+     * @param  array<TKey, mixed>  $rules
+     * @return array<TKey, mixed>
+     */
+    public function withoutHidden(array $rules): array
+    {
+        if ($this->hidden === []) {
+            return $rules;
+        }
+
+        return array_filter($rules, fn (int|string $key): bool => ! $this->hides((string) $key), ARRAY_FILTER_USE_KEY);
+    }
+
     /** @return list<string> */
     public function unfilterableNames(): array
     {
@@ -56,6 +71,11 @@ final readonly class NarrowedFields
     public function unsortableNames(): array
     {
         return array_values(array_unique([...$this->hidden, ...$this->unsortable]));
+    }
+
+    private function hides(string $key): bool
+    {
+        return array_any($this->hidden, static fn (string $field): bool => $key === $field || str_starts_with($key, $field.'.'));
     }
 
     private function narrow(Field $field): Field

@@ -72,6 +72,18 @@ final class NarrowedFieldsTest extends TestCase
     }
 
     #[Test]
+    public function it_drops_the_rule_keys_of_hidden_fields(): void
+    {
+        $rules = ['price' => 'integer', 'prices' => 'array', 'price.*' => 'integer', 'unit_price' => 'integer', 'price.amount' => 'integer', 0 => 'present', 'name' => 'string'];
+
+        $this->assertSame(
+            ['prices' => 'array', 'unit_price' => 'integer', 0 => 'present', 'name' => 'string'],
+            (new NarrowedFields(hidden: ['price']))->withoutHidden($rules),
+        );
+        $this->assertSame($rules, (new NarrowedFields(readOnly: ['price']))->withoutHidden($rules));
+    }
+
+    #[Test]
     public function it_lists_hidden_names_among_unfilterable_and_unsortable_names(): void
     {
         $narrowed = new NarrowedFields(hidden: ['price'], unfilterable: ['name', 'price'], unsortable: ['id']);

@@ -10,6 +10,7 @@ use Lomkit\Rest\Authorization\CacheContext;
 use Lomkit\Rest\Authorization\CachedAbilities;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Fields\NarrowedFields;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Metrics\Metric;
@@ -59,6 +60,12 @@ final class ResourceDefinition
     public function declaredFields(): FieldSet
     {
         return $this->fields->declared();
+    }
+
+    /** @internal */
+    public function fieldNarrowing(): NarrowedFields
+    {
+        return $this->fields->narrowing();
     }
 
     public function version(): ?RowVersion
