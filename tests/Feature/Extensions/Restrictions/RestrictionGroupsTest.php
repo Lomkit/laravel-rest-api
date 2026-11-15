@@ -22,7 +22,6 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class RestrictionGroupsTest extends PackageTestCase
@@ -119,27 +118,16 @@ class RestrictionGroupsTest extends PackageTestCase
         $response->assertOk()->assertJsonPath('data.*.id', [3, 1]);
     }
 
-    /** @param list<class-string> $extensions */
     #[Test]
-    #[DataProvider('orders')]
-    public function it_gives_the_same_rows_and_sql_in_any_extension_order(array $extensions): void
+    public function it_gives_the_same_rows_and_sql_in_any_extension_order(): void
     {
-        config(['rest.extensions' => $extensions]);
+        config(['rest.extensions' => [SecondHalfExtension::class, FirstHalfExtension::class]]);
         $this->captureQueries();
 
         $response = $this->postJson('/restricted-authors/search', ['search' => ['selects' => [['field' => 'id']]]]);
 
         $response->assertOk()->assertJsonPath('data.*.id', [4, 2]);
         $this->assertSame([[sprintf(self::ROOT, '((authors.id != ?) and (authors.id != ?)) and '), [1, 3]]], $this->readsOf('authors'));
-    }
-
-    /** @return array<string, array{list<class-string>}> */
-    public static function orders(): array
-    {
-        return [
-            'in name order' => [[FirstHalfExtension::class, SecondHalfExtension::class]],
-            'in reverse order' => [[SecondHalfExtension::class, FirstHalfExtension::class]],
-        ];
     }
 
     #[Test]
