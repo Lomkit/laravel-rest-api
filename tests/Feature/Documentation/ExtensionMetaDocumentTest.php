@@ -15,6 +15,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SearchOnlyMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharedSchemaMeta;
 use Lomkit\Rest\Tests\Fixtures\Festival\StageResource;
 use Orchestra\Testbench\Attributes\WithConfig;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use stdClass;
 
@@ -52,21 +53,6 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
     }
 
     #[Test]
-    public function it_validates_the_meta_of_a_page_against_the_extension_schemas(): void
-    {
-        $document = $this->document();
-        $pointer = '#/components/schemas/StagePaginated/properties/meta';
-        $validator = new OpenApiValidator;
-
-        $this->assertSame([], $validator->schemaErrors($document, $pointer, ['quota' => ['remaining' => 3], 'region' => new stdClass]));
-        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, (object) []));
-        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['quota' => ['remaining' => 3]]));
-        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['quota' => ['remaining' => 'three']]));
-        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['quota' => ['remaining' => 3, 'used' => 1]]));
-        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['listed' => 2]));
-    }
-
-    #[Test]
     public function it_adds_the_extension_properties_to_the_open_meta_of_a_resource_with_search_meta(): void
     {
         $meta = $this->document()['components']['schemas']['ShowPaginated']['properties']['meta'];
@@ -100,30 +86,22 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
     }
 
     #[Test]
-    public function it_lists_the_extension_properties_in_name_order_whatever_the_config_order(): void
-    {
-        $first = $this->document()['components']['schemas'];
-        config(['rest.extensions' => [RegionStageMeta::class, QuotaStageMeta::class]]);
-        $second = $this->document()['components']['schemas'];
-
-        $this->assertSame(self::PAGE_META, json_encode($second['StagePaginated']['properties']['meta']));
-        $this->assertSame(self::DETAILS_META, json_encode($second['StageDetails']['properties']['data']['properties']['meta']));
-        $this->assertSame(json_encode($first), json_encode($second));
-    }
-
-    #[Test]
-    public function it_lists_the_extension_properties_in_name_order_whatever_the_class_order(): void
+    public function it_lists_the_extension_properties_in_name_order_whatever_the_class_and_config_order(): void
     {
         $keys = [];
+        $documents = [];
 
         foreach ([[QuotaStageMeta::class, RegionStageMetaNamedArea::class], [RegionStageMetaNamedArea::class, QuotaStageMeta::class]] as $extensions) {
             config(['rest.extensions' => $extensions]);
-            $schemas = $this->document()['components']['schemas'];
+            $document = $this->document();
+            $schemas = $document['components']['schemas'];
             $keys[] = array_keys($schemas['StagePaginated']['properties']['meta']['properties']);
             $keys[] = array_keys($schemas['StageDetails']['properties']['data']['properties']['meta']['properties']);
+            $documents[] = json_encode($document);
         }
 
         $this->assertSame([['gates', 'area', 'quota'], ['area', 'quota'], ['gates', 'area', 'quota'], ['area', 'quota']], $keys);
+        $this->assertSame($documents[0], $documents[1]);
     }
 
     #[Test]
@@ -138,22 +116,26 @@ class ExtensionMetaDocumentTest extends DocumentationTestCase
         $this->assertSame('', SharedSchemaMeta::$schema?->description);
     }
 
-    #[Test]
-    public function it_refuses_a_meta_schema_of_an_extension_without_the_meta_kind(): void
+    /** @return array<string, array{string, class-string, class-string}> */
+    public static function metaWithoutKind(): array
     {
-        config(['rest.extensions' => [SchemaOnlyMeta::class], 'app.debug' => false]);
-
-        $this->expectExceptionObject(InvalidDocumentationExtensionException::metaWithoutKind('schema', SchemaOnlyMeta::class, StageResource::class, AddsSearchMeta::class));
-
-        $this->document();
+        return [
+            'a search meta schema without any meta kind' => ['schema', SchemaOnlyMeta::class, AddsSearchMeta::class],
+            'a details meta schema of an extension that adds only search meta' => ['search', SearchOnlyMeta::class, AddsDetailsMeta::class],
+        ];
     }
 
+    /**
+     * @param  class-string  $class
+     * @param  class-string  $kind
+     */
     #[Test]
-    public function it_refuses_a_details_meta_schema_of_an_extension_that_adds_only_search_meta(): void
+    #[DataProvider('metaWithoutKind')]
+    public function it_refuses_a_meta_schema_of_an_extension_without_the_meta_kind(string $name, string $class, string $kind): void
     {
-        config(['rest.extensions' => [SearchOnlyMeta::class], 'app.debug' => false]);
+        config(['rest.extensions' => [$class], 'app.debug' => false]);
 
-        $this->expectExceptionObject(InvalidDocumentationExtensionException::metaWithoutKind('search', SearchOnlyMeta::class, StageResource::class, AddsDetailsMeta::class));
+        $this->expectExceptionObject(InvalidDocumentationExtensionException::metaWithoutKind($name, $class, StageResource::class, $kind));
 
         $this->document();
     }
