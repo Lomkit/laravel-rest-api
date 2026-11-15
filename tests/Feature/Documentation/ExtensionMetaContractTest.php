@@ -99,6 +99,22 @@ class ExtensionMetaContractTest extends DocumentationTestCase
         $this->assertSame(['main'], DB::table('stages')->pluck('code')->all());
     }
 
+    #[Test]
+    public function it_documents_no_refusal_under_the_statuses_that_refuse_rejects(): void
+    {
+        $document = $this->document();
+        $refusal = (object) ['message' => 'The monthly quota is reached.'];
+        $validator = new OpenApiValidator;
+        $errors = [];
+
+        foreach (['RestConflict', 'RestValidationFailed', 'RestConfirmationRequired'] as $component) {
+            $errors[$component] = $validator->schemaErrors($document, "#/components/responses/{$component}/content/application~1json/schema", $refusal) !== [];
+        }
+
+        $this->assertSame(['RestConflict' => true, 'RestValidationFailed' => true, 'RestConfirmationRequired' => true], $errors);
+        $this->assertSame([], $validator->schemaErrors($document, '#/components/responses/RestForbidden/content/application~1json/schema', $refusal));
+    }
+
     private static function meta(string $content, ?string $wrapper = null): mixed
     {
         $decoded = json_decode($content, flags: JSON_THROW_ON_ERROR);
