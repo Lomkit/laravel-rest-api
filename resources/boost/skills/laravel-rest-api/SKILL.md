@@ -1935,6 +1935,75 @@ final class SharingExtension extends Extension implements DeclaresGates
 - Guarantees: a static kind. It receives the resource class only, no user. Its gates come after those of the resource, in name order, each listed once even when the resource or another extension declares it too. They show in `/details` (`with=gates`), are accepted in `search.gates` at every level of the resource and answered from the policy method (`share($user, $model)`, `authorized_to_share`, renamed in `rest.gates.names`), and the OpenAPI document lists them. A resource that turns its gates off lists none.
 - Forbids: what `gates()` of a resource refuses (a name that is not camelCase, `viewAny`, a built-in ability) and a name listed twice by one extension. `InvalidAuthorizationExtensionException` names the extension by its name and its class, and the resource, when the gates are first read.
 
+### Narrowing fields (`NarrowsFields`)
+
+App: `'payroll' => \Vendor\Payroll\SalaryFieldsExtension::class` in `rest.extensions`.
+
+Package:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\FieldsContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\NarrowsFields;
+
+final class SalaryFieldsExtension extends Extension implements NarrowsFields
+{
+    public function __construct(private readonly PayrollAccess $access) {}
+
+    #[\Override]
+    public function appliesTo(string $resource): bool
+    {
+        return $resource === EmployeeResource::class;
+    }
+
+    #[\Override]
+    public function narrowFields(FieldsContext $context): void
+    {
+        if ($this->access->readsSalaries($context->user)) {
+            return;
+        }
+
+        $context->hide('salary');
+        $context->readOnly('grade');
+        $context->unsortable('hired_on');
+    }
+}
+```
+
+- Guarantees: it only takes away, in any extension order: each method adds names to a list, and the lists of every extension apply together. It runs once per request and resource, before any write transaction, with `$context->user`, the user of the request (`null` for a guest), also under `Rest::search()->as($user)`. A hidden field is gone from filters (nested groups, relation paths, relation groups, include and aggregate filters), sorts (relation sorts too), selects, includes, aggregates, rendered rows at every include level and in morph-to branches, the records read after a write, `/details` (`fields` and `rules`), mutate validation and writes (nested relations too), the searches of actions and metrics, and the grammar of a search engine (`text.engine` in `/details`). A client gets the answer it gets for a field that `fields()` does not declare: same status, same message. The `rules()`, `createRules()` and `updateRules()` keys of a hidden field are dropped. `readOnly()`, `unfilterable()` and `unsortable()` give the field `readonly()`, `filterable(false)` and `sortable(false)`, with the same answers; an unsortable field also leaves `min`, `max`, `avg` and `sum` aggregates and relation sorts, as `sortable(false)` does. The narrowed fields are copies: the declared ones stay as they are.
+- Forbids: a name that `fields()` does not declare (`$context->declares()` tells, for a resource whose `fields()` depends on the user), and hiding the model key, the row version of a `versioned()` resource, a `searchable()` field of a SQL text search (the text search would still match it) or an attribute of `ScoutEngine::perimeter()`. Reading the fields or the text search of the same resource inside `narrowFields()`. Each throws `Lomkit\Rest\Exceptions\InvalidFieldExtensionException`, which names the extension, the resource and the field (the last one names the resource only).
+- The OpenAPI document is built without a user and without this kind: it lists the declared fields, also those that an extension hides for some users.
+- Out of reach: app code reads any column, so metrics, scopes, instructions, `perimeterQuery()`, `defaultOrderBy()`, `filterUsing()`, `sortUsing()`, `resolveUsing()` and `requires()` of other fields still use a hidden column; authorize a metric that reads it. Relations are not fields: hiding a foreign key leaves the relation and the key of its rows. Pivot fields belong to the relation and stay. A search engine matches the text of its index, and its restrictions and instructions still filter on every attribute: keep a hidden value out of `toSearchableArray()`. The column of a hidden field is not selected for that user: a policy that reads it needs the column in `alwaysSelect()`, as it does today when a client sends `selects`; it is loaded and not rendered. `Rest::search()->page()` returns models; `render()` and `lazy()` return narrowed rows. A hidden field that a create needs (a column without default) makes that create fail in the database: hide only what the user may leave out.
+
+### Adding route middleware (`AddsRouteMiddleware`)
+
+App: `'plans' => \Vendor\Plans\PlanRoutesExtension::class` in `rest.extensions`.
+
+Package:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\RouteMiddlewareContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\AddsRouteMiddleware;
+use Lomkit\Rest\Http\Routing\Endpoint;
+
+final class PlanRoutesExtension extends Extension implements AddsRouteMiddleware
+{
+    #[\Override]
+    public function routeMiddleware(RouteMiddlewareContext $context): array
+    {
+        return $context->endpoint === Endpoint::Search ? ['throttle:searches'] : [];
+    }
+}
+```
+
+- Guarantees: a static kind. It receives the resource class, the endpoint, the controller and the route name of the endpoint, no user, once per endpoint when the routes register. Its middleware comes after the package, resource and endpoint middleware and before the middleware of an action or a metric, in extension name order, each middleware once. The routes of the actions and metrics of an endpoint get it too. An `auth` middleware that it adds makes the OpenAPI document list the `401`, and `rest:check` counts the route as authenticated.
+- Forbids: anything but non-empty strings (`Lomkit\Rest\Exceptions\InvalidRouteExtensionException`, which names the extension, the resource and the endpoint, before any route of the resource is added). It cannot remove a middleware: the kind has no exclusion. The app keeps the last word: `withoutMiddleware()`, `withoutMiddlewareFor()` and the `$withoutMiddleware` of an action also remove the middleware of an extension.
+- The middleware is written into the routes when they register. After you add, remove or change an extension, run `php artisan route:cache` again. With Laravel's `WithCachedRoutes` on a test case, every test gets the routes, and the extension middleware, of the first test: a test that configures other extensions extends a base without the trait.
+- Use a named limiter (`throttle:searches`): two unnamed `throttle` middleware count each request twice. Route middleware also runs on Precognition requests.
+- When a configured or registered class implements this kind (or is bound in the container), each `Rest::resource()` registration builds the extensions once (at boot, or once in `route:cache`), and an invalid extension entry then stops the registration. Otherwise the routes register as before and no extension is built.
+- A changed extension middleware is not detected in a cached route, unlike the middleware of an action: refresh the cache.
+
 ## Artisan commands shipped by the package
 
 - `rest:resource {Name} --model=Model` — generate a Resource. Without `--model`, the model is guessed from the name (`PostResource` → `App\Models\Post`) when that class exists; otherwise the `$model` line is left out and the command warns.
