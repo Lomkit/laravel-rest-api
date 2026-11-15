@@ -2121,9 +2121,9 @@ final class ReadUsageExtension extends Extension implements ObservesReads
 
 ### Adding search meta (`AddsSearchMeta`)
 
-App: `'quota' => \Vendor\Plans\QuotaExtension::class` in `rest.extensions`.
+App: `\Vendor\Plans\QuotaExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(QuotaExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\SearchMetaContext;
@@ -2132,6 +2132,12 @@ use Lomkit\Rest\Extensions\Kinds\AddsSearchMeta;
 
 final class QuotaExtension extends Extension implements AddsSearchMeta
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
     public function __construct(private readonly ReadQuota $quota) {}
 
     #[\Override]
@@ -2143,13 +2149,13 @@ final class QuotaExtension extends Extension implements AddsSearchMeta
 ```
 
 - Guarantees: a request kind. The keys render under `meta.quota` of the search page, an object (`{}` when the array is empty), after the `create` gate, the `searchMeta()` keys of the resource and `instructions`, extensions in name order. It runs on the received page, after `searched()` and `searchMeta()` of the resource, on the database and on a search engine, for HTTP searches and `Rest::search()->page()` and `render()`, not `lazy()` nor the includes: `$context->rows` are copies of the rows of the page, then `$context->total`, `$context->page`, `$context->perPage`, `$context->search` (the `SearchContext` that `searchMeta()` of the resource receives), `$context->resource` and `$context->user`, `null` for a guest. Reading a column that the search did not load throws `MissingColumnException`, as in `searched()`. The values may be null, booleans, integers, finite floats, strings, arrays, `stdClass`, backed enums and `JsonSerializable` objects (a date renders as JSON), but not a model, an Eloquent collection or a `JsonResource` of a model (a `ResourceCollection` too; one inside a plain collection or a paginator is refused too: their items are checked), which would render every visible attribute past the fields of the resource: return the values the client needs.
-- Forbids: a name equal to `rest.gates.key` or `instructions`, a `searchMeta()` key of the resource equal to the name of the extension, and a value that JSON cannot encode (another object, a model, an Eloquent collection or a `JsonResource`, a `ResourceCollection` too, also inside a collection or a paginator, a pure enum, a float that is not finite, a string or key that is not UTF-8, an object that holds itself, a value nested deeper than 256 levels, a `jsonSerialize()` result that JSON refuses). Each throws `Lomkit\Rest\Exceptions\InvalidMetaExtensionException`, naming the extension and the resource; `rest:check` reports a name equal to `rest.gates.key` or `instructions` for each resource that the checked controllers reach, under `extension checks`. Slow calls: it runs on every search page. The rows can hold columns that the response does not render (`alwaysSelect()`, the columns of `AugmentsQueries` extensions, and the columns of the fields that `NarrowsFields` hides, loaded for the policies): keep them out of the meta, which the client receives.
+- Forbids: a name equal to `rest.gates.key` or `instructions`, a `searchMeta()` key of the resource equal to the name of the extension, and a value that JSON cannot encode (another object, a model, an Eloquent collection or a `JsonResource`, a `ResourceCollection` too, also inside a collection or a paginator, a pure enum, a float that is not finite, a string or key that is not UTF-8, an object that holds itself, a value nested deeper than 256 levels, a `jsonSerialize()` result that JSON refuses). Each throws `Lomkit\Rest\Exceptions\InvalidMetaExtensionException`, which names the extension by its name and its registered class and the resource, and `concerns(QuotaExtension::class)` is `true`. A name taken by the package or by a key of the resource is settled with another `name()`: the package returns another one, or the app lists a subclass that overrides `name()` in `rest.extensions` and the package class in `rest.disabled_extensions`. `rest:check` reports a name equal to `rest.gates.key` or `instructions` for each resource that the checked controllers reach, under `extension checks`. Slow calls: it runs on every search page. The rows can hold columns that the response does not render (`alwaysSelect()`, the columns of `AugmentsQueries` extensions, and the columns of the fields that `NarrowsFields` hides, loaded for the policies): keep them out of the meta, which the client receives.
 
 ### Adding details meta (`AddsDetailsMeta`)
 
-App: `'features' => \Vendor\Flags\FeaturesExtension::class` in `rest.extensions`.
+App: `\Vendor\Flags\FeaturesExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(FeaturesExtension::class)`:
 
 ```php
 use Lomkit\Rest\Extensions\Contexts\DetailsMetaContext;
@@ -2158,6 +2164,12 @@ use Lomkit\Rest\Extensions\Kinds\AddsDetailsMeta;
 
 final class FeaturesExtension extends Extension implements AddsDetailsMeta
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'features';
+    }
+
     public function __construct(private readonly FeatureFlags $flags) {}
 
     #[\Override]
@@ -2169,13 +2181,13 @@ final class FeaturesExtension extends Extension implements AddsDetailsMeta
 ```
 
 - Guarantees: a request kind. The keys render under `meta.features` of `/details`, an object, after the `detailsMeta()` keys of the resource, extensions in name order, for the user of the request (`$context->user`, `null` for a guest). `json_encode($resource)` holds them too, for the user of the context of the resource (`null` in the console). `described()` and the `ObservesReads` extensions receive the details with them.
-- Forbids: a `detailsMeta()` key of the resource equal to the name of the extension, and a value that JSON cannot encode, as for `AddsSearchMeta`. Each throws `InvalidMetaExtensionException`, naming the extension and the resource.
+- Forbids: a `detailsMeta()` key of the resource equal to the name of the extension, and a value that JSON cannot encode, as for `AddsSearchMeta`. Each throws `InvalidMetaExtensionException`, which names the extension by its name and its registered class and the resource.
 
 ### Documenting an extension (`DocumentsExtension`)
 
-App: `'quota' => \Vendor\Plans\QuotaExtension::class` in `rest.extensions`.
+App: `\Vendor\Plans\QuotaExtension::class` in the `rest.extensions` list.
 
-Package: the class that adds the meta documents it, with its responses:
+Package, which registers the class alone with `Rest::registerExtension(QuotaExtension::class)`: the class that adds the meta documents it, with its responses:
 
 ```php
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
@@ -2191,6 +2203,12 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 
 final class QuotaExtension extends Extension implements AddsSearchMeta, DocumentsExtension
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'quota';
+    }
+
     public function __construct(private readonly ReadQuota $quota) {}
 
     #[\Override]
@@ -2223,13 +2241,13 @@ final class QuotaExtension extends Extension implements AddsSearchMeta, Document
 ```
 
 - Guarantees: a static kind with two methods, one per moment of the document, run only when Scramble builds it. Neither receives a user. `documentOperation()` runs at the end of each operation, after the responses of the package: `$context->resource` (the class), `$context->endpoint`, `$context->declaration` (the action or metric of the operation, else `null`) and `$context->authenticates`. `response()` adds the shared response component `{name}.{Name}` (`quota.Exceeded`) to the operation, and `$context->documents(429)` tells whether the operation already has that status. The responses stay sorted by status, so the document is the same in any extension order. One component name holds one status and one content: the same name with another status, description or body throws `InvalidDocumentationException`, and so does a body changed after `response()` received it (pass a new object for each body); the same content on several operations is one component. `documentMeta()` gives the schema of the meta of the extension with `searchMeta()` and `detailsMeta()`; it may run several times per document, so it only declares. Each extension that adds meta is one required property of the meta schema (its key always renders, `{}` when empty), typed by that schema (described `Added by the [quota] extension ...` when it has no description), or an open object without one. The `meta` of a page whose resource does not override `searchMeta()` stays closed to other keys. The document does not change without such an extension.
-- Forbids: a status that the operation already has, from the package (`200`, `401`, `403`, `404`, `409`, `422`, `428` where they apply) or from another extension, a status outside 400 to 599, a response name that is not letters and digits starting with a letter, a search meta schema of an extension that does not implement `AddsSearchMeta`, and a details meta schema of an extension that does not implement `AddsDetailsMeta` (each meta on its own: an extension that adds only search meta cannot document details meta). Each throws `Lomkit\Rest\Exceptions\InvalidDocumentationExtensionException`, naming the extension. A `GuardsWrites` refusal with `403` already matches `RestForbidden`. A refusal never answers `409`, `422` or `428`: `refuse()` rejects them, and the package documents them with their own bodies (`RestConflict`, `RestValidationFailed`, `RestConfirmationRequired`), so document a refusal under its own status (`423`, `429`, `503`).
+- Forbids: a status that the operation already has, from the package (`200`, `401`, `403`, `404`, `409`, `422`, `428` where they apply) or from another extension, a status outside 400 to 599, a response name that is not letters and digits starting with a letter, a search meta schema of an extension that does not implement `AddsSearchMeta`, and a details meta schema of an extension that does not implement `AddsDetailsMeta` (each meta on its own: an extension that adds only search meta cannot document details meta). Each throws `Lomkit\Rest\Exceptions\InvalidDocumentationExtensionException`, which names the extension by its name and its registered class, and `concerns($class)` tells whether it is about that class. A `GuardsWrites` refusal with `403` already matches `RestForbidden`. A refusal never answers `409`, `422` or `428`: `refuse()` rejects them, and the package documents them with their own bodies (`RestConflict`, `RestValidationFailed`, `RestConfirmationRequired`), so document a refusal under its own status (`423`, `429`, `503`).
 
 ### Checking resources (`ChecksResources`)
 
-App: `'tenant_columns' => \Vendor\Tenancy\TenantColumnExtension::class` in `rest.extensions`.
+App: `\Vendor\Tenancy\TenantColumnExtension::class` in the `rest.extensions` list.
 
-Package:
+Package, which registers the class alone with `Rest::registerExtension(TenantColumnExtension::class)`:
 
 ```php
 use Illuminate\Support\Facades\Schema;
@@ -2239,6 +2257,12 @@ use Lomkit\Rest\Extensions\Kinds\ChecksResources;
 
 final class TenantColumnExtension extends Extension implements ChecksResources
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'tenant_columns';
+    }
+
     #[\Override]
     public function checkResource(ResourceCheckContext $context): void
     {
@@ -2251,7 +2275,7 @@ final class TenantColumnExtension extends Extension implements ChecksResources
 }
 ```
 
-- Guarantees: a static kind, console only: `rest:check` runs it once per extension and per resource that the checked controllers reach, directly or through their relations, extensions in name order, with `$context->resource` (the class). `$context->problem()` reports a problem that names the extension and the resource, and fails `rest:check`. An exception thrown by a check is a problem that names the extension and the resource, after the problems it reported, and so is an exception thrown by `appliesTo()`; the other checks still run. The problems show under `extension checks` (printed when a check ran or reported a problem) and under the `extension_checks` key of `--json` (`checked`, a list of `{extension, resource}`, and `problems`). The checks do not run when the extension list cannot be built: the `extensions` section reports it.
+- Guarantees: a static kind, console only: `rest:check` runs it once per extension and per resource that the checked controllers reach, directly or through their relations, extensions in name order, with `$context->resource` (the class). `$context->problem()` reports a problem that names the extension (its name and its registered class) and the resource, and fails `rest:check`. An exception thrown by a check is a problem that names the extension and the resource, after the problems it reported, and so is an exception thrown by `appliesTo()`; the other checks still run. The problems show under `extension checks` (printed when a check ran or reported a problem) and under the `extension_checks` key of `--json` (`checked`, a list of `{extension, resource}`, and `problems`). The checks do not run when the extension list cannot be built: the `extensions` section reports it.
 - Forbids: writes, and checks that read the request or a user. The package cannot check that `toSearchableArray()` or the index settings hold the attributes that an extension declares: a check of the extension can.
 
 ## Artisan commands shipped by the package
