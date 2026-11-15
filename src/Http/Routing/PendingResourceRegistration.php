@@ -128,7 +128,7 @@ final class PendingResourceRegistration
         $registrations->freeze();
         $routeExtensions = $this->routeExtensions || RouteExtensionClasses::present($registrations->all(), $this->container);
 
-        $routes = new EndpointRoutes($this->name, $this->controller, ResourceVerbs::current(), $this->names, $this->middleware, $this->endpointMiddleware, $this->container, $routeExtensions);
+        $routes = new EndpointRoutes($this->name, $this->controller, ResourceVerbs::current(), $this->names->inGroup($this->registrar->groupName()), $this->middleware, $this->endpointMiddleware, $this->container, $routeExtensions);
 
         return $this->registrar->register($routes->definitions($this->selection->resolve()));
     }

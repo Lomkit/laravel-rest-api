@@ -59,13 +59,12 @@ final readonly class EndpointRoutes
     /** @return list<RouteDefinition> */
     private function for(Endpoint $endpoint, ?ResourceDefinition $definition, ExtensionMiddleware $extensions): array
     {
-        $name = $this->names->for($endpoint);
         $route = new RouteDefinition(
             $endpoint->methods(),
             $endpoint->uri($this->name, $this->verbs),
-            $name,
+            $this->names->for($endpoint),
             $this->controller.'@'.$endpoint->value,
-            $this->middlewareFor($endpoint)->with($extensions->for($endpoint, $name)),
+            $this->middlewareFor($endpoint)->with($extensions->for($endpoint, $this->names->registered($endpoint))),
         );
 
         $declarations = $definition === null ? [] : self::declarations($endpoint, $definition);

@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Routing\ResourceRegistrar as IlluminateResourceRegistrar;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Route as RouteFacade;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Exceptions\InvalidRouteExtensionException;
 use Lomkit\Rest\Extensions\Applicability;
@@ -200,6 +201,22 @@ class ExtensionRouteMiddlewareTest extends HelpdeskTestCase
             static fn (RouteMiddlewareContext $context): array => [$context->resource, $context->endpoint->value, $context->controller, $context->routeName],
             StampRoutes::$contexts,
         ));
+    }
+
+    #[Test]
+    public function it_passes_the_route_name_with_the_name_of_its_groups(): void
+    {
+        config(['rest.extensions' => ['stamp' => StampRoutes::class]]);
+
+        RouteFacade::name('api.')->prefix('api')->group(function (): void {
+            RouteFacade::name('desk.')->group(function (): void {
+                Rest::resource('routed-tickets', RoutedTicketController::class)->only('search', 'mutate')->name('mutate', 'write')->register();
+            });
+        });
+
+        $this->assertSame(['api.desk.routed-tickets.search', 'api.desk.write'], array_map(static fn (RouteMiddlewareContext $context): string => $context->routeName, StampRoutes::$contexts));
+        $this->assertSame([self::STAMP], array_slice($this->routeNamed('api.desk.routed-tickets.search')->middleware(), -1));
+        $this->assertSame([self::STAMP], array_slice($this->routeNamed('api.desk.write')->middleware(), -1));
     }
 
     #[Test]
