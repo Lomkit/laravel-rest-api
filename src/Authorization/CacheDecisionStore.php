@@ -19,7 +19,7 @@ final class CacheDecisionStore implements DecisionStore
         private readonly Factory $cache,
         private readonly UserIdentity $user,
         private readonly ?string $store = null,
-        DecisionVersions $versions = new DecisionVersions,
+        ?DecisionVersions $versions = null,
     ) {
         $this->stamps = new DecisionStamps($user->user);
         $this->entries = new DecisionEntries(Date::now()->getTimestamp(), $versions);

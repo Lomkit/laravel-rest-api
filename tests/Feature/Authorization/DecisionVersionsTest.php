@@ -5,12 +5,16 @@ namespace Lomkit\Rest\Tests\Feature\Authorization;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\RetrievingManyKeys;
+use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use LogicException;
+use Lomkit\Rest\Authorization\CacheDecisionStore;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Authorization\Decision;
 use Lomkit\Rest\Authorization\RowVersions;
+use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\VersionedTicketController;
@@ -233,6 +237,21 @@ class DecisionVersionsTest extends HelpdeskTestCase
             'versions hook attachTag 1,1 for guest', 'attachTag 1 1',
         ], $this->tickets->calls);
         $this->assertSame([Ticket::class, Tag::class], VersionedTicketResource::$received[0]->rows->map(fn (object $row): string => $row::class)->all());
+    }
+
+    #[Test]
+    public function it_runs_no_hook_for_a_store_built_without_versions(): void
+    {
+        Cache::forever('rest.authorizations.stamp', 'every-user');
+        $resource = $this->contextFor(null)->resource(VersionedTicketResource::class);
+        $store = new CacheDecisionStore($this->app->make(Factory::class), UserIdentity::of('web', null));
+        $check = new Check($resource, 'update', Ticket::query()->findOrFail(1));
+
+        $store->many([$check->key() => $check]);
+        $store->putMany([$check->key() => $check], [$check->key() => Decision::allow()]);
+
+        $this->assertCount(0, VersionedTicketResource::$received);
+        $this->assertSame([self::key(VersionedTicketResource::class.'|update|'.Ticket::class.'#1|'.self::CREATED.'|a:0:{}')], $this->written);
     }
 
     #[Test]

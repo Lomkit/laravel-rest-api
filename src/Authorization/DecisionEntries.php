@@ -7,7 +7,7 @@ final readonly class DecisionEntries
 {
     public function __construct(
         private int $since,
-        private DecisionVersions $versions = new DecisionVersions,
+        private ?DecisionVersions $versions,
     ) {}
 
     /**
@@ -16,6 +16,7 @@ final readonly class DecisionEntries
      */
     public function of(array $checks): array
     {
+        $collector = $this->versions;
         $abilities = [];
         $entries = [];
         $contexts = [];
@@ -37,13 +38,17 @@ final readonly class DecisionEntries
             $entries[$key] = [$decisionKey, $seconds];
             $contexts[$key] = $cached->context;
 
-            if ($check->models() !== [] && $this->versions->appliesTo($check->resource)) {
+            if ($check->models() !== [] && $collector?->appliesTo($check->resource) === true) {
                 $versioned[$check->resource::class.'|'.$check->ability][$key] = $check;
             }
         }
 
+        if ($collector === null) {
+            return $entries;
+        }
+
         foreach ($versioned as $group) {
-            $versions = $this->versions->collect(array_values($group), $this->since);
+            $versions = $collector->collect(array_values($group), $this->since);
 
             foreach ($group as $key => $check) {
                 $decisionKey = DecisionKey::of($check, $contexts[$key], $this->since, $versions);
