@@ -7,8 +7,14 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\DeclaresGates;
 use Lomkit\Rest\Http\Resource;
 
-final class SecondGates extends Extension implements DeclaresGates
+class SecondGates extends Extension implements DeclaresGates
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'b';
+    }
+
     /** @var list<class-string<Resource>>|null */
     public static ?array $resources = null;
 

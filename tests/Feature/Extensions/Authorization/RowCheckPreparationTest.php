@@ -18,6 +18,7 @@ use Lomkit\Rest\Tests\Feature\Authorization\Stubs\PreparedTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\PreparedTicketResource;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ScannedTicket;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentedPreparingExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\LatePreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PreparingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RowCheckLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondPreparingExtension;
@@ -57,7 +58,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_the_rows_of_a_page_to_an_extension_once_per_ability_before_the_policy(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         PreparingExtension::$resources = [TicketResource::class];
         $rows = array_values($this->seedTickets());
 
@@ -74,7 +75,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_the_hook_and_the_extensions_the_same_object(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         $rows = array_values($this->seedTickets());
 
         $this->postJson('/prepared-tickets/search', ['search' => ['gates' => ['update'], 'sorts' => [['field' => 'id']]]])->assertOk();
@@ -92,7 +93,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_the_extension_the_user_of_the_gate(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         $jam = $this->seedTickets()['Printer jam'];
         $lead = new GenericUser(['id' => TicketPolicy::LEAD]);
         $search = ['filters' => [['field' => 'id', 'value' => $jam->id]], 'gates' => ['update']];
@@ -110,7 +111,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_the_exact_ability_and_the_resource(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class], 'rest.gates.names.authorized_to_escalate' => 'can_escalate']);
+        config(['rest.extensions' => [PreparingExtension::class], 'rest.gates.names.authorized_to_escalate' => 'can_escalate']);
         $jam = $this->seedTickets()['Printer jam'];
 
         $response = $this->postJson('/api/tickets/search', ['search' => ['filters' => [['field' => 'id', 'value' => $jam->id]], 'gates' => ['escalate']]])->assertOk();
@@ -132,7 +133,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $plain = $this->postJson('/api/tickets/search', $payload)->assertOk()->json();
         $plainCalls = [$this->tickets->calls, $this->teams->calls];
         [$this->tickets->calls, $this->teams->calls] = [[], []];
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         $prepared = $this->postJson('/api/tickets/search', $payload)->assertOk()->json();
 
         $this->assertSame($plain, $prepared);
@@ -144,7 +145,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_leaves_class_checks_drafts_changed_rows_and_link_checks_out_for_an_extension(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         ['Printer jam' => $jam, 'Printer toner' => $toner, 'Password reset' => $reset] = $this->seedTickets();
         $context = $this->contextFor(null);
         $resource = $context->resource(TicketResource::class);
@@ -172,7 +173,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_leaves_the_rows_that_the_memo_decided_out_for_an_extension(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         [$jam, $reset, $toner, $laptop] = array_values($this->seedTickets());
         $context = $this->contextFor(null);
         $resource = $context->resource(TicketResource::class);
@@ -191,7 +192,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_leaves_the_rows_that_the_store_decided_out_for_an_extension(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         PreparingExtension::$resources = [CachedTicketResource::class];
         $rows = array_values($this->seedTickets());
         $this->travel(1)->seconds();
@@ -207,7 +208,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_groups_the_rows_of_one_resource_at_two_levels_for_an_extension(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
 
         $this->postJson('/api/tickets/search', ['search' => [
@@ -228,7 +229,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_prepares_each_chunk_of_an_action_with_an_extension(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
 
         $this->postJson('/prepared-tickets/actions/escalate-allowed-tickets', ['resources' => [$jam->id, $reset->id, $toner->id, $laptop->id]])->assertOk();
@@ -248,7 +249,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_does_no_preparation_work_without_a_hook_or_an_extension_that_applies(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         $this->seedTickets();
         $tickets = ScannedTicket::query()->orderBy('id')->get();
         PreparingExtension::$resources = [TeamResource::class];
@@ -283,7 +284,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $this->assertSame([], PreparingExtension::$received);
     }
 
-    /** @param array<string, class-string<Extension>> $extensions */
+    /** @param list<class-string<Extension>> $extensions */
     #[Test]
     #[DataProvider('configOrders')]
     public function it_calls_the_extensions_in_name_order_whatever_the_config_order(array $extensions): void
@@ -302,17 +303,17 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $this->assertSame(SecondPreparingExtension::$received[0], PreparingExtension::$received[0]);
     }
 
-    /** @return iterable<string, array{array<string, class-string<Extension>>}> */
+    /** @return iterable<string, array{list<class-string<Extension>>}> */
     public static function configOrders(): iterable
     {
-        yield 'b before a' => [['b' => PreparingExtension::class, 'a' => SecondPreparingExtension::class]];
-        yield 'a before b' => [['a' => SecondPreparingExtension::class, 'b' => PreparingExtension::class]];
+        yield 'b before a' => [[LatePreparingExtension::class, SecondPreparingExtension::class]];
+        yield 'a before b' => [[SecondPreparingExtension::class, LatePreparingExtension::class]];
     }
 
     #[Test]
     public function it_lets_the_exception_of_an_extension_through_before_any_policy_check(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         $rows = array_values($this->seedTickets());
         PreparingExtension::$prepare = static function (): void {
             throw new LogicException('The grants are unreachable.');
@@ -332,7 +333,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_the_augmented_rows_to_the_preparation_and_the_policy(): void
     {
-        config(['rest.extensions' => ['aug' => AugmentedPreparingExtension::class]]);
+        config(['rest.extensions' => [AugmentedPreparingExtension::class]]);
         $this->app->instance(TicketPolicy::class, $policy = new SubjectTicketPolicy);
         $this->seedTickets();
 
@@ -353,7 +354,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[DataProvider('rowChanges')]
     public function it_refuses_an_extension_that_changes_a_prepared_row(Closure $change): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         $this->seedTickets();
         PreparingExtension::$prepare = static function (PendingChecks $checks) use ($change): void {
             $change($checks);
@@ -372,7 +373,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_answers_an_error_and_renders_no_row_when_an_extension_changes_a_row_during_a_search(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         $this->seedTickets();
         PreparingExtension::$prepare = static function (PendingChecks $checks): void {
             $checks->rows->firstOrFail()->setAttribute('title', 'Changed');
@@ -401,7 +402,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[DataProvider('relatedChanges')]
     public function it_refuses_an_extension_that_changes_the_models_of_an_included_relation(Closure $change): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         ['Printer jam' => $jam] = $this->seedTickets();
         $jam->tags()->attach(Tag::create(['id' => 1, 'name' => 'Hardware'])->id);
         PreparingExtension::$prepare = static function (PendingChecks $checks) use ($change): void {
@@ -438,7 +439,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $this->seedTickets();
         $payload = ['search' => ['gates' => ['update'], 'includes' => [['relation' => 'team']], 'sorts' => [['field' => 'id']]]];
         $plain = $this->postJson('/api/tickets/search', $payload)->assertOk()->json();
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         PreparingExtension::$prepare = static function (PendingChecks $checks): void {
             $checks->rows->each(fn (Model $row): mixed => $row->getRelation('team')->loadMissing('tickets'));
         };
@@ -454,7 +455,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[DataProvider('writeSettingChanges')]
     public function it_refuses_an_extension_that_changes_where_a_destroyed_row_is_written(Closure $change): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         ['Printer jam' => $jam, 'Password reset' => $reset] = $this->seedTickets();
         PreparingExtension::$prepare = static function (PendingChecks $checks) use ($change): void {
             $checks->rows->each($change);
@@ -488,7 +489,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $this->seedTickets();
         $payload = ['search' => ['gates' => ['update'], 'includes' => [['relation' => 'team']], 'sorts' => [['field' => 'id']]]];
         $plain = $this->postJson('/api/tickets/search', $payload)->assertOk()->json();
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         $read = [];
         PreparingExtension::$prepare = static function (PendingChecks $checks) use (&$read): void {
             $checks->rows->loadMissing('tags');
@@ -501,7 +502,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
         $this->assertSame([['Printer jam', 'Billing'], ['Password reset', 'Support'], ['Printer toner', 'Billing'], ['Laptop setup', 'Support']], $read);
     }
 
-    /** @param array<string, class-string<Extension>> $extensions */
+    /** @param list<class-string<Extension>> $extensions */
     #[Test]
     #[DataProvider('configOrders')]
     public function it_lets_two_extensions_load_the_same_relation(array $extensions): void
@@ -525,7 +526,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_lets_an_extension_load_a_relation_that_the_hook_loaded(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         $rows = array_values($this->seedTickets());
         $loads = static function (PendingChecks $checks): void {
             $checks->rows->load('tags');
@@ -546,7 +547,7 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     #[Test]
     public function it_refuses_the_second_extension_that_replaces_a_relation_loaded_before_the_preparation(): void
     {
-        config(['rest.extensions' => ['a' => SecondPreparingExtension::class, 'b' => PreparingExtension::class]]);
+        config(['rest.extensions' => [SecondPreparingExtension::class, LatePreparingExtension::class]]);
         $this->seedTickets();
         SecondPreparingExtension::$prepare = static function (PendingChecks $checks): void {
             $checks->rows->load('tags');

@@ -49,7 +49,7 @@ class GatePrefetchTest extends HelpdeskTestCase
     #[Test]
     public function it_batches_every_row_gate_when_a_row_check_extension_applies(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
 
         $this->assertSame(['update 1', 'update 2', 'escalate 1', 'escalate 2'], $this->rowChecks(TicketResource::class));
     }
@@ -79,7 +79,7 @@ class GatePrefetchTest extends HelpdeskTestCase
     #[Test]
     public function it_batches_a_cached_class_gate_of_a_resource_that_prepares(): void
     {
-        config(['rest.extensions' => ['prep' => PreparingExtension::class]]);
+        config(['rest.extensions' => [PreparingExtension::class]]);
         $plan = $this->plan(CachedTicketResource::class, ['create']);
 
         $this->assertSame(['create class', 'update 1', 'update 2', 'escalate 1', 'escalate 2'], self::described(GatePrefetch::page($plan, $this->rows(), GateReach::everyRow())));

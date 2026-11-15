@@ -8,8 +8,14 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\ContributesCacheContext;
 use Lomkit\Rest\Http\Resource;
 
-final class FirstCacheContext extends Extension implements ContributesCacheContext
+class FirstCacheContext extends Extension implements ContributesCacheContext
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'acl';
+    }
+
     /** @var list<class-string<Resource>>|null */
     public static ?array $resources = null;
 

@@ -63,7 +63,7 @@ class PreparationCostTest extends TestCase
 
     private function prepare(WalkedDocument $row): void
     {
-        $registry = ExtensionRegistry::of(['prep' => PreparingExtension::class], [], $this->app ?? $this->fail('No application.'));
+        $registry = ExtensionRegistry::of([PreparingExtension::class], [], [], $this->app ?? $this->fail('No application.'));
         $preparation = new DecisionPreparation(null, static fn (): ExtensionRegistry => $registry);
 
         $preparation->prepare(['view|1' => new Check(new TicketResource, 'view', $row)], static fn (string $key): bool => false);

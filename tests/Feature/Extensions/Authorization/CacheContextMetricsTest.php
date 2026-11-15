@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Event;
 use Lomkit\Rest\Extensions\Contexts\CacheContributionContext;
 use Lomkit\Rest\Metrics\CacheScope;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstCacheContext;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TenantCacheContext;
 use Lomkit\Rest\Tests\Feature\Metrics\SalesTestCase;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\MetricOrderResource;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\TotalRevenue;
@@ -57,7 +58,7 @@ class CacheContextMetricsTest extends SalesTestCase
     {
         $this->useStore($store);
         $this->serve(TotalRevenue::make()->cacheFor(600)->cacheScope($scope));
-        config(['rest.extensions' => ['tenant' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [TenantCacheContext::class]]);
         $tenant = 0;
         FirstCacheContext::$contribute = static function (CacheContributionContext $context) use (&$tenant): void {
             $context->put('id', $tenant);
@@ -80,7 +81,7 @@ class CacheContextMetricsTest extends SalesTestCase
     {
         $this->useStore($store);
         $this->serve(TotalRevenue::make()->cacheFor(600)->cacheScope($scope));
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         $rules = '';
         FirstCacheContext::$contribute = static function (CacheContributionContext $context) use (&$rules): void {
             $context->put('rules', $rules);
@@ -112,7 +113,7 @@ class CacheContextMetricsTest extends SalesTestCase
         $this->serve(TotalRevenue::make()->cacheFor(600));
 
         $plain = $this->statementsOf('total-revenue');
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         $itemless = $this->statementsOf('total-revenue');
         $written = array_keys($this->written);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('tenant', 1);
@@ -129,7 +130,7 @@ class CacheContextMetricsTest extends SalesTestCase
     public function it_keeps_the_duration_of_the_metric(): void
     {
         $this->serve(TotalRevenue::make()->cacheFor(600));
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static function (CacheContributionContext $context): void {
             $context->shorten('viewAny', 1);
             $context->forget('view');
@@ -144,7 +145,7 @@ class CacheContextMetricsTest extends SalesTestCase
     public function it_calls_the_extension_once_per_request(): void
     {
         $this->serve(TotalRevenue::make()->cacheFor(600)->cacheScope(CacheScope::Global));
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
 
         $this->metric('total-revenue')->assertOk();
 

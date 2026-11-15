@@ -20,7 +20,10 @@ use Lomkit\Rest\Tests\Feature\Authorization\Stubs\TeamTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DottedContextTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DottedContextTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstCacheContext;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstLateCacheContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondCacheContext;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondEarlyCacheContext;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TenantCacheContext;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\CachedTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
@@ -70,7 +73,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     public function it_keeps_the_decisions_of_two_tenants_apart(string $store): void
     {
         $this->useStore($store);
-        config(['rest.extensions' => ['tenant' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [TenantCacheContext::class]]);
         $tenant = 0;
         FirstCacheContext::$contribute = static function (CacheContributionContext $context) use (&$tenant): void {
             $context->put('id', $tenant);
@@ -89,7 +92,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     public function it_never_serves_a_decision_after_the_rules_fingerprint_changes(string $store): void
     {
         $this->useStore($store);
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         $rules = '';
         FirstCacheContext::$contribute = static function (CacheContributionContext $context) use (&$rules): void {
             $context->put('rules', $rules);
@@ -113,7 +116,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_keys_each_item_under_its_extension_name(): void
     {
-        config(['rest.extensions' => ['tenant' => SecondCacheContext::class, 'acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [SecondCacheContext::class, FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('rules', 'v1');
         SecondCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('id', 7);
         $definition = $this->contextFor(new GenericUser(['id' => 1, 'current_team_id' => 3]))->resource(TeamTicketResource::class)->definition();
@@ -122,7 +125,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
         $this->assertSame(serialize(['acl.rules' => 'v1', 'team' => 3, 'tenant.id' => 7]), $definition->cachedAbilities()->context);
     }
 
-    /** @param array<string, class-string<Extension>> $extensions */
+    /** @param list<class-string<Extension>> $extensions */
     #[Test]
     #[DataProvider('itemlessExtensions')]
     public function it_keeps_the_keys_of_a_resource_without_an_item(array $extensions): void
@@ -134,17 +137,17 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
         $this->assertSame('a:1:{s:4:"team";i:3;}', $definition->cacheContext()->serialized());
     }
 
-    /** @return iterable<string, array{array<string, class-string<Extension>>}> */
+    /** @return iterable<string, array{list<class-string<Extension>>}> */
     public static function itemlessExtensions(): iterable
     {
         yield 'no extension' => [[]];
-        yield 'an extension that puts nothing' => [['acl' => FirstCacheContext::class]];
+        yield 'an extension that puts nothing' => [[FirstCacheContext::class]];
     }
 
     #[Test]
     public function it_shortens_the_cache_of_an_ability(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->shorten('update', 30);
 
         $this->postJson('/api/cached-tickets/search', self::SEARCH)->assertOk();
@@ -158,7 +161,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_never_lengthens_the_cache_of_an_ability(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->shorten('update', 3600);
 
         $this->postJson('/api/cached-tickets/search', self::SEARCH)->assertOk();
@@ -169,7 +172,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
         $this->assertSame(['viewAny', 'update 1', 'update 2', 'viewAny', 'update 1', 'update 2'], $this->tickets->calls);
     }
 
-    /** @param array<string, class-string<Extension>> $extensions */
+    /** @param list<class-string<Extension>> $extensions */
     #[Test]
     #[DataProvider('configOrders')]
     public function it_keeps_the_shortest_duration_and_the_same_items_in_any_extension_order(array $extensions): void
@@ -192,17 +195,17 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
         $this->assertSame(30, $definition->cachedAbilities()->seconds('update'));
     }
 
-    /** @return iterable<string, array{array<string, class-string<Extension>>}> */
+    /** @return iterable<string, array{list<class-string<Extension>>}> */
     public static function configOrders(): iterable
     {
-        yield 'b before a' => [['b' => FirstCacheContext::class, 'a' => SecondCacheContext::class]];
-        yield 'a before b' => [['a' => SecondCacheContext::class, 'b' => FirstCacheContext::class]];
+        yield 'b before a' => [[FirstLateCacheContext::class, SecondEarlyCacheContext::class]];
+        yield 'a before b' => [[SecondEarlyCacheContext::class, FirstLateCacheContext::class]];
     }
 
     #[Test]
     public function it_forgets_the_cache_of_an_ability(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static function (CacheContributionContext $context): void {
             $context->forget('update');
             $context->shorten('update', 30);
@@ -218,7 +221,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_never_adds_an_ability_to_the_cache(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->shorten('escalate', 30);
         $search = ['search' => ['gates' => ['escalate'], 'sorts' => [['field' => 'id']]]];
 
@@ -233,7 +236,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_calls_no_extension_for_a_resource_that_keeps_nothing(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->shorten('update', 30);
 
         $this->postJson('/api/tickets/search', self::SEARCH)->assertOk();
@@ -246,7 +249,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_calls_the_extension_once_per_request(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
 
         $this->postJson('/api/cached-tickets/search', ['search' => ['gates' => ['update', 'delete'], 'includes' => [['relation' => 'team']]]])->assertOk();
 
@@ -256,7 +259,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_gives_the_extension_the_resource_and_the_acting_user(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         $lead = new GenericUser(['id' => TicketPolicy::LEAD]);
         $other = new GenericUser(['id' => 9]);
 
@@ -275,7 +278,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[DataProvider('invalidContributions')]
     public function it_names_the_extension_of_an_invalid_contribution(Closure $contribute, InvalidAuthorizationExtensionException $expected): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = $contribute;
         $this->withoutExceptionHandling();
 
@@ -308,7 +311,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_refuses_a_key_that_the_resource_returns(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('rules', 'v1');
         $this->withoutExceptionHandling();
 
@@ -320,7 +323,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_accepts_a_float(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('weight', 1.5);
 
         $this->postJson('/api/cached-tickets/search', self::SEARCH)->assertOk();
@@ -338,7 +341,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_reads_the_cache_context_again_when_the_user_changes(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('team', $context->user instanceof GenericUser ? $context->user->current_team_id : null);
         $user = new GenericUser(['id' => 1, 'current_team_id' => 3]);
         $definition = $this->contextFollowing($user)->resource(CachedTicketResource::class)->definition();
@@ -354,7 +357,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_narrows_the_cached_abilities_for_the_new_user(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static function (CacheContributionContext $context): void {
             if (($context->user instanceof GenericUser ? $context->user->current_team_id : null) === 4) {
                 $context->forget('view');
@@ -389,7 +392,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[DataProvider('checkedAbilities')]
     public function it_resolves_the_user_as_often_for_a_batch_of_many_checks_as_for_one(array $abilities): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('rules', 'v1');
 
         $this->assertSame($this->resolutionsFor(['view']), $this->resolutionsFor($abilities));
@@ -405,7 +408,7 @@ class CacheContextExtensionsTest extends HelpdeskTestCase
     #[Test]
     public function it_keeps_the_cache_context_while_the_user_stays(): void
     {
-        config(['rest.extensions' => ['acl' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [FirstCacheContext::class]]);
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('rules', 'v1');
         $user = new GenericUser(['id' => 1, 'current_team_id' => 3]);
         $definition = $this->contextFollowing($user)->resource(CachedTicketResource::class)->definition();

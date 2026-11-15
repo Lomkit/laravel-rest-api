@@ -8,8 +8,14 @@ use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\PreparesRowChecks;
 use Lomkit\Rest\Http\Resource;
 
-final class PreparingExtension extends Extension implements PreparesRowChecks
+class PreparingExtension extends Extension implements PreparesRowChecks
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'prep';
+    }
+
     /** @var list<class-string<Resource>>|null */
     public static ?array $resources = null;
 

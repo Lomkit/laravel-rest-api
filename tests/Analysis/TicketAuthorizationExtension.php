@@ -12,6 +12,12 @@ use Lomkit\Rest\Extensions\Kinds\PreparesRowChecks;
 
 final class TicketAuthorizationExtension extends Extension implements ContributesCacheContext, DeclaresGates, PreparesRowChecks
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'ticket_authorization';
+    }
+
     /** @var array<string, list<int|string>> */
     private array $prepared = [];
 

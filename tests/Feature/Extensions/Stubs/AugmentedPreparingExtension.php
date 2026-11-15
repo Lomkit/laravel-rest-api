@@ -11,6 +11,12 @@ use Lomkit\Rest\Extensions\Kinds\PreparesRowChecks;
 
 final class AugmentedPreparingExtension extends Extension implements AugmentsQueries, PreparesRowChecks
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'aug';
+    }
+
     public static ?string $alias = null;
 
     /** @var list<string> */

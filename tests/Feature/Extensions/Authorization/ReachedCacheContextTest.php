@@ -9,6 +9,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ContextTagTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstCacheContext;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TagsCacheContext;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
@@ -45,7 +46,7 @@ class ReachedCacheContextTest extends HelpdeskTestCase
     #[DataProvider('scopes')]
     public function it_keys_the_extension_items_of_each_reached_resource(string $metric, string $seen, string $hidden): void
     {
-        config(['rest.extensions' => ['tags' => FirstCacheContext::class]]);
+        config(['rest.extensions' => [TagsCacheContext::class]]);
         FirstCacheContext::$resources = [TagResource::class];
         FirstCacheContext::$contribute = static fn (CacheContributionContext $context) => $context->put('reveal', config()->boolean('helpdesk.reveal_secret_tags'));
         Tag::addGlobalScope('secret', fn (Builder $query): Builder => config()->boolean('helpdesk.reveal_secret_tags') ? $query : $query->where('tags.name', '!=', 'Secret'));

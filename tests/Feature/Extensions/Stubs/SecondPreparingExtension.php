@@ -7,8 +7,14 @@ use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\PreparesRowChecks;
 
-final class SecondPreparingExtension extends Extension implements PreparesRowChecks
+class SecondPreparingExtension extends Extension implements PreparesRowChecks
 {
+    #[\Override]
+    public static function name(): string
+    {
+        return 'a';
+    }
+
     /** @var list<PendingChecks> */
     public static array $received = [];
 

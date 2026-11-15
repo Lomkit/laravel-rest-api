@@ -8,9 +8,13 @@ use Lomkit\Rest\Extensions\Contexts\GatesContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AugmentedPreparingExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstEarlyGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstGates;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstLateGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RowCheckLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondEarlyGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondGates;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharesGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharingTicketPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
@@ -49,7 +53,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_lists_extension_gates_after_the_resource_gates_in_details(): void
     {
-        config(['rest.extensions' => ['a' => FirstGates::class, 'b' => SecondGates::class]]);
+        config(['rest.extensions' => [FirstEarlyGates::class, SecondGates::class]]);
         FirstGates::$gates = ['export', 'share'];
         SecondGates::$gates = ['share', 'archive', 'publish'];
 
@@ -58,7 +62,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
             ->assertJsonPath('data.gates', [...self::TICKET_GATES, 'export', 'share', 'publish']);
     }
 
-    /** @param array<string, class-string<Extension>> $extensions */
+    /** @param list<class-string<Extension>> $extensions */
     #[Test]
     #[DataProvider('configOrders')]
     public function it_lists_the_gates_in_the_same_order_whatever_the_config_order(array $extensions): void
@@ -72,17 +76,17 @@ class ExtensionGatesTest extends HelpdeskTestCase
             ->assertJsonPath('data.gates', [...self::TICKET_GATES, 'publish', 'share', 'export']);
     }
 
-    /** @return iterable<string, array{array<string, class-string<Extension>>}> */
+    /** @return iterable<string, array{list<class-string<Extension>>}> */
     public static function configOrders(): iterable
     {
-        yield 'b before a' => [['b' => FirstGates::class, 'a' => SecondGates::class]];
-        yield 'a before b' => [['a' => SecondGates::class, 'b' => FirstGates::class]];
+        yield 'b before a' => [[FirstLateGates::class, SecondEarlyGates::class]];
+        yield 'a before b' => [[SecondEarlyGates::class, FirstLateGates::class]];
     }
 
     #[Test]
     public function it_answers_an_extension_gate_on_each_row(): void
     {
-        config(['rest.extensions' => ['shares' => FirstGates::class], 'rest.gates.names.authorized_to_share' => 'can_share']);
+        config(['rest.extensions' => [SharesGates::class], 'rest.gates.names.authorized_to_share' => 'can_share']);
         FirstGates::$gates = ['share'];
 
         $response = $this->postJson('/api/tickets/search', ['search' => ['gates' => ['share'], 'sorts' => [['field' => 'id']]]]);
@@ -97,7 +101,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_accepts_an_extension_gate_in_an_include_of_its_resource(): void
     {
-        config(['rest.extensions' => ['shares' => FirstGates::class]]);
+        config(['rest.extensions' => [SharesGates::class]]);
         FirstGates::$gates = ['share'];
         FirstGates::$resources = [TicketResource::class];
 
@@ -116,7 +120,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_refuses_an_extension_gate_at_the_level_of_another_resource(): void
     {
-        config(['rest.extensions' => ['shares' => FirstGates::class]]);
+        config(['rest.extensions' => [SharesGates::class]]);
         FirstGates::$gates = ['share'];
         FirstGates::$resources = [TicketResource::class];
 
@@ -128,7 +132,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_refuses_an_extension_gate_when_the_extension_does_not_apply(): void
     {
-        config(['rest.extensions' => ['shares' => FirstGates::class]]);
+        config(['rest.extensions' => [SharesGates::class]]);
         FirstGates::$gates = ['share'];
         FirstGates::$resources = [TeamResource::class];
 
@@ -141,7 +145,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_lists_no_gate_for_a_resource_that_turns_them_off(): void
     {
-        config(['rest.extensions' => ['shares' => FirstGates::class]]);
+        config(['rest.extensions' => [SharesGates::class]]);
         FirstGates::$gates = ['share'];
         $search = ['selects' => [['field' => 'id']], 'sorts' => [['field' => 'id']]];
 
@@ -159,7 +163,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[DataProvider('misdeclaredGates')]
     public function it_names_the_extension_of_a_misdeclared_gate(array $gates, int $index, mixed $name): void
     {
-        config(['rest.extensions' => ['acl' => FirstGates::class]]);
+        config(['rest.extensions' => [FirstGates::class]]);
         FirstGates::$gates = $gates;
         $this->withoutExceptionHandling();
 
@@ -171,7 +175,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_refuses_a_misdeclared_gate_with_an_exception_that_names_the_extension(): void
     {
-        config(['rest.extensions' => ['acl' => FirstGates::class]]);
+        config(['rest.extensions' => [FirstGates::class]]);
         FirstGates::$gates = ['Share'];
         $definition = $this->contextFor(null)->resource(TicketResource::class)->definition();
 
@@ -198,7 +202,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_accepts_a_gate_that_the_resource_also_declares(): void
     {
-        config(['rest.extensions' => ['acl' => FirstGates::class]]);
+        config(['rest.extensions' => [FirstGates::class]]);
         FirstGates::$gates = ['archive', 'escalate'];
 
         $this->getJson('/api/tickets?with=gates')->assertOk()->assertJsonPath('data.gates', self::TICKET_GATES);
@@ -207,7 +211,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_reads_the_extension_gates_once_per_context_and_only_when_gates_are_read(): void
     {
-        config(['rest.extensions' => ['acl' => FirstGates::class]]);
+        config(['rest.extensions' => [FirstGates::class]]);
         FirstGates::$gates = ['share'];
 
         $this->postJson('/api/tickets/search', ['search' => ['sorts' => [['field' => 'id']]]])->assertOk();
@@ -220,7 +224,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_gives_the_declaration_the_resource_class_only(): void
     {
-        config(['rest.extensions' => ['acl' => FirstGates::class]]);
+        config(['rest.extensions' => [FirstGates::class]]);
         FirstGates::$gates = ['share'];
 
         $this->getJson('/api/tickets?with=gates')->assertOk();
@@ -235,7 +239,7 @@ class ExtensionGatesTest extends HelpdeskTestCase
     #[Test]
     public function it_hands_an_extension_gate_to_the_augmentation_and_the_preparation(): void
     {
-        config(['rest.extensions' => ['shares' => FirstGates::class, 'aug' => AugmentedPreparingExtension::class]]);
+        config(['rest.extensions' => [SharesGates::class, AugmentedPreparingExtension::class]]);
         FirstGates::$gates = ['share'];
 
         $this->postJson('/api/tickets/search', ['search' => ['gates' => ['share'], 'sorts' => [['field' => 'id']]]])->assertOk();

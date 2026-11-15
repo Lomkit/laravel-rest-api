@@ -4,11 +4,12 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstGates;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SharesGates;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
-#[WithConfig('rest.extensions', ['shares' => FirstGates::class])]
+#[WithConfig('rest.extensions', [SharesGates::class])]
 class ExtensionGatesDocumentTest extends DocumentationTestCase
 {
     #[\Override]
