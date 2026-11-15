@@ -129,8 +129,7 @@ final class ExtensionFactoryTest extends TestCase
     {
         $refusals = [
             InvalidExtensionException::invalidName('acl'),
-            InvalidExtensionException::duplicateName('acl', NotingExtension::class, CountingExtension::class),
-            InvalidExtensionException::repeatedRegistration('acl', NotingExtension::class),
+            InvalidExtensionException::sharedName('acl', [NotingExtension::class, CountingExtension::class]),
             InvalidExtensionException::lateRegistration('acl', NotingExtension::class),
             InvalidExtensionException::notAClass('acl', self::MISSING),
             InvalidExtensionException::notAnExtension('acl', NotAnExtension::class),

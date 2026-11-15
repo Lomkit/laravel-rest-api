@@ -30,7 +30,7 @@ final class RuntimeExtensionsTest extends TestCase
         $extensions->register('noting', NotingExtension::class);
         $extensions->register('counting', CountingExtension::class);
 
-        $this->assertSame(['noting' => NotingExtension::class, 'counting' => CountingExtension::class], $extensions->all());
+        $this->assertSame(['noting' => [NotingExtension::class], 'counting' => [CountingExtension::class]], $extensions->all());
     }
 
     #[Test]
@@ -42,53 +42,47 @@ final class RuntimeExtensionsTest extends TestCase
         $extensions->registerAll(['noting' => NotingExtension::class, 'counting' => CountingExtension::class]);
 
         $this->assertSame([
-            'first' => CountingExtension::class,
-            'noting' => NotingExtension::class,
-            'counting' => CountingExtension::class,
+            'first' => [CountingExtension::class],
+            'noting' => [NotingExtension::class],
+            'counting' => [CountingExtension::class],
         ], $extensions->all());
     }
 
     #[Test]
-    public function it_refuses_a_second_class_under_a_registered_name(): void
+    public function it_records_a_second_class_under_a_registered_name(): void
     {
         $extensions = new RuntimeExtensions;
         $extensions->register('noting', NotingExtension::class);
-
-        $this->expectExceptionObject(InvalidExtensionException::duplicateName('noting', NotingExtension::class, CountingExtension::class));
 
         $extensions->register('noting', CountingExtension::class);
+
+        $this->assertSame(['noting' => [NotingExtension::class, CountingExtension::class]], $extensions->all());
     }
 
     #[Test]
-    public function it_asks_to_remove_a_class_registered_twice_under_one_name(): void
+    public function it_accepts_the_same_class_twice_under_one_name_silently(): void
     {
         $extensions = new RuntimeExtensions;
         $extensions->register('noting', NotingExtension::class);
 
-        try {
-            $extensions->register('noting', NotingExtension::class);
-            $this->fail('A class registered twice under one name was accepted.');
-        } catch (InvalidExtensionException $exception) {
-            $this->assertSame(
-                'The [noting] extension '.NotingExtension::class.' is registered twice under this name. Remove the second registration: one registration applies it to every resource.',
-                $exception->getMessage(),
-            );
-        }
-
-        $this->expectExceptionObject(InvalidExtensionException::repeatedRegistration('noting', NotingExtension::class));
-
+        $extensions->register('noting', NotingExtension::class);
         $extensions->registerAll(['noting' => NotingExtension::class]);
+
+        $this->assertSame(['noting' => [NotingExtension::class]], $extensions->all());
     }
 
     #[Test]
-    public function it_refuses_a_name_registered_twice_in_one_map(): void
+    public function it_records_a_map_entry_under_a_registered_name(): void
     {
         $extensions = new RuntimeExtensions;
         $extensions->register('noting', NotingExtension::class);
 
-        $this->expectExceptionObject(InvalidExtensionException::duplicateName('noting', NotingExtension::class, CountingExtension::class));
+        $extensions->registerAll(['noting' => CountingExtension::class, 'counting' => CountingExtension::class]);
 
-        $extensions->registerAll(['noting' => CountingExtension::class]);
+        $this->assertSame([
+            'noting' => [NotingExtension::class, CountingExtension::class],
+            'counting' => [CountingExtension::class],
+        ], $extensions->all());
     }
 
     #[Test]
@@ -115,7 +109,7 @@ final class RuntimeExtensionsTest extends TestCase
         $extensions->register($name, NotingExtension::class);
 
         $this->assertSame(32, strlen($name));
-        $this->assertSame([$name => NotingExtension::class], $extensions->all());
+        $this->assertSame([$name => [NotingExtension::class]], $extensions->all());
     }
 
     #[Test]
@@ -229,7 +223,7 @@ final class RuntimeExtensionsTest extends TestCase
             $this->assertEquals(InvalidExtensionException::lateRegistration('counting', CountingExtension::class), $exception);
         }
 
-        $this->assertSame(['noting' => NotingExtension::class], $extensions->all());
+        $this->assertSame(['noting' => [NotingExtension::class]], $extensions->all());
     }
 
     #[Test]

@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Console\Check;
 use Illuminate\Console\View\Components\Factory;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Extensions\ExtensionEntry;
+use Lomkit\Rest\Extensions\ExtensionOrigin;
 
 final readonly class ExtensionReport
 {
@@ -13,7 +14,7 @@ final readonly class ExtensionReport
     private const string REPLACES = 'replaces';
 
     /**
-     * @param  list<array{name: string, class: string|null, origin: string, disabled: bool, replaces: string|null}>  $registered
+     * @param  list<array{name: string, class: string|null, origin: string, disabled: bool, runtime: list<string>}>  $registered
      * @param  list<string>  $problems
      */
     public function __construct(
@@ -28,7 +29,7 @@ final readonly class ExtensionReport
             'class' => $entry->class,
             'origin' => $entry->origin->value,
             'disabled' => $entry->disabled,
-            'replaces' => $entry->replaces,
+            'runtime' => $entry->runtime,
         ]], $this->problems);
     }
 
@@ -42,7 +43,7 @@ final readonly class ExtensionReport
         return $this->problems === [];
     }
 
-    /** @return array{extensions: array{registered: list<array{name: string, class: string|null, origin: string, disabled: bool, replaces: string|null}>, problems: list<string>}} */
+    /** @return array{extensions: array{registered: list<array{name: string, class: string|null, origin: string, disabled: bool, runtime: list<string>}>, problems: list<string>}} */
     public function toArray(): array
     {
         return ['extensions' => ['registered' => $this->registered, 'problems' => $this->problems]];
@@ -58,10 +59,17 @@ final readonly class ExtensionReport
         }
 
         foreach ($this->registered as $entry) {
-            $replaces = $entry['replaces'] === null ? null : self::REPLACES.' '.$entry['replaces'];
-            $details = array_filter([$entry['class'], $entry['origin'], $entry['disabled'] ? self::DISABLED : null, $replaces]);
+            $details = array_filter([$entry['class'] ?? implode(', ', $entry['runtime']), $entry['origin'], $entry['disabled'] ? self::DISABLED : null, self::replaced($entry)]);
             $components->twoColumnDetail($entry['name'], implode(', ', $details));
         }
+    }
+
+    /** @param array{name: string, class: string|null, origin: string, disabled: bool, runtime: list<string>} $entry */
+    private static function replaced(array $entry): ?string
+    {
+        $others = array_diff($entry['runtime'], [$entry['class']]);
+
+        return $entry['origin'] === ExtensionOrigin::Config->value && $others !== [] ? self::REPLACES.' '.implode(', ', $others) : null;
     }
 
     private function summary(): string

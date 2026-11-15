@@ -51,7 +51,7 @@ final class ExtensionRegistryTest extends TestCase
         $container = $this->createMock(Container::class);
         $container->expects($this->never())->method($this->anything());
 
-        $registry = ExtensionRegistry::of(['noting' => false], ['noting' => NotingExtension::class], $container);
+        $registry = ExtensionRegistry::of(['noting' => false], ['noting' => [NotingExtension::class]], $container);
 
         $this->assertTrue($registry->isEmpty());
         $this->assertSame([], $registry->all());
@@ -62,7 +62,7 @@ final class ExtensionRegistryTest extends TestCase
     #[Test]
     public function it_builds_nothing_before_first_use(): void
     {
-        $registry = ExtensionRegistry::of([], ['noting' => NotingExtension::class], new IlluminateContainer);
+        $registry = ExtensionRegistry::of([], ['noting' => [NotingExtension::class]], new IlluminateContainer);
 
         $this->assertFalse($registry->isEmpty());
         $this->assertSame([], ExtensionLog::$built);
@@ -71,7 +71,7 @@ final class ExtensionRegistryTest extends TestCase
     #[Test]
     public function it_builds_each_extension_once(): void
     {
-        $registry = ExtensionRegistry::of([], ['noting' => NotingExtension::class], new IlluminateContainer);
+        $registry = ExtensionRegistry::of([], ['noting' => [NotingExtension::class]], new IlluminateContainer);
 
         $first = $registry->all();
         $second = $registry->all();
@@ -86,9 +86,9 @@ final class ExtensionRegistryTest extends TestCase
     public function it_gives_the_extensions_of_one_kind_by_name_in_registration_order(): void
     {
         $registry = ExtensionRegistry::of([], [
-            'noting' => NotingExtension::class,
-            'counting' => CountingExtension::class,
-            'both' => BothKindsExtension::class,
+            'noting' => [NotingExtension::class],
+            'counting' => [CountingExtension::class],
+            'both' => [BothKindsExtension::class],
         ], new IlluminateContainer);
 
         $this->assertSame(['noting', 'both'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
@@ -99,7 +99,7 @@ final class ExtensionRegistryTest extends TestCase
     #[Test]
     public function it_leaves_out_an_extension_that_does_not_apply_to_the_resource(): void
     {
-        $registry = ExtensionRegistry::of([], ['products' => ProductsOnlyExtension::class, 'noting' => NotingExtension::class], new IlluminateContainer);
+        $registry = ExtensionRegistry::of([], ['products' => [ProductsOnlyExtension::class], 'noting' => [NotingExtension::class]], new IlluminateContainer);
 
         $this->assertSame(['products', 'noting'], array_keys($registry->applicable(ProductResource::class, NotesResources::class)));
         $this->assertSame(['noting'], array_keys($registry->applicable(CategoryResource::class, NotesResources::class)));
@@ -108,7 +108,7 @@ final class ExtensionRegistryTest extends TestCase
     #[Test]
     public function it_asks_applies_to_once_per_resource_in_one_registry(): void
     {
-        $registry = ExtensionRegistry::of([], ['products' => ProductsOnlyExtension::class], new IlluminateContainer);
+        $registry = ExtensionRegistry::of([], ['products' => [ProductsOnlyExtension::class]], new IlluminateContainer);
         $registry->applicable(ProductResource::class, NotesResources::class);
         $registry->applicable(ProductResource::class, NotesResources::class);
         $registry->applicable(CategoryResource::class, NotesResources::class);
@@ -123,7 +123,7 @@ final class ExtensionRegistryTest extends TestCase
     public function it_asks_applies_to_again_in_another_registry(): void
     {
         foreach ([new IlluminateContainer, new IlluminateContainer] as $container) {
-            $registry = ExtensionRegistry::of([], ['products' => ProductsOnlyExtension::class], $container);
+            $registry = ExtensionRegistry::of([], ['products' => [ProductsOnlyExtension::class]], $container);
             $registry->applicable(ProductResource::class, NotesResources::class);
             $registry->applicable(ProductResource::class, NotesResources::class);
             $registry->applicable(CategoryResource::class, NotesResources::class);
@@ -141,7 +141,7 @@ final class ExtensionRegistryTest extends TestCase
     #[Test]
     public function it_does_not_ask_an_extension_of_another_kind(): void
     {
-        $registry = ExtensionRegistry::of([], ['products' => ProductsOnlyExtension::class], new IlluminateContainer);
+        $registry = ExtensionRegistry::of([], ['products' => [ProductsOnlyExtension::class]], new IlluminateContainer);
 
         $this->assertSame([], $registry->applicable(ProductResource::class, CountsResources::class));
         $this->assertSame([], ExtensionLog::$asked);
@@ -150,7 +150,7 @@ final class ExtensionRegistryTest extends TestCase
     #[Test]
     public function it_throws_the_first_invalid_entry_when_built(): void
     {
-        $registry = ExtensionRegistry::of([], ['noting' => NotingExtension::class, 'kindless' => KindlessExtension::class], new IlluminateContainer);
+        $registry = ExtensionRegistry::of([], ['noting' => [NotingExtension::class], 'kindless' => [KindlessExtension::class]], new IlluminateContainer);
 
         $this->expectExceptionObject(InvalidExtensionException::noKind('kindless', KindlessExtension::class));
 

@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Exceptions;
 
+use Illuminate\Support\Arr;
 use LogicException;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\ExtensionName;
@@ -36,14 +37,12 @@ final class InvalidExtensionException extends LogicException
         return self::about($name, "The extension name [{$name}] is invalid. A name has 1 to {$length} lowercase letters, digits or underscores and starts with a letter, such as [acl]: it prefixes the keys that the extension adds.");
     }
 
-    public static function duplicateName(string $name, string $registered, string $class): self
+    /** @param non-empty-list<string> $classes */
+    public static function sharedName(string $name, array $classes): self
     {
-        return self::about($name, "The [{$name}] extension is already registered as {$registered}, so {$class} cannot take the same name. Register {$class} under another name.");
-    }
+        $registered = Arr::join($classes, ', ', ' and ');
 
-    public static function repeatedRegistration(string $name, string $class): self
-    {
-        return self::about($name, "The [{$name}] extension {$class} is registered twice under this name. Remove the second registration: one registration applies it to every resource.");
+        return self::about($name, "The [{$name}] extension name is registered by several packages, as {$registered}. Settle it in the [rest.extensions] config: '{$name}' => {$classes[0]}::class keeps one, '{$name}' => false keeps none, and the other class can take another name there.");
     }
 
     public static function lateRegistration(string $name, string $class): self

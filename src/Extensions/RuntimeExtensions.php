@@ -9,7 +9,7 @@ use Lomkit\Rest\Exceptions\InvalidExtensionException;
 #[Singleton]
 final class RuntimeExtensions
 {
-    /** @var array<string, string> */
+    /** @var array<string, non-empty-list<string>> */
     private array $classes = [];
 
     private bool $frozen = false;
@@ -18,7 +18,7 @@ final class RuntimeExtensions
     {
         $this->ensureAccepted($name, $class);
 
-        $this->classes[$name] = $class;
+        $this->add($name, $class);
     }
 
     /** @param array<array-key, mixed> $classes */
@@ -43,7 +43,9 @@ final class RuntimeExtensions
             $accepted[$name] = $class;
         }
 
-        $this->classes = [...$this->classes, ...$accepted];
+        foreach ($accepted as $name => $class) {
+            $this->add($name, $class);
+        }
     }
 
     public function freeze(): void
@@ -51,7 +53,7 @@ final class RuntimeExtensions
         $this->frozen = true;
     }
 
-    /** @return array<string, string> */
+    /** @return array<string, non-empty-list<string>> */
     public function all(): array
     {
         return $this->classes;
@@ -64,15 +66,14 @@ final class RuntimeExtensions
         }
 
         ExtensionName::ensureValid($name);
+    }
 
-        if (! isset($this->classes[$name])) {
+    private function add(string $name, string $class): void
+    {
+        if (in_array($class, $this->classes[$name] ?? [], true)) {
             return;
         }
 
-        if ($this->classes[$name] === $class) {
-            throw InvalidExtensionException::repeatedRegistration($name, $class);
-        }
-
-        throw InvalidExtensionException::duplicateName($name, $this->classes[$name], $class);
+        $this->classes[$name][] = $class;
     }
 }

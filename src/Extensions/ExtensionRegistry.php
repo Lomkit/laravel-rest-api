@@ -22,7 +22,7 @@ final class ExtensionRegistry
 
     /**
      * @param  array<array-key, mixed>  $configured
-     * @param  array<string, string>  $registered
+     * @param  array<string, non-empty-list<string>>  $registered
      */
     public static function of(array $configured, array $registered, Container $container): self
     {

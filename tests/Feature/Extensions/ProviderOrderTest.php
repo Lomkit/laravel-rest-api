@@ -63,9 +63,9 @@ final class ProviderOrderTest extends PackageTestCase
 
         $this->assertSame($store, $this->app->make(RuntimeExtensions::class));
         $this->assertSame([
-            'early' => NotingExtension::class,
-            'later' => BothKindsExtension::class,
-            'booted' => CountingExtension::class,
+            'early' => [NotingExtension::class],
+            'later' => [BothKindsExtension::class],
+            'booted' => [CountingExtension::class],
         ], $store->all());
     }
 }

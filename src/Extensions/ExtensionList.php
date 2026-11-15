@@ -17,15 +17,15 @@ final readonly class ExtensionList
 
     /**
      * @param  array<array-key, mixed>  $configured
-     * @param  array<string, string>  $registered
+     * @param  array<string, non-empty-list<string>>  $registered
      */
     public static function merge(array $configured, array $registered): self
     {
         $entries = [];
         $refused = [];
 
-        foreach ($registered as $name => $class) {
-            $entries[$name] = new ExtensionEntry($name, $class, ExtensionOrigin::Runtime, false);
+        foreach ($registered as $name => $classes) {
+            $entries[$name] = new ExtensionEntry($name, count($classes) === 1 ? $classes[0] : null, ExtensionOrigin::Runtime, false, $classes);
         }
 
         foreach ($configured as $name => $value) {
@@ -38,6 +38,12 @@ final readonly class ExtensionList
             }
 
             $entries[$entry->name] = $entry;
+        }
+
+        foreach ($registered as $name => $classes) {
+            if ($entries[$name]->conflicts()) {
+                $refused[] = InvalidExtensionException::sharedName($name, $classes);
+            }
         }
 
         return new self(array_values($entries), $refused);
@@ -70,7 +76,7 @@ final readonly class ExtensionList
         ExtensionName::ensureValid($name);
 
         if ($value === false) {
-            return new ExtensionEntry($name, $registered?->class, $registered->origin ?? ExtensionOrigin::Config, true);
+            return new ExtensionEntry($name, $registered?->class, $registered->origin ?? ExtensionOrigin::Config, true, $registered->runtime ?? []);
         }
 
         if (is_object($value)) {
@@ -81,6 +87,6 @@ final readonly class ExtensionList
             throw InvalidExtensionException::notAClass($name, get_debug_type($value));
         }
 
-        return new ExtensionEntry($name, $value, ExtensionOrigin::Config, false, $registered?->class);
+        return new ExtensionEntry($name, $value, ExtensionOrigin::Config, false, $registered->runtime ?? []);
     }
 }

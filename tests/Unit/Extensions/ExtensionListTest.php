@@ -21,12 +21,12 @@ final class ExtensionListTest extends TestCase
     {
         $list = ExtensionList::merge(
             ['noting' => BothKindsExtension::class, 'archive' => InjectedExtension::class],
-            ['noting' => NotingExtension::class, 'counting' => CountingExtension::class],
+            ['noting' => [NotingExtension::class], 'counting' => [CountingExtension::class]],
         );
 
         $this->assertEquals([
-            new ExtensionEntry('noting', BothKindsExtension::class, ExtensionOrigin::Config, false, NotingExtension::class),
-            new ExtensionEntry('counting', CountingExtension::class, ExtensionOrigin::Runtime, false),
+            new ExtensionEntry('noting', BothKindsExtension::class, ExtensionOrigin::Config, false, [NotingExtension::class]),
+            new ExtensionEntry('counting', CountingExtension::class, ExtensionOrigin::Runtime, false, [CountingExtension::class]),
             new ExtensionEntry('archive', InjectedExtension::class, ExtensionOrigin::Config, false),
         ], $list->entries);
         $this->assertSame([
@@ -39,11 +39,11 @@ final class ExtensionListTest extends TestCase
     #[Test]
     public function it_disables_a_runtime_extension_with_false(): void
     {
-        $list = ExtensionList::merge(['noting' => false], ['noting' => NotingExtension::class, 'counting' => CountingExtension::class]);
+        $list = ExtensionList::merge(['noting' => false], ['noting' => [NotingExtension::class], 'counting' => [CountingExtension::class]]);
 
         $this->assertEquals([
-            new ExtensionEntry('noting', NotingExtension::class, ExtensionOrigin::Runtime, true),
-            new ExtensionEntry('counting', CountingExtension::class, ExtensionOrigin::Runtime, false),
+            new ExtensionEntry('noting', NotingExtension::class, ExtensionOrigin::Runtime, true, [NotingExtension::class]),
+            new ExtensionEntry('counting', CountingExtension::class, ExtensionOrigin::Runtime, false, [CountingExtension::class]),
         ], $list->entries);
         $this->assertSame(['counting' => CountingExtension::class], $list->enabled());
     }
@@ -60,9 +60,9 @@ final class ExtensionListTest extends TestCase
     #[Test]
     public function it_keeps_the_runtime_registrations_without_config(): void
     {
-        $list = ExtensionList::merge([], ['noting' => NotingExtension::class]);
+        $list = ExtensionList::merge([], ['noting' => [NotingExtension::class]]);
 
-        $this->assertEquals([new ExtensionEntry('noting', NotingExtension::class, ExtensionOrigin::Runtime, false)], $list->entries);
+        $this->assertEquals([new ExtensionEntry('noting', NotingExtension::class, ExtensionOrigin::Runtime, false, [NotingExtension::class])], $list->entries);
         $this->assertSame(['noting' => NotingExtension::class], $list->enabled());
     }
 
@@ -71,11 +71,11 @@ final class ExtensionListTest extends TestCase
     {
         $list = ExtensionList::merge(
             ['counting' => CountingExtension::class, 'Bad' => NotingExtension::class, 0 => InjectedExtension::class, 'archive' => 1, 'tenant' => false],
-            ['noting' => NotingExtension::class],
+            ['noting' => [NotingExtension::class]],
         );
 
         $this->assertEquals([
-            new ExtensionEntry('noting', NotingExtension::class, ExtensionOrigin::Runtime, false),
+            new ExtensionEntry('noting', NotingExtension::class, ExtensionOrigin::Runtime, false, [NotingExtension::class]),
             new ExtensionEntry('counting', CountingExtension::class, ExtensionOrigin::Config, false),
             new ExtensionEntry('tenant', null, ExtensionOrigin::Config, true),
         ], $list->entries);
@@ -84,6 +84,53 @@ final class ExtensionListTest extends TestCase
             InvalidExtensionException::missingName(InjectedExtension::class),
             InvalidExtensionException::notAClass('archive', 'int'),
         ], $list->refused);
+    }
+
+    #[Test]
+    public function it_refuses_a_name_that_two_classes_share_without_config(): void
+    {
+        $list = ExtensionList::merge([], ['acl' => [NotingExtension::class, CountingExtension::class], 'counting' => [CountingExtension::class]]);
+
+        $this->assertEquals([
+            new ExtensionEntry('acl', null, ExtensionOrigin::Runtime, false, [NotingExtension::class, CountingExtension::class]),
+            new ExtensionEntry('counting', CountingExtension::class, ExtensionOrigin::Runtime, false, [CountingExtension::class]),
+        ], $list->entries);
+        $this->assertEquals([InvalidExtensionException::sharedName('acl', [NotingExtension::class, CountingExtension::class])], $list->refused);
+        $this->assertSame(
+            'The [acl] extension name is registered by several packages, as '.NotingExtension::class.' and '.CountingExtension::class.'.'
+            ." Settle it in the [rest.extensions] config: 'acl' => ".NotingExtension::class."::class keeps one, 'acl' => false keeps none, and the other class can take another name there.",
+            $list->refused[0]->getMessage(),
+        );
+
+        $this->expectExceptionObject(InvalidExtensionException::sharedName('acl', [NotingExtension::class, CountingExtension::class]));
+
+        $list->enabled();
+    }
+
+    #[Test]
+    public function it_lets_false_settle_a_shared_name(): void
+    {
+        $list = ExtensionList::merge(['acl' => false], ['acl' => [NotingExtension::class, CountingExtension::class]]);
+
+        $this->assertEquals([new ExtensionEntry('acl', null, ExtensionOrigin::Runtime, true, [NotingExtension::class, CountingExtension::class])], $list->entries);
+        $this->assertSame([], $list->refused);
+        $this->assertSame([], $list->enabled());
+    }
+
+    #[Test]
+    public function it_lets_a_config_class_settle_a_shared_name(): void
+    {
+        $list = ExtensionList::merge(
+            ['acl' => BothKindsExtension::class, 'counting' => CountingExtension::class],
+            ['acl' => [NotingExtension::class, CountingExtension::class]],
+        );
+
+        $this->assertEquals([
+            new ExtensionEntry('acl', BothKindsExtension::class, ExtensionOrigin::Config, false, [NotingExtension::class, CountingExtension::class]),
+            new ExtensionEntry('counting', CountingExtension::class, ExtensionOrigin::Config, false),
+        ], $list->entries);
+        $this->assertSame([], $list->refused);
+        $this->assertSame(['acl' => BothKindsExtension::class, 'counting' => CountingExtension::class], $list->enabled());
     }
 
     #[Test]
