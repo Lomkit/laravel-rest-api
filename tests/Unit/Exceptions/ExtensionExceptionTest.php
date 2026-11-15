@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Unit\Exceptions;
 
 use Lomkit\Rest\Exceptions\ExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
+use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentation;
@@ -42,6 +43,16 @@ class ExtensionExceptionTest extends TestCase
             method_exists(InvalidEngineExtensionException::class, 'missingName'),
             $exception->namesExtension('first'),
         ]);
+    }
+
+    #[Test]
+    public function it_keeps_the_engine_query_refusal_as_the_previous_exception(): void
+    {
+        $reason = InvalidEngineQueryException::undeclaredAttribute('owner');
+
+        $exception = InvalidEngineExtensionException::refusedEngineCondition('owner', 'App\Rest\OwnerExtension', 'App\Rest\PostResource', $reason);
+
+        $this->assertSame([$reason, true], [$exception->getPrevious(), $exception->namesExtension('owner')]);
     }
 
     #[Test]

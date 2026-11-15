@@ -55,7 +55,7 @@ final class InvalidEngineExtensionException extends ExtensionException
 
     public static function refusedEngineCondition(string $name, string $class, string $resource, InvalidEngineQueryException $reason): self
     {
-        return self::about($name, "The [{$name}] extension {$class} restricts the engine search of {$resource} with a condition that the engine query refuses: {$reason->getMessage()}");
+        return self::about($name, "The [{$name}] extension {$class} restricts the engine search of {$resource} with a condition that the engine query refuses: {$reason->getMessage()}", $reason);
     }
 
     private static function taken(string $name, string $class, string $resource, string $attribute, string $owner): self
