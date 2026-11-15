@@ -128,17 +128,7 @@ class IndexAttributeOwnersTest extends ScoutEngineDeclarationTestCase
     }
 
     #[Test]
-    public function it_refuses_an_attribute_declared_twice_by_one_extension(): void
-    {
-        $this->declare([FirstIndexExtension::class => [Integer::make('owner_id'), Integer::make('owner_id')]]);
-
-        $this->expectExceptionObject(InvalidEngineExtensionException::repeatedIndexAttribute('first', FirstIndexExtension::class, VoucherResource::class, 'owner_id'));
-
-        $this->capabilities($this->open());
-    }
-
-    #[Test]
-    public function it_names_the_registered_class_of_a_declaring_extension_bound_to_a_subclass(): void
+    public function it_refuses_an_attribute_declared_twice_by_one_extension_and_names_the_registered_class(): void
     {
         $bound = new class extends FirstIndexExtension {};
         $this->app?->bind(FirstIndexExtension::class, static fn (): FirstIndexExtension => $bound);

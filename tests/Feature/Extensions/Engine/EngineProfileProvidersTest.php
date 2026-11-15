@@ -80,10 +80,15 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
     /** @param list<class-string> $extensions */
     #[Test]
     #[DataProvider('rivals')]
-    public function it_refuses_two_extensions_that_claim_one_engine_in_any_order(array $extensions): void
+    public function it_refuses_two_extensions_that_claim_one_engine_in_any_order(array $extensions, bool $subclass): void
     {
         $this->useEngine(new ForeignEngine);
         config(['rest.extensions' => $extensions]);
+
+        if ($subclass) {
+            $this->app?->bind(RivalEngineProfiles::class, static fn (): RivalEngineProfiles => new class extends RivalEngineProfiles {});
+        }
+
         $this->withoutExceptionHandling();
 
         $this->expectExceptionObject(InvalidEngineExtensionException::conflictingProfiles(ForeignEngine::class, VoucherResource::class, 'a', EarlyForeignEngineProfiles::class, 'b', RivalEngineProfiles::class));
@@ -91,26 +96,14 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
         $this->search('vouchers', ['text' => ['value' => 'report']]);
     }
 
-    /** @return array<string, array{list<class-string>}> */
+    /** @return array<string, array{list<class-string>, bool}> */
     public static function rivals(): array
     {
         return [
-            'in name order' => [[EarlyForeignEngineProfiles::class, RivalEngineProfiles::class]],
-            'in reverse order' => [[RivalEngineProfiles::class, EarlyForeignEngineProfiles::class]],
+            'in name order' => [[EarlyForeignEngineProfiles::class, RivalEngineProfiles::class], false],
+            'in reverse order' => [[RivalEngineProfiles::class, EarlyForeignEngineProfiles::class], false],
+            'with the second bound to a subclass' => [[EarlyForeignEngineProfiles::class, RivalEngineProfiles::class], true],
         ];
-    }
-
-    #[Test]
-    public function it_names_the_registered_class_of_a_provider_bound_to_a_subclass(): void
-    {
-        $this->useEngine(new ForeignEngine);
-        config(['rest.extensions' => [EarlyForeignEngineProfiles::class, RivalEngineProfiles::class]]);
-        $this->app?->bind(RivalEngineProfiles::class, static fn (): RivalEngineProfiles => new class extends RivalEngineProfiles {});
-        $this->withoutExceptionHandling();
-
-        $this->expectExceptionObject(InvalidEngineExtensionException::conflictingProfiles(ForeignEngine::class, VoucherResource::class, 'a', EarlyForeignEngineProfiles::class, 'b', RivalEngineProfiles::class));
-
-        $this->search('vouchers', ['text' => ['value' => 'report']]);
     }
 
     #[Test]
