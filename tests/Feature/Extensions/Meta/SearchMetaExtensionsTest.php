@@ -7,6 +7,10 @@ use Closure;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Fluent;
 use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
@@ -16,21 +20,19 @@ use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ColumnSearchMeta;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\JsonResourceMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaDto;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaShape;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaStatus;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaTicketResource;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\NotFiniteValue;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaSearchMetaNamedGates;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionSearchMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RegionSearchMetaNamedArea;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamSearchMeta;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnencodableMeta;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ValueSearchMeta;
-use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WrappedMeta;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedAbilities;
 use Lomkit\Rest\Tests\Fixtures\Extensions\PageCountMetaExtensionNamedInstructions;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
@@ -38,6 +40,7 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use SplObjectStorage;
+use stdClass;
 
 final class SearchMetaExtensionsTest extends HelpdeskTestCase
 {
@@ -204,7 +207,9 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     public static function refusedValues(): array
     {
         $ticket = fn (): Ticket => new Ticket(['title' => 'Printer jam']);
-        $cases = [
+        $resource = fn (): JsonResource => new JsonResource($ticket());
+
+        return [
             'an object' => [fn (): ArrayObject => new ArrayObject, 'value.value', ArrayObject::class],
             'an infinite float' => [fn (): float => INF, 'value.value', 'float'],
             'a nested object' => [fn (): array => ['nested' => new SplObjectStorage], 'value.value.nested', SplObjectStorage::class],
@@ -213,13 +218,19 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
             'an Eloquent collection' => [fn (): array => ['tickets' => new EloquentCollection([$ticket()])], 'value.value.tickets', EloquentCollection::class],
             'a model inside a plain collection' => [fn (): array => ['tickets' => collect([$ticket()])], 'value.value.tickets.0', Ticket::class],
             'the models of an Eloquent collection turned into a plain one' => [fn (): array => ['tickets' => (new EloquentCollection([$ticket()]))->toBase()], 'value.value.tickets.0', Ticket::class],
+            'a resource of a model' => [fn (): array => ['ticket' => $resource()], 'value.value.ticket', JsonResource::class],
+            'a resource collection' => [fn (): array => ['tickets' => JsonResource::collection(collect([$ticket()]))], 'value.value.tickets', AnonymousResourceCollection::class],
+            'a resource inside a plain collection' => [fn (): array => ['tickets' => collect([$resource()])], 'value.value.tickets.0', JsonResource::class],
+            'a resource inside a paginator' => [fn (): array => ['page' => new LengthAwarePaginator([$resource()], 1, 10)], 'value.value.page.0', JsonResource::class],
+            'a resource inside a cursor paginator' => [fn (): array => ['page' => new CursorPaginator([$resource()], 10)], 'value.value.page.0', JsonResource::class],
+            'a resource collection inside a plain collection' => [fn (): array => ['lists' => collect(['open' => JsonResource::collection(collect([$ticket()]))])], 'value.value.lists.open', AnonymousResourceCollection::class],
+            'a resource nested deep' => [fn (): array => ['a' => ['b' => (object) ['c' => [$resource()]]]], 'value.value.a.b.c.0', JsonResource::class],
+            'a resource in a Fluent' => [fn (): array => ['wrapper' => new Fluent(['ticket' => $resource()])], 'value.value.wrapper.ticket', JsonResource::class],
+            'a model in a Fluent' => [fn (): array => ['wrapper' => new Fluent(['ticket' => $ticket()])], 'value.value.wrapper.ticket', Ticket::class],
+            'a model in a list of a Fluent' => [fn (): array => ['wrapper' => new Fluent(['tickets' => [$ticket()]])], 'value.value.wrapper.tickets.0', Ticket::class],
+            'an Eloquent collection in a DTO' => [fn (): array => ['dto' => new MetaDto(new EloquentCollection([$ticket()]))], 'value.value.dto.data', EloquentCollection::class],
+            'a resource in a DTO in a DTO' => [fn (): array => ['dto' => new MetaDto(new MetaDto([$resource()]))], 'value.value.dto.data.data.0', JsonResource::class],
         ];
-
-        foreach ([...JsonResourceMeta::cases(), ...WrappedMeta::cases()] as $name => [$value, $path, $type]) {
-            $cases[$name] = [$value, "value.value.{$path}", $type];
-        }
-
-        return $cases;
     }
 
     /** @param Closure(): mixed $value */
@@ -301,7 +312,22 @@ final class SearchMetaExtensionsTest extends HelpdeskTestCase
     /** @return array<string, array{mixed, string}> */
     public static function notJson(): array
     {
-        return UnencodableMeta::cases();
+        $loop = new stdClass;
+        $loop->self = $loop;
+        $deep = 'leaf';
+
+        for ($level = 0; $level < 260; $level++) {
+            $deep = [$deep];
+        }
+
+        return [
+            'a string that is not UTF-8' => [['title' => "\xB1\x31"], 'Malformed UTF-8 characters, possibly incorrectly encoded'],
+            'a key that is not UTF-8' => [["\xB1\x31" => 1], 'Malformed UTF-8 characters, possibly incorrectly encoded'],
+            'a JsonSerializable that returns NAN' => [new NotFiniteValue(NAN), 'Inf and NaN cannot be JSON encoded'],
+            'a JsonSerializable that returns INF' => [['ratio' => new NotFiniteValue(INF)], 'Inf and NaN cannot be JSON encoded'],
+            'an object that holds itself' => [$loop, 'Recursion detected'],
+            'a value nested too deep' => [$deep, 'Maximum stack depth exceeded'],
+        ];
     }
 
     #[Test]
