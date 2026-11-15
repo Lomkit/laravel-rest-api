@@ -33,9 +33,13 @@ final class ResourceRegistrar
     public function groupName(): string
     {
         $groups = $this->router->getGroupStack();
-        $name = end($groups)['as'] ?? '';
+        $group = end($groups);
 
-        return is_string($name) ? $name : '';
+        if (! is_array($group) || ! is_string($group['as'] ?? null)) {
+            return '';
+        }
+
+        return $group['as'];
     }
 
     /** @param list<RouteDefinition> $definitions */
