@@ -204,9 +204,9 @@ class StringListAttributesTest extends EngineSearchTestCase
 
     #[Test]
     #[DataProvider('listSupport')]
-    public function it_tells_both_kinds_whether_the_engine_matches_lists(object $engine, bool $matches): void
+    public function it_tells_both_kinds_whether_the_engine_matches_lists(string $engine, bool $matches): void
     {
-        $this->useEngine($engine);
+        $this->useEngine($this->engine($engine));
         $this->actingAs(new GenericUser(['id' => 'ann']));
 
         $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
@@ -222,12 +222,12 @@ class StringListAttributesTest extends EngineSearchTestCase
         }
     }
 
-    /** @return array<string, array{object, bool}> */
+    /** @return array<string, array{class-string, bool}> */
     public static function listSupport(): array
     {
         return [
-            'typesense' => [new FilterCapturingTypesenseEngine, true],
-            'collection' => [new CollectionEngine, false],
+            'typesense' => [FilterCapturingTypesenseEngine::class, true],
+            'collection' => [CollectionEngine::class, false],
         ];
     }
 
