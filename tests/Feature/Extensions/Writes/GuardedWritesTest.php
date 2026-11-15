@@ -674,6 +674,22 @@ final class GuardedWritesTest extends PackageTestCase
 
     #[Test]
     #[WithConfig('queue.default', 'database')]
+    public function it_queues_no_job_when_a_later_chunk_is_refused_in_the_request(): void
+    {
+        WriteLog::$refuseAt = 2;
+        $this->seedDocuments(null, null);
+
+        $this->postJson('/written-documents/actions/queued-archive-documents-by-one', ['search' => []])
+            ->assertStatus(429)
+            ->assertExactJson(['message' => 'The monthly quota is reached.']);
+
+        $this->assertSame([[1], [2]], $this->guardedKeys());
+        $this->assertDatabaseCount('jobs', 0);
+        $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
+    }
+
+    #[Test]
+    #[WithConfig('queue.default', 'database')]
     public function it_guards_each_chunk_of_a_batched_action_in_the_request_and_in_the_worker(): void
     {
         config(['queue.batching.database' => config('database.default')]);

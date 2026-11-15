@@ -49,6 +49,11 @@ final readonly class ActionWrites
         return $impacted;
     }
 
+    public function guarded(): bool
+    {
+        return $this->guard !== null;
+    }
+
     /** @param Collection<array-key, Model> $models */
     public function queued(Collection $models): void
     {
