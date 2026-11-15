@@ -15,6 +15,8 @@ enum ActionTransaction
     case None;
 
     /**
+     * @internal
+     *
      * @template TResult
      *
      * @param  Closure(): TResult  $run
@@ -25,7 +27,11 @@ enum ActionTransaction
         return $this === self::Whole ? $transaction->run($run) : $run();
     }
 
-    /** @param Collection<array-key, Model> $models */
+    /**
+     * @internal
+     *
+     * @param  Collection<array-key, Model>  $models
+     */
     public function handle(Action $action, ActionFields $fields, WriteTransaction $transaction, Collection $models): void
     {
         ActionWrites::in($this, $action, $fields, isset($action->resource) ? $action->resource : null, $transaction)->handle($models);

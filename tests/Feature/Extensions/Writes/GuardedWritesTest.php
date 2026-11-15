@@ -404,22 +404,42 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertSame([[1, null], [2, null]], $this->rows());
     }
 
+    /** @return array<string, array{string, list<string>}> */
+    public static function refusedLaterWrites(): array
+    {
+        return [
+            'chunk' => ['archive-documents-by-one', [
+                'operating archive-documents-by-one',
+                'begin level 2', 'guard operate 1', 'handle 1', 'sql update documents', 'commit level 1',
+                'begin level 2', 'guard operate 2', 'rollback level 1',
+            ]],
+            'without transaction' => ['direct-archive-documents', [
+                'operating direct-archive-documents',
+                'guard operate 1', 'handle 1', 'sql update documents',
+                'guard operate 2',
+            ]],
+            'per row' => ['archive-each-document', [
+                'operating archive-each-document',
+                'before 1', 'begin level 2', 'guard operate 1', 'row 1', 'sql update documents', 'commit level 1',
+                'before 2', 'begin level 2', 'guard operate 2', 'rollback level 1',
+            ]],
+        ];
+    }
+
+    /** @param list<string> $lines */
     #[Test]
-    public function it_keeps_the_transactions_committed_before_a_refusal(): void
+    #[DataProvider('refusedLaterWrites')]
+    public function it_keeps_the_writes_committed_before_a_refusal(string $uriKey, array $lines): void
     {
         WriteLog::$refuseAt = 2;
         $this->seedDocuments(null, null);
         EventLog::listen();
 
-        $this->postJson('/written-documents/actions/archive-documents-by-one', ['search' => []])
+        $this->postJson("/written-documents/actions/{$uriKey}", ['search' => []])
             ->assertStatus(429)
             ->assertExactJson(['message' => 'The monthly quota is reached.']);
 
-        $this->assertSame([
-            'operating archive-documents-by-one',
-            'begin level 2', 'guard operate 1', 'handle 1', 'sql update documents', 'commit level 1',
-            'begin level 2', 'guard operate 2', 'rollback level 1',
-        ], $this->writeLines());
+        $this->assertSame($lines, $this->writeLines());
         $this->assertSame([[1, 'Annual report', true], [2, 'Budget', false]], $this->documents());
     }
 
