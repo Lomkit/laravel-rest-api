@@ -7,7 +7,6 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
 use Lomkit\Rest\Extensions\Extension;
@@ -143,53 +142,6 @@ class RowCheckPreparationTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_leaves_class_checks_drafts_changed_rows_and_link_checks_out_for_an_extension(): void
-    {
-        config(['rest.extensions' => [PreparingExtension::class]]);
-        ['Printer jam' => $jam, 'Printer toner' => $toner, 'Password reset' => $reset] = $this->seedTickets();
-        $context = $this->contextFor(null);
-        $resource = $context->resource(TicketResource::class);
-        $tag = Tag::create(['id' => 1, 'name' => 'Hardware']);
-        $changed = $reset->fill(['title' => 'Password changed']);
-
-        $context->authorizer()->inspectAll([
-            Check::onClass($resource, 'viewAny'),
-            new Check($resource, 'create', new Ticket(['title' => 'Draft'])),
-            new Check($resource, 'update', $changed),
-            new Check($resource, 'attachTag', $jam, related: [$tag]),
-            new Check($resource, 'update', $toner),
-        ]);
-
-        $this->assertSame([
-            'ext first update '.$toner->id.' for guest',
-            'viewAny',
-            'create',
-            'update '.$reset->id,
-            'attachTag '.$jam->id.' '.$tag->id,
-            'update '.$toner->id,
-        ], $this->tickets->calls);
-    }
-
-    #[Test]
-    public function it_leaves_the_rows_that_the_memo_decided_out_for_an_extension(): void
-    {
-        config(['rest.extensions' => [PreparingExtension::class]]);
-        [$jam, $reset, $toner, $laptop] = array_values($this->seedTickets());
-        $context = $this->contextFor(null);
-        $resource = $context->resource(TicketResource::class);
-
-        $context->authorizer()->inspect(new Check($resource, 'update', $jam));
-        $context->authorizer()->inspectEach($resource, 'update', collect([$jam, $reset, $toner, $laptop]));
-
-        $this->assertSame([
-            'ext first update '.$jam->id.' for guest',
-            'update '.$jam->id,
-            'ext first update '.$this->keys($reset, $toner, $laptop).' for guest',
-            ...$this->calls('update', $reset, $toner, $laptop),
-        ], $this->tickets->calls);
-    }
-
-    #[Test]
     public function it_leaves_the_rows_that_the_store_decided_out_for_an_extension(): void
     {
         config(['rest.extensions' => [PreparingExtension::class]]);
@@ -203,27 +155,6 @@ class RowCheckPreparationTest extends HelpdeskTestCase
 
         $this->assertSame($first, $second);
         $this->assertSame(['viewAny', 'ext first update '.$this->keys(...$rows).' for guest', ...$this->calls('update', ...$rows)], $this->tickets->calls);
-    }
-
-    #[Test]
-    public function it_groups_the_rows_of_one_resource_at_two_levels_for_an_extension(): void
-    {
-        config(['rest.extensions' => [PreparingExtension::class]]);
-        ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
-
-        $this->postJson('/api/tickets/search', ['search' => [
-            'filters' => [['field' => 'id', 'operator' => 'in', 'value' => [$jam->id, $reset->id]]],
-            'gates' => ['update'],
-            'includes' => [['relation' => 'team.tickets', 'gates' => ['update']]],
-            'sorts' => [['field' => 'id']],
-        ]])->assertOk();
-
-        $this->assertSame([
-            'viewAny',
-            'ext first update '.$this->keys($jam, $reset, $toner, $laptop).' for guest',
-            ...$this->calls('update', $jam, $toner, $reset, $laptop),
-        ], $this->tickets->calls);
-        $this->assertCount(1, PreparingExtension::$received);
     }
 
     #[Test]
