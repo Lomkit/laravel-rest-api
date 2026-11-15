@@ -42,6 +42,19 @@ class ComponentRegistryTest extends TestCase
     }
 
     #[Test]
+    public function it_refuses_the_same_content_under_a_taken_name_with_another_status(): void
+    {
+        $registry = new ComponentRegistry(new Components);
+        $registry->response('quota.Refused', Response::make(429)->setDescription('Refused'), 'App\Docs\First');
+
+        $this->expectExceptionObject(new InvalidDocumentationException(
+            'The OpenAPI response component [quota.Refused] of [App\Docs\Second] is already defined differently by [App\Docs\First]. Give one of them another name.',
+        ));
+
+        $registry->response('quota.Refused', Response::make(423)->setDescription('Refused'), 'App\Docs\Second');
+    }
+
+    #[Test]
     public function it_builds_a_schema_component_once_for_its_owner(): void
     {
         $components = new Components;

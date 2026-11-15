@@ -31,13 +31,22 @@ final readonly class ComponentRegistry
             return $this->components->add(new Reference('responses', $name, $this->components), $response);
         }
 
-        if (json_encode($existing->serializeAs31()) !== json_encode($response->serializeAs31())) {
+        if (! self::same($existing, $response)) {
             $other = $existing instanceof Response ? $existing->getAttribute(self::OWNER, 'the application') : 'the application';
 
             throw InvalidDocumentationException::componentTaken('response', $name, $owner, is_string($other) ? $other : 'the application');
         }
 
         return new Reference('responses', $name, $this->components);
+    }
+
+    private static function same(Response|Reference $existing, Response $response): bool
+    {
+        if ($existing instanceof Response && $existing->code !== $response->code) {
+            return false;
+        }
+
+        return json_encode($existing->serializeAs31()) === json_encode($response->serializeAs31());
     }
 
     /** @param Closure(): Type $build */

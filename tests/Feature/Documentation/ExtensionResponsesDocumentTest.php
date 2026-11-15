@@ -13,6 +13,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CreatedResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DottedResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForbiddenResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MetaLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MovingResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingResponses;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RivalQuotaResponses;
@@ -148,6 +149,16 @@ class ExtensionResponsesDocumentTest extends DocumentationTestCase
         config(['rest.extensions' => ['shifting' => ShiftingResponses::class], 'app.debug' => false]);
 
         $this->expectExceptionObject(InvalidDocumentationException::componentTaken('response', 'shifting.Exceeded', ShiftingResponses::class, ShiftingResponses::class));
+
+        $this->document();
+    }
+
+    #[Test]
+    public function it_refuses_one_response_name_with_two_statuses(): void
+    {
+        config(['rest.extensions' => ['moving' => MovingResponses::class], 'app.debug' => false]);
+
+        $this->expectExceptionObject(InvalidDocumentationException::componentTaken('response', 'moving.Refused', MovingResponses::class, MovingResponses::class));
 
         $this->document();
     }
