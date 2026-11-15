@@ -46,7 +46,7 @@ final class CheckUnsearchableEngineTest extends ScaffoldingTestCase
 
         $this->assertSame(1, $exitCode);
         $this->assertSame(
-            ['The [hidden] extension '.HiddenRowsExtension::class.' restricts the rows of '.IndexedBookResource::class.' in SQL but does not implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries, and the text search or the Scout engine of '.IndexedBookResource::class." cannot be resolved ({$reason->getMessage()}). A text search of ".IndexedBookResource::class.' is refused on an engine that does not apply SQL restrictions. Implement RestrictsEngineQueries in '.HiddenRowsExtension::class.' to restrict the engine search too, index the model with the Scout database or collection driver, or leave '.IndexedBookResource::class.' out of the extension with appliesTo().'],
+            ['The [hidden] extension '.HiddenRowsExtension::class.' restricts the rows of '.IndexedBookResource::class.' in SQL but does not implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries, and the text search or the Scout engine of '.IndexedBookResource::class." cannot be resolved ({$reason->getMessage()}). A text search of ".IndexedBookResource::class.' is refused on an engine that does not apply SQL restrictions. Implement RestrictsEngineQueries in '.HiddenRowsExtension::class.' to restrict the engine search too, index the model with the Scout database or collection driver, leave '.IndexedBookResource::class.' out of the extension with appliesTo(), or disable it with \'hidden\' => false in the [rest.extensions] config.'],
             json_decode($output->fetch(), true)['rows']['problems'],
         );
     }

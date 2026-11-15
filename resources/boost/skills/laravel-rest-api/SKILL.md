@@ -1572,7 +1572,7 @@ final class TenantExtension extends Extension implements RestrictsQueries
 - Qualify columns with `$context->query->qualifyColumn()`: pivot reads join another table.
 - A restriction may run several times in one request, and again on each attempt of a write transaction: keep it free of side effects.
 - Write where clauses only. Laravel drops a global scope or an `afterQuery()` callback added to the Eloquent builder of a nested group before the check can see it, and neither is applied.
-- Search engines: on the Scout `database` and `collection` drivers, the restriction applies in the SQL of the engine query, with an exact total; the `null` driver returns no row. On every engine, the rows of a page are read again by key through the restriction, so a row changed since indexing is dropped. On another engine, implement `RestrictsEngineQueries` too, or a text search of the resource throws `InvalidTextSearchException` (`rest:check` reports it).
+- Search engines: on the Scout `database` and `collection` drivers, the restriction applies in the SQL of the engine query, with an exact total; the `null` driver returns no row. On every engine, the rows of a page are read again by key through the restriction, so a row changed since indexing is dropped. On another engine, implement `RestrictsEngineQueries` too, or a text search of the resource throws `InvalidTextSearchException` (`rest:check` reports it); its message also offers to leave the resource out with `appliesTo()` or to disable the extension with `'name' => false` in `rest.extensions`.
 
 ### Adding to rendered rows (`AugmentsQueries`)
 

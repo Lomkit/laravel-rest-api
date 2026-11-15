@@ -151,11 +151,11 @@ final class InvalidTextSearchException extends LogicException
 
     public static function unrestrictedEngine(string $resource, string $name, string $class, string $engine): self
     {
-        return new self("The [{$name}] extension {$class} restricts the rows of {$resource} in SQL, but the text search of {$resource} runs on [{$engine}], which does not apply SQL restrictions. Implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries in {$class} to restrict the engine search too, index the model with the Scout database or collection driver, or leave {$resource} out of the extension with appliesTo().");
+        return new self("The [{$name}] extension {$class} restricts the rows of {$resource} in SQL, but the text search of {$resource} runs on [{$engine}], which does not apply SQL restrictions. Implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries in {$class} to restrict the engine search too, index the model with the Scout database or collection driver, leave {$resource} out of the extension with appliesTo(), or disable it with '{$name}' => false in the [rest.extensions] config.");
     }
 
     public static function unresolvedEngine(string $resource, string $name, string $class, Throwable $reason): self
     {
-        return new self("The [{$name}] extension {$class} restricts the rows of {$resource} in SQL but does not implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries, and the text search or the Scout engine of {$resource} cannot be resolved ({$reason->getMessage()}). A text search of {$resource} is refused on an engine that does not apply SQL restrictions. Implement RestrictsEngineQueries in {$class} to restrict the engine search too, index the model with the Scout database or collection driver, or leave {$resource} out of the extension with appliesTo().", previous: $reason);
+        return new self("The [{$name}] extension {$class} restricts the rows of {$resource} in SQL but does not implement Lomkit\\Rest\\Extensions\\Kinds\\RestrictsEngineQueries, and the text search or the Scout engine of {$resource} cannot be resolved ({$reason->getMessage()}). A text search of {$resource} is refused on an engine that does not apply SQL restrictions. Implement RestrictsEngineQueries in {$class} to restrict the engine search too, index the model with the Scout database or collection driver, leave {$resource} out of the extension with appliesTo(), or disable it with '{$name}' => false in the [rest.extensions] config.", previous: $reason);
     }
 }

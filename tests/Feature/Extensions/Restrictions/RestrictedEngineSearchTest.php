@@ -76,7 +76,7 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_names_the_extension_the_engine_and_the_ways_out(): void
     {
         $this->assertSame(
-            'The [hidden] extension '.HiddenRowsExtension::class.' restricts the rows of '.VoucherResource::class.' in SQL, but the text search of '.VoucherResource::class.' runs on ['.ForeignEngine::class.'], which does not apply SQL restrictions. Implement Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries in '.HiddenRowsExtension::class.' to restrict the engine search too, index the model with the Scout database or collection driver, or leave '.VoucherResource::class.' out of the extension with appliesTo().',
+            'The [hidden] extension '.HiddenRowsExtension::class.' restricts the rows of '.VoucherResource::class.' in SQL, but the text search of '.VoucherResource::class.' runs on ['.ForeignEngine::class.'], which does not apply SQL restrictions. Implement Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries in '.HiddenRowsExtension::class.' to restrict the engine search too, index the model with the Scout database or collection driver, leave '.VoucherResource::class.' out of the extension with appliesTo(), or disable it with \'hidden\' => false in the [rest.extensions] config.',
             InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, ForeignEngine::class)->getMessage(),
         );
     }
