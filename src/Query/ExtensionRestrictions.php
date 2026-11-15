@@ -54,6 +54,11 @@ final readonly class ExtensionRestrictions implements RowRestriction
         return array_map(static fn (string $name): array => [$name, $registry->classOf($name)], array_keys($this->extensions));
     }
 
+    public function restricts(string $name): bool
+    {
+        return isset($this->extensions[$name]);
+    }
+
     /** @return array<string, Extension&RestrictsQueries> */
     public function unreached(): array
     {

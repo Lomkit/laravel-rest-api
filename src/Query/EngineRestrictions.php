@@ -36,7 +36,9 @@ final readonly class EngineRestrictions
 
     public function applyTo(EngineQuery $query): void
     {
-        if ($this->rows !== null && ! $query->restrictRows($this->rows)) {
+        $restrictedInSql = $this->rows !== null && $query->restrictRows($this->rows);
+
+        if ($this->rows !== null && ! $restrictedInSql) {
             $this->ensureReached($query);
         }
 
@@ -44,12 +46,14 @@ final readonly class EngineRestrictions
             return;
         }
 
-        $profile = $query->profile();
+        $restriction = new EngineRestriction($query);
         $user = $this->resource->context()->actingUser()->user;
-        $context = new EngineRestrictionContext(new EngineRestriction($query), $this->resource, $user, $profile->matchesStringLists(), $profile->appliesRowRestrictions());
+        $lists = $query->profile()->matchesStringLists();
 
-        foreach ($this->engine as $extension) {
-            $extension->restrictEngine($context);
+        foreach ($this->engine as $name => $extension) {
+            $sql = $restrictedInSql && $this->rows?->restricts($name) === true;
+
+            $extension->restrictEngine(new EngineRestrictionContext($restriction, $this->resource, $user, $lists, $sql));
         }
     }
 

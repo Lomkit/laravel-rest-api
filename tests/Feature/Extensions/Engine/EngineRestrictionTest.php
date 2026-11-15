@@ -22,8 +22,10 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\NumberEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OwnerEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PriceEngineRestriction;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedTeamEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RowReplacingExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SqlAwareEngineExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\TeamIndexExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnappliedEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
@@ -259,16 +261,19 @@ class EngineRestrictionTest extends EngineSearchTestCase
         ));
     }
 
-    /** @param array{bool, bool} $expected */
+    /**
+     * @param  array<string, class-string<Extension>>  $extensions
+     * @param  array{bool, bool}  $expected
+     */
     #[Test]
     #[DataProvider('capabilities')]
-    public function it_tells_the_extension_what_the_engine_can_do(?string $driver, array $expected): void
+    public function it_tells_the_extension_what_the_engine_can_do(?string $driver, array $extensions, array $expected): void
     {
         if ($driver !== null) {
             config(['scout.driver' => $driver]);
         }
 
-        config(['rest.extensions' => ['guestless' => GuestlessEngineExtension::class]]);
+        config(['rest.extensions' => $extensions]);
 
         $this->search('vouchers', ['text' => ['value' => 'report']])->assertOk();
 
@@ -277,12 +282,15 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $this->assertSame($expected, [$context->matchesStringLists, $context->rowsRestrictedInSql]);
     }
 
-    /** @return array<string, array{?string, array{bool, bool}}> */
+    /** @return array<string, array{?string, array<string, class-string<Extension>>, array{bool, bool}}> */
     public static function capabilities(): array
     {
         return [
-            'the collection engine' => [null, [false, false]],
-            'the database engine' => ['database', [false, true]],
+            'the collection engine' => [null, ['guestless' => GuestlessEngineExtension::class], [false, false]],
+            'the database engine without SQL restriction' => ['database', ['guestless' => GuestlessEngineExtension::class], [false, false]],
+            'the database engine with the SQL restriction of another extension' => ['database', ['guestless' => GuestlessEngineExtension::class, 'red' => RedRowsExtension::class], [false, false]],
+            'the database engine with its own SQL restriction' => ['database', ['aware' => SqlAwareEngineExtension::class], [false, true]],
+            'the collection engine with its own SQL restriction' => [null, ['aware' => SqlAwareEngineExtension::class], [false, false]],
         ];
     }
 
