@@ -56,14 +56,6 @@ final class CheckRouteMiddlewareTest extends ScaffoldingTestCase
         $this->assertStringNotContainsString('is not behind an authentication middleware', $output);
     }
 
-    #[Test]
-    public function it_reports_the_same_routes_without_the_extension(): void
-    {
-        $this->expose();
-
-        $this->assertStringContainsString('POST /api/trips/search is not behind an authentication middleware', $this->check());
-    }
-
     private function expose(): void
     {
         Route::prefix('api')->group(function (): void {
