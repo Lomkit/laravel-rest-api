@@ -15,6 +15,7 @@ use Lomkit\Rest\Tests\Fixtures\Atlas\JournalController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripResource;
+use Lomkit\Rest\Tests\Fixtures\Extensions\AclPerimeterExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AtlasRowsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AtlasRowsExtensionNamedZones;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ColumnCheckExtension;
@@ -29,6 +30,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\PassingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RelationCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\TripCheckExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\UnappliedAclPerimeterExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedMetaCheckExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UndecidedRowsExtension;
@@ -159,7 +161,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
 
         $this->assertStringContainsString("  declarations ... FAILED\n  ⇂ ".rtrim($problems[0], '.')."\n  ⇂ ".rtrim($problems[1], '.')."\n  rows ... 1 resource with a perimeter\n", $output);
         $this->assertSame(['actions' => 2, 'metrics' => 0, 'instructions' => 0, 'problems' => $problems], $report['declarations']);
-        $this->assertSame(['perimeter' => [TripResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => []], $report['rows']);
+        $this->assertSame(['perimeter' => [TripResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [], 'extension_perimeter' => []], $report['rows']);
         $this->assertSame(['checked' => [['extension' => 'passing', 'resource' => TripResource::class]], 'problems' => []], $report['extension_checks']);
         $this->assertSame([TripResource::class, TripResource::class], ExtensionLog::$checked);
     }
@@ -315,6 +317,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
             'without_perimeter' => [CountryResource::class],
             'problems' => [],
             'restricted' => [['resource' => TripResource::class, 'extensions' => $names]],
+            'extension_perimeter' => [],
         ], $report['rows']);
     }
 
@@ -338,6 +341,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
             'without_perimeter' => [],
             'problems' => [self::RESTRICTED_JOURNAL_PROBLEM],
             'restricted' => [['resource' => JournalResource::class, 'extensions' => ['atlas']]],
+            'extension_perimeter' => [],
         ], $report['rows']);
     }
 
@@ -354,6 +358,121 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
             'without_perimeter' => [],
             'problems' => [self::JOURNAL_PROBLEM],
             'restricted' => [],
+            'extension_perimeter' => [],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [AclPerimeterExtension::class])]
+    public function it_accepts_a_resource_whose_perimeter_an_extension_provides(): void
+    {
+        $this->expose('journals', JournalController::class);
+
+        $output = $this->check(0, JournalController::class);
+        $report = $this->report(0, JournalController::class);
+
+        $this->assertStringContainsString(
+            "  rows ... 0 resources with a perimeter, 1 with a perimeter from extensions, 1 restricted by extensions\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource ... perimeter from acl\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource ... restricted by acl\n"
+            .'  actions ',
+            $output,
+        );
+        $this->assertSame([
+            'perimeter' => [],
+            'without_perimeter' => [],
+            'problems' => [],
+            'restricted' => [['resource' => JournalResource::class, 'extensions' => ['acl']]],
+            'extension_perimeter' => [['resource' => JournalResource::class, 'extensions' => ['acl']]],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [AtlasRowsExtension::class, AclPerimeterExtension::class])]
+    public function it_names_only_the_extensions_that_provide_the_perimeter(): void
+    {
+        $this->expose('journals', JournalController::class);
+
+        $output = $this->check(0, JournalController::class);
+        $report = $this->report(0, JournalController::class);
+
+        $this->assertStringContainsString(
+            "  Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource ... perimeter from acl\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\JournalResource ... restricted by acl, atlas\n",
+            $output,
+        );
+        $this->assertSame([
+            'perimeter' => [],
+            'without_perimeter' => [],
+            'problems' => [],
+            'restricted' => [['resource' => JournalResource::class, 'extensions' => ['acl', 'atlas']]],
+            'extension_perimeter' => [['resource' => JournalResource::class, 'extensions' => ['acl']]],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [UnappliedAclPerimeterExtension::class])]
+    public function it_keeps_the_problem_when_the_perimeter_extension_does_not_apply(): void
+    {
+        $this->expose('journals', JournalController::class);
+
+        $report = $this->report(1, JournalController::class);
+
+        $this->assertSame([
+            'perimeter' => [],
+            'without_perimeter' => [],
+            'problems' => [self::JOURNAL_PROBLEM],
+            'restricted' => [],
+            'extension_perimeter' => [],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [AtlasRowsExtension::class, AclPerimeterExtension::class])]
+    #[WithConfig('rest.disabled_extensions', [AclPerimeterExtension::class])]
+    public function it_keeps_the_problem_when_the_perimeter_extension_is_disabled(): void
+    {
+        $this->expose('journals', JournalController::class);
+
+        $output = $this->check(1, JournalController::class);
+        $report = $this->report(1, JournalController::class);
+
+        $this->assertStringNotContainsString('perimeter from', $output);
+        $this->assertSame([
+            'perimeter' => [],
+            'without_perimeter' => [],
+            'problems' => [self::RESTRICTED_JOURNAL_PROBLEM],
+            'restricted' => [['resource' => JournalResource::class, 'extensions' => ['atlas']]],
+            'extension_perimeter' => [],
+        ], $report['rows']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [AclPerimeterExtension::class])]
+    public function it_keeps_the_report_of_a_resource_with_its_own_perimeter_or_without_perimeter(): void
+    {
+        $this->expose('trips', TripController::class);
+
+        $output = $this->check(0, TripController::class);
+        $report = $this->report(0, TripController::class);
+
+        $this->assertStringContainsString(
+            "  rows ... 1 resource with a perimeter, 1 marked #[WithoutPerimeter], 2 restricted by extensions\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource ... restricted by acl\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... restricted by acl\n"
+            .'  actions ',
+            $output,
+        );
+        $this->assertSame([
+            'perimeter' => [TripResource::class],
+            'without_perimeter' => [CountryResource::class],
+            'problems' => [],
+            'restricted' => [
+                ['resource' => TripResource::class, 'extensions' => ['acl']],
+                ['resource' => CountryResource::class, 'extensions' => ['acl']],
+            ],
+            'extension_perimeter' => [],
         ], $report['rows']);
     }
 
@@ -435,6 +554,7 @@ final class CheckResourceExtensionsTest extends ScaffoldingTestCase
                 ['resource' => TripResource::class, 'extensions' => ['atlas']],
                 ['resource' => CountryResource::class, 'extensions' => ['undecided']],
             ],
+            'extension_perimeter' => [],
         ], $report['rows']);
         $this->assertSame(['checked' => [], 'problems' => []], $report['extension_checks']);
     }
