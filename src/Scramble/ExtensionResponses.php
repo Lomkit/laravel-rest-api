@@ -62,7 +62,7 @@ final class ExtensionResponses
             throw InvalidDocumentationExtensionException::statusTaken($extension, $class, $this->route, $status, $this->owners[$status]);
         }
 
-        $this->operation->addResponse($this->components->response("{$extension}.{$name}", Schemas::response($status, $description, $body), $class));
+        $this->operation->addResponse($this->components->response("{$extension}.{$name}", Schemas::response($status, $description, $body), $class, watched: true));
         $this->owners[$status] = "the [{$extension}] extension {$class}";
         $this->added = true;
     }

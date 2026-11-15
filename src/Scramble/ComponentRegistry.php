@@ -23,13 +23,16 @@ final readonly class ComponentRegistry
         private Components $components,
     ) {}
 
-    public function response(string $name, Response $response, string $owner): Reference
+    public function response(string $name, Response $response, string $owner, bool $watched = false): Reference
     {
         $existing = $this->components->responses[$name] ?? null;
 
         if ($existing === null) {
             $response->setAttribute(self::OWNER, $owner);
-            $response->setAttribute(self::CONTENT, self::content($response));
+
+            if ($watched) {
+                $response->setAttribute(self::CONTENT, self::content($response));
+            }
 
             return $this->components->add(new Reference('responses', $name, $this->components), $response);
         }
