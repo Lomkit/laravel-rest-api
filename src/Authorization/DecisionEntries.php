@@ -16,11 +16,9 @@ final readonly class DecisionEntries
      */
     public function of(array $checks): array
     {
-        $collector = $this->versions;
         $abilities = [];
         $entries = [];
         $contexts = [];
-        $versioned = [];
 
         foreach ($checks as $key => $check) {
             if ($check->isKeyedByInstance()) {
@@ -31,33 +29,51 @@ final readonly class DecisionEntries
             $seconds = $cached->seconds($check->ability);
             $decisionKey = $seconds === null ? null : DecisionKey::of($check, $cached->context, $this->since);
 
-            if ($seconds === null || $decisionKey === null) {
-                continue;
-            }
-
-            $entries[$key] = [$decisionKey, $seconds];
-            $contexts[$key] = $cached->context;
-
-            if ($check->models() !== [] && $collector?->appliesTo($check->resource) === true) {
-                $versioned[$check->resource::class.'|'.$check->ability][$key] = $check;
+            if ($seconds !== null && $decisionKey !== null) {
+                $entries[$key] = [$decisionKey, $seconds];
+                $contexts[$key] = $cached->context;
             }
         }
 
-        if ($collector === null) {
-            return $entries;
-        }
+        return $this->versions === null ? $entries : $this->versioned($this->versions, $checks, $entries, $contexts);
+    }
 
-        foreach ($versioned as $group) {
-            $versions = $collector->collect(array_values($group), $this->since);
+    /**
+     * @param  array<string, Check>  $checks
+     * @param  array<string, array{DecisionKey, int}>  $entries
+     * @param  array<string, string>  $contexts
+     * @return array<string, array{DecisionKey, int}>
+     */
+    private function versioned(DecisionVersions $versions, array $checks, array $entries, array $contexts): array
+    {
+        $groups = [];
+        $byModel = [];
 
-            foreach ($group as $key => $check) {
-                $decisionKey = DecisionKey::of($check, $contexts[$key], $this->since, $versions);
+        foreach (array_keys($entries) as $key) {
+            foreach ($checks[$key]->models() as $index => $model) {
+                $resource = $checks[$key]->resourceOf($model);
 
-                if ($decisionKey === null) {
-                    unset($entries[$key]);
-                } else {
-                    $entries[$key] = [$decisionKey, $entries[$key][1]];
+                if ($versions->appliesTo($resource)) {
+                    $group = $resource::class.'|'.$checks[$key]->ability;
+                    $groups[$group] ??= [$resource, $checks[$key]->ability, []];
+                    $groups[$group][2][spl_object_id($model)] = $model;
+                    $byModel[$key][$index] = $group;
                 }
+            }
+        }
+
+        $collected = array_map(
+            fn (array $group): DependentVersions => $versions->collect($group[0], $group[1], array_values($group[2]), $this->since),
+            $groups,
+        );
+
+        foreach ($byModel as $key => $models) {
+            $decisionKey = DecisionKey::of($checks[$key], $contexts[$key], $this->since, array_map(fn (string $group): DependentVersions => $collected[$group], $models));
+
+            if ($decisionKey === null) {
+                unset($entries[$key]);
+            } else {
+                $entries[$key] = [$decisionKey, $entries[$key][1]];
             }
         }
 

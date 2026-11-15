@@ -34,11 +34,10 @@ final class DecisionVersions
         return self::hooked($resource) || $this->extensionsOf($resource) !== [];
     }
 
-    /** @param non-empty-list<Check> $checks */
-    public function collect(array $checks, int $since): DependentVersions
+    /** @param list<Model> $models */
+    public function collect(Resource $resource, string $ability, array $models, int $since): DependentVersions
     {
-        [$resource, $ability] = [$checks[0]->resource, $checks[0]->ability];
-        $rows = self::rows($checks);
+        $rows = new Collection($models);
         $collected = new CollectedVersions($resource::class, $ability, $since, $rows);
         $versions = new RowVersions($resource, $ability, $rows, $this->user, $collected);
         $names = LoadedRelationNames::of($rows);
@@ -90,22 +89,5 @@ final class DecisionVersions
     private static function hooked(Resource $resource): bool
     {
         return self::$hooked[$resource::class] ??= Overrides::method($resource, 'versionAuthorization', Resource::class);
-    }
-
-    /**
-     * @param  non-empty-list<Check>  $checks
-     * @return Collection<int, Model>
-     */
-    private static function rows(array $checks): Collection
-    {
-        $rows = [];
-
-        foreach ($checks as $check) {
-            foreach ($check->models() as $model) {
-                $rows[spl_object_id($model)] = $model;
-            }
-        }
-
-        return new Collection(array_values($rows));
     }
 }

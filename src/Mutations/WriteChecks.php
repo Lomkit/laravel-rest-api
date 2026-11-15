@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Mutations;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\Changes;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\AttributeWriter;
@@ -107,7 +108,7 @@ final class WriteChecks
         }
 
         if ($ability !== null && $parent->exists && $related->exists) {
-            $this->checks[] = new Check($relation->parentResource(), $ability, $subject, $node->path, [$related], $related);
+            $this->checks[] = new Check($relation->parentResource(), $ability, $subject, $node->path, [$related], $related, self::relatedResource($relation, $related));
         }
     }
 
@@ -119,7 +120,7 @@ final class WriteChecks
             return;
         }
 
-        $check = new Check($relation->parentResource(), $ability, $parent, $node->path, [$related], $related);
+        $check = new Check($relation->parentResource(), $ability, $parent, $node->path, [$related], $related, self::relatedResource($relation, $related));
 
         if (! $parent->exists) {
             $this->pending[spl_object_id($parent)][] = $check;
@@ -169,6 +170,11 @@ final class WriteChecks
             ->context()
             ->authorizer()
             ->plan($checks);
+    }
+
+    private static function relatedResource(Relation $relation, Model $related): ?Resource
+    {
+        return $relation instanceof PolymorphicRelation ? $relation->resourceFor($related) : $relation->resource();
     }
 
     private static function created(Model $model): bool

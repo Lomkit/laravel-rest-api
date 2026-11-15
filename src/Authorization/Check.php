@@ -18,6 +18,7 @@ final readonly class Check
         public string $path = '',
         public array $related = [],
         public ?Model $row = null,
+        private ?Resource $relatedResource = null,
     ) {}
 
     public static function onClass(Resource $resource, string $ability, string $path = ''): self
@@ -41,6 +42,16 @@ final readonly class Check
     public function models(): array
     {
         return array_values(array_filter($this->arguments(), fn (Model|Changes|string $argument): bool => $argument instanceof Model));
+    }
+
+    /** @internal */
+    public function resourceOf(Model $model): Resource
+    {
+        if ($this->relatedResource === null || $model === $this->subject || ! in_array($model, $this->related, true)) {
+            return $this->resource;
+        }
+
+        return $this->relatedResource;
     }
 
     /** @return list<string> */

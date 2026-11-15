@@ -8,6 +8,7 @@ use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use LogicException;
 use Lomkit\Rest\Authorization\CacheDecisionStore;
@@ -17,6 +18,7 @@ use Lomkit\Rest\Authorization\RowVersions;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\VersionedTagResource;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\VersionedTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\VersionedTicketResource;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\VersionLog;
@@ -216,7 +218,7 @@ class DecisionVersionsTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_hands_the_hook_every_row_of_a_check_on_two_models(): void
+    public function it_hands_the_resource_of_the_check_every_row_of_an_app_check_on_two_models(): void
     {
         $tag = Tag::forceCreate(['id' => 1, 'name' => 'Hardware', 'created_at' => '2026-11-06 10:00:00', 'updated_at' => '2026-11-06 10:00:00']);
         $owner = 1;
@@ -237,6 +239,28 @@ class DecisionVersionsTest extends HelpdeskTestCase
             'versions hook attachTag 1,1 for guest', 'attachTag 1 1',
         ], $this->tickets->calls);
         $this->assertSame([Ticket::class, Tag::class], VersionedTicketResource::$received[0]->rows->map(fn (object $row): string => $row::class)->all());
+    }
+
+    #[Test]
+    public function it_versions_the_related_row_of_a_link_check_with_its_own_resource(): void
+    {
+        Tag::forceCreate(['id' => 1, 'name' => 'Hardware', 'created_at' => '2026-11-06 10:00:00', 'updated_at' => '2026-11-06 10:00:00']);
+        $attach = ['mutate' => [['operation' => 'update', 'key' => 1, 'relations' => ['tags' => [['operation' => 'attach', 'key' => 1]]]]]];
+
+        foreach ([1, 1, 2] as $group) {
+            VersionedTagResource::$groups = [1 => $group];
+            $this->travel(1)->seconds();
+            $this->postJson('/versioned-tickets/mutate', $attach)->assertOk();
+            DB::table('tag_ticket')->delete();
+        }
+
+        $versions = 'versions hook attachTag 1 for guest';
+        $this->assertSame([
+            'viewAny', $versions, 'update 1', 'attachTag 1 1',
+            $versions, 'update 1',
+            $versions, 'update 1', 'attachTag 1 1',
+        ], $this->tickets->calls);
+        $this->assertSame(array_fill(0, 3, 'versions tag attachTag 1 for guest'), array_values(array_filter($this->tags->calls, fn (string $call): bool => str_starts_with($call, 'versions '))));
     }
 
     #[Test]
