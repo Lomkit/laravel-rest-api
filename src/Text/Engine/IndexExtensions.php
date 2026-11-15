@@ -4,6 +4,8 @@ namespace Lomkit\Rest\Text\Engine;
 
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Extensions\Contexts\EngineProfileContext;
+use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
+use Lomkit\Rest\Extensions\Kinds\DeclaresIndexAttributes;
 use Lomkit\Rest\Extensions\Kinds\ProvidesEngineProfiles;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
@@ -11,6 +13,9 @@ use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 
 final class IndexExtensions
 {
+    /** @var array<string, array{class-string, array<mixed>}>|null */
+    private ?array $declarations = null;
+
     /** @param class-string<Resource>|null $resource */
     public function __construct(
         private readonly ?string $resource = null,
@@ -20,6 +25,12 @@ final class IndexExtensions
     public static function of(Resource $resource): self
     {
         return new self($resource::class, $resource->context());
+    }
+
+    /** @return array<string, array{class-string, array<mixed>}> */
+    public function declarations(): array
+    {
+        return $this->declarations ??= $this->declare();
     }
 
     public function profile(object $engine): ?EngineProfile
@@ -47,6 +58,30 @@ final class IndexExtensions
         }
 
         return self::single($this->resource, $engine, $claims);
+    }
+
+    /** @return array<string, array{class-string, array<mixed>}> */
+    private function declare(): array
+    {
+        if ($this->resource === null || $this->context === null) {
+            return [];
+        }
+
+        $extensions = $this->context->extensions()->applicable($this->resource, DeclaresIndexAttributes::class);
+
+        if ($extensions === []) {
+            return [];
+        }
+
+        ksort($extensions);
+        $context = new IndexAttributesContext($this->resource);
+        $declarations = [];
+
+        foreach ($extensions as $name => $extension) {
+            $declarations[$name] = [$extension::class, $extension->indexAttributes($context)];
+        }
+
+        return $declarations;
     }
 
     /** @param array<string, array{class-string, EngineProfile}> $claims */

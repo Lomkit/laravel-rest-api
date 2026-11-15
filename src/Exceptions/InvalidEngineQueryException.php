@@ -8,7 +8,7 @@ final class InvalidEngineQueryException extends LogicException
 {
     public static function undeclaredAttribute(string $attribute): self
     {
-        return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable() or among the attributes of ScoutEngine::perimeter().");
+        return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.");
     }
 
     public static function unsupportedOperator(string $attribute, string $operator): self

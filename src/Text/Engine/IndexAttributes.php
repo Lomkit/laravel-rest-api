@@ -12,11 +12,13 @@ final readonly class IndexAttributes
      * @param  array<string, IndexAttribute>  $filterable
      * @param  array<string, IndexAttribute>  $perimeter
      * @param  list<string>  $sortable
+     * @param  array<string, IndexAttribute>  $owned
      */
     private function __construct(
         private array $filterable,
         private array $perimeter,
         private array $sortable,
+        private array $owned,
     ) {}
 
     /**
@@ -35,12 +37,14 @@ final readonly class IndexAttributes
             }
         }
 
-        return new self($client, $restricted, DeclaredAttributes::sorts($target, $profile, $client, $sortable));
+        $sorts = DeclaredAttributes::sorts($target, $profile, $client, $sortable);
+
+        return new self($client, $restricted, $sorts, ExtensionAttributes::of($target, $profile, $client, $restricted));
     }
 
     public function find(string $name): ?IndexAttribute
     {
-        return $this->filterable[$name] ?? $this->perimeter[$name] ?? null;
+        return $this->filterable[$name] ?? $this->perimeter[$name] ?? $this->owned[$name] ?? null;
     }
 
     public function sorts(string $name): bool
