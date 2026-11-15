@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Fields;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Authorization\ActingUser;
 use Lomkit\Rest\Extensions\Applicability;
@@ -15,6 +16,8 @@ use Lomkit\Rest\Fields\WriteOperation;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadOnlyKeyCategoryController;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadOnlyKeyProductController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReducedCategoryController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReducedProductController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReducedProductResource;
@@ -53,6 +56,8 @@ class ReducedFieldsTest extends PackageTestCase
         Route::prefix('api')->group(function (): void {
             Rest::resource('reduced-products', ReducedProductController::class)->register();
             Rest::resource('reduced-categories', ReducedCategoryController::class)->register();
+            Rest::resource('read-only-key-products', ReadOnlyKeyProductController::class)->register();
+            Rest::resource('read-only-key-categories', ReadOnlyKeyCategoryController::class)->register();
         });
         $this->seedCatalog();
     }
@@ -115,6 +120,59 @@ class ReducedFieldsTest extends PackageTestCase
             'a max aggregate' => [...$categories, ['search' => ['aggregates' => [['relation' => 'products', 'type' => 'max', 'field' => 'price']]]]],
             'a sum aggregate' => [...$categories, ['search' => ['aggregates' => [['relation' => 'products', 'type' => 'sum', 'field' => 'price']]]]],
         ];
+    }
+
+    /** @param array<string, mixed> $payload */
+    #[Test]
+    #[DataProvider('relinks')]
+    public function it_relinks_a_read_only_foreign_key_through_its_relation_like_a_declared_one(string $uri, string $twin, array $payload): void
+    {
+        MaskingFields::$narrow = static function (FieldsContext $context): void {
+            if ($context->resource::class === ProductResource::class) {
+                $context->readOnly('category_id');
+            }
+        };
+
+        $narrowed = $this->actingAs(self::user())->postJson($uri, $payload);
+        $narrowedKey = DB::table('products')->where('id', 1)->value('category_id');
+        DB::table('products')->where('id', 1)->update(['category_id' => 1]);
+        $declared = $this->actingAs(self::user())->postJson($twin, $payload);
+
+        $narrowed->assertOk()->assertExactJson(['operations' => $payload['mutate']]);
+        $this->assertSame(2, (int) $narrowedKey);
+        $this->assertSame(2, (int) DB::table('products')->where('id', 1)->value('category_id'));
+        $this->assertSame($declared->json(), $narrowed->json());
+    }
+
+    /** @return array<string, array{string, string, array<string, mixed>}> */
+    public static function relinks(): array
+    {
+        return [
+            'a belongs to attach' => ['/api/products/mutate', '/api/read-only-key-products/mutate', ['mutate' => [
+                ['operation' => 'update', 'key' => 1, 'relations' => ['category' => ['operation' => 'attach', 'key' => 2]]],
+            ]]],
+            'a has many attach' => ['/api/categories/mutate', '/api/read-only-key-categories/mutate', ['mutate' => [
+                ['operation' => 'update', 'key' => 2, 'relations' => ['products' => [['operation' => 'attach', 'key' => 1]]]],
+            ]]],
+        ];
+    }
+
+    #[Test]
+    public function it_refuses_a_read_only_foreign_key_as_an_attribute_like_a_declared_one(): void
+    {
+        MaskingFields::$narrow = static function (FieldsContext $context): void {
+            if ($context->resource::class === ProductResource::class) {
+                $context->readOnly('category_id');
+            }
+        };
+        $payload = ['mutate' => [['operation' => 'update', 'key' => 1, 'attributes' => ['category_id' => 2]]]];
+
+        $narrowed = $this->actingAs(self::user())->postJson('/api/products/mutate', $payload);
+        $declared = $this->actingAs(self::user())->postJson('/api/read-only-key-products/mutate', $payload);
+
+        $narrowed->assertUnprocessable()->assertJsonPath('errors', ['mutate.0.attributes' => ['The category_id key of the mutate.0.attributes field is not writable on update.']]);
+        $this->assertSame($declared->json(), $narrowed->json());
+        $this->assertSame(1, (int) DB::table('products')->where('id', 1)->value('category_id'));
     }
 
     #[Test]
