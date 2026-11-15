@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 
-use Lomkit\Rest\Extensions\Applicability;
-
 final class AugmentationLog
 {
     /** @var list<string> */
@@ -18,6 +16,5 @@ final class AugmentationLog
         self::$gates = [];
         FirstAugmentation::$augment = null;
         SecondAugmentation::$augment = null;
-        Applicability::flush();
     }
 }

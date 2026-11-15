@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Auth\GenericUser;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\LimitsContext;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstNarrowing;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -20,7 +19,6 @@ class NarrowedLimitsDocumentTest extends DocumentationTestCase
     {
         parent::setUp();
 
-        Applicability::flush();
         FirstNarrowing::$narrow = function (LimitsContext $context): void {
             $this->narrowed[] = $context->user?->getAuthIdentifier();
             $context->allowSizes([10]);
@@ -31,7 +29,6 @@ class NarrowedLimitsDocumentTest extends DocumentationTestCase
     protected function tearDown(): void
     {
         FirstNarrowing::$narrow = null;
-        Applicability::flush();
 
         parent::tearDown();
     }

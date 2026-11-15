@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Feature\Extensions;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
@@ -50,7 +49,6 @@ class ExtensionInstructionsTest extends PackageTestCase
     {
         parent::setUp();
 
-        Applicability::flush();
         config(['rest.extensions' => ['arc' => ArchiveInstructionsExtension::class]]);
         DB::table('authors')->insert([
             ['id' => 1, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'api_token' => 'token-1'],
@@ -63,7 +61,6 @@ class ExtensionInstructionsTest extends PackageTestCase
     protected function tearDown(): void
     {
         BrokenInstructionsExtension::$entry = Instruction::class;
-        Applicability::flush();
 
         parent::tearDown();
     }

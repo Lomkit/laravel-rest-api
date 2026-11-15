@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Lomkit\Rest\Extensions\Applicability;
 
 final class RestrictionLog
 {
@@ -17,6 +16,5 @@ final class RestrictionLog
     {
         self::$seen = [];
         self::$users = [];
-        Applicability::flush();
     }
 }

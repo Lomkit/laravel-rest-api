@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Limits;
 
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\DB;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\LimitsContext;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
@@ -36,7 +35,6 @@ class NarrowedLimitsTest extends PackageTestCase
     {
         parent::setUp();
 
-        Applicability::flush();
         FirstNarrowing::$narrow = static function (LimitsContext $context): void {
             if ($context->user === null) {
                 return;
@@ -61,7 +59,6 @@ class NarrowedLimitsTest extends PackageTestCase
     protected function tearDown(): void
     {
         FirstNarrowing::$narrow = null;
-        Applicability::flush();
 
         parent::tearDown();
     }

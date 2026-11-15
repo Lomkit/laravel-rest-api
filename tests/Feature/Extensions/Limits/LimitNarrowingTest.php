@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Limits;
 
 use Closure;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
-use Lomkit\Rest\Extensions\Applicability;
 use Lomkit\Rest\Extensions\Contexts\LimitsContext;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -232,6 +231,5 @@ class LimitNarrowingTest extends PackageTestCase
     {
         FirstNarrowing::$narrow = null;
         SecondNarrowing::$narrow = null;
-        Applicability::flush();
     }
 }
