@@ -34,6 +34,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ChangingGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DenyingDocumentPolicy;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DirectArchiveDocuments;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FrozenGuard;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FrozenRowGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ModeChangingExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\QuotaGuard;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RecordingGuard;
@@ -167,7 +168,7 @@ final class GuardedWritesTest extends PackageTestCase
         $this->assertNull(WriteLog::$guards[0]->entries);
     }
 
-    /** @return array<string, array{string, class-string, list<string>, list<list<int>|null>}> */
+    /** @return array<string, array{string, class-string, list<string>, list<list<int>>}> */
     public static function actions(): array
     {
         return [
@@ -178,12 +179,13 @@ final class GuardedWritesTest extends PackageTestCase
                 'operated archive-documents-by-one 2',
             ], [[1], [2]]],
             'atomic' => ['atomic-archive-documents', AtomicArchiveDocuments::class, [
-                'begin level 2', 'guard operate *',
+                'begin level 2',
                 'operating atomic-archive-documents',
-                'handle 1', 'sql update documents', 'handle 2', 'sql update documents',
+                'guard operate 1', 'handle 1', 'sql update documents',
+                'guard operate 2', 'handle 2', 'sql update documents',
                 'operated atomic-archive-documents 2',
                 'commit level 1',
-            ], [null]],
+            ], [[1], [2]]],
             'direct' => ['direct-archive-documents', DirectArchiveDocuments::class, [
                 'operating direct-archive-documents',
                 'guard operate 1', 'handle 1', 'sql update documents',
@@ -202,7 +204,7 @@ final class GuardedWritesTest extends PackageTestCase
     /**
      * @param  class-string  $action
      * @param  list<string>  $lines
-     * @param  list<list<int>|null>  $rows
+     * @param  list<list<int>>  $rows
      */
     #[Test]
     #[DataProvider('actions')]
@@ -216,7 +218,7 @@ final class GuardedWritesTest extends PackageTestCase
             ->assertExactJson(self::IMPACTED);
 
         $this->assertSame($lines, $this->writeLines());
-        $this->assertSame($rows, array_map(fn ($context): ?array => $context->rows === null ? null : array_map(fn (Model $row): mixed => $row->getKey(), $context->rows), WriteLog::$guards));
+        $this->assertSame($rows, array_map(fn ($context): array => array_map(fn (Model $row): mixed => $row->getKey(), $context->rows ?? []), WriteLog::$guards));
 
         foreach (WriteLog::$guards as $context) {
             $this->assertSame(Endpoint::Operate, $context->endpoint);
@@ -350,6 +352,26 @@ final class GuardedWritesTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_refuses_a_whole_action_on_a_frozen_row_and_writes_nothing(): void
+    {
+        config(['rest.extensions' => ['frozen' => FrozenRowGuard::class]]);
+        WriteLog::$frozen = [2];
+        $this->seedDocuments(null, null);
+        Event::fake([ActionOperated::class]);
+        EventLog::listen();
+
+        $this->postJson('/written-documents/actions/atomic-archive-documents', ['search' => []])
+            ->assertStatus(423)
+            ->assertExactJson(['message' => 'The document is frozen.']);
+
+        $this->assertSame([
+            'begin level 2', 'operating atomic-archive-documents', 'handle 1', 'sql update documents', 'rollback level 1',
+        ], $this->writeLines());
+        $this->assertSame([[1, 'Annual report', false], [2, 'Budget', false]], $this->documents());
+        Event::assertNotDispatched(ActionOperated::class);
+    }
+
+    #[Test]
     public function it_guards_each_transaction_of_an_action_whose_mode_an_extension_changes(): void
     {
         config(['rest.extensions' => ['mode' => ModeChangingExtension::class, 'quota' => RecordingGuard::class]]);
@@ -413,7 +435,7 @@ final class GuardedWritesTest extends PackageTestCase
                 'guard operate 1,2', 'handle 1,2', 'sql update documents', 'sql update documents', 'observe operate 1,2 (2)',
             ]],
             'whole' => [ActionTransaction::Whole, 'archive-documents-by-one', [
-                'handle 1,2', 'sql update documents', 'sql update documents',
+                'guard operate 1,2', 'handle 1,2', 'sql update documents', 'sql update documents',
             ]],
         ];
     }
@@ -421,7 +443,7 @@ final class GuardedWritesTest extends PackageTestCase
     /** @param list<string> $lines */
     #[Test]
     #[DataProvider('handledModes')]
-    public function it_asks_and_notifies_the_extensions_in_handle_except_for_a_whole_run(ActionTransaction $mode, string $uriKey, array $lines): void
+    public function it_asks_the_extensions_in_handle_and_notifies_them_except_for_a_whole_run(ActionTransaction $mode, string $uriKey, array $lines): void
     {
         config(['rest.extensions' => ['history' => RecordingWriteObserver::class, 'quota' => RecordingGuard::class]]);
         $this->seedDocuments(null, null);

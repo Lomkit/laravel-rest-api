@@ -43,8 +43,8 @@ final readonly class WriteGuard
         $this->check($this->resource, $endpoint, null, array_values($rows->all()));
     }
 
-    /** @param list<Model>|null $rows */
-    public function action(Action $action, ActionFields $fields, ?array $rows): void
+    /** @param list<Model> $rows */
+    public function action(Action $action, ActionFields $fields, array $rows): void
     {
         $this->check($this->resource, Endpoint::Operate, null, $rows, $action, $fields);
     }

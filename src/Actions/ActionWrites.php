@@ -43,11 +43,7 @@ final readonly class ActionWrites
             return $run();
         }
 
-        $impacted = $this->transaction->run(function () use ($run): int {
-            $this->guard?->action($this->action, $this->fields, null);
-
-            return $run();
-        });
+        $impacted = $this->transaction->run($run);
         $this->observers?->operated($this->transaction, $this->action, $this->fields, $impacted, null);
 
         return $impacted;
@@ -77,6 +73,7 @@ final readonly class ActionWrites
             return;
         }
 
+        $this->guard?->action($this->action, $this->fields, array_values($models->all()));
         $this->action->handle($this->fields, $models);
     }
 

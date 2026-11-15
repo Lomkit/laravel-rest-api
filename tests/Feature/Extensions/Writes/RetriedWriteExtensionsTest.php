@@ -126,8 +126,8 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
                 'begin secondary', 'guard operate 3', 'commit secondary', 'observe operate 3 (1)',
             ], fn (): array => self::IMPACTED],
             'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', $search, 1, [
-                'begin secondary', 'guard operate *', 'rollback secondary',
-                'begin secondary', 'guard operate *', 'commit secondary', 'observe operate * (3)',
+                'begin secondary', 'guard operate 1,2', 'guard operate 3', 'rollback secondary',
+                'begin secondary', 'guard operate 1,2', 'guard operate 3', 'commit secondary', 'observe operate * (3)',
             ], fn (): array => self::IMPACTED],
             'an action row' => ['POST', '/retried-documents/actions/rename-retried-documents-per-row', $search, 1, [
                 'begin secondary', 'guard operate 1', 'commit secondary', 'observe operate 1 (1)',
@@ -227,7 +227,7 @@ final class RetriedWriteExtensionsTest extends PackageTestCase
                 'begin secondary', 'guard operate 3', 'rollback secondary',
             ], ['Renamed', 'Renamed', 'Minutes']],
             'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', $search, 1, [
-                'begin secondary', 'guard operate *', 'rollback secondary',
+                'begin secondary', 'guard operate 1,2', 'guard operate 3', 'rollback secondary',
             ], ['Annual report', 'Roadmap', 'Minutes']],
         ];
     }

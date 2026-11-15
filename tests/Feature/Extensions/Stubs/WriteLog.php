@@ -27,6 +27,9 @@ final class WriteLog
 
     public static int $status = 429;
 
+    /** @var list<int> */
+    public static array $frozen = [];
+
     public static function reset(): void
     {
         self::$guards = [];
@@ -36,5 +39,6 @@ final class WriteLog
         self::$refuseAt = null;
         self::$refusal = 'The monthly quota is reached.';
         self::$status = 429;
+        self::$frozen = [];
     }
 }
