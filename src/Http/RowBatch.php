@@ -49,10 +49,12 @@ final readonly class RowBatch
     public function write(Closure $before, Closure $write, Closure $after, string $written): Collection
     {
         $this->resource->definition()->fieldNarrowing();
+        $guard = WriteGuard::of($this->resource);
 
         WriteTransaction::of($this->resource)
             ->over($this->rows)
-            ->run(function () use ($before, $write, $after): void {
+            ->run(function () use ($before, $write, $after, $written, $guard): void {
+                $guard?->rows(self::endpoint($written), $this->rows);
                 $before($this->rows);
 
                 foreach ($this->rows as $row) {
@@ -65,5 +67,19 @@ final readonly class RowBatch
         $this->resource->context()->events()->dispatch($written::of($this->resource, $this->rows));
 
         return $this->rows;
+    }
+
+    /** @param class-string<ResourceDestroyed|ResourceRestored|ResourceForceDestroyed> $written */
+    private static function endpoint(string $written): Endpoint
+    {
+        if ($written === ResourceRestored::class) {
+            return Endpoint::Restore;
+        }
+
+        if ($written === ResourceForceDestroyed::class) {
+            return Endpoint::ForceDestroy;
+        }
+
+        return Endpoint::Destroy;
     }
 }

@@ -28,9 +28,10 @@ final readonly class MutateResponse implements Responsable
     public static function of(MutateRequest $request, Resource $resource): self
     {
         $gate = ConfirmationGate::of($request, [Endpoint::Mutate->value], ['mutate', 'response']);
+        $guard = WriteGuard::of($resource);
         $operations = WriteTransaction::of($resource)
             ->over($request->rows()->loaded())
-            ->run(fn (): array => self::write($request, $resource, $gate));
+            ->run(fn (): array => self::write($request, $resource, $gate, $guard));
         $resource->context()->events()->dispatch(ResourceMutated::of($resource, $operations));
         $block = $request->responseBlock();
 
@@ -38,7 +39,7 @@ final readonly class MutateResponse implements Responsable
     }
 
     /** @return list<OperationEntry> */
-    private static function write(MutateRequest $request, Resource $resource, ConfirmationGate $gate): array
+    private static function write(MutateRequest $request, Resource $resource, ConfirmationGate $gate, ?WriteGuard $guard): array
     {
         $nodes = $request->payload();
         $checks = new WriteChecks($request->rows());
@@ -47,6 +48,7 @@ final readonly class MutateResponse implements Responsable
         $request->versions()->verify();
         $checks->syncs->verify();
         $gate->pass(fn (): ?Confirmation => $resource->mutateConfirmation(new PendingMutation($nodes, $request->rows())));
+        $guard?->mutation($nodes, $request->rows()->loaded());
 
         $resource->mutatingAll($nodes);
 
