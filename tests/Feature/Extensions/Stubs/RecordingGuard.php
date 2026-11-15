@@ -9,7 +9,7 @@ use Lomkit\Rest\Extensions\Kinds\GuardsWrites;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 
-final class RecordingGuard extends Extension implements GuardsWrites
+class RecordingGuard extends Extension implements GuardsWrites
 {
     #[\Override]
     public static function name(): string

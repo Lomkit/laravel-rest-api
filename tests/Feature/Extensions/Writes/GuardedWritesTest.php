@@ -335,7 +335,7 @@ final class GuardedWritesTest extends PackageTestCase
         $this->deleteJson('/written-documents', ['resources' => [1, 2]])->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
 
         $message = 'The [quota] extension '.RecordingGuard::class.' refuses a destroy write on '.WrittenDocumentResource::class." with the status {$status}. Pass 403, another client error status from 400 to 499 such as 423 or 429, or 503 to refuse(): a refusal answers the client and rolls the write back.";
-        Exceptions::assertReported(fn (InvalidWriteExtensionException $exception): bool => $exception->getMessage() === $message && $exception->namesExtension('quota'));
+        Exceptions::assertReported(fn (InvalidWriteExtensionException $exception): bool => $exception->getMessage() === $message && $exception->concerns(RecordingGuard::class) && ! $exception->concerns('quota'));
         $this->assertSame([[1, null], [2, null]], $this->rows());
     }
 
@@ -361,7 +361,24 @@ final class GuardedWritesTest extends PackageTestCase
         $this->deleteJson('/written-documents', ['resources' => [1, 2]])->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
 
         $message = 'The [quota] extension '.RecordingGuard::class.' refuses a destroy write on '.WrittenDocumentResource::class." with the status {$status}, which the package answers with another body (409 conflicts, 422 validation errors, 428 confirmations). Refuse with 423 or 429.";
-        Exceptions::assertReported(fn (InvalidWriteExtensionException $exception): bool => $exception->getMessage() === $message && $exception->namesExtension('quota'));
+        Exceptions::assertReported(fn (InvalidWriteExtensionException $exception): bool => $exception->getMessage() === $message && $exception->concerns(RecordingGuard::class) && ! $exception->concerns('quota'));
+        $this->assertSame([[1, null], [2, null]], $this->rows());
+    }
+
+    #[Test]
+    public function it_names_the_registered_class_of_a_guard_bound_to_a_subclass(): void
+    {
+        Exceptions::fake();
+        $bound = new class extends RecordingGuard {};
+        $this->app->bind(RecordingGuard::class, static fn (): RecordingGuard => $bound);
+        WriteLog::$refuseAt = 1;
+        WriteLog::$status = 409;
+        $this->seedDocuments(null, null);
+
+        $this->deleteJson('/written-documents', ['resources' => [1, 2]])->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
+
+        $message = 'The [quota] extension '.RecordingGuard::class.' refuses a destroy write on '.WrittenDocumentResource::class.' with the status 409, which the package answers with another body (409 conflicts, 422 validation errors, 428 confirmations). Refuse with 423 or 429.';
+        Exceptions::assertReported(fn (InvalidWriteExtensionException $exception): bool => $exception->getMessage() === $message && $exception->concerns(RecordingGuard::class) && ! $exception->concerns($bound::class));
         $this->assertSame([[1, null], [2, null]], $this->rows());
     }
 

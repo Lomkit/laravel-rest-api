@@ -56,7 +56,8 @@ final readonly class WriteGuard
     private function check(Resource $resource, Endpoint $endpoint, ?array $entries, array $rows, ?Action $action = null, ?ActionFields $fields = null): void
     {
         $context = $this->resource->context();
-        $extensions = $context->extensions()->applicable($resource::class, GuardsWrites::class);
+        $registry = $context->extensions();
+        $extensions = $registry->applicable($resource::class, GuardsWrites::class);
 
         if ($extensions === []) {
             return;
@@ -65,7 +66,7 @@ final readonly class WriteGuard
         $user = $context->actingUser()->user;
 
         foreach ($extensions as $name => $extension) {
-            $extension->guardWrite(new WriteGuardContext($name, $extension::class, $resource, $endpoint, $user, $entries, RowCopies::of($rows), $action === null ? null : clone $action, $fields));
+            $extension->guardWrite(new WriteGuardContext($name, $registry->classOf($name), $resource, $endpoint, $user, $entries, RowCopies::of($rows), $action === null ? null : clone $action, $fields));
         }
     }
 }

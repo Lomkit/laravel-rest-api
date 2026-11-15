@@ -99,11 +99,12 @@ class ExtensionExceptionTest extends TestCase
     {
         $exception = InvalidWriteExtensionException::reservedRefusalStatus('quota', 'App\Rest\WriteQuota', 'App\Rest\PostResource', Endpoint::Mutate, 409);
 
-        $this->assertSame([true, false, false, true], [
+        $this->assertSame([true, false, false, true, false], [
             is_a($exception, ExtensionException::class),
             is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidWriteExtensionException::class, 'missingName'),
-            $exception->namesExtension('quota'),
+            method_exists(InvalidWriteExtensionException::class, 'notAClass'),
+            $exception->concerns('App\Rest\WriteQuota'),
+            $exception->concerns('quota'),
         ]);
     }
 

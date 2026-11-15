@@ -72,7 +72,11 @@ final class ExtensionRegistry
         return $applicable;
     }
 
-    /** @param class-string<ExtensionKind> $kind */
+    /**
+     * @internal
+     *
+     * @param  class-string<ExtensionKind>  $kind
+     */
     public function hasKind(string $kind): bool
     {
         foreach ($this->all() as $extension) {
