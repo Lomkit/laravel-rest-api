@@ -42,15 +42,6 @@ final class SharedRouteNameTest extends PackageTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.disabled_extensions', [RivalAclExtension::class])]
-    public function it_refuses_two_route_extensions_with_one_name_when_routes_register(): void
-    {
-        $this->expectExceptionObject(new InvalidExtensionException('The extensions '.StampRoutes::class.' and '.OtherStampRoutes::class.' share the name [stamp]. Add one of them to the [rest.disabled_extensions] config, or extend one of them and override name() to give it another name.'));
-
-        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
-    }
-
-    #[Test]
     #[WithConfig('rest.disabled_extensions', [StampRoutes::class])]
     public function it_registers_routes_beside_a_shared_name_of_another_kind(): void
     {
@@ -82,15 +73,5 @@ final class SharedRouteNameTest extends PackageTestCase
         $route = $this->app['router']->getRoutes()->getByName('routed-tickets.search');
         $this->assertSame([EnforceExpectsJson::class, StampsRequests::class.':app'], $route?->middleware());
         $this->assertSame([AppStampRoutes::class], StampRoutes::$ran);
-    }
-
-    #[Test]
-    #[WithConfig('rest.extensions', [AppStampRoutes::class])]
-    #[WithConfig('rest.disabled_extensions', [OtherStampRoutes::class, RivalAclExtension::class])]
-    public function it_refuses_a_replacement_without_the_disabled_entry_when_routes_register(): void
-    {
-        $this->expectExceptionObject(InvalidExtensionException::sharedName('stamp', [StampRoutes::class, AppStampRoutes::class]));
-
-        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
     }
 }

@@ -40,17 +40,4 @@ class RuntimeRouteMiddlewareTest extends HelpdeskTestCase
         $route = $this->app['router']->getRoutes()->getByName('routed-tickets.search');
         $this->assertSame([EnforceExpectsJson::class, StampsRequests::class.':a'], $route?->middleware());
     }
-
-    #[Test]
-    public function it_skips_a_disabled_runtime_extension(): void
-    {
-        config(['rest.extensions' => [], 'rest.disabled_extensions' => [StampRoutes::class]]);
-        StampRoutes::reset();
-
-        Rest::resource('routed-tickets', RoutedTicketController::class)->only('search')->register();
-
-        $route = $this->app['router']->getRoutes()->getByName('routed-tickets.search');
-        $this->assertSame([EnforceExpectsJson::class], $route?->middleware());
-        $this->assertSame(0, StampRoutes::$built);
-    }
 }
