@@ -20,16 +20,12 @@ final readonly class RowState
         private LoadedRelations $relations,
     ) {}
 
-    public static function of(Model $row, ?self $start = null): self
+    /** @param array<array-key, mixed> $relationNames */
+    public static function of(Model $row, array $relationNames): self
     {
         $attributes = self::stored($row, CastedAttributes::keys($row));
 
-        return new self($row, self::settings($row), $row->getRawOriginal(), $attributes, LoadedRelations::of($row, $start?->relations));
-    }
-
-    public function row(): Model
-    {
-        return $this->row;
+        return new self($row, self::settings($row), $row->getRawOriginal(), $attributes, LoadedRelations::of($row, $relationNames));
     }
 
     public function keeps(Model $row): bool

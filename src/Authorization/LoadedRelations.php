@@ -17,13 +17,20 @@ final readonly class LoadedRelations
         private array $shape,
     ) {}
 
-    public static function of(Model $row, ?self $start = null): self
+    /** @param array<array-key, mixed> $names */
+    public static function of(Model $row, array $names): self
     {
-        $seen = [];
-        $names = $start === null ? self::names($row, $seen) : $start->names;
         $seen = [];
 
         return new self($names, self::shape($row, $names, $seen));
+    }
+
+    /** @return array<array-key, mixed> */
+    public static function names(Model $model): array
+    {
+        $seen = [];
+
+        return self::walk($model, $seen);
     }
 
     public function keep(Model $row): bool
@@ -37,7 +44,7 @@ final readonly class LoadedRelations
      * @param  array<int, true>  $seen
      * @return array<array-key, mixed>
      */
-    private static function names(Model $model, array &$seen): array
+    private static function walk(Model $model, array &$seen): array
     {
         $seen[spl_object_id($model)] = true;
         $names = [];
@@ -47,7 +54,7 @@ final readonly class LoadedRelations
 
             foreach (self::models($related) as $child) {
                 if (! isset($seen[spl_object_id($child)])) {
-                    $nested = array_replace_recursive($nested, self::names($child, $seen));
+                    $nested = array_replace_recursive($nested, self::walk($child, $seen));
                 }
             }
 

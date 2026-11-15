@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Unit\Authorization;
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Authorization\LoadedRelationNames;
 use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Authorization\PreparedRows;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
@@ -23,7 +24,7 @@ class PreparedRowsTest extends TestCase
     public function it_refuses_a_row_whose_write_settings_change(Closure $change): void
     {
         $checks = $this->checks();
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $change($checks->rows->firstOrFail());
 
@@ -55,7 +56,7 @@ class PreparedRowsTest extends TestCase
         $row = $checks->rows->firstOrFail();
         $row->setRelation('links', new Collection([$this->related(2), $this->related(3)]));
         $row->getRelation('links')->firstOrFail()->setRelation('links', new Collection([$this->related(4)]));
-        $start = PreparedRows::of($checks->rows);
+        $start = LoadedRelationNames::of($checks->rows);
         $rows = PreparedRows::of($checks->rows, $start);
 
         $change($row);
@@ -82,7 +83,7 @@ class PreparedRowsTest extends TestCase
         $checks = $this->checks();
         $row = $checks->rows->firstOrFail();
         $row->setRelation('links', new Collection([$this->related(2)]));
-        $start = PreparedRows::of($checks->rows);
+        $start = LoadedRelationNames::of($checks->rows);
         $row->getRelation('links')->firstOrFail()->setRelation('team', $this->related(5));
         $rows = PreparedRows::of($checks->rows, $start);
 
@@ -101,7 +102,7 @@ class PreparedRowsTest extends TestCase
         $child = $this->related(2);
         $row->setRelation('links', new Collection([$child]));
         $child->setRelation('parent', $row);
-        $rows = PreparedRows::of($checks->rows, PreparedRows::of($checks->rows));
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $child->getRelation('parent');
 
@@ -113,7 +114,7 @@ class PreparedRowsTest extends TestCase
     public function it_keeps_a_row_whose_cast_attribute_is_read(): void
     {
         $checks = $this->checks();
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $meta = $checks->rows->firstOrFail()->getAttribute('meta');
 
@@ -125,7 +126,7 @@ class PreparedRowsTest extends TestCase
     public function it_refuses_a_row_whose_cast_attribute_changes(): void
     {
         $checks = $this->checks();
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $checks->rows->firstOrFail()->getAttribute('meta')['a'] = 2;
 
@@ -137,7 +138,7 @@ class PreparedRowsTest extends TestCase
     public function it_names_the_extension_that_changed_the_rows(): void
     {
         $checks = $this->checks();
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
         $checks->rows->firstOrFail()->setAttribute('id', 2);
 
         try {
@@ -152,7 +153,7 @@ class PreparedRowsTest extends TestCase
     public function it_keeps_a_row_whose_object_cast_attribute_is_read_and_stored_again(): void
     {
         $checks = $this->checks();
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
         $row = $checks->rows->firstOrFail();
 
         $settings = $row->getAttribute('settings');
@@ -169,7 +170,7 @@ class PreparedRowsTest extends TestCase
     public function it_refuses_a_row_whose_object_cast_attribute_changes_in_place(): void
     {
         $checks = $this->checks();
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $settings = $checks->rows->firstOrFail()->getAttribute('settings');
         $this->assertInstanceOf(Settings::class, $settings);
@@ -183,7 +184,7 @@ class PreparedRowsTest extends TestCase
     public function it_refuses_a_row_whose_object_cast_attribute_is_replaced(): void
     {
         $checks = $this->checks();
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $checks->rows->firstOrFail()->setAttribute('settings', new Settings(['a' => 2]));
 
@@ -203,7 +204,7 @@ class PreparedRowsTest extends TestCase
     public function it_refuses_a_row_whose_attribute_takes_a_value_of_another_type(mixed $value): void
     {
         $checks = $this->checks();
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $checks->rows->firstOrFail()->setAttribute('team_id', $value);
 
@@ -217,7 +218,7 @@ class PreparedRowsTest extends TestCase
     {
         $checks = $this->checks();
         $row = $checks->rows->firstOrFail();
-        $start = PreparedRows::of($checks->rows);
+        $start = LoadedRelationNames::of($checks->rows);
         $row->setRelation('tags', new Collection);
 
         $rows = PreparedRows::of($checks->rows, $start);
@@ -233,7 +234,7 @@ class PreparedRowsTest extends TestCase
         $checks = $this->checks();
         $row = $checks->rows->firstOrFail();
         $row->setRelation('team', null);
-        $start = PreparedRows::of($checks->rows);
+        $start = LoadedRelationNames::of($checks->rows);
         $row->setRelation('tags', new Collection);
 
         $rows = PreparedRows::of($checks->rows, $start);

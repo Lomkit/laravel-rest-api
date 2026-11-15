@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Unit\Authorization;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Crypt;
+use Lomkit\Rest\Authorization\LoadedRelationNames;
 use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Authorization\PreparedRows;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
@@ -20,7 +21,7 @@ class EncryptedPreparedRowsTest extends TestCase
     public function it_keeps_a_row_whose_encrypted_cast_attribute_is_read(): void
     {
         $checks = $this->checks();
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $secret = $checks->rows->firstOrFail()->getAttribute('secret');
 
@@ -33,7 +34,7 @@ class EncryptedPreparedRowsTest extends TestCase
     {
         $checks = $this->checks();
         $checks->rows->firstOrFail()->getAttribute('secret');
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $checks->rows->firstOrFail()->getAttribute('secret');
 
@@ -45,7 +46,7 @@ class EncryptedPreparedRowsTest extends TestCase
     public function it_keeps_a_row_that_the_hook_read_for_an_extension_that_does_nothing(): void
     {
         $checks = $this->checks();
-        $start = PreparedRows::of($checks->rows);
+        $start = LoadedRelationNames::of($checks->rows);
         $checks->rows->firstOrFail()->getAttribute('secret');
 
         $rows = PreparedRows::of($checks->rows, $start);
@@ -58,7 +59,7 @@ class EncryptedPreparedRowsTest extends TestCase
     public function it_refuses_a_row_whose_encrypted_cast_attribute_changes_in_place(): void
     {
         $checks = $this->checks();
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $checks->rows->firstOrFail()->getAttribute('secret')['a'] = 2;
 
@@ -70,7 +71,7 @@ class EncryptedPreparedRowsTest extends TestCase
     public function it_refuses_a_row_whose_encrypted_cast_attribute_changes_after_the_hook_read_it(): void
     {
         $checks = $this->checks();
-        $start = PreparedRows::of($checks->rows);
+        $start = LoadedRelationNames::of($checks->rows);
         $checks->rows->firstOrFail()->getAttribute('secret');
         $rows = PreparedRows::of($checks->rows, $start);
 

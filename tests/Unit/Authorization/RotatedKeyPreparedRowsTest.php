@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\Facades\Crypt;
+use Lomkit\Rest\Authorization\LoadedRelationNames;
 use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Authorization\PreparedRows;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
@@ -31,7 +32,7 @@ class RotatedKeyPreparedRowsTest extends TestCase
     public function it_keeps_a_row_whose_encrypted_cast_attribute_is_read_with_previous_keys(string $document): void
     {
         $checks = $this->checks($document, Crypt::encryptString('{"a": 1}'));
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $secret = $this->secret($checks);
 
@@ -46,7 +47,7 @@ class RotatedKeyPreparedRowsTest extends TestCase
     {
         $previous = (new Encrypter((string) base64_decode(self::PREVIOUS_KEY), 'AES-256-CBC'))->encryptString('{"a": 1}');
         $checks = $this->checks($document, $previous);
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $secret = $this->secret($checks);
 
@@ -61,7 +62,7 @@ class RotatedKeyPreparedRowsTest extends TestCase
     {
         $checks = $this->checks($document, Crypt::encryptString('{"a": 1}'));
         $this->secret($checks);
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $secret = $this->secret($checks);
 
@@ -75,7 +76,7 @@ class RotatedKeyPreparedRowsTest extends TestCase
     public function it_refuses_a_row_whose_encrypted_cast_attribute_changes_in_place_with_previous_keys(string $document): void
     {
         $checks = $this->checks($document, Crypt::encryptString('{"a": 1}'));
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $this->secret($checks)['a'] = 2;
 
@@ -89,7 +90,7 @@ class RotatedKeyPreparedRowsTest extends TestCase
     public function it_refuses_an_encrypted_value_of_another_type_with_previous_keys(string $document): void
     {
         $checks = $this->checks($document, Crypt::encryptString('{"a": 1}'));
-        $rows = PreparedRows::of($checks->rows);
+        $rows = PreparedRows::of($checks->rows, LoadedRelationNames::of($checks->rows));
 
         $checks->rows->firstOrFail()->setAttribute('secret', ['a' => '1']);
 
