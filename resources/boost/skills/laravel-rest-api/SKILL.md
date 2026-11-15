@@ -1530,9 +1530,9 @@ final class ArchiveExtension extends Extension implements RestrictsQueries
 
 - `name()` returns the name of the extension, which prefixes every key it adds. A subclass inherits it; override it only to run the subclass beside its parent.
 - Register the class, never an instance: the container builds each extension once per context (request, queued job, search), at first use, so its constructor can inject services. `registerExtension()` takes a class name, so an instance is a PHP `TypeError`; in `registerExtensions()` or the config, it throws `InvalidExtensionException`. Keep settings in properties; for other settings, register a subclass. Never bind the extension as a singleton: one instance would then serve every context of an Octane or queue worker.
-- `RestrictsQueries` is one of the kinds the extension implements, the interfaces of `Lomkit\Rest\Extensions\Kinds` described below; the constructor injects what their methods use. Each kind method receives one context object of `Lomkit\Rest\Extensions\Contexts`, except `PreparesRowChecks`, which receives the `Lomkit\Rest\Authorization\PendingChecks` of `prepareAuthorization()`, and each kind calls its extensions in name order. Implement at least one kind. An abstract class is refused at registration, or, listed in the config, when a context first reads its extensions; a class with no kind or a binding that builds another class is refused when the extensions are built.
+- `RestrictsQueries` is one of the kinds the extension implements, the interfaces of `Lomkit\Rest\Extensions\Kinds` described below; the constructor injects what their methods use. Each kind method receives one context object of `Lomkit\Rest\Extensions\Contexts`, except `PreparesRowChecks`, which receives the `Lomkit\Rest\Authorization\PendingChecks` of `prepareAuthorization()`, and each kind calls its extensions in name order. `DocumentsExtension` has two methods, one per moment of the OpenAPI document; every other kind has one. Implement at least one kind. An abstract class is refused at registration, or, listed in the config, when a context first reads its extensions; a class with no kind or a binding that builds another class is refused when the extensions are built.
 - `appliesTo()` returns `true` by default. Each context (request, queued job, search) asks it once per resource class and keeps the answer: answer from the resource class and the config, never from the user or the request (use a request kind for that).
-- An exception thrown by an extension reaches the caller, except from `ObservesWrites`, which runs after the commit: its exceptions are reported.
+- An exception thrown by an extension reaches the caller, except from `ObservesWrites`, which runs after the commit: its exceptions are reported, and from `ChecksResources`: `rest:check` reports them as problems.
 - With no extension registered, nothing is built and nothing is read beyond the config.
 
 ### Restricting queries (`RestrictsQueries`)
@@ -2226,7 +2226,7 @@ final class QuotaExtension extends Extension implements AddsSearchMeta, Document
 
 ### Checking resources (`ChecksResources`)
 
-App: `'tenant' => \Vendor\Tenancy\TenantExtension::class` in `rest.extensions`.
+App: `'tenant_columns' => \Vendor\Tenancy\TenantColumnExtension::class` in `rest.extensions`.
 
 Package:
 
