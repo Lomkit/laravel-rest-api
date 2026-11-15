@@ -4,10 +4,12 @@ namespace Lomkit\Rest\Tests\Unit\Exceptions;
 
 use Lomkit\Rest\Exceptions\ExtensionException;
 use Lomkit\Rest\Exceptions\InvalidAuthorizationExtensionException;
+use Lomkit\Rest\Exceptions\InvalidDocumentationExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
+use Lomkit\Rest\Exceptions\InvalidMetaExtensionException;
 use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
 use Lomkit\Rest\Exceptions\InvalidRouteExtensionException;
 use Lomkit\Rest\Exceptions\InvalidWriteExtensionException;
@@ -105,6 +107,32 @@ class ExtensionExceptionTest extends TestCase
             method_exists(InvalidWriteExtensionException::class, 'notAClass'),
             $exception->concerns('App\Rest\WriteQuota'),
             $exception->concerns('quota'),
+        ]);
+    }
+
+    #[Test]
+    public function it_gives_the_meta_extension_exception_the_shared_base_only(): void
+    {
+        $exception = InvalidMetaExtensionException::instructionsName('instructions', 'App\Rest\PlanMeta', 'App\Rest\PostResource');
+
+        $this->assertSame([true, false, false, true], [
+            is_a($exception, ExtensionException::class),
+            is_a($exception, InvalidExtensionException::class),
+            method_exists(InvalidMetaExtensionException::class, 'missingName'),
+            $exception->namesExtension('instructions'),
+        ]);
+    }
+
+    #[Test]
+    public function it_gives_the_documentation_extension_exception_the_shared_base_only(): void
+    {
+        $exception = InvalidDocumentationExtensionException::statusOutOfRange('quota', 'App\Rest\QuotaDocs', 'api.posts.mutate', 302);
+
+        $this->assertSame([true, false, false, true], [
+            is_a($exception, ExtensionException::class),
+            is_a($exception, InvalidExtensionException::class),
+            method_exists(InvalidDocumentationExtensionException::class, 'missingName'),
+            $exception->namesExtension('quota'),
         ]);
     }
 

@@ -2,7 +2,7 @@
 
 namespace Lomkit\Rest\Exceptions;
 
-final class InvalidDocumentationExtensionException extends InvalidExtensionException
+final class InvalidDocumentationExtensionException extends ExtensionException
 {
     public static function statusOutOfRange(string $name, string $class, string $route, int $status): self
     {

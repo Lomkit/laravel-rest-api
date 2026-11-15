@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Exceptions;
 
 use Lomkit\Rest\Http\ExtensionMetaValues;
 
-final class InvalidMetaExtensionException extends InvalidExtensionException
+final class InvalidMetaExtensionException extends ExtensionException
 {
     public static function gatesKeyName(string $name, string $class, string $resource): self
     {
