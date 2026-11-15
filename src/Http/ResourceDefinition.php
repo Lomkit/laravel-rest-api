@@ -177,7 +177,7 @@ final class ResourceDefinition
 
     public function text(): ResolvedText
     {
-        return $this->text ??= ResolvedText::of($this->resource, $this->request);
+        return $this->text ??= ResolvedText::of($this->resource, $this->request)->narrowedBy($this->fields->narrowing());
     }
 
     public function gates(): GateVocabulary

@@ -32,6 +32,27 @@ final readonly class EngineGrammar implements JsonSerializable
         return in_array($attribute, $this->sorts, true);
     }
 
+    /**
+     * @internal
+     *
+     * @param  list<string>  $unfilterable
+     * @param  list<string>  $unsortable
+     */
+    public function without(array $unfilterable, array $unsortable): self
+    {
+        if ($unfilterable === [] && $unsortable === []) {
+            return $this;
+        }
+
+        return new self(
+            array_diff_key($this->filters, array_flip($unfilterable)),
+            array_values(array_diff($this->sorts, $unsortable)),
+            $this->sortKeys,
+            $this->maxPageSize,
+            $this->window,
+        );
+    }
+
     /** @internal */
     public function searchGrammar(TextCapabilities $text): SearchGrammar
     {

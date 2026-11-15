@@ -235,6 +235,7 @@ class FieldNarrowingRulesTest extends PackageTestCase
     {
         return [
             'the fields' => ['fields'],
+            'the text search' => ['text'],
         ];
     }
 

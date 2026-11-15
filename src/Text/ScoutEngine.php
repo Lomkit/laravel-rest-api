@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Text;
 
 use Closure;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
+use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Text\Engine\EngineIndex;
 use Lomkit\Rest\Text\Engine\EngineQuery;
@@ -56,6 +57,22 @@ final readonly class ScoutEngine implements EngineTextSearch
     public function withoutPerimeter(): self
     {
         return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, true);
+    }
+
+    /**
+     * @internal
+     *
+     * @return list<string>
+     */
+    public function perimeterNames(): array
+    {
+        $names = array_map(static fn (mixed $attribute): ?string => match (true) {
+            $attribute instanceof Field => $attribute->name,
+            is_string($attribute) => $attribute,
+            default => null,
+        }, $this->perimeterAttributes);
+
+        return array_values(array_filter($names, is_string(...)));
     }
 
     #[\Override]

@@ -8,6 +8,7 @@ use Lomkit\Rest\Fields\FieldReduction;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\NarrowedFields;
 use Lomkit\Rest\Text\QueryTextSearch;
+use Lomkit\Rest\Text\ScoutEngine;
 use Lomkit\Rest\Text\TextSearch;
 
 /** @internal */
@@ -70,8 +71,14 @@ final class FieldRequests
             throw InvalidFieldExtensionException::hidesKey($extension, $resource, $field->name);
         }
 
-        if ($this->text() instanceof QueryTextSearch && $field->isSearchable()) {
+        $text = $this->text();
+
+        if ($text instanceof QueryTextSearch && $field->isSearchable()) {
             throw InvalidFieldExtensionException::hidesSearchable($extension, $resource, $field->name);
+        }
+
+        if ($text instanceof ScoutEngine && in_array($field->name, $text->perimeterNames(), true)) {
+            throw InvalidFieldExtensionException::hidesPerimeterAttribute($extension, $resource, $field->name);
         }
     }
 
