@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Tests\Unit\Text;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
-use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
+use Lomkit\Rest\Exceptions\ConflictingListsException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherResource;
 use Lomkit\Rest\Text\Engine\IndexConditions;
@@ -71,7 +71,7 @@ class IndexConditionsTest extends TestCase
         $conditions = new IndexConditions(ReaderVoucherResource::class);
         $conditions->include('readers', $lists[0], true);
 
-        $this->expectExceptionObject(InvalidEngineQueryException::conflictingListMemberships(ReaderVoucherResource::class, 'readers', null, null));
+        $this->expectExceptionObject(ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', null, null));
 
         $conditions->include('readers', $lists[1], true);
     }

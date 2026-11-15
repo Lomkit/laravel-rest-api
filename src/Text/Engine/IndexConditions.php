@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Text\Engine;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
-use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
+use Lomkit\Rest\Exceptions\ConflictingListsException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
 final class IndexConditions
@@ -48,7 +48,7 @@ final class IndexConditions
         }
 
         if ($current !== null && ! self::holds($current, $values)) {
-            throw InvalidEngineQueryException::conflictingListMemberships($this->resource, $attribute, $this->sources[$attribute] ?? null, $by);
+            throw ConflictingListsException::memberships($this->resource, $attribute, $this->sources[$attribute] ?? null, $by);
         }
 
         $this->memberships[$attribute] = $values;

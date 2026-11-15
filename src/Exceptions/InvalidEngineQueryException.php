@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Exceptions;
 
 use LogicException;
-use Lomkit\Rest\Text\Engine\RestrictingExtension;
 
 final class InvalidEngineQueryException extends LogicException
 {
@@ -28,13 +27,6 @@ final class InvalidEngineQueryException extends LogicException
         $names = implode(', ', $extensions);
 
         return new self("The engine query of {$resource} already carries the row restrictions of the extensions [{$names}], and the package passes them once per engine query. Restrict the engine query with where(), whereIn() or whereNotIn() in ScoutEngine::perimeter() or in an instruction instead of restrictRows().");
-    }
-
-    public static function conflictingListMemberships(string $resource, string $attribute, ?RestrictingExtension $first, ?RestrictingExtension $second): self
-    {
-        $sources = $first === null && $second === null ? 'ScoutEngine::perimeter() or instructions' : self::listSource($first).' and '.self::listSource($second);
-
-        return new self("The engine query of {$resource} keeps the rows whose list attribute [{$attribute}] shares a value with each of two lists, set by {$sources}, and neither list holds the other. The engine matches one list per attribute: restrict [{$attribute}] with one list, or with lists that hold one another.");
     }
 
     public static function unsupportedOperator(string $attribute, string $operator): self
@@ -99,10 +91,5 @@ final class InvalidEngineQueryException extends LogicException
     public static function beyondWindow(int $window): self
     {
         return new self("The search engine does not paginate beyond the first {$window} results.");
-    }
-
-    private static function listSource(?RestrictingExtension $source): string
-    {
-        return $source === null ? 'ScoutEngine::perimeter() or an instruction' : "the [{$source->name}] extension {$source->class}";
     }
 }

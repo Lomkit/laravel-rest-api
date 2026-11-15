@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Engines\NullEngine;
+use Lomkit\Rest\Exceptions\ConflictingListsException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
@@ -14,6 +15,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AdaptiveReadersExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupsExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeAlgolia3Engine;
@@ -175,7 +177,7 @@ class StringListAttributesTest extends EngineSearchTestCase
         $this->useEngine(new FakeTypesenseEngine);
         $query = $this->engineQuery()->whereIn('readers', ['ann', 'bob']);
 
-        $this->expectExceptionObject(InvalidEngineQueryException::conflictingListMemberships(ReaderVoucherResource::class, 'readers', null, null));
+        $this->expectExceptionObject(ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', null, null));
 
         $query->whereIn('readers', ['ann', 'cid']);
     }
@@ -187,7 +189,7 @@ class StringListAttributesTest extends EngineSearchTestCase
         config(['rest.extensions' => ['readers' => ReadersExtension::class, 'groups' => ReaderGroupsExtension::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
         $this->withoutExceptionHandling();
-        $exception = InvalidEngineQueryException::conflictingListMemberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('groups', ReaderGroupsExtension::class), new RestrictingExtension('readers', ReadersExtension::class));
+        $exception = ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('groups', ReaderGroupsExtension::class), new RestrictingExtension('readers', ReadersExtension::class));
 
         $this->assertSame('The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [groups] extension '.ReaderGroupsExtension::class.' and the [readers] extension '.ReadersExtension::class.', and neither list holds the other. The engine matches one list per attribute: restrict [readers] with one list, or with lists that hold one another.', $exception->getMessage());
         $this->expectExceptionObject($exception);
@@ -196,11 +198,24 @@ class StringListAttributesTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_answers_422_to_an_instruction_list_that_conflicts_with_an_extension(): void
+    {
+        $this->useEngine(new FakeTypesenseEngine);
+        config(['rest.extensions' => ['readers' => ReadersExtension::class, 'ri' => ReaderInstructionsExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+
+        $response = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'ri.bob']]]);
+
+        $message = 'The search.instructions.0 field restricts the list [readers] with values that neither hold nor are held by the list that the search already keeps.';
+        $response->assertStatus(422)->assertExactJson(['message' => $message, 'errors' => ['search.instructions.0' => [$message]]]);
+    }
+
+    #[Test]
     public function it_names_the_perimeter_or_an_instruction_beside_an_extension(): void
     {
         $this->assertSame(
             'The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [readers] extension '.ReadersExtension::class.' and ScoutEngine::perimeter() or an instruction, and neither list holds the other. The engine matches one list per attribute: restrict [readers] with one list, or with lists that hold one another.',
-            InvalidEngineQueryException::conflictingListMemberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('readers', ReadersExtension::class), null)->getMessage(),
+            ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('readers', ReadersExtension::class), null)->getMessage(),
         );
     }
 
