@@ -39,6 +39,10 @@ final readonly class ExtensionCheck
         foreach ($list->entries as $entry) {
             $report = $report->withEntry($entry);
 
+            if ($entry->disablesNothing()) {
+                $report = $report->withNote(self::idle($entry->name));
+            }
+
             if ($entry->disabled || $entry->class === null) {
                 continue;
             }
@@ -51,6 +55,11 @@ final readonly class ExtensionCheck
         }
 
         return $report;
+    }
+
+    private static function idle(string $name): string
+    {
+        return "The [{$name}] entry of the [rest.extensions] config is false, but no extension is registered under this name, so it disables nothing. Remove it, or use the name that the package registers.";
     }
 
     private static function problem(ExtensionEntry $entry, Throwable $exception): string

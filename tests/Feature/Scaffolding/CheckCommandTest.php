@@ -138,7 +138,7 @@ class CheckCommandTest extends ScaffoldingTestCase
                     ],
                     'problems' => [],
                 ],
-                'extensions' => ['registered' => [], 'problems' => []],
+                'extensions' => ['registered' => [], 'problems' => [], 'notes' => []],
             ],
             json_decode($output->fetch(), true),
         );

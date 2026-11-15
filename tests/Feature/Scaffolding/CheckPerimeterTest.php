@@ -112,7 +112,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                     'problems' => [self::EXPORT_PROBLEM],
                 ],
                 'relations' => ['detachable' => [], 'skipped' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'relation' => 'country', 'table' => 'trips']], 'problems' => []],
-                'extensions' => ['registered' => [], 'problems' => []],
+                'extensions' => ['registered' => [], 'problems' => [], 'notes' => []],
             ],
             json_decode($output->fetch(), true),
         );
@@ -166,7 +166,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                     'problems' => [],
                 ],
                 'relations' => ['detachable' => [], 'skipped' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'relation' => 'country', 'table' => 'trips']], 'problems' => []],
-                'extensions' => ['registered' => [], 'problems' => []],
+                'extensions' => ['registered' => [], 'problems' => [], 'notes' => []],
             ],
             json_decode($output->fetch(), true),
         );

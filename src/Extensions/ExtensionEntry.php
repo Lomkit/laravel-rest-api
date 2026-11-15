@@ -17,4 +17,9 @@ final readonly class ExtensionEntry
     {
         return $this->origin === ExtensionOrigin::Runtime && ! $this->disabled && count($this->runtime) > 1;
     }
+
+    public function disablesNothing(): bool
+    {
+        return $this->disabled && $this->runtime === [];
+    }
 }

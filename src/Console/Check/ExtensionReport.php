@@ -13,13 +13,17 @@ final readonly class ExtensionReport
 
     private const string REPLACES = 'replaces';
 
+    private const string IDLE = 'disables nothing';
+
     /**
      * @param  list<array{name: string, class: string|null, origin: string, disabled: bool, runtime: list<string>}>  $registered
      * @param  list<string>  $problems
+     * @param  list<string>  $notes
      */
     public function __construct(
         private array $registered = [],
         private array $problems = [],
+        private array $notes = [],
     ) {}
 
     public function withEntry(ExtensionEntry $entry): self
@@ -30,12 +34,17 @@ final readonly class ExtensionReport
             'origin' => $entry->origin->value,
             'disabled' => $entry->disabled,
             'runtime' => $entry->runtime,
-        ]], $this->problems);
+        ]], $this->problems, $this->notes);
     }
 
     public function withProblem(string $problem): self
     {
-        return new self($this->registered, [...$this->problems, $problem]);
+        return new self($this->registered, [...$this->problems, $problem], $this->notes);
+    }
+
+    public function withNote(string $note): self
+    {
+        return new self($this->registered, $this->problems, [...$this->notes, $note]);
     }
 
     public function passed(): bool
@@ -43,10 +52,10 @@ final readonly class ExtensionReport
         return $this->problems === [];
     }
 
-    /** @return array{extensions: array{registered: list<array{name: string, class: string|null, origin: string, disabled: bool, runtime: list<string>}>, problems: list<string>}} */
+    /** @return array{extensions: array{registered: list<array{name: string, class: string|null, origin: string, disabled: bool, runtime: list<string>}>, problems: list<string>, notes: list<string>}} */
     public function toArray(): array
     {
-        return ['extensions' => ['registered' => $this->registered, 'problems' => $this->problems]];
+        return ['extensions' => ['registered' => $this->registered, 'problems' => $this->problems, 'notes' => $this->notes]];
     }
 
     public function render(Factory $components): void
@@ -58,10 +67,20 @@ final readonly class ExtensionReport
             $components->bulletList($this->problems);
         }
 
+        if ($this->notes !== []) {
+            $components->bulletList($this->notes);
+        }
+
         foreach ($this->registered as $entry) {
-            $details = array_filter([$entry['class'] ?? implode(', ', $entry['runtime']), $entry['origin'], $entry['disabled'] ? self::DISABLED : null, self::replaced($entry)]);
+            $details = array_filter([$entry['class'] ?? implode(', ', $entry['runtime']), $entry['origin'], $entry['disabled'] ? self::DISABLED : null, self::replaced($entry), self::idle($entry)]);
             $components->twoColumnDetail($entry['name'], implode(', ', $details));
         }
+    }
+
+    /** @param array{name: string, class: string|null, origin: string, disabled: bool, runtime: list<string>} $entry */
+    private static function idle(array $entry): ?string
+    {
+        return $entry['disabled'] && $entry['runtime'] === [] ? self::IDLE : null;
     }
 
     /** @param array{name: string, class: string|null, origin: string, disabled: bool, runtime: list<string>} $entry */

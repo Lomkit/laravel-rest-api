@@ -32,6 +32,8 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
     private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
 
+    private const string IDLE_TENANT = 'The [tenant] entry of the [rest.extensions] config is false, but no extension is registered under this name, so it disables nothing. Remove it, or use the name that the package registers.';
+
     #[Before]
     #[After]
     public function resetTheLog(): void
@@ -65,10 +67,11 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
 
         $this->assertStringEndsWith(
             "  extensions ... 2 extensions built, 2 disabled\n"
+            .'  ⇂ '.rtrim(self::IDLE_TENANT, '.')."\n"
             ."  noting ... Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension, runtime, disabled\n"
             ."  both ... Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension, runtime\n"
             ."  counting ... Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension, config\n"
-            ."  tenant ... config, disabled\n",
+            ."  tenant ... config, disabled, disables nothing\n",
             $output,
         );
         $this->assertSame([BothKindsExtension::class, CountingExtension::class], ExtensionLog::$built);
@@ -91,6 +94,31 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
                 ['name' => 'tenant', 'class' => null, 'origin' => 'config', 'disabled' => true, 'runtime' => []],
             ],
             'problems' => [],
+            'notes' => [self::IDLE_TENANT],
+        ], $report['extensions']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['tenant' => false])]
+    public function it_notes_a_false_entry_that_disables_nothing(): void
+    {
+        $this->expose('trips', TripController::class);
+
+        $output = $this->check(0, TripController::class);
+        $report = $this->report(0, TripController::class);
+
+        $this->assertStringEndsWith(
+            "  extensions ... 0 extensions built, 1 disabled\n"
+            .'  ⇂ '.rtrim(self::IDLE_TENANT, '.')."\n"
+            ."  tenant ... config, disabled, disables nothing\n",
+            $output,
+        );
+        $this->assertSame([
+            'registered' => [
+                ['name' => 'tenant', 'class' => null, 'origin' => 'config', 'disabled' => true, 'runtime' => []],
+            ],
+            'problems' => [],
+            'notes' => [self::IDLE_TENANT],
         ], $report['extensions']);
     }
 
@@ -114,6 +142,7 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
                 ['name' => 'noting', 'class' => BothKindsExtension::class, 'origin' => 'config', 'disabled' => false, 'runtime' => [NotingExtension::class]],
             ],
             'problems' => [],
+            'notes' => [],
         ], $report['extensions']);
     }
 
@@ -139,6 +168,7 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
                 ['name' => 'acl', 'class' => null, 'origin' => 'runtime', 'disabled' => false, 'runtime' => [NotingExtension::class, CountingExtension::class]],
             ],
             'problems' => [$problem],
+            'notes' => [],
         ], $report['extensions']);
         $this->assertSame([], ExtensionLog::$built);
     }
@@ -186,7 +216,7 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
         $report = $this->report(1, TripController::class);
 
         $this->assertStringEndsWith("  extensions ... FAILED\n  ⇂ ".rtrim($problem, '.')."\n", $output);
-        $this->assertSame(['registered' => [], 'problems' => [$problem]], $report['extensions']);
+        $this->assertSame(['registered' => [], 'problems' => [$problem], 'notes' => []], $report['extensions']);
     }
 
     #[Test]
@@ -224,6 +254,7 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
                 ['name' => 'noting', 'class' => NotingExtension::class, 'origin' => 'runtime', 'disabled' => false, 'runtime' => [NotingExtension::class]],
             ],
             'problems' => ['The [rest.extensions] option must be a map of extension names to class names or false.'],
+            'notes' => [],
         ], $report['extensions']);
         $this->assertSame([NotingExtension::class], ExtensionLog::$built);
     }
@@ -244,6 +275,7 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
                 InvalidExtensionException::invalidName('Bad')->getMessage(),
                 InvalidExtensionException::missingName(BothKindsExtension::class)->getMessage(),
             ],
+            'notes' => [],
         ], $report['extensions']);
         $this->assertSame([NotingExtension::class, CountingExtension::class], ExtensionLog::$built);
     }
@@ -271,6 +303,7 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
                 ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false, 'runtime' => []],
             ],
             'problems' => [$problem],
+            'notes' => [],
         ], $report['extensions']);
         $this->assertArrayHasKey('routes', $report);
         $this->assertSame([CountingExtension::class, CountingExtension::class], ExtensionLog::$built);
