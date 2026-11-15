@@ -45,7 +45,7 @@ final readonly class ExtensionCheck
             }
 
             try {
-                $factory->make($entry->class);
+                $factory->make($entry->class, $entry->name);
             } catch (Throwable $exception) {
                 $report = $report->withProblem(self::problem($entry, $exception));
             }

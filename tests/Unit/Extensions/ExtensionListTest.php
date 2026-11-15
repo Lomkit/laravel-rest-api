@@ -19,10 +19,12 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotAnExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RenamableExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RivalAclExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingNameExtension;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class ExtensionListTest extends TestCase
 {
@@ -71,6 +73,39 @@ final class ExtensionListTest extends TestCase
             new ExtensionEntry(CountingExtension::class, ExtensionOrigin::Runtime, false, 'counting'),
         ], $named->entries);
         $this->assertSame([], $named->refused);
+    }
+
+    #[Test]
+    public function it_counts_a_class_written_two_ways_once(): void
+    {
+        $named = ExtensionList::of(['\\'.NotingExtension::class, strtolower(NotingExtension::class)], [], [NotingExtension::class])->named();
+
+        $this->assertEquals([new ExtensionEntry(NotingExtension::class, ExtensionOrigin::Config, false, 'noting')], $named->entries);
+        $this->assertSame([], $named->refused);
+    }
+
+    #[Test]
+    public function it_disables_a_class_written_another_way_but_not_its_subclass(): void
+    {
+        $list = ExtensionList::of([AppAclExtension::class], [strtolower(AclExtension::class), '\\'.CountingExtension::class, '\\'.self::MISSING], [AclExtension::class, CountingExtension::class]);
+
+        $this->assertEquals([
+            new ExtensionEntry(AclExtension::class, ExtensionOrigin::Runtime, true),
+            new ExtensionEntry(CountingExtension::class, ExtensionOrigin::Runtime, true),
+            new ExtensionEntry(AppAclExtension::class, ExtensionOrigin::Config, false, 'acl'),
+        ], $list->named()->entries);
+        $this->assertSame([self::MISSING], $list->idle);
+    }
+
+    #[Test]
+    public function it_refuses_a_class_whose_name_throws_beside_the_others(): void
+    {
+        $named = ExtensionList::of([ThrowingNameExtension::class, CountingExtension::class], [], [])->named();
+
+        $this->assertEquals([new ExtensionEntry(CountingExtension::class, ExtensionOrigin::Config, false, 'counting')], $named->entries);
+        $this->assertCount(1, $named->refused);
+        $this->assertTrue($named->refused[0]->concerns(ThrowingNameExtension::class));
+        $this->assertInstanceOf(RuntimeException::class, $named->refused[0]->getPrevious());
     }
 
     #[Test]

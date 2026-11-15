@@ -77,7 +77,7 @@ final class ExtensionRegistry
         $built = [];
 
         foreach ($this->classes as $name => $class) {
-            $built[$name] = $factory->make($class);
+            $built[$name] = $factory->make($class, $name);
         }
 
         return $built;

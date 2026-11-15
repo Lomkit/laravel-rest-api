@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Extensions;
 
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
+use Throwable;
 
 /** @internal */
 final readonly class ExtensionName
@@ -14,7 +15,11 @@ final readonly class ExtensionName
     /** @param class-string<Extension> $class */
     public static function of(string $class): string
     {
-        $name = $class::name();
+        try {
+            $name = $class::name();
+        } catch (Throwable $exception) {
+            throw InvalidExtensionException::unreadableName($class, $exception);
+        }
 
         if (! self::matches($name)) {
             throw InvalidExtensionException::invalidName($class, $name);

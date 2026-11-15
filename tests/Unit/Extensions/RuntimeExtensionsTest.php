@@ -13,11 +13,13 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotAnExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotesResources;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RenamableExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingNameExtension;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class RuntimeExtensionsTest extends TestCase
 {
@@ -64,6 +66,37 @@ final class RuntimeExtensionsTest extends TestCase
         $extensions->registerAll([NotingExtension::class, NotingExtension::class]);
 
         $this->assertSame([NotingExtension::class], $extensions->all());
+    }
+
+    #[Test]
+    public function it_stores_the_declared_name_of_a_class_written_another_way(): void
+    {
+        $extensions = new RuntimeExtensions;
+
+        $extensions->register('\\'.NotingExtension::class);
+        $extensions->registerAll([strtolower(NotingExtension::class), NotingExtension::class]);
+
+        $this->assertSame([NotingExtension::class], $extensions->all());
+    }
+
+    #[Test]
+    public function it_refuses_a_class_whose_name_throws_and_names_the_class(): void
+    {
+        $extensions = new RuntimeExtensions;
+
+        try {
+            $extensions->register(ThrowingNameExtension::class);
+            $this->fail('The class was accepted.');
+        } catch (InvalidExtensionException $exception) {
+            $this->assertSame(
+                'The extension '.ThrowingNameExtension::class.' gives no name: '.ThrowingNameExtension::class.'::name() throws [RuntimeException] '.ThrowingNameExtension::MESSAGE
+                ." Return a name such as 'acl' from ".ThrowingNameExtension::class.'::name(), without reading anything that can fail.',
+                $exception->getMessage(),
+            );
+            $this->assertInstanceOf(RuntimeException::class, $exception->getPrevious());
+            $this->assertTrue($exception->concerns(ThrowingNameExtension::class));
+            $this->assertSame([], $extensions->all());
+        }
     }
 
     #[Test]

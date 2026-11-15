@@ -68,7 +68,7 @@ final readonly class ExtensionList
 
         foreach ($values as $value) {
             if (is_string($value)) {
-                $classes[] = $value;
+                $classes[] = ExtensionClass::canonical($value);
             } else {
                 $refused[] = is_object($value) ? InvalidExtensionException::instanceGiven($source, $value::class) : InvalidExtensionException::notAClassName($source, get_debug_type($value));
             }

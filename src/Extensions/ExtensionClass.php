@@ -11,6 +11,8 @@ final readonly class ExtensionClass
     /** @return class-string<Extension> */
     public static function ensureValid(string $class): string
     {
+        $class = ltrim($class, '\\');
+
         if (! class_exists($class)) {
             throw InvalidExtensionException::notAClass($class);
         }
@@ -19,10 +21,17 @@ final readonly class ExtensionClass
             throw InvalidExtensionException::notAnExtension($class);
         }
 
-        if (! (new ReflectionClass($class))->isInstantiable()) {
-            throw InvalidExtensionException::notInstantiable($class);
+        $reflection = new ReflectionClass($class);
+
+        if (! $reflection->isInstantiable()) {
+            throw InvalidExtensionException::notInstantiable($reflection->getName());
         }
 
-        return $class;
+        return $reflection->getName();
+    }
+
+    public static function canonical(string $class): string
+    {
+        return class_exists($class) ? (new ReflectionClass($class))->getName() : ltrim($class, '\\');
     }
 }

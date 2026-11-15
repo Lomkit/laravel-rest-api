@@ -21,6 +21,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\FailingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\KindlessExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\RivalAclExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\ThrowingNameExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UnresolvableExtension;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
@@ -208,7 +209,7 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
         $this->assertSame([
             InvalidExtensionException::notInstantiable(AbstractNotingExtension::class)->getMessage(),
             InvalidExtensionException::notAClass(self::MISSING)->getMessage(),
-            InvalidExtensionException::noKind(KindlessExtension::class)->getMessage(),
+            InvalidExtensionException::noKind(KindlessExtension::class, 'kindless')->getMessage(),
         ], array_slice($problems, 0, 3));
         $this->assertIsString($problems[3]);
         $this->assertStringStartsWith('The [unresolvable] extension '.UnresolvableExtension::class.' cannot be built: Unresolvable dependency resolving', $problems[3]);
@@ -280,6 +281,26 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
             'notes' => [],
         ], $report['extensions']);
         $this->assertSame([NotingExtension::class], ExtensionLog::$built);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', [ThrowingNameExtension::class, NotingExtension::class])]
+    public function it_reports_a_class_whose_name_throws_and_lists_the_others(): void
+    {
+        $this->expose('trips', TripController::class);
+
+        $output = $this->check(1, TripController::class);
+        $report = $this->report(1, TripController::class);
+
+        $this->assertIsArray($report['extensions']);
+        $this->assertSame([self::row('noting', NotingExtension::class, 'config')], $report['extensions']['registered']);
+        $problems = $report['extensions']['problems'];
+        $this->assertIsArray($problems);
+        $this->assertCount(1, $problems);
+        $this->assertIsString($problems[0]);
+        $this->assertStringStartsWith('The extension '.ThrowingNameExtension::class.' gives no name: ', $problems[0]);
+        $this->assertStringEndsWith("  noting ... Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension, config\n", $output);
+        $this->assertSame([NotingExtension::class, NotingExtension::class], ExtensionLog::$built);
     }
 
     #[Test]

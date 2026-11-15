@@ -117,6 +117,23 @@ final class ExtensionFactoryTest extends TestCase
     }
 
     #[Test]
+    public function it_gives_the_name_when_it_is_known(): void
+    {
+        $container = new Container;
+        $container->bind(NotingExtension::class, fn (): CountingExtension => new CountingExtension);
+
+        try {
+            (new ExtensionFactory($container))->make(NotingExtension::class, 'noting');
+            $this->fail('The binding was accepted.');
+        } catch (InvalidExtensionException $exception) {
+            $this->assertSame(
+                'The container builds ['.CountingExtension::class.'] for the [noting] extension '.NotingExtension::class.': bind '.NotingExtension::class.' to itself or to a class that extends it.',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    #[Test]
     public function it_lets_an_unresolvable_constructor_fail(): void
     {
         $this->expectException(BindingResolutionException::class);

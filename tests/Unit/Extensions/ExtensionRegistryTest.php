@@ -5,8 +5,11 @@ namespace Lomkit\Rest\Tests\Unit\Extensions;
 use Illuminate\Container\Container as IlluminateContainer;
 use Illuminate\Contracts\Container\Container;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
+use Lomkit\Rest\Extensions\ExtensionFactory;
 use Lomkit\Rest\Extensions\ExtensionList;
 use Lomkit\Rest\Extensions\ExtensionRegistry;
+use Lomkit\Rest\Extensions\Kinds\ExtensionKind;
+use Lomkit\Rest\Extensions\NamedExtensions;
 use Lomkit\Rest\Tests\Fixtures\Catalog\CategoryResource;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 use Lomkit\Rest\Tests\Fixtures\Extensions\AclExtension;
@@ -21,6 +24,8 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ProductsOnlyExtension;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -45,6 +50,20 @@ final class ExtensionRegistryTest extends TestCase
         $this->assertSame([], $registry->applicable(ProductResource::class, NotesResources::class));
         $this->assertSame([], ExtensionLog::$built);
         $this->assertSame([], ExtensionLog::$asked);
+    }
+
+    #[Test]
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function it_loads_no_list_class_without_extensions(): void
+    {
+        $container = $this->createMock(Container::class);
+        $container->expects($this->never())->method($this->anything());
+
+        $this->assertSame([], ExtensionRegistry::of([], [], [], $container)->all());
+        $this->assertFalse(class_exists(ExtensionList::class, false));
+        $this->assertFalse(class_exists(NamedExtensions::class, false));
+        $this->assertFalse(class_exists(ExtensionFactory::class, false));
     }
 
     #[Test]
@@ -148,9 +167,15 @@ final class ExtensionRegistryTest extends TestCase
     {
         $registry = ExtensionRegistry::of([], [], [NotingExtension::class, KindlessExtension::class], new IlluminateContainer);
 
-        $this->expectExceptionObject(InvalidExtensionException::noKind(KindlessExtension::class));
-
-        $registry->applicable(ProductResource::class, NotesResources::class);
+        try {
+            $registry->applicable(ProductResource::class, NotesResources::class);
+            $this->fail('The kindless extension was built.');
+        } catch (InvalidExtensionException $exception) {
+            $this->assertSame(
+                'The [kindless] extension '.KindlessExtension::class.' implements no extension kind. Implement at least one interface that extends '.ExtensionKind::class.'.',
+                $exception->getMessage(),
+            );
+        }
     }
 
     #[Test]

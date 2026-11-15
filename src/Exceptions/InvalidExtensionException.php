@@ -7,6 +7,7 @@ use LogicException;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\ExtensionName;
 use Lomkit\Rest\Extensions\Kinds\ExtensionKind;
+use Throwable;
 
 final class InvalidExtensionException extends LogicException
 {
@@ -17,6 +18,13 @@ final class InvalidExtensionException extends LogicException
         $length = ExtensionName::MAX_LENGTH;
 
         return self::about($class, "{$class}::name() returns [{$name}], which is not a valid extension name. A name has 1 to {$length} lowercase letters or digits, starts with a letter and joins words with single underscores, such as [acl] or [row_lock]: it prefixes the keys that the extension adds, and two underscores separate it from them. Return a name such as 'acl' from {$class}::name().");
+    }
+
+    public static function unreadableName(string $class, Throwable $previous): self
+    {
+        $type = $previous::class;
+
+        return self::about($class, "The extension {$class} gives no name: {$class}::name() throws [{$type}] {$previous->getMessage()} Return a name such as 'acl' from {$class}::name(), without reading anything that can fail.", $previous);
     }
 
     /** @param non-empty-list<string> $classes */
@@ -62,14 +70,14 @@ final class InvalidExtensionException extends LogicException
         return self::about($class, "The extension {$class} is abstract or cannot be instantiated. Register a concrete class.");
     }
 
-    public static function noKind(string $class): self
+    public static function noKind(string $class, ?string $name = null): self
     {
-        return self::about($class, "The extension {$class} implements no extension kind. Implement at least one interface that extends ".ExtensionKind::class.'.');
+        return self::about($class, self::subject($class, $name).' implements no extension kind. Implement at least one interface that extends '.ExtensionKind::class.'.');
     }
 
-    public static function foreignBinding(string $class, string $bound): self
+    public static function foreignBinding(string $class, string $bound, ?string $name = null): self
     {
-        return self::about($class, "The container builds [{$bound}] for the extension {$class}: bind {$class} to itself or to a class that extends it.");
+        return self::about($class, "The container builds [{$bound}] for ".lcfirst(self::subject($class, $name)).": bind {$class} to itself or to a class that extends it.");
     }
 
     public function concerns(string $class): bool
@@ -77,9 +85,14 @@ final class InvalidExtensionException extends LogicException
         return $this->extension === $class;
     }
 
-    private static function about(string $class, string $message): self
+    private static function subject(string $class, ?string $name): string
     {
-        $exception = new self($message);
+        return $name === null ? "The extension {$class}" : "The [{$name}] extension {$class}";
+    }
+
+    private static function about(string $class, string $message, ?Throwable $previous = null): self
+    {
+        $exception = new self($message, 0, $previous);
         $exception->extension = $class;
 
         return $exception;
