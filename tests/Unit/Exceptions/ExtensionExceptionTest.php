@@ -17,107 +17,29 @@ use Lomkit\Rest\Fields\FieldReduction;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstAugmentation;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SecondAugmentation;
+use Lomkit\Rest\Tests\Fixtures\Extensions\AbstractNotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BadlyNamedExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\KindlessExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\NotAnExtension;
+use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class ExtensionExceptionTest extends TestCase
 {
-    #[Test]
-    public function it_gives_the_engine_extension_exception_the_shared_base_only(): void
-    {
-        $exception = InvalidEngineExtensionException::repeatedIndexAttribute('first', 'App\Rest\FirstExtension', 'App\Rest\PostResource', 'owner_id');
-
-        $this->assertSame([true, false, false, true, false], [
-            is_a($exception, ExtensionException::class),
-            is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidEngineExtensionException::class, 'notAClass'),
-            $exception->concerns('App\Rest\FirstExtension'),
-            $exception->concerns('first'),
-        ]);
-    }
+    private const string MISSING = 'Lomkit\Rest\Tests\Fixtures\Extensions\MissingExtension';
 
     #[Test]
-    public function it_gives_the_authorization_extension_exception_the_shared_base_only(): void
+    #[DataProvider('kindExceptions')]
+    public function it_gives_a_kind_extension_exception_the_shared_base_only(ExtensionException $exception, string $class, string $name): void
     {
-        $exception = InvalidAuthorizationExtensionException::changedRows('acl', 'App\Rest\AclExtension', 'App\Rest\PostResource', 'view');
-
-        $this->assertSame([true, false, false, true, false], [
+        $this->assertSame([true, false, true, false], [
             is_a($exception, ExtensionException::class),
             is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidAuthorizationExtensionException::class, 'notAClass'),
-            $exception->concerns('App\Rest\AclExtension'),
-            $exception->concerns('acl'),
-        ]);
-    }
-
-    #[Test]
-    public function it_gives_the_field_extension_exception_the_shared_base_only(): void
-    {
-        $exception = InvalidFieldExtensionException::unknownField('mask', 'App\Rest\MaskExtension', 'App\Rest\PostResource', FieldReduction::Hide, 'salary');
-
-        $this->assertSame([true, false, false, true, false], [
-            is_a($exception, ExtensionException::class),
-            is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidFieldExtensionException::class, 'notAClass'),
-            $exception->concerns('App\Rest\MaskExtension'),
-            $exception->concerns('mask'),
-        ]);
-    }
-
-    #[Test]
-    public function it_gives_the_route_extension_exception_the_shared_base_only(): void
-    {
-        $exception = InvalidRouteExtensionException::invalidMiddleware('plans', 'App\Rest\PlanRoutes', 'App\Rest\PostResource', Endpoint::Search, 'an empty string');
-
-        $this->assertSame([true, false, false, true, false], [
-            is_a($exception, ExtensionException::class),
-            is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidRouteExtensionException::class, 'notAClass'),
-            $exception->concerns('App\Rest\PlanRoutes'),
-            $exception->concerns('plans'),
-        ]);
-    }
-
-    #[Test]
-    public function it_gives_the_write_extension_exception_the_shared_base_only(): void
-    {
-        $exception = InvalidWriteExtensionException::reservedRefusalStatus('quota', 'App\Rest\WriteQuota', 'App\Rest\PostResource', Endpoint::Mutate, 409);
-
-        $this->assertSame([true, false, false, true, false], [
-            is_a($exception, ExtensionException::class),
-            is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidWriteExtensionException::class, 'notAClass'),
-            $exception->concerns('App\Rest\WriteQuota'),
-            $exception->concerns('quota'),
-        ]);
-    }
-
-    #[Test]
-    public function it_gives_the_meta_extension_exception_the_shared_base_only(): void
-    {
-        $exception = InvalidMetaExtensionException::instructionsName('instructions', 'App\Rest\PlanMeta', 'App\Rest\PostResource');
-
-        $this->assertSame([true, false, false, true, false], [
-            is_a($exception, ExtensionException::class),
-            is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidMetaExtensionException::class, 'missingName'),
-            $exception->concerns('App\Rest\PlanMeta'),
-            $exception->concerns('instructions'),
-        ]);
-    }
-
-    #[Test]
-    public function it_gives_the_documentation_extension_exception_the_shared_base_only(): void
-    {
-        $exception = InvalidDocumentationExtensionException::statusOutOfRange('quota', 'App\Rest\QuotaDocs', 'api.posts.mutate', 302);
-
-        $this->assertSame([true, false, false, true, false], [
-            is_a($exception, ExtensionException::class),
-            is_a($exception, InvalidExtensionException::class),
-            method_exists(InvalidDocumentationExtensionException::class, 'missingName'),
-            $exception->concerns('App\Rest\QuotaDocs'),
-            $exception->concerns('quota'),
+            $exception->concerns($class),
+            $exception->concerns($name),
         ]);
     }
 
@@ -145,5 +67,41 @@ class ExtensionExceptionTest extends TestCase
             $query->concerns('first'),
             $query->concerns(SecondAugmentation::class),
         ]);
+
+        $refusals = [
+            NotingExtension::class => [
+                InvalidExtensionException::lateRegistration(NotingExtension::class),
+                InvalidExtensionException::foreignBinding(NotingExtension::class, CountingExtension::class),
+                InvalidExtensionException::instanceGiven('Rest::registerExtensions()', NotingExtension::class),
+            ],
+            self::MISSING => [InvalidExtensionException::notAClass(self::MISSING)],
+            NotAnExtension::class => [InvalidExtensionException::notAnExtension(NotAnExtension::class)],
+            KindlessExtension::class => [InvalidExtensionException::noKind(KindlessExtension::class), InvalidExtensionException::invalidName(KindlessExtension::class, 'Acl')],
+            AbstractNotingExtension::class => [InvalidExtensionException::notInstantiable(AbstractNotingExtension::class)],
+        ];
+
+        foreach ($refusals as $class => $exceptions) {
+            foreach ($exceptions as $exception) {
+                $this->assertTrue($exception->concerns($class));
+                $this->assertFalse($exception->concerns(CountingExtension::class));
+                $this->assertStringContainsString($class, $exception->getMessage());
+            }
+        }
+
+        $this->assertFalse(InvalidExtensionException::sharedName('acl', [NotingExtension::class, CountingExtension::class])->concerns(NotingExtension::class));
+    }
+
+    /** @return array<string, array{ExtensionException, string, string}> */
+    public static function kindExceptions(): array
+    {
+        return [
+            'engine' => [InvalidEngineExtensionException::repeatedIndexAttribute('first', 'App\Rest\FirstExtension', 'App\Rest\PostResource', 'owner_id'), 'App\Rest\FirstExtension', 'first'],
+            'authorization' => [InvalidAuthorizationExtensionException::changedRows('acl', 'App\Rest\AclExtension', 'App\Rest\PostResource', 'view'), 'App\Rest\AclExtension', 'acl'],
+            'field' => [InvalidFieldExtensionException::unknownField('mask', 'App\Rest\MaskExtension', 'App\Rest\PostResource', FieldReduction::Hide, 'salary'), 'App\Rest\MaskExtension', 'mask'],
+            'route' => [InvalidRouteExtensionException::invalidMiddleware('plans', 'App\Rest\PlanRoutes', 'App\Rest\PostResource', Endpoint::Search, 'an empty string'), 'App\Rest\PlanRoutes', 'plans'],
+            'write' => [InvalidWriteExtensionException::reservedRefusalStatus('quota', 'App\Rest\WriteQuota', 'App\Rest\PostResource', Endpoint::Mutate, 409), 'App\Rest\WriteQuota', 'quota'],
+            'meta' => [InvalidMetaExtensionException::instructionsName('instructions', 'App\Rest\PlanMeta', 'App\Rest\PostResource'), 'App\Rest\PlanMeta', 'instructions'],
+            'documentation' => [InvalidDocumentationExtensionException::statusOutOfRange('quota', 'App\Rest\QuotaDocs', 'api.posts.mutate', 302), 'App\Rest\QuotaDocs', 'quota'],
+        ];
     }
 }
