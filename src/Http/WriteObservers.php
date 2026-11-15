@@ -19,23 +19,13 @@ use Throwable;
 /** @internal */
 final readonly class WriteObservers
 {
-    /** @param non-empty-array<string, Extension&ObservesWrites> $extensions */
     private function __construct(
         private Resource $resource,
-        private array $extensions,
     ) {}
 
     public static function of(Resource $resource): ?self
     {
-        $extensions = $resource->context()->extensions()->applicable($resource::class, ObservesWrites::class);
-
-        if ($extensions === []) {
-            return null;
-        }
-
-        ksort($extensions);
-
-        return new self($resource, $extensions);
+        return $resource->context()->extensions()->hasKind(ObservesWrites::class) ? new self($resource) : null;
     }
 
     /**
@@ -45,36 +35,56 @@ final readonly class WriteObservers
     public function mutated(WriteTransaction $transaction, array $operations, array $written): void
     {
         $entries = array_map(fn (OperationEntry $entry): array => $entry->toArray(), $operations);
+        $calls = [];
 
-        $this->schedule($transaction, fn (?Authenticatable $user): WriteObservationContext => new WriteObservationContext(
-            $this->resource, Endpoint::Mutate, $user, operations: $entries, written: self::copied($written),
-        ));
+        foreach ($this->byResource($written) as [$resource, $rows]) {
+            $calls = [...$calls, ...$this->calls($resource, fn (?Authenticatable $user): WriteObservationContext => new WriteObservationContext(
+                $resource, Endpoint::Mutate, $user, operations: $entries, written: self::copied($rows),
+            ))];
+        }
+
+        $this->schedule($transaction, $calls);
     }
 
     /** @param Collection<int, Model> $rows */
     public function rowsWritten(WriteTransaction $transaction, Endpoint $endpoint, Collection $rows): void
     {
-        $this->schedule($transaction, fn (?Authenticatable $user): WriteObservationContext => new WriteObservationContext(
+        $this->schedule($transaction, $this->calls($this->resource, fn (?Authenticatable $user): WriteObservationContext => new WriteObservationContext(
             $this->resource, $endpoint, $user, rows: RowCopies::of($rows),
-        ));
+        )));
     }
 
     /** @param list<Model>|null $rows */
     public function operated(WriteTransaction $transaction, Action $action, ActionFields $fields, int $impacted, ?array $rows): void
     {
-        $this->schedule($transaction, fn (?Authenticatable $user): WriteObservationContext => new WriteObservationContext(
+        $this->schedule($transaction, $this->calls($this->resource, fn (?Authenticatable $user): WriteObservationContext => new WriteObservationContext(
             $this->resource, Endpoint::Operate, $user, rows: $rows === null ? null : RowCopies::of($rows), action: clone $action, fields: $fields, impacted: $impacted,
-        ));
+        )));
     }
 
-    /** @param Closure(?Authenticatable): WriteObservationContext $context */
-    private function schedule(WriteTransaction $transaction, Closure $context): void
+    /**
+     * @param  Closure(?Authenticatable): WriteObservationContext  $context
+     * @return list<array{Extension&ObservesWrites, WriteObservationContext}>
+     */
+    private function calls(Resource $resource, Closure $context): array
     {
+        $extensions = $this->resource->context()->extensions()->applicable($resource::class, ObservesWrites::class);
+        ksort($extensions);
         $user = $this->resource->context()->actingUser()->user;
         $calls = [];
 
-        foreach ($this->extensions as $extension) {
+        foreach ($extensions as $extension) {
             $calls[] = [$extension, $context($user)];
+        }
+
+        return $calls;
+    }
+
+    /** @param list<array{Extension&ObservesWrites, WriteObservationContext}> $calls */
+    private function schedule(WriteTransaction $transaction, array $calls): void
+    {
+        if ($calls === []) {
+            return;
         }
 
         $transaction->afterCommit(static function () use ($calls): void {
@@ -86,6 +96,23 @@ final readonly class WriteObservers
                 }
             }
         });
+    }
+
+    /**
+     * @param  list<WrittenRow>  $written
+     * @return list<array{Resource, list<WrittenRow>}>
+     */
+    private function byResource(array $written): array
+    {
+        $resources = [$this->resource::class => $this->resource];
+        $rows = [$this->resource::class => []];
+
+        foreach ($written as $row) {
+            $resources[$row->resource::class] ??= $row->resource;
+            $rows[$row->resource::class][] = $row;
+        }
+
+        return array_map(fn (Resource $resource, string $class): array => [$resource, $rows[$class] ?? []], $resources, array_keys($resources));
     }
 
     /**

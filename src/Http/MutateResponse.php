@@ -46,13 +46,13 @@ final readonly class MutateResponse implements Responsable
     private static function write(MutateRequest $request, Resource $resource, ConfirmationGate $gate, ?WriteGuard $guard, OperationLog $log): OperationLog
     {
         $nodes = $request->payload();
-        $checks = new WriteChecks($request->rows());
+        $checks = new WriteChecks($request->rows(), $guard?->reach());
 
         $checks->authorize($resource, $nodes);
         $request->versions()->verify();
         $checks->syncs->verify();
         $gate->pass(fn (): ?Confirmation => $resource->mutateConfirmation(new PendingMutation($nodes, $request->rows())));
-        $guard?->mutation($nodes, $request->rows()->loaded());
+        $guard?->mutation($checks);
 
         $resource->mutatingAll($nodes);
 

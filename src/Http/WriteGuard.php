@@ -7,64 +7,67 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Extensions\Contexts\WriteGuardContext;
-use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\GuardsWrites;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\MutationNode;
+use Lomkit\Rest\Mutations\ReachedResources;
+use Lomkit\Rest\Mutations\WriteChecks;
 
 /** @internal */
 final readonly class WriteGuard
 {
-    /** @param non-empty-array<string, Extension&GuardsWrites> $extensions */
     private function __construct(
         private Resource $resource,
-        private array $extensions,
     ) {}
 
     public static function of(Resource $resource): ?self
     {
-        $extensions = $resource->context()->extensions()->applicable($resource::class, GuardsWrites::class);
-
-        if ($extensions === []) {
-            return null;
-        }
-
-        ksort($extensions);
-
-        return new self($resource, $extensions);
+        return $resource->context()->extensions()->hasKind(GuardsWrites::class) ? new self($resource) : null;
     }
 
-    /**
-     * @param  list<MutationNode>  $entries
-     * @param  list<Model>  $rows
-     */
-    public function mutation(array $entries, array $rows): void
+    public function reach(): ReachedResources
     {
-        $this->check(Endpoint::Mutate, $entries, $rows);
+        return new ReachedResources;
+    }
+
+    public function mutation(WriteChecks $checks): void
+    {
+        foreach ($checks->reached?->all() ?? [] as [$resource, $entries, $rows]) {
+            $this->check($resource, Endpoint::Mutate, $entries, $rows);
+        }
     }
 
     /** @param Collection<int, Model> $rows */
     public function rows(Endpoint $endpoint, Collection $rows): void
     {
-        $this->check($endpoint, null, array_values($rows->all()));
+        $this->check($this->resource, $endpoint, null, array_values($rows->all()));
     }
 
     /** @param list<Model>|null $rows */
     public function action(Action $action, ActionFields $fields, ?array $rows): void
     {
-        $this->check(Endpoint::Operate, null, $rows, $action, $fields);
+        $this->check($this->resource, Endpoint::Operate, null, $rows, $action, $fields);
     }
 
     /**
      * @param  list<MutationNode>|null  $entries
      * @param  list<Model>|null  $rows
      */
-    private function check(Endpoint $endpoint, ?array $entries, ?array $rows, ?Action $action = null, ?ActionFields $fields = null): void
+    private function check(Resource $resource, Endpoint $endpoint, ?array $entries, ?array $rows, ?Action $action = null, ?ActionFields $fields = null): void
     {
-        $user = $this->resource->context()->actingUser()->user;
+        $context = $this->resource->context();
+        $extensions = $context->extensions()->applicable($resource::class, GuardsWrites::class);
 
-        foreach ($this->extensions as $name => $extension) {
-            $extension->guardWrite(new WriteGuardContext($name, $extension::class, $this->resource, $endpoint, $user, $entries, $rows === null ? null : RowCopies::of($rows), $action === null ? null : clone $action, $fields));
+        if ($extensions === []) {
+            return;
+        }
+
+        ksort($extensions);
+        $user = $context->actingUser()->user;
+
+        foreach ($extensions as $name => $extension) {
+            $copies = $rows === null ? null : RowCopies::of($rows);
+            $extension->guardWrite(new WriteGuardContext($name, $extension::class, $resource, $endpoint, $user, $entries, $copies, $action === null ? null : clone $action, $fields));
         }
     }
 }
