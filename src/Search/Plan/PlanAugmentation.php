@@ -20,7 +20,8 @@ final readonly class PlanAugmentation
         }
 
         $resource = $plan->resource;
-        $extensions = $resource->context()->extensions()->applicable($resource::class, AugmentsQueries::class);
+        $registry = $resource->context()->extensions();
+        $extensions = $registry->applicable($resource::class, AugmentsQueries::class);
 
         if ($extensions === []) {
             return;
@@ -32,7 +33,7 @@ final readonly class PlanAugmentation
         $gates = self::gates($plan);
 
         foreach ($extensions as $name => $extension) {
-            $extension->augment(new AugmentationContext($name, $extension::class, $resource, $user, $gates, $additions));
+            $extension->augment(new AugmentationContext($name, $registry->classOf($name), $resource, $user, $gates, $additions));
         }
 
         $additions->seal();

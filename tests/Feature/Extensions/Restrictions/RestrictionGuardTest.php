@@ -122,6 +122,22 @@ class RestrictionGuardTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_names_the_registered_class_of_an_extension_bound_to_a_subclass(): void
+    {
+        $this->app?->bind(ClausedExtension::class, static fn (): ClausedExtension => new class extends ClausedExtension {});
+        ClausedExtension::$clause = static fn (Builder $query): Builder => $query->orderBy('id');
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->postJson('/restricted-authors/search', ['search' => []]);
+            $this->fail('The order was accepted.');
+        } catch (InvalidQueryExtensionException $exception) {
+            $this->assertSame(InvalidQueryExtensionException::restrictionClause('claused', ClausedExtension::class, RestrictedAuthorResource::class, QueryPart::Order)->getMessage(), $exception->getMessage());
+            $this->assertTrue($exception->concerns(ClausedExtension::class));
+        }
+    }
+
+    #[Test]
     public function it_names_the_extension_and_the_resource_and_advises_another_table(): void
     {
         $exception = InvalidQueryExtensionException::restrictionClause('claused', ClausedExtension::class, RestrictedAuthorResource::class, QueryPart::Join);

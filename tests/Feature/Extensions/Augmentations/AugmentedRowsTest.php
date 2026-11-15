@@ -465,6 +465,23 @@ class AugmentedRowsTest extends PackageTestCase
         $this->assertSame([true, false], [$exception->concerns(FirstAugmentation::class), $exception->concerns('first')]);
     }
 
+    #[Test]
+    public function it_names_the_registered_class_of_an_extension_bound_to_a_subclass(): void
+    {
+        config(['rest.extensions' => [FirstAugmentation::class]]);
+        $this->app?->bind(FirstAugmentation::class, static fn (): FirstAugmentation => new class extends FirstAugmentation {});
+        FirstAugmentation::$augment = static fn (AugmentationContext $context): mixed => $context->column('*');
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->postJson('/path-authors/search', ['search' => []]);
+            $this->fail('The column was accepted.');
+        } catch (InvalidQueryExtensionException $exception) {
+            $this->assertSame(InvalidQueryExtensionException::invalidColumn('first', FirstAugmentation::class, '*', PathAuthorResource::class)->getMessage(), $exception->getMessage());
+            $this->assertTrue($exception->concerns(FirstAugmentation::class));
+        }
+    }
+
     /** @param Closure(EloquentBuilder<Author>): mixed $change */
     #[Test]
     #[DataProvider('invalidColumns')]

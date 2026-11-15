@@ -12,7 +12,8 @@ final readonly class ExtensionInstructions
     /** @return array<string, array{string, list<Instruction|class-string<Instruction>>}> */
     public static function of(Resource $resource): array
     {
-        $extensions = $resource->context()->extensions()->applicable($resource::class, DeclaresInstructions::class);
+        $registry = $resource->context()->extensions();
+        $extensions = $registry->applicable($resource::class, DeclaresInstructions::class);
 
         if ($extensions === []) {
             return [];
@@ -22,7 +23,7 @@ final readonly class ExtensionInstructions
         $declared = [];
 
         foreach ($extensions as $name => $extension) {
-            $declared[$name] = [$extension::class, $extension->instructions($context)];
+            $declared[$name] = [$registry->classOf($name), $extension->instructions($context)];
         }
 
         return $declared;

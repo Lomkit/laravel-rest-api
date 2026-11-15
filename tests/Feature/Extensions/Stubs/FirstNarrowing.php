@@ -7,7 +7,7 @@ use Lomkit\Rest\Extensions\Contexts\LimitsContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\NarrowsLimits;
 
-final class FirstNarrowing extends Extension implements NarrowsLimits
+class FirstNarrowing extends Extension implements NarrowsLimits
 {
     /** @var (Closure(LimitsContext): mixed)|null */
     public static ?Closure $narrow = null;

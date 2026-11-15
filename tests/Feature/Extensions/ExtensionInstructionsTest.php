@@ -183,6 +183,21 @@ class ExtensionInstructionsTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_names_the_registered_class_of_an_extension_bound_to_a_subclass(): void
+    {
+        config(['rest.extensions' => [TwinInstructionsExtension::class]]);
+        $this->app?->bind(TwinInstructionsExtension::class, static fn (): TwinInstructionsExtension => new class extends TwinInstructionsExtension {});
+
+        try {
+            $this->context()->resource(AuthorResource::class)->definition()->instructions();
+            $this->fail('The taken key was accepted.');
+        } catch (InvalidQueryExtensionException $exception) {
+            $this->assertSame(InvalidQueryExtensionException::instructionTaken('arc.with-archived', AuthorResource::class, [['arc', TwinInstructionsExtension::class], ['arc', TwinInstructionsExtension::class]])->getMessage(), $exception->getMessage());
+            $this->assertTrue($exception->concerns(TwinInstructionsExtension::class));
+        }
+    }
+
+    #[Test]
     public function it_finds_an_extension_instruction_by_its_public_key(): void
     {
         $definition = $this->context()->resource(AuthorResource::class)->definition();

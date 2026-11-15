@@ -153,6 +153,7 @@ final class InvalidTextSearchException extends LogicException
     /** @param list<array{string, string}> $extensions */
     public static function restrictedByExtensions(string $resource, array $extensions): self
     {
+        usort($extensions, static fn (array $first, array $second): int => strcmp($first[0], $second[0]));
         $named = array_map(static fn (array $extension): string => "the [{$extension[0]}] extension {$extension[1]}", $extensions);
 
         $restricting = ucfirst(Arr::join($named, ', ', ' and '));

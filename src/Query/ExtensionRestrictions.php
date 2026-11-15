@@ -38,7 +38,7 @@ final readonly class ExtensionRestrictions
             $query->where(function (Builder $group) use ($name, $extension, $user): void {
                 $extension->restrict(new RestrictionContext($group, $this->resource, $user));
 
-                RestrictionGuard::ensureOnlyWheres($group, $name, $extension::class, $this->resource);
+                RestrictionGuard::ensureOnlyWheres($group, $name, $this->resource->context()->extensions()->classOf($name), $this->resource);
             });
         }
     }
@@ -46,6 +46,8 @@ final readonly class ExtensionRestrictions
     /** @return non-empty-list<array{string, string}> */
     public function extensions(): array
     {
-        return array_map(static fn (string $name, Extension $extension): array => [$name, $extension::class], array_keys($this->extensions), array_values($this->extensions));
+        $registry = $this->resource->context()->extensions();
+
+        return array_map(static fn (string $name): array => [$name, $registry->classOf($name)], array_keys($this->extensions));
     }
 }

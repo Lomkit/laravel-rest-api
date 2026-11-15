@@ -126,6 +126,20 @@ class LimitNarrowingTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_names_the_registered_class_of_an_extension_bound_to_a_subclass(): void
+    {
+        $this->app?->bind(FirstNarrowing::class, static fn (): FirstNarrowing => new class extends FirstNarrowing {});
+
+        try {
+            $this->limits(BookResource::class, static fn (LimitsContext $context): mixed => $context->allowSizes([5]));
+            $this->fail('The narrowing was accepted.');
+        } catch (InvalidQueryExtensionException $exception) {
+            $this->assertSame(InvalidQueryExtensionException::noPageSize(BookResource::class, [['first', FirstNarrowing::class]])->getMessage(), $exception->getMessage());
+            $this->assertTrue($exception->concerns(FirstNarrowing::class));
+        }
+    }
+
+    #[Test]
     public function it_refuses_a_max_total_below_every_size(): void
     {
         $this->expectExceptionObject(InvalidQueryExtensionException::noPageSize(BookResource::class, [['first', FirstNarrowing::class]]));

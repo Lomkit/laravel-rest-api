@@ -9,7 +9,7 @@ use Lomkit\Rest\Extensions\Contexts\RestrictionContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 
-final class ClausedExtension extends Extension implements RestrictsQueries
+class ClausedExtension extends Extension implements RestrictsQueries
 {
     /** @var (Closure(Builder<Model>): mixed)|null */
     public static ?Closure $clause = null;

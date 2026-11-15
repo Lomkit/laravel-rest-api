@@ -57,11 +57,23 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_points_the_disabled_extensions_to_the_registered_class_of_a_bound_subclass(): void
+    {
+        config(['rest.extensions' => [HiddenRowsExtension::class]]);
+        $this->app?->bind(HiddenRowsExtension::class, static fn (): HiddenRowsExtension => new class extends HiddenRowsExtension {});
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, [['hidden', HiddenRowsExtension::class]]));
+
+        $this->search('vouchers', ['text' => ['value' => 'report']]);
+    }
+
+    #[Test]
     public function it_names_the_extensions_and_how_to_leave_the_resource_out(): void
     {
         $this->assertSame(
             'The [half_a] extension '.FirstHalfExtension::class.' and the [half_b] extension '.SecondHalfExtension::class.' restrict the rows of '.VoucherResource::class.', whose text search runs on a search engine that these restrictions do not reach. Leave '.VoucherResource::class.' out of them with appliesTo(), add one of these classes to the [rest.disabled_extensions] config, or remove the text search of '.VoucherResource::class.'.',
-            InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, [['half_a', FirstHalfExtension::class], ['half_b', SecondHalfExtension::class]])->getMessage(),
+            InvalidTextSearchException::restrictedByExtensions(VoucherResource::class, [['half_b', SecondHalfExtension::class], ['half_a', FirstHalfExtension::class]])->getMessage(),
         );
     }
 

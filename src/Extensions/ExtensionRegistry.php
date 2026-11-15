@@ -44,6 +44,12 @@ final class ExtensionRegistry
         return $this->built ??= $this->build();
     }
 
+    /** @return class-string<Extension> */
+    public function classOf(string $name): string
+    {
+        return $this->classes[$name];
+    }
+
     /**
      * @template TKind of ExtensionKind
      *

@@ -14,7 +14,7 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Tag;
 
-final class HiddenRowsExtension extends Extension implements RestrictsQueries
+class HiddenRowsExtension extends Extension implements RestrictsQueries
 {
     private const array COLUMNS = [
         Author::class => 'last_name',
