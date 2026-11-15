@@ -48,11 +48,12 @@ final readonly class EngineRestrictions
         }
 
         $user = $this->resource->context()->actingUser()->user;
+        $registry = $this->resource->context()->extensions();
         $lists = $query->profile() instanceof MatchesStringLists;
         $columns = $query->profile() instanceof ComparesColumns;
 
         foreach ($this->engine as $name => $extension) {
-            $restriction = new EngineRestriction($query, new RestrictingExtension($name, $extension::class), $this->resource::class);
+            $restriction = new EngineRestriction($query, new RestrictingExtension($name, $registry->classOf($name)), $this->resource::class);
 
             $extension->restrictEngine(new EngineRestrictionContext($restriction, $this->resource, $user, $lists, $inSql?->restricts($name) === true, $columns));
         }
@@ -64,7 +65,7 @@ final readonly class EngineRestrictions
         $name = array_key_first($unreached);
 
         if ($name !== null) {
-            throw InvalidTextSearchException::unrestrictedEngine($this->resource::class, $name, $unreached[$name]::class, $query->profile()->name());
+            throw InvalidTextSearchException::unrestrictedEngine($this->resource::class, $name, $this->resource->context()->extensions()->classOf($name), $query->profile()->name());
         }
     }
 }

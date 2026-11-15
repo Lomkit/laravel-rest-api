@@ -62,6 +62,19 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_points_the_disabled_extensions_to_the_registered_class_of_a_bound_subclass(): void
+    {
+        $this->useEngine(new ForeignEngine);
+        config(['rest.extensions' => [ForeignEngineProfiles::class, HiddenRowsExtension::class]]);
+        $this->app?->bind(HiddenRowsExtension::class, static fn (): HiddenRowsExtension => new class extends HiddenRowsExtension {});
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, ForeignEngine::class));
+
+        $this->search('vouchers', ['text' => ['value' => 'report']]);
+    }
+
+    #[Test]
     public function it_refuses_an_action_on_the_results_of_such_a_search(): void
     {
         $this->useEngine(new ForeignEngine);

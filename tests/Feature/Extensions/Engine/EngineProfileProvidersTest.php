@@ -101,6 +101,19 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_names_the_registered_class_of_a_provider_bound_to_a_subclass(): void
+    {
+        $this->useEngine(new ForeignEngine);
+        config(['rest.extensions' => [EarlyForeignEngineProfiles::class, RivalEngineProfiles::class]]);
+        $this->app?->bind(RivalEngineProfiles::class, static fn (): RivalEngineProfiles => new class extends RivalEngineProfiles {});
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidEngineExtensionException::conflictingProfiles(ForeignEngine::class, VoucherResource::class, 'a', EarlyForeignEngineProfiles::class, 'b', RivalEngineProfiles::class));
+
+        $this->search('vouchers', ['text' => ['value' => 'report']]);
+    }
+
+    #[Test]
     public function it_names_both_extensions_the_engine_and_the_ways_out(): void
     {
         $exception = InvalidEngineExtensionException::conflictingProfiles(ForeignEngine::class, VoucherResource::class, 'a', ForeignEngineProfiles::class, 'b', RivalEngineProfiles::class);

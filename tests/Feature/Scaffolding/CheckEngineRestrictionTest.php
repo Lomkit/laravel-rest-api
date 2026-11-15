@@ -67,6 +67,17 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     }
 
     #[Test]
+    public function it_reports_the_registered_class_of_a_restriction_bound_to_a_subclass(): void
+    {
+        $this->useForeignEngine([RedRowsExtension::class]);
+        $this->app?->bind(RedRowsExtension::class, static fn (): RedRowsExtension => new class extends RedRowsExtension {});
+
+        [$exitCode, $rows] = $this->rows();
+
+        $this->assertSame([1, [InvalidTextSearchException::unrestrictedEngine(CheckedVoucherResource::class, 'red', RedRowsExtension::class, ForeignEngine::class)->getMessage()]], [$exitCode, $rows['problems']]);
+    }
+
+    #[Test]
     public function it_reports_a_restriction_that_an_engine_search_cannot_apply(): void
     {
         $this->useForeignEngine([RedRowsExtension::class]);

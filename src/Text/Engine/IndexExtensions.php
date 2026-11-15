@@ -40,7 +40,8 @@ final class IndexExtensions
             return null;
         }
 
-        $providers = $this->context->extensions()->applicable($this->resource, ProvidesEngineProfiles::class);
+        $registry = $this->context->extensions();
+        $providers = $registry->applicable($this->resource, ProvidesEngineProfiles::class);
 
         if ($providers === []) {
             return null;
@@ -53,7 +54,7 @@ final class IndexExtensions
             $profile = $provider->engineProfile($context);
 
             if ($profile !== null) {
-                $claims[$name] = [$provider::class, $profile];
+                $claims[$name] = [$registry->classOf($name), $profile];
             }
         }
 
@@ -67,7 +68,8 @@ final class IndexExtensions
             return [];
         }
 
-        $extensions = $this->context->extensions()->applicable($this->resource, DeclaresIndexAttributes::class);
+        $registry = $this->context->extensions();
+        $extensions = $registry->applicable($this->resource, DeclaresIndexAttributes::class);
 
         if ($extensions === []) {
             return [];
@@ -77,7 +79,7 @@ final class IndexExtensions
         $declarations = [];
 
         foreach ($extensions as $name => $extension) {
-            $declarations[$name] = [$extension::class, $extension->indexAttributes($context)];
+            $declarations[$name] = [$registry->classOf($name), $extension->indexAttributes($context)];
         }
 
         return $declarations;

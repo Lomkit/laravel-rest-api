@@ -34,7 +34,7 @@ final class EngineReach
             return null;
         }
 
-        $class = $unreached[$name]::class;
+        $class = $resource->context()->extensions()->classOf($name);
 
         try {
             $profile = $this->profile($resource);

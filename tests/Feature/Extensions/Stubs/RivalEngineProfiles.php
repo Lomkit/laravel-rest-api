@@ -9,7 +9,7 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignProfile;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 
-final class RivalEngineProfiles extends Extension implements ProvidesEngineProfiles
+class RivalEngineProfiles extends Extension implements ProvidesEngineProfiles
 {
     #[\Override]
     public static function name(): string

@@ -6,7 +6,7 @@ use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
 
-final class OwnerEngineRestriction extends Extension implements RestrictsEngineQueries
+class OwnerEngineRestriction extends Extension implements RestrictsEngineQueries
 {
     #[\Override]
     public static function name(): string

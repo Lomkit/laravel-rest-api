@@ -342,6 +342,22 @@ class EngineRestrictionTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_names_the_registered_class_of_an_engine_restriction_bound_to_a_subclass(): void
+    {
+        config(['rest.extensions' => [OwnerEngineRestriction::class]]);
+        $this->app?->bind(OwnerEngineRestriction::class, static fn (): OwnerEngineRestriction => new class extends OwnerEngineRestriction {});
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->search('vouchers', ['text' => ['value' => 'report']]);
+            $this->fail('The undeclared attribute was accepted.');
+        } catch (InvalidEngineExtensionException $exception) {
+            $this->assertSame(InvalidEngineExtensionException::refusedEngineCondition('owner', OwnerEngineRestriction::class, VoucherResource::class, InvalidEngineQueryException::undeclaredAttribute('owner'))->getMessage(), $exception->getMessage());
+            $this->assertTrue($exception->concerns(OwnerEngineRestriction::class));
+        }
+    }
+
+    #[Test]
     public function it_names_the_extension_in_a_refused_condition(): void
     {
         $exception = InvalidEngineExtensionException::refusedEngineCondition('owner', OwnerEngineRestriction::class, VoucherResource::class, InvalidEngineQueryException::undeclaredAttribute('owner'));
