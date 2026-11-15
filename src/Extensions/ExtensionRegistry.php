@@ -63,6 +63,8 @@ final class ExtensionRegistry
     }
 
     /**
+     * @internal
+     *
      * @template TKind of ExtensionKind
      *
      * @param  class-string<TKind>  $kind
@@ -83,7 +85,11 @@ final class ExtensionRegistry
         return $extensions;
     }
 
-    /** @param class-string<Resource> $resource */
+    /**
+     * @internal
+     *
+     * @param  class-string<Resource>  $resource
+     */
     public function appliesTo(string $name, string $resource): bool
     {
         $extension = $this->all()[$name] ?? null;
