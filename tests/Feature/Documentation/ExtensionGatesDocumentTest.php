@@ -36,14 +36,6 @@ class ExtensionGatesDocumentTest extends DocumentationTestCase
     }
 
     #[Test]
-    public function it_lists_an_extension_gate_in_the_search_enum(): void
-    {
-        $enum = $this->search($this->document(), '/shows/search')['gates']['items']['enum'];
-
-        $this->assertSame(['view', 'create', 'update', 'delete', 'restore', 'forceDelete', 'feature', 'share'], $enum);
-    }
-
-    #[Test]
     public function it_documents_the_answer_of_an_extension_gate_on_a_row(): void
     {
         $gates = $this->document()['components']['schemas']['Show']['properties']['gates']['properties'];

@@ -49,7 +49,7 @@ class NarrowedLimitsDocumentTest extends DocumentationTestCase
     {
         $schemas = $this->document()['components']['schemas'];
 
-        $this->assertArrayHasKey('total_capped', $schemas['ShowPaginated']['properties']);
+        $this->assertSame('{"type":"boolean","description":"True when more rows match than the resource counts: total is then a lower bound"}', json_encode($schemas['ShowPaginated']['properties']['total_capped']));
         $this->assertNotContains('total_capped', $schemas['ShowPaginated']['required']);
     }
 }
