@@ -2,11 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Restrictions;
 
-use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GuestlessExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\HiddenRowsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\NoSqlDatabaseProfiles;
@@ -50,10 +50,11 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     #[Test]
     public function it_refuses_a_text_search_through_an_engine_that_applies_no_sql_restriction(): void
     {
-        config(['rest.extensions' => ['hidden' => HiddenRowsExtension::class]]);
+        $this->useEngine(new ForeignEngine);
+        config(['rest.extensions' => ['foreign' => ForeignEngineProfiles::class, 'hidden' => HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, CollectionEngine::class));
+        $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, ForeignEngine::class));
 
         $this->search('vouchers', ['text' => ['value' => 'report']]);
     }
@@ -61,10 +62,11 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     #[Test]
     public function it_refuses_an_action_on_the_results_of_such_a_search(): void
     {
-        config(['rest.extensions' => [HiddenRowsExtension::class]]);
+        $this->useEngine(new ForeignEngine);
+        config(['rest.extensions' => ['foreign' => ForeignEngineProfiles::class, 'hidden' => HiddenRowsExtension::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, CollectionEngine::class));
+        $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, ForeignEngine::class));
 
         $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
     }
@@ -73,8 +75,8 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     public function it_names_the_extension_the_engine_and_the_ways_out(): void
     {
         $this->assertSame(
-            'The [hidden] extension '.HiddenRowsExtension::class.' restricts the rows of '.VoucherResource::class.' in SQL, but the text search of '.VoucherResource::class.' runs on ['.CollectionEngine::class.'], which does not apply SQL restrictions. Implement Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries in '.HiddenRowsExtension::class.' to restrict the engine search too, index the model with the Scout database driver, or leave '.VoucherResource::class.' out of the extension with appliesTo().',
-            InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, CollectionEngine::class)->getMessage(),
+            'The [hidden] extension '.HiddenRowsExtension::class.' restricts the rows of '.VoucherResource::class.' in SQL, but the text search of '.VoucherResource::class.' runs on ['.ForeignEngine::class.'], which does not apply SQL restrictions. Implement Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries in '.HiddenRowsExtension::class.' to restrict the engine search too, index the model with the Scout database or collection driver, or leave '.VoucherResource::class.' out of the extension with appliesTo().',
+            InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'hidden', HiddenRowsExtension::class, ForeignEngine::class)->getMessage(),
         );
     }
 
@@ -125,10 +127,11 @@ class RestrictedEngineSearchTest extends EngineSearchTestCase
     #[DataProvider('orders')]
     public function it_names_the_first_unreached_extension_by_name_in_any_order(array $extensions): void
     {
-        config(['rest.extensions' => $extensions]);
+        $this->useEngine(new ForeignEngine);
+        config(['rest.extensions' => [...$extensions, 'foreign' => ForeignEngineProfiles::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'a', RedRowsExtension::class, CollectionEngine::class));
+        $this->expectExceptionObject(InvalidTextSearchException::unrestrictedEngine(VoucherResource::class, 'a', RedRowsExtension::class, ForeignEngine::class));
 
         $this->search('vouchers', ['text' => ['value' => 'report']]);
     }

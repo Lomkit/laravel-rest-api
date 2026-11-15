@@ -82,14 +82,14 @@ class EngineProfilesTest extends EngineTestCase
     public static function sqlAndLists(): array
     {
         return [
-            'collection' => [CollectionEngine::class, false, false],
+            'collection' => [CollectionEngine::class, true, false],
             'database' => [DatabaseEngine::class, true, false],
             'meilisearch' => [FakeMeilisearchEngine::class, false, true],
             'typesense' => [FakeTypesenseEngine::class, false, true],
             'algolia 3' => [FakeAlgolia3Engine::class, false, true],
             'algolia 4' => [FakeAlgolia4Engine::class, false, true],
             'turbopuffer' => [FakeTurbopufferEngine::class, false, false],
-            'null' => [NullEngine::class, false, false],
+            'null' => [NullEngine::class, true, false],
         ];
     }
 

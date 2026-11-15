@@ -245,7 +245,7 @@ class StringListAttributesTest extends EngineSearchTestCase
         $this->useEngine($typesense);
         $engine = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
 
-        $collection->assertOk()->assertExactJson($this->page([], 0));
+        $collection->assertOk()->assertExactJson($this->page([5, 1, 3], 3));
         $database->assertOk()->assertExactJson($this->page([5, 1, 3], 3));
         $engine->assertOk();
         $this->assertSame(['readers:=[`ann`]'], $typesense->filters);

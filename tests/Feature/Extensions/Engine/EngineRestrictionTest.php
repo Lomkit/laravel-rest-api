@@ -305,7 +305,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
             'the database engine without SQL restriction' => ['database', ['guestless' => GuestlessEngineExtension::class], [false, false]],
             'the database engine with the SQL restriction of another extension' => ['database', ['guestless' => GuestlessEngineExtension::class, 'red' => RedRowsExtension::class], [false, false]],
             'the database engine with its own SQL restriction' => ['database', ['aware' => SqlAwareEngineExtension::class], [false, true]],
-            'the collection engine with its own SQL restriction' => [null, ['aware' => SqlAwareEngineExtension::class], [false, false]],
+            'the collection engine with its own SQL restriction' => [null, ['aware' => SqlAwareEngineExtension::class], [false, true]],
         ];
     }
 

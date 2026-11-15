@@ -23,7 +23,7 @@ final readonly class RestrictedPage
         $tracked = new TrackedRows($this->rows);
         $result = $this->profile->restrictedPage($builder, $model, $perPage, $page, $tracked);
 
-        if (! $tracked->applied()) {
+        if (! $tracked->applied() && ($result->keys !== [] || $result->total !== 0)) {
             throw InvalidEngineQueryException::unappliedRowRestriction($this->resource, $this->profile::class, $this->profile->name());
         }
 
