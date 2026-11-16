@@ -151,7 +151,8 @@ final class DetailsResponseType
             'window' => (new IntegerType)->nullable(true)->setDescription('page times limit must not exceed it; null when unbounded'),
             'lists' => (new BooleanType)->setDescription('Present and true when the resource serves its lists through its search engine: a search without text follows this grammar too, and @relevance needs a text'),
             'max_list_sorts' => (new IntegerType)->nullable(true)->setDescription('With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort'),
-        ], ['lists', 'max_list_sorts'], 'The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only, no scopes, @relevance alone and desc only; null on the database');
+            'groups' => (new BooleanType)->setDescription('Present and true when the engine accepts filters joined with or and nested groups of filters, within the depth and count limits of the filters'),
+        ], ['lists', 'max_list_sorts', 'groups'], 'The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only unless groups is true, no scopes, @relevance alone and desc only; null on the database');
 
         return $engine->nullable(true);
     }

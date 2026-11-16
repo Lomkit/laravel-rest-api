@@ -106,9 +106,14 @@ class ScrambleEngineTextTest extends ScrambleTestCase
         $this->assertSame(['$ref' => '#/components/schemas/ListedVoucherEngineInstruction'], $search['instructions']['items']);
         $this->assertSame($search['filters'], $schemas['ListedVoucherActionSearch']['properties']['filters']);
         $this->assertFalse($schemas['ListedVoucherActionSearch']['properties']['scopes']);
-        $this->assertSame(['number', 'price', 'active', 'code'], array_keys((array) $schemas['ListedVoucherEngineFilter']['discriminator']['mapping']));
+        $this->assertSame([['$ref' => '#/components/schemas/ListedVoucherEngineFieldFilter'], ['$ref' => '#/components/schemas/ListedVoucherEngineFilterGroup']], $schemas['ListedVoucherEngineFilter']['oneOf']);
         $this->assertSame(
-            '{"type":"object","properties":{"field":{"type":"string","const":"code"},"operator":{"type":"string","enum":["in","not in"]},"value":{"type":"array","items":{"type":"string","maxLength":1000},"minItems":1,"maxItems":100},"type":{"type":"string","enum":["and"]}},"required":["field","operator","value"],"additionalProperties":false}',
+            '{"type":"object","description":"Filters that count as one condition. Groups nest at most 1 deep.","properties":{"nested":{"type":"array","items":{"$ref":"#/components/schemas/ListedVoucherEngineFilter"},"maxItems":100},"type":{"type":"string","enum":["and","or"]}},"required":["nested"],"additionalProperties":false,"title":"ListedVoucherEngineFilterGroup"}',
+            json_encode($schemas['ListedVoucherEngineFilterGroup'], JSON_UNESCAPED_SLASHES),
+        );
+        $this->assertSame(['number', 'price', 'active', 'code'], array_keys((array) $schemas['ListedVoucherEngineFieldFilter']['discriminator']['mapping']));
+        $this->assertSame(
+            '{"type":"object","properties":{"field":{"type":"string","const":"code"},"operator":{"type":"string","enum":["in","not in"]},"value":{"type":"array","items":{"type":"string","maxLength":1000},"minItems":1,"maxItems":100},"type":{"type":"string","enum":["and","or"]}},"required":["field","operator","value"],"additionalProperties":false}',
             json_encode($schemas['ListedVoucherEngineFilterCode']['oneOf'][1]),
         );
         $this->assertSame(['price', 'number', 'code', '@relevance'], $schemas['ListedVoucherEngineSort']['properties']['field']['enum']);

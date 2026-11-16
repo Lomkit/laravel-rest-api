@@ -6,11 +6,12 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\CollectionEngine;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class CollectionProfile implements AppliesRowRestrictions, ComparesColumns, ListsWithoutText
+final readonly class CollectionProfile implements AppliesRowRestrictions, ComparesColumns, FiltersWithGroups, ListsWithoutText
 {
     use PlainLiterals;
 
@@ -50,6 +51,12 @@ final readonly class CollectionProfile implements AppliesRowRestrictions, Compar
     public function listSortKeys(): int
     {
         return PHP_INT_MAX;
+    }
+
+    #[\Override]
+    public function filterGroups(Builder $builder, FilterTree $tree): void
+    {
+        CollectionCallback::group($builder, $tree);
     }
 
     #[\Override]

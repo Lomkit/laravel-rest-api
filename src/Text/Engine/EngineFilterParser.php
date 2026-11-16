@@ -15,7 +15,7 @@ final readonly class EngineFilterParser
     public function __construct(private EngineGrammar $engine) {}
 
     /** @param list<Cursor> $entries */
-    public function group(array $entries, ValidationContext $context): FilterGroup
+    public function group(array $entries, ValidationContext $context, string $boolean = 'and'): FilterGroup
     {
         $filters = [];
 
@@ -27,10 +27,10 @@ final readonly class EngineFilterParser
             }
         }
 
-        return new FilterGroup($filters);
+        return new FilterGroup($filters, $boolean);
     }
 
-    private function filter(Cursor $entry, ValidationContext $context): ?EngineFilterCondition
+    private function filter(Cursor $entry, ValidationContext $context): EngineFilterCondition|FilterGroup|null
     {
         if (! $context->reader->object($entry)) {
             return null;
@@ -46,12 +46,23 @@ final readonly class EngineFilterParser
         $value = $entry->at('value');
         $name = is_string($field->value) ? $field->value : null;
         $declared = $name === null ? null : ($this->engine->filters[$name] ?? null);
+        $groups = $this->engine->groups;
 
         $rules->gate($entry, $field, $operator);
-        $rules->add($field->path, ['required', 'string', $context->grammar->allowed($context->vocabulary->of($context->resource, $context->grammar, 'filters', fn (): array => array_keys($this->engine->filters)))]);
-        $rules->add($nested->path, ['prohibited']);
-        $rules->addWhenPresent($type, [Rule::in(['and'])]);
+        $rules->add($field->path, [$groups ? 'required_without:'.$nested->path : 'required', 'string', $context->grammar->allowed($context->vocabulary->of($context->resource, $context->grammar, 'filters', fn (): array => array_keys($this->engine->filters)))]);
+        $children = match (true) {
+            ! $groups => $this->prohibited($nested, $context),
+            $context->reader->filled($nested) => $this->nested($entry, $context),
+            default => null,
+        };
+        $rules->addWhenPresent($type, [Rule::in($groups ? ['and', 'or'] : ['and'])]);
         $rules->add($operator->path, self::operatorRules($declared));
+
+        $boolean = (new FilterParser)->boolean($type, $context);
+
+        if ($children !== null) {
+            return $this->group($children, $context->deeper(), $boolean);
+        }
 
         $resolved = $declared === null ? null : self::operator($operator->value ?? FilterOperator::Equal->value, $declared);
 
@@ -63,13 +74,37 @@ final readonly class EngineFilterParser
 
         $this->values($value, $declared, $resolved, $context);
 
-        if ($context->reader->filled($nested) || ($type->present && $type->value !== 'and')) {
+        if ($context->reader->filled($nested) || ($type->present && ! $groups && $type->value !== 'and')) {
             $rules->partial();
 
             return null;
         }
 
-        return new EngineFilterCondition($name, $declared, $resolved, $value->value);
+        return new EngineFilterCondition($name, $declared, $resolved, $value->value, $boolean);
+    }
+
+    /** @return list<Cursor>|null */
+    private function nested(Cursor $entry, ValidationContext $context): ?array
+    {
+        $nested = $entry->at('nested');
+
+        if ($context->filterDepth >= $context->limits->depths->filters) {
+            return $this->prohibited($nested, $context);
+        }
+
+        $context->rules->addWhenPresent($nested, [
+            'prohibits:'.$entry->at('field')->path.','.$entry->at('operator')->path.','.$entry->at('value')->path,
+            'array',
+        ]);
+
+        return $context->reader->entries($nested, $context->limits->sizes->filters, true);
+    }
+
+    private function prohibited(Cursor $nested, ValidationContext $context): null
+    {
+        $context->rules->add($nested->path, ['prohibited']);
+
+        return null;
     }
 
     private function values(Cursor $value, IndexAttribute $declared, FilterOperator $operator, ValidationContext $context): void

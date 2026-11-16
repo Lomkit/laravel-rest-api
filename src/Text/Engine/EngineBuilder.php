@@ -4,9 +4,12 @@ namespace Lomkit\Rest\Text\Engine;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
+use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
+use Lomkit\Rest\Text\Engine\Profiles\FiltersWithGroups;
 use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\TextQuery;
 
@@ -23,7 +26,7 @@ final readonly class EngineBuilder
      * @param  array<string, mixed>  $options
      * @return Builder<Model>
      */
-    public function build(IndexConditions $conditions, array $orders, array $options): Builder
+    public function build(IndexConditions $conditions, array $orders, array $options, ?FilterTree $tree = null): Builder
     {
         $builder = new Builder($this->index->model->model(), $this->query(), null, $this->index->model->softDeletes());
 
@@ -45,6 +48,10 @@ final readonly class EngineBuilder
 
         if ($builder::class !== Builder::class || $builder->callback !== null || $builder->queryCallback !== null) {
             throw InvalidTextSearchException::unexpectedBuilder($builder::class);
+        }
+
+        if ($tree !== null) {
+            $this->groups()->filterGroups($builder, $tree);
         }
 
         return $builder;
@@ -69,6 +76,13 @@ final readonly class EngineBuilder
         }
 
         return [[$key, SortDirection::Asc]];
+    }
+
+    private function groups(): FiltersWithGroups
+    {
+        $profile = $this->index->profile;
+
+        return $profile instanceof FiltersWithGroups ? $profile : throw InvalidEngineQueryException::ungroupedFilters($this->index->searchedClass(), $profile->name());
     }
 
     private function lists(): ListsWithoutText

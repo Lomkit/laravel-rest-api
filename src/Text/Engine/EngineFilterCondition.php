@@ -12,11 +12,12 @@ final readonly class EngineFilterCondition implements FilterNode
         public IndexAttribute $attribute,
         public FilterOperator $operator,
         public mixed $value,
+        private string $boolean = 'and',
     ) {}
 
     #[\Override]
     public function boolean(): string
     {
-        return 'and';
+        return $this->boolean;
     }
 }

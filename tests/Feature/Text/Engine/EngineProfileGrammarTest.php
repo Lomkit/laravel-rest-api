@@ -5,9 +5,11 @@ namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeAlgolia4Engine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTurbopufferEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnboundedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnboundedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnsortedVoucherController;
@@ -46,10 +48,40 @@ class EngineProfileGrammarTest extends EngineSearchTestCase
         $response->assertUnprocessable()->assertJsonPath('errors', $errors);
     }
 
+    /**
+     * @param  array<string, mixed>  $search
+     * @param  array<string, list<string>>  $errors
+     */
+    #[Test]
+    #[DataProvider('groupsOnAlgolia')]
+    public function it_refuses_or_and_nested_filters_on_an_engine_without_groups(array $search, array $errors): void
+    {
+        $this->useEngine(new FakeAlgolia4Engine(new SettingsClient(fn (): array => [])));
+
+        $response = $this->search('unsorted-vouchers', ['text' => ['value' => 'report'], ...$search]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', $errors);
+    }
+
+    /** @return array<string, array{array<string, mixed>, array<string, list<string>>}> */
+    public static function groupsOnAlgolia(): array
+    {
+        return [
+            'an or filter' => [['filters' => [['field' => 'number', 'value' => 3], ['field' => 'number', 'value' => 1, 'type' => 'or']]], [
+                'search.filters.1.type' => ['The selected search.filters.1.type is invalid.'],
+            ]],
+            'a group of filters' => [['filters' => [['nested' => [['field' => 'number', 'value' => 3]]]]], [
+                'search.filters.0.field' => ['The search.filters.0.field field is required.'],
+                'search.filters.0.nested' => ['The search.filters.0.nested field is prohibited.'],
+            ]],
+        ];
+    }
+
     /** @return array<string, array{class-string, string, array<string, mixed>, array<string, list<string>>}> */
     public static function searchesBeyondTheEngine(): array
     {
         return [
+
             'a page larger than Typesense returns' => [FakeTypesenseEngine::class, 'unsorted-vouchers', ['limit' => 300], [
                 'search.limit' => ['The search.limit field must not be greater than 250.'],
             ]],

@@ -6,10 +6,12 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\TurbopufferEngine;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
+use Lomkit\Rest\Text\Engine\Groups\TurbopufferFilter;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class TurbopufferProfile implements FiltersStringLists, ListsWithoutText, MatchesStringLists
+final readonly class TurbopufferProfile implements FiltersStringLists, FiltersWithGroups, ListsWithoutText, MatchesStringLists
 {
     use PlainLiterals;
 
@@ -49,6 +51,15 @@ final readonly class TurbopufferProfile implements FiltersStringLists, ListsWith
     public function listSortKeys(): int
     {
         return 1;
+    }
+
+    #[\Override]
+    public function filterGroups(Builder $builder, FilterTree $tree): void
+    {
+        $client = TurbopufferFilter::of($tree, ScoutModel::tryFrom($builder->model)?->keyName() ?? 'id');
+        $native = $builder->options['filters'] ?? null;
+
+        $builder->options([...$builder->options, 'filters' => $native === null ? $client : ['And', [$native, $client]]]);
     }
 
     #[\Override]

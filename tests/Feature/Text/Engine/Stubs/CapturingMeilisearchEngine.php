@@ -14,7 +14,8 @@ class CapturingMeilisearchEngine extends PagedMeilisearchEngine
     #[\Override]
     public function paginate(Builder $builder, $perPage, $page)
     {
-        $this->requests[] = ['q' => (string) $builder->query, 'filter' => (string) $this->filters($builder), 'sort' => array_values($this->buildSortFromOrderByClauses($builder))];
+        $filter = array_merge($builder->options, array_filter(['filter' => $this->filters($builder)]))['filter'] ?? '';
+        $this->requests[] = ['q' => (string) $builder->query, 'filter' => is_string($filter) ? $filter : '', 'sort' => array_values($this->buildSortFromOrderByClauses($builder))];
 
         return parent::paginate($builder, $perPage, $page);
     }

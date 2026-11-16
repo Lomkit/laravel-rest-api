@@ -6,11 +6,12 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\NullEngine;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class NullProfile implements AppliesRowRestrictions, ListsWithoutText
+final readonly class NullProfile implements AppliesRowRestrictions, FiltersWithGroups, ListsWithoutText
 {
     use PlainLiterals;
 
@@ -51,6 +52,9 @@ final readonly class NullProfile implements AppliesRowRestrictions, ListsWithout
     {
         return PHP_INT_MAX;
     }
+
+    #[\Override]
+    public function filterGroups(Builder $builder, FilterTree $tree): void {}
 
     #[\Override]
     public function exactTotal(): bool

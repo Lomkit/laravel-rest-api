@@ -12,6 +12,11 @@ final class InvalidEngineQueryException extends LogicException
         return new self("The engine query of {$resource} compares the list attribute [{$attribute}], but the engine [{$engine}] compares single values only. Compare lists of strings on an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists, and check \$context->matchesStringLists before comparing the list.");
     }
 
+    public static function ungroupedFilters(string $resource, string $engine): self
+    {
+        return new self("The search of {$resource} groups its filters with or or nested, but the profile of the engine [{$engine}] does not implement Lomkit\\Rest\\Text\\Engine\\Profiles\\FiltersWithGroups. Combine the filters with and only, or implement FiltersWithGroups in the profile of the engine.");
+    }
+
     public static function undeclaredAttribute(string $attribute): self
     {
         return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.");

@@ -162,7 +162,7 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
         $response->assertOk();
 
         $this->assertSame(
-            '{"filters":'.$grammar.',"max_sorts":null,"max_page_size":null,"window":null}',
+            '{"filters":'.$grammar.',"max_sorts":null,"max_page_size":null,"window":null,"groups":true}',
             json_encode(json_decode((string) $response->getContent(), flags: JSON_THROW_ON_ERROR)->data->text->engine),
         );
     }
