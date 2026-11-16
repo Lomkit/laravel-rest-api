@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ContainsVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -27,6 +28,15 @@ class EngineDetailsTest extends EngineTestCase
 
         config(['scout.driver' => 'collection']);
         Route::prefix('api')->group(fn () => Rest::resource('contains-vouchers', ContainsVoucherController::class)->register());
+        Route::prefix('api')->group(fn () => Rest::resource('listed-vouchers', ListedVoucherController::class)->register());
+    }
+
+    #[Test]
+    public function it_describes_a_resource_that_serves_its_lists_through_the_engine(): void
+    {
+        $grammar = str_replace('"sorts":["price","number"],"max_sorts":null,"max_page_size":null,"window":null}', '"sorts":["price","number","code"],"max_sorts":null,"max_page_size":null,"window":null,"lists":true,"max_list_sorts":null}', self::GRAMMAR);
+
+        $this->assertTextDetails('{"fields":[],"modes":["words"],"relevance":true,"trashed":false,"max_length":255,"engine":'.$grammar.'}', $this->getJson('/api/listed-vouchers?with=text'));
     }
 
     #[Test]

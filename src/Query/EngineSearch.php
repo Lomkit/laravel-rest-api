@@ -4,13 +4,13 @@ namespace Lomkit\Rest\Query;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\ConflictingListsException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Pagination\EnginePaginator;
 use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
 use Lomkit\Rest\Search\Plan\KeyedRows;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
@@ -43,11 +43,13 @@ final readonly class EngineSearch implements SearchSource
         $page = $this->search->page ?? 1;
         $result = $query->page($perPage, $page);
         $plan = $this->plan($result->keys, ColumnSelection::of($this->resource), true);
+        $rows = $result->keys === [] ? new Collection : $this->load($plan);
+        $dropped = count(array_flip($result->keys)) - $rows->count();
 
-        return new PlannedPage($plan, new LengthAwarePaginator($result->keys === [] ? new Collection : $this->load($plan), $result->total, $perPage, $page, [
+        return new PlannedPage($plan, new EnginePaginator($rows, $result->total, $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
             'pageName' => 'page',
-        ]));
+        ], max(0, $dropped), $result->capped));
     }
 
     public function query(): EngineQuery

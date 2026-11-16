@@ -11,6 +11,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
 use Lomkit\Rest\Query\Clauses\TextClause;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Search\Run\PayloadSearchRequest;
 use Lomkit\Rest\Text\Engine\EngineGrammar;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Validation\Search\SearchGrammar;
@@ -25,6 +26,7 @@ final readonly class ResolvedText
         public ?TextCapabilities $capabilities = null,
         private ?QueryTextSearch $strategy = null,
         private ?EngineTextSearch $engine = null,
+        private bool $listing = false,
     ) {}
 
     public static function of(Resource $resource, RestRequest $request): self
@@ -36,8 +38,10 @@ final readonly class ResolvedText
         }
 
         $query = TextQuery::fromSearch($request->input('search.text'));
+        $terms = $query?->hasTerms() ? $query : null;
+        $streams = $request instanceof PayloadSearchRequest && $request->streams();
 
-        return self::resolve($resource, $strategy, $query?->hasTerms() ? $query : null);
+        return self::resolve($resource, $strategy, $terms, $terms === null && ! $streams && $strategy instanceof ListingTextSearch && $strategy->servingLists());
     }
 
     /** @internal */
@@ -51,12 +55,17 @@ final readonly class ResolvedText
 
         $narrowed = $engine->without($narrowing->unfilterableNames(), $narrowing->unsortableNames());
 
-        return new self($this->backend, $this->query, $this->target, $this->capabilities->withEngine($narrowed), $this->strategy, $this->engine);
+        return new self($this->backend, $this->query, $this->target, $this->capabilities->withEngine($narrowed), $this->strategy, $this->engine, $this->listing);
     }
 
     public function usesEngine(): bool
     {
-        return $this->engine !== null && $this->query !== null;
+        return $this->engine !== null && ($this->query !== null || $this->listing);
+    }
+
+    public function lists(): bool
+    {
+        return $this->listing;
     }
 
     public function engineGrammar(): ?EngineGrammar
@@ -77,7 +86,7 @@ final readonly class ResolvedText
             return new SqlSearchGrammar($this->capabilities, $this->ranks());
         }
 
-        return $engine->searchGrammar($this->capabilities);
+        return $engine->searchGrammar($this->capabilities, $this->listing);
     }
 
     public function sqlGrammar(): SearchGrammar
@@ -105,11 +114,15 @@ final readonly class ResolvedText
 
     public function engineQuery(?Trashed $trashed = null): ?EngineQuery
     {
-        if ($this->engine === null || $this->target === null || $this->query === null) {
+        if ($this->engine === null || $this->target === null) {
             return null;
         }
 
-        return $this->engine->query($this->query, $this->target, $trashed);
+        if ($this->query !== null) {
+            return $this->engine->query($this->query, $this->target, $trashed);
+        }
+
+        return $this->listing && $this->engine instanceof ListingTextSearch ? $this->engine->list($this->target, $trashed) : null;
     }
 
     /**
@@ -127,13 +140,13 @@ final readonly class ResolvedText
         return $this->strategy->run($query, $this->target);
     }
 
-    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query): self
+    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing): self
     {
         $target = TextTarget::of($resource);
 
         return match (true) {
             $strategy instanceof QueryTextSearch => new self(TextBackend::Query, $query, $target, $strategy->capabilities($target), strategy: $strategy),
-            $strategy instanceof EngineTextSearch => new self(TextBackend::Engine, $query, $target, self::engineCapabilities($resource, $strategy, $target), engine: $strategy),
+            $strategy instanceof EngineTextSearch => new self(TextBackend::Engine, $query, $target, self::engineCapabilities($resource, $strategy, $target), engine: $strategy, listing: $listing),
             default => throw InvalidTextSearchException::unsupportedStrategy($resource::class, $strategy::class),
         };
     }

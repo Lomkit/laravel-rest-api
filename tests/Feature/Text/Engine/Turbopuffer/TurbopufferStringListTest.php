@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Text\Engine\Turbopuffer;
 
 use Illuminate\Auth\GenericUser;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
@@ -190,7 +191,7 @@ class TurbopufferStringListTest extends TurbopufferTestCase
 
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
 
-        $response->assertOk()->assertExactJson($this->page([], 0));
+        $response->assertOk()->assertExactJson(Arr::except($this->page([], 0), 'total_capped'));
         $this->assertSame([], $this->queries());
     }
 }

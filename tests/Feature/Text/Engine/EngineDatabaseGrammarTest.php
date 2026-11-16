@@ -39,9 +39,9 @@ class EngineDatabaseGrammarTest extends EngineSearchTestCase
         $punctuation = $this->search('vouchers', ['text' => ['value' => '%_!'], ...$search]);
         $absent = $this->search('vouchers', $search);
 
-        $blank->assertOk()->assertExactJson($this->page([3, 1], 2));
-        $punctuation->assertOk()->assertExactJson($this->page([3, 1], 2));
-        $absent->assertOk()->assertExactJson($this->page([3, 1], 2));
+        $blank->assertOk()->assertExactJson($this->sqlPage([3, 1], 2));
+        $punctuation->assertOk()->assertExactJson($this->sqlPage([3, 1], 2));
+        $absent->assertOk()->assertExactJson($this->sqlPage([3, 1], 2));
         $this->assertSame([], $this->engine->searches);
     }
 

@@ -35,6 +35,12 @@ abstract class MeilisearchTestCase extends EngineSearchTestCase
     }
 
     #[\Override]
+    protected function capped(int $total): array
+    {
+        return ['total_capped' => $total >= 1000];
+    }
+
+    #[\Override]
     protected function seedLedger(): void
     {
         $this->assertSame(MeilisearchEngine::class, (new Voucher)->searchableUsing()::class);

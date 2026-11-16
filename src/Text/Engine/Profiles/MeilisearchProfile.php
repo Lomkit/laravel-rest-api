@@ -10,7 +10,7 @@ use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 use Throwable;
 
-final readonly class MeilisearchProfile implements MatchesStringLists
+final readonly class MeilisearchProfile implements ListsWithoutText, MatchesStringLists
 {
     use PlainLiterals;
 
@@ -41,6 +41,18 @@ final readonly class MeilisearchProfile implements MatchesStringLists
     }
 
     #[\Override]
+    public function matchAll(): string
+    {
+        return '';
+    }
+
+    #[\Override]
+    public function listSortKeys(): int
+    {
+        return PHP_INT_MAX;
+    }
+
+    #[\Override]
     public function exactTotal(): bool
     {
         return true;
@@ -64,7 +76,9 @@ final readonly class MeilisearchProfile implements MatchesStringLists
     #[\Override]
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
-        return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
+        $result = EngineHits::page($this->engine, $builder, $model, $perPage, $page);
+
+        return $result->cappedAt($result->total === 0 ? PHP_INT_MAX : $this->reachable($model));
     }
 
     #[\Override]

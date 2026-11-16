@@ -47,17 +47,18 @@ final readonly class InputSchema
         });
     }
 
-    public function instruction(Resource $resource): ?Reference
+    public function instruction(Resource $resource, TextBackend $backend = TextBackend::Query): ?Reference
     {
-        $instructions = InstructionSupport::among($resource->definition()->instructions(), TextBackend::Query);
+        $instructions = InstructionSupport::among($resource->definition()->instructions(), $backend);
 
         if ($instructions === []) {
             return null;
         }
 
         $name = $this->records->name($resource);
+        $component = $backend === TextBackend::Engine ? $name.'EngineInstruction' : $name.'Instruction';
 
-        return $this->components->schema($name.'Instruction', $resource::class, function () use ($resource, $name, $instructions): Type {
+        return $this->components->schema($component, $resource::class, function () use ($resource, $name, $instructions): Type {
             $branches = [];
 
             foreach ($instructions as $instruction) {

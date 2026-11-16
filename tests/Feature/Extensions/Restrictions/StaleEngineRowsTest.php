@@ -42,7 +42,7 @@ class StaleEngineRowsTest extends EngineSearchTestCase
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
-        $response->assertOk()->assertExactJson($this->page([], 1));
+        $response->assertOk()->assertExactJson($this->page([], 1, dropped: 1));
     }
 
     #[Test]

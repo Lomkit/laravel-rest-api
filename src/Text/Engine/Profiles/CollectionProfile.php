@@ -10,7 +10,7 @@ use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class CollectionProfile implements AppliesRowRestrictions, ComparesColumns
+final readonly class CollectionProfile implements AppliesRowRestrictions, ComparesColumns, ListsWithoutText
 {
     use PlainLiterals;
 
@@ -38,6 +38,18 @@ final readonly class CollectionProfile implements AppliesRowRestrictions, Compar
     public function ownedOptions(): array
     {
         return [];
+    }
+
+    #[\Override]
+    public function matchAll(): string
+    {
+        return '';
+    }
+
+    #[\Override]
+    public function listSortKeys(): int
+    {
+        return PHP_INT_MAX;
     }
 
     #[\Override]

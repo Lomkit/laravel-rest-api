@@ -7,6 +7,7 @@ use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Rules\AllowedValues;
+use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\ScopeNode;
 use Lomkit\Rest\Search\SortNode;
@@ -27,7 +28,7 @@ interface SearchGrammar
 
     public function filterCounts(Cursor $filters, ValidationContext $context): FilterCounts;
 
-    /** @return list<string> */
+    /** @return list<mixed> */
     public function scopeRules(): array;
 
     /**
@@ -43,6 +44,8 @@ interface SearchGrammar
     public function sortDirection(mixed $field): Enum;
 
     public function sort(string $name, ?SortDirection $direction, ValidationContext $context): SortNode;
+
+    public function allowed(OneOf $values): AllowedValues;
 
     /**
      * @param  array<int, Instruction>  $declared

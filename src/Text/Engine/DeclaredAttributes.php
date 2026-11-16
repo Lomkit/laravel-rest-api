@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Text\Engine;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\TextTarget;
 
 final readonly class DeclaredAttributes
@@ -40,7 +41,7 @@ final readonly class DeclaredAttributes
      * @param  array<mixed>  $sortable
      * @return list<string>
      */
-    public static function sorts(TextTarget $target, EngineProfile $profile, array $filterable, array $sortable): array
+    public static function sorts(TextTarget $target, EngineProfile $profile, array $filterable, array $sortable, bool $lists = false): array
     {
         $sorts = [];
 
@@ -60,7 +61,7 @@ final readonly class DeclaredAttributes
             $sorts[] = $name;
         }
 
-        if ($sorts !== [] && $profile->sortKeys() === 0) {
+        if ($sorts !== [] && $profile->sortKeys() === 0 && ! ($lists && $profile instanceof ListsWithoutText && $profile->listSortKeys() > 0)) {
             throw InvalidTextSearchException::unsortableEngine($target->resource, $profile->name());
         }
 

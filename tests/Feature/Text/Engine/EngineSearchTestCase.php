@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Ledger;
 
@@ -39,7 +40,7 @@ abstract class EngineSearchTestCase extends EngineTestCase
      * @param  list<int>  $ids
      * @return array<string, mixed>
      */
-    protected function page(array $ids, int $total, int $perPage = 50, int $page = 1): array
+    protected function page(array $ids, int $total, int $perPage = 50, int $page = 1, int $dropped = 0): array
     {
         $first = ($page - 1) * $perPage + 1;
 
@@ -51,7 +52,24 @@ abstract class EngineSearchTestCase extends EngineTestCase
             'per_page' => $perPage,
             'to' => $ids === [] ? null : $first + count($ids) - 1,
             'total' => $total,
+            ...$this->capped($total),
+            'dropped' => $dropped,
             'meta' => [],
         ];
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return array<string, mixed>
+     */
+    protected function sqlPage(array $ids, int $total, int $perPage = 50, int $page = 1): array
+    {
+        return Arr::except($this->page($ids, $total, $perPage, $page), ['total_capped', 'dropped']);
+    }
+
+    /** @return array<string, bool> */
+    protected function capped(int $total): array
+    {
+        return [];
     }
 }

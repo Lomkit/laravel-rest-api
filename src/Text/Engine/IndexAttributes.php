@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Text\Engine;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\TextTarget;
 
 final readonly class IndexAttributes
@@ -27,7 +28,7 @@ final readonly class IndexAttributes
      * @param  array<mixed>  $sortable
      * @param  array<mixed>  $perimeter
      */
-    public static function of(TextTarget $target, EngineProfile $profile, array $filterable, array $sortable, array $perimeter): self
+    public static function of(TextTarget $target, EngineProfile $profile, array $filterable, array $sortable, array $perimeter, bool $lists = false): self
     {
         $client = DeclaredAttributes::of($target, $profile, $filterable, 'filterable()');
         $restricted = DeclaredAttributes::of($target, $profile, $perimeter, 'perimeter()', true);
@@ -38,7 +39,7 @@ final readonly class IndexAttributes
             }
         }
 
-        $sorts = DeclaredAttributes::sorts($target, $profile, $client, $sortable);
+        $sorts = DeclaredAttributes::sorts($target, $profile, $client, $sortable, $lists);
 
         return new self($client, $restricted, $sorts, ExtensionAttributes::of($target, $profile, $client, $restricted));
     }
@@ -58,8 +59,10 @@ final readonly class IndexAttributes
         return in_array($name, $this->sortable, true);
     }
 
-    public function grammar(EngineProfile $profile): EngineGrammar
+    public function grammar(EngineProfile $profile, bool $lists = false): EngineGrammar
     {
-        return new EngineGrammar($this->filterable, $this->sortable, $profile->sortKeys(), $profile->maxPageSize(), $profile->window());
+        $grammar = new EngineGrammar($this->filterable, $this->sortable, $profile->sortKeys(), $profile->maxPageSize(), $profile->window());
+
+        return $lists && $profile instanceof ListsWithoutText ? $grammar->listing($profile->listSortKeys()) : $grammar;
     }
 }

@@ -19,6 +19,7 @@ final readonly class EngineGrammar implements JsonSerializable
         public int $sortKeys = PHP_INT_MAX,
         public ?int $maxPageSize = null,
         public ?int $window = null,
+        public ?int $listSortKeys = null,
     ) {}
 
     /** @return list<FilterOperator> */
@@ -50,25 +51,45 @@ final readonly class EngineGrammar implements JsonSerializable
             $this->sortKeys,
             $this->maxPageSize,
             $this->window,
+            $this->listSortKeys,
         );
     }
 
     /** @internal */
-    public function searchGrammar(TextCapabilities $text): SearchGrammar
+    public function listing(int $sortKeys): self
     {
-        return new EngineSearchGrammar($this, $text);
+        return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, $sortKeys);
     }
 
-    /** @return array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null} */
+    public function servesLists(): bool
+    {
+        return $this->listSortKeys !== null;
+    }
+
+    /** @internal */
+    public function searchGrammar(TextCapabilities $text, bool $listing = false): SearchGrammar
+    {
+        return new EngineSearchGrammar($this, $text, $listing && $this->servesLists());
+    }
+
+    /** @return array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null, lists?: true, max_list_sorts?: int|null} */
     #[\Override]
     public function jsonSerialize(): array
     {
+        $lists = $this->listSortKeys === null ? [] : ['lists' => true, 'max_list_sorts' => self::bound($this->listSortKeys)];
+
         return [
             'filters' => array_values($this->filters),
             'sorts' => $this->sorts,
-            'max_sorts' => $this->sortKeys === PHP_INT_MAX ? null : $this->sortKeys,
+            'max_sorts' => self::bound($this->sortKeys),
             'max_page_size' => $this->maxPageSize,
             'window' => $this->window,
+            ...$lists,
         ];
+    }
+
+    private static function bound(int $keys): ?int
+    {
+        return $keys === PHP_INT_MAX ? null : $keys;
     }
 }

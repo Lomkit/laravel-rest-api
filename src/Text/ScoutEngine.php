@@ -10,9 +10,10 @@ use Lomkit\Rest\Text\Engine\EngineIndex;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Text\Engine\IndexAttributes;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfiles;
+use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 
-final readonly class ScoutEngine implements EngineTextSearch
+final readonly class ScoutEngine implements ListingTextSearch
 {
     /**
      * @param  array<mixed>  $filterable
@@ -26,6 +27,7 @@ final readonly class ScoutEngine implements EngineTextSearch
         private ?Closure $perimeter = null,
         private array $perimeterAttributes = [],
         private bool $withoutPerimeter = false,
+        private bool $lists = false,
     ) {}
 
     public static function make(): self
@@ -36,13 +38,13 @@ final readonly class ScoutEngine implements EngineTextSearch
     /** @param array<mixed> $attributes */
     public function filterable(array $attributes): self
     {
-        return new self($attributes, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter);
+        return new self($attributes, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists);
     }
 
     /** @param array<mixed> $attributes */
     public function sortable(array $attributes): self
     {
-        return new self($this->filterable, $attributes, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter);
+        return new self($this->filterable, $attributes, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists);
     }
 
     /**
@@ -51,12 +53,24 @@ final readonly class ScoutEngine implements EngineTextSearch
      */
     public function perimeter(Closure $perimeter, array $attributes = []): self
     {
-        return new self($this->filterable, $this->sortable, $perimeter, $attributes, $this->withoutPerimeter);
+        return new self($this->filterable, $this->sortable, $perimeter, $attributes, $this->withoutPerimeter, $this->lists);
     }
 
     public function withoutPerimeter(): self
     {
-        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, true);
+        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, true, $this->lists);
+    }
+
+    public function servesLists(bool $serves = true): static
+    {
+        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $serves);
+    }
+
+    /** @internal */
+    #[\Override]
+    public function servingLists(): bool
+    {
+        return $this->lists;
     }
 
     /**
@@ -84,8 +98,22 @@ final readonly class ScoutEngine implements EngineTextSearch
     #[\Override]
     public function query(TextQuery $text, TextTarget $target, ?Trashed $trashed = null): EngineQuery
     {
-        $query = new EngineQuery($this->index($target), $text, $trashed);
+        return $this->bounded(new EngineQuery($this->index($target), $text, $trashed));
+    }
 
+    /** @internal */
+    #[\Override]
+    public function list(TextTarget $target, ?Trashed $trashed = null): EngineQuery
+    {
+        if (! $this->lists) {
+            throw InvalidTextSearchException::notOnEngine($target->resource);
+        }
+
+        return $this->bounded(new EngineQuery($this->index($target), null, $trashed));
+    }
+
+    private function bounded(EngineQuery $query): EngineQuery
+    {
         if ($this->perimeter !== null) {
             ($this->perimeter)($query);
         }
@@ -108,8 +136,12 @@ final readonly class ScoutEngine implements EngineTextSearch
 
         $profile->ensureUsableBy($target);
 
-        $attributes = IndexAttributes::of($target, $profile, $this->filterable, $this->sortable, $this->perimeterAttributes);
+        if ($this->lists && ! $profile instanceof ListsWithoutText) {
+            throw InvalidTextSearchException::unlistedEngine($target->resource, $profile->name());
+        }
 
-        return new EngineIndex($model, $profile, $attributes, $target->resource);
+        $attributes = IndexAttributes::of($target, $profile, $this->filterable, $this->sortable, $this->perimeterAttributes, $this->lists);
+
+        return new EngineIndex($model, $profile, $attributes, $target->resource, $this->lists);
     }
 }

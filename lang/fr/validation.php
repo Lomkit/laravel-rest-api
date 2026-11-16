@@ -18,6 +18,7 @@ return [
     'response_rows' => 'Le champ :attribute fait dépasser à la réponse la limite de :max lignes : elle peut en rendre jusqu\'à :rows.',
     'owner_include' => 'Le champ :attribute est interdit : cette relation charge au plus un élément par parent.',
     'gates_off' => 'Le champ :attribute est interdit : la ressource incluse désactive ses gates.',
+    'served_list' => 'Le champ :attribute est refusé : cette ressource sert ses listes par son moteur de recherche, qui ne l\'exécute pas.',
     'several_types' => 'Le champ :attribute est interdit : cette relation a plusieurs types. Indiquez-le pour chaque type, sous types.',
     'held_record' => 'Le champ :attribute est interdit : cette relation contient déjà un élément. Détachez-le d\'abord.',
     'attached_record' => 'Le champ :attribute contient un élément déjà attaché. Utilisez update ou sync pour modifier son pivot.',

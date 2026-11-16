@@ -7,13 +7,14 @@ use Laravel\Scout\Builder;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\TextQuery;
 
 final readonly class EngineBuilder
 {
     public function __construct(
         private EngineIndex $index,
-        private TextQuery $text,
+        private ?TextQuery $text,
         private ?Trashed $trashed,
     ) {}
 
@@ -24,7 +25,7 @@ final readonly class EngineBuilder
      */
     public function build(IndexConditions $conditions, array $orders, array $options): Builder
     {
-        $builder = new Builder($this->index->model->model(), implode(' ', $this->text->terms()), null, $this->index->model->softDeletes());
+        $builder = new Builder($this->index->model->model(), $this->query(), null, $this->index->model->softDeletes());
 
         if ($options !== []) {
             $builder->options($options);
@@ -38,7 +39,7 @@ final readonly class EngineBuilder
             null => $builder,
         };
 
-        foreach ($orders as [$attribute, $direction]) {
+        foreach ($orders === [] ? $this->stableOrder() : $orders as [$attribute, $direction]) {
             $builder->orderBy($attribute, $direction->value);
         }
 
@@ -47,5 +48,33 @@ final readonly class EngineBuilder
         }
 
         return $builder;
+    }
+
+    private function query(): string
+    {
+        if ($this->text !== null) {
+            return implode(' ', $this->text->terms());
+        }
+
+        return $this->lists()->matchAll();
+    }
+
+    /** @return list<array{string, SortDirection}> */
+    private function stableOrder(): array
+    {
+        $key = $this->index->model->keyName();
+
+        if ($this->text !== null || $this->lists()->listSortKeys() < 1 || ! $this->index->attributes->sorts($key)) {
+            return [];
+        }
+
+        return [[$key, SortDirection::Asc]];
+    }
+
+    private function lists(): ListsWithoutText
+    {
+        $profile = $this->index->profile;
+
+        return $profile instanceof ListsWithoutText ? $profile : throw InvalidTextSearchException::unlistedEngine($this->index->searchedClass(), $profile->name());
     }
 }

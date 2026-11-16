@@ -8,6 +8,7 @@ use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
+use Lomkit\Rest\Rules\AllowedValues;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\RelevanceSort;
@@ -29,6 +30,7 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     public function __construct(
         private EngineGrammar $engine,
         private TextCapabilities $text,
+        private bool $listing = false,
     ) {}
 
     #[\Override]
@@ -52,7 +54,7 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     #[\Override]
     public function scopeRules(): array
     {
-        return ['prohibited'];
+        return [$this->listing ? new ListRefusal : 'prohibited'];
     }
 
     #[\Override]
@@ -64,21 +66,29 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     #[\Override]
     public function sortLimit(Limits $limits): int
     {
-        if ($this->engine->sortKeys === PHP_INT_MAX) {
+        $keys = $this->sortKeys();
+
+        if ($keys === PHP_INT_MAX) {
             return $limits->sizes->sorts;
         }
 
-        return min($limits->sizes->sorts, max(1, $this->engine->sortKeys));
+        return min($limits->sizes->sorts, max(1, $keys));
     }
 
     #[\Override]
-    public function sortFields(ValidationContext $context, int $count): OneOf
+    public function sortFields(ValidationContext $context, int $count): AllowedValues
     {
-        if ($count !== 1) {
-            return $context->vocabulary->of($context->resource, $this, 'sorts', fn (): array => $this->engine->sorts);
+        $sorts = $this->sortKeys() === 0 ? [] : $this->engine->sorts;
+
+        if ($this->listing) {
+            return $this->allowed($context->vocabulary->of($context->resource, $this, 'list-sorts', fn (): array => $sorts));
         }
 
-        return $context->vocabulary->of($context->resource, $this, 'sorts+relevance', fn (): array => [...$this->engine->sorts, RelevanceClause::FIELD]);
+        if ($count !== 1) {
+            return $context->vocabulary->of($context->resource, $this, 'sorts', fn (): array => $sorts);
+        }
+
+        return $context->vocabulary->of($context->resource, $this, 'sorts+relevance', fn (): array => [...$sorts, RelevanceClause::FIELD]);
     }
 
     #[\Override]
@@ -95,6 +105,12 @@ final readonly class EngineSearchGrammar implements SearchGrammar
         }
 
         return new EngineSort($name, $direction);
+    }
+
+    #[\Override]
+    public function allowed(OneOf $values): AllowedValues
+    {
+        return $this->listing ? new ListRefusal($values) : $values;
     }
 
     #[\Override]
@@ -137,5 +153,10 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     public function nested(): SearchGrammar
     {
         return new SqlSearchGrammar(null, false);
+    }
+
+    private function sortKeys(): int
+    {
+        return $this->listing ? $this->engine->listSortKeys ?? 0 : $this->engine->sortKeys;
     }
 }

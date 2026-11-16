@@ -43,7 +43,7 @@ class EngineInstructionsTest extends EngineSearchTestCase
 
         $response = $this->search('vouchers', $search);
 
-        $response->assertOk()->assertExactJson($this->page($ids, $total));
+        $response->assertOk()->assertExactJson(isset($search['text']) ? $this->page($ids, $total) : $this->sqlPage($ids, $total));
         $this->assertSame($calls, $this->received->calls());
     }
 

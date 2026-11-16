@@ -24,30 +24,38 @@ final readonly class FieldFilterSchema
         private Limits $limits,
     ) {}
 
-    public static function joint(): StringType
+    /** @param list<string> $joints */
+    public static function joint(array $joints = ['and', 'or']): StringType
     {
-        return (new StringType)->enum(['and', 'or']);
+        return (new StringType)->enum($joints);
     }
 
-    public function schema(string $path, Field $field): Type
+    /**
+     * @param  list<FilterOperator>|null  $operators
+     * @param  list<string>  $joints
+     */
+    public function schema(string $path, Field $field, ?array $operators = null, array $joints = ['and', 'or']): Type
     {
         $groups = [];
 
-        foreach ($field->filterOperators() as $operator) {
+        foreach ($operators ?? $field->filterOperators() as $operator) {
             $groups[self::shape($operator)][] = $operator;
         }
 
         $branches = [];
 
-        foreach ($groups as $shape => $operators) {
-            $branches[] = $this->branch($path, $field, $shape, $operators);
+        foreach ($groups as $shape => $grouped) {
+            $branches[] = $this->branch($path, $field, $shape, $grouped, $joints);
         }
 
         return count($branches) === 1 ? $branches[0] : new OneOf($branches);
     }
 
-    /** @param non-empty-list<FilterOperator> $operators */
-    private function branch(string $path, Field $field, string $shape, array $operators): ObjectType
+    /**
+     * @param  non-empty-list<FilterOperator>  $operators
+     * @param  list<string>  $joints
+     */
+    private function branch(string $path, Field $field, string $shape, array $operators, array $joints): ObjectType
     {
         $value = $this->value($field, $shape);
         $properties = [
@@ -59,7 +67,7 @@ final readonly class FieldFilterSchema
             $properties['value'] = $value;
         }
 
-        $properties['type'] = self::joint();
+        $properties['type'] = self::joint($joints);
         $operator = in_array(FilterOperator::Equal, $operators, true) ? [] : ['operator'];
 
         return Schemas::closed($properties, ['field', ...$operator, ...($value === null ? [] : ['value'])]);

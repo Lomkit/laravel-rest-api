@@ -12,7 +12,7 @@ use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 use Throwable;
 
-final readonly class AlgoliaProfile implements MatchesStringLists
+final readonly class AlgoliaProfile implements ListsWithoutText, MatchesStringLists
 {
     use PlainLiterals;
 
@@ -41,6 +41,18 @@ final readonly class AlgoliaProfile implements MatchesStringLists
     public function ownedOptions(): array
     {
         return ['query', 'filters', 'hitsPerPage', 'page', 'offset', 'length'];
+    }
+
+    #[\Override]
+    public function matchAll(): string
+    {
+        return '';
+    }
+
+    #[\Override]
+    public function listSortKeys(): int
+    {
+        return 0;
     }
 
     #[\Override]

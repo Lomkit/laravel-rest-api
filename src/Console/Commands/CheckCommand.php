@@ -7,6 +7,7 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Lomkit\Rest\Console\Check\DeclarationCheck;
 use Lomkit\Rest\Console\Check\DetachCheck;
+use Lomkit\Rest\Console\Check\EngineListCheck;
 use Lomkit\Rest\Console\Check\ExtensionCheck;
 use Lomkit\Rest\Console\Check\ExtensionResourceCheck;
 use Lomkit\Rest\Console\Check\PerimeterCheck;
@@ -18,14 +19,14 @@ use Lomkit\Rest\Http\RestContext;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'rest:check', description: 'Check the routes, policies, actions and metrics, perimeters, action row checks and relation detaches of the resources, and the extensions and their resource checks')]
+#[AsCommand(name: 'rest:check', description: 'Check the routes, policies, actions and metrics, perimeters, action row checks and relation detaches of the resources, the extensions and their resource checks, and the lists served through a search engine')]
 class CheckCommand extends Command
 {
     protected $signature = 'rest:check
         {controllers?* : The controllers to check, every controller that a route uses by default}
         {--json : Print the report as JSON}';
 
-    protected $description = 'Check the routes, policies, actions and metrics, perimeters, action row checks and relation detaches of the resources, and the extensions and their resource checks';
+    protected $description = 'Check the routes, policies, actions and metrics, perimeters, action row checks and relation detaches of the resources, the extensions and their resource checks, and the lists served through a search engine';
 
     public function handle(): int
     {
@@ -39,9 +40,10 @@ class CheckCommand extends Command
         $links = $this->laravel->make(DetachCheck::class)->run($controllers, $context);
         $extensions = $this->laravel->make(ExtensionCheck::class)->run($context);
         $checks = $this->laravel->make(ExtensionResourceCheck::class)->run($controllers, $context);
+        $lists = $this->laravel->make(EngineListCheck::class)->run($controllers, $context);
 
         if ($this->option('json') === true) {
-            $this->output->writeln(json_encode([...$access->toArray(), ...$declarations->toArray(), ...$rows->toArray(), ...$links->toArray(), ...$extensions->toArray(), ...$checks->toArray()], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), OutputInterface::OUTPUT_RAW);
+            $this->output->writeln(json_encode([...$access->toArray(), ...$declarations->toArray(), ...$rows->toArray(), ...$links->toArray(), ...$extensions->toArray(), ...$checks->toArray(), ...$lists->toArray()], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), OutputInterface::OUTPUT_RAW);
         } else {
             $access->render($this->components, 'routes and policies');
             $declarations->render($this->components);
@@ -49,9 +51,10 @@ class CheckCommand extends Command
             $links->render($this->components);
             $extensions->render($this->components);
             $checks->render($this->components);
+            $lists->render($this->components);
         }
 
-        return $access->passed() && $declarations->passed() && $rows->passed() && $links->passed() && $extensions->passed() && $checks->passed() ? self::SUCCESS : self::FAILURE;
+        return $access->passed() && $declarations->passed() && $rows->passed() && $links->passed() && $extensions->passed() && $checks->passed() && $lists->passed() ? self::SUCCESS : self::FAILURE;
     }
 
     /** @return list<string> */
