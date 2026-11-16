@@ -118,7 +118,7 @@ final readonly class SearchSchema
         return match ($key) {
             'filters' => $schema->filters($resource, $engine),
             'scopes' => null,
-            'sorts' => self::capped($schema->sort($resource, $engine), $sizes->sorts),
+            'sorts' => self::capped($schema->sort($resource, $engine), min($sizes->sorts, max(1, $engine->sortKeys, $engine->listSortKeys ?? 0))),
             'instructions' => self::capped((new InputSchema($this->components))->instruction($resource, TextBackend::Engine), $sizes->instructions),
             default => $this->property($resource, $key, true),
         };

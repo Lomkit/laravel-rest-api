@@ -52,7 +52,7 @@ final readonly class EngineListReport
         }
 
         $count = count($this->resources);
-        $components->twoColumnDetail('engine lists', "{$count} ".Str::plural('resource', $count).' list through the search engine');
+        $components->twoColumnDetail('engine lists', "{$count} ".Str::plural('resource', $count).($count === 1 ? ' lists' : ' list').' through the search engine');
 
         foreach ($this->resources as $resource) {
             $components->twoColumnDetail($resource, 'lists through the search engine');

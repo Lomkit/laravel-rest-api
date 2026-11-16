@@ -42,7 +42,7 @@ class MeilisearchIndexTest extends MeilisearchTestCase
 
         $response = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]);
 
-        $response->assertOk()->assertExactJson($this->page([3, 5], 3));
+        $response->assertOk()->assertExactJson($this->page([3, 5], 3, dropped: 1));
     }
 
     #[Test]

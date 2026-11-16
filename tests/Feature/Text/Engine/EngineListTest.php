@@ -187,6 +187,7 @@ class EngineListTest extends EngineSearchTestCase
             'an instruction that runs in the database only' => [['instructions' => [['name' => 'with-lines']]], 'search.instructions.0.name'],
             'the relevance sort without text' => [['sorts' => [['field' => '@relevance']]], 'search.sorts.0.field'],
             'the relevance sort with a blank text' => [['text' => ['value' => ' '], 'sorts' => [['field' => '@relevance']]], 'search.sorts.0.field'],
+            'trashed rows that the index does not keep' => [['trashed' => 'with'], 'search.trashed'],
         ];
     }
 

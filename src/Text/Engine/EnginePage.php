@@ -16,6 +16,7 @@ final readonly class EnginePage
         return new self([], 0);
     }
 
+    /** @internal */
     public function cappedAt(?int $maximum): self
     {
         return new self($this->keys, $this->total, $maximum === null ? null : $this->total >= $maximum);

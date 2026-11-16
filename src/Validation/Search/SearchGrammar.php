@@ -31,6 +31,8 @@ interface SearchGrammar
     /** @return list<mixed> */
     public function scopeRules(): array;
 
+    public function prohibited(): mixed;
+
     /**
      * @param  list<Cursor>  $entries
      * @return list<ScopeNode>

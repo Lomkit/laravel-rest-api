@@ -54,7 +54,13 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     #[\Override]
     public function scopeRules(): array
     {
-        return [$this->listing ? new ListRefusal : 'prohibited'];
+        return [$this->prohibited()];
+    }
+
+    #[\Override]
+    public function prohibited(): mixed
+    {
+        return $this->listing ? new ListRefusal : 'prohibited';
     }
 
     #[\Override]

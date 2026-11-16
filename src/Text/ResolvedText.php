@@ -63,11 +63,6 @@ final readonly class ResolvedText
         return $this->engine !== null && ($this->query !== null || $this->listing);
     }
 
-    public function lists(): bool
-    {
-        return $this->listing;
-    }
-
     public function engineGrammar(): ?EngineGrammar
     {
         return $this->usesEngine() ? $this->capabilities?->engine : null;

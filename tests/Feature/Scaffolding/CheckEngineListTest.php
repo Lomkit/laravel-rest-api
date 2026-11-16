@@ -62,7 +62,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         Artisan::call('rest:check', ['controllers' => [ListedVoucherController::class]], $text = new BufferedOutput);
 
         $this->assertSame(['resources' => [ListedVoucherResource::class], 'problems' => []], $lists);
-        $this->assertStringContainsString("  engine lists ... 1 resource list through the search engine\n  ".ListedVoucherResource::class.' ... lists through the search engine', $this->summary($text->fetch()));
+        $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine\n  ".ListedVoucherResource::class.' ... lists through the search engine', $this->summary($text->fetch()));
     }
 
     #[Test]

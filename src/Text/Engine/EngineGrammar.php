@@ -61,6 +61,7 @@ final readonly class EngineGrammar implements JsonSerializable
         return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, $sortKeys);
     }
 
+    /** @internal */
     public function servesLists(): bool
     {
         return $this->listSortKeys !== null;

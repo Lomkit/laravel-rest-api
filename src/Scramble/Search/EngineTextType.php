@@ -25,7 +25,9 @@ final readonly class EngineTextType
         $type = (new StringType)->enum(array_column(Trashed::cases(), 'value'));
 
         if (! $this->capabilities->trashed) {
-            $type->setDescription('Cannot be combined with a text search: the search index of the resource does not keep the trashed models');
+            $type->setDescription($this->capabilities->engine?->servesLists() === true
+                ? 'Refused: the resource serves its lists through its search engine, whose index does not keep the trashed models'
+                : 'Cannot be combined with a text search: the search index of the resource does not keep the trashed models');
         }
 
         return $type;

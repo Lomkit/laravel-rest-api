@@ -43,7 +43,7 @@ final readonly class SearchParser
     private function trashed(Cursor $trashed, ValidationContext $context): ?Trashed
     {
         if (! $context->grammar->trashed($context->resource)) {
-            $context->rules->add($trashed->path, ['prohibited']);
+            $context->rules->add($trashed->path, [$context->grammar->prohibited()]);
 
             return null;
         }

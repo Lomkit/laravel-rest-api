@@ -59,6 +59,12 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     }
 
     #[\Override]
+    public function prohibited(): string
+    {
+        return 'prohibited';
+    }
+
+    #[\Override]
     public function scopes(array $entries, ValidationContext $context): array
     {
         return (new ScopeParser)->parse($entries, $context);
