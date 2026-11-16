@@ -9,7 +9,6 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilterCapturingTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -55,34 +54,14 @@ class EngineListRequestTest extends EngineSearchTestCase
     #[Test]
     public function it_sends_the_empty_query_of_meilisearch_with_the_filters_and_the_key_sort(): void
     {
-        $engine = new CapturingMeilisearchEngine(new SettingsClient(fn (): array => ['maxTotalHits' => 1000]));
+        $settings = new SettingsClient(fn (): array => ['maxTotalHits' => 1000]);
+        $engine = new CapturingMeilisearchEngine($settings);
         $this->useEngine($engine);
 
         $response = $this->search('listed-vouchers', ['filters' => [['field' => 'number', 'operator' => 'in', 'value' => [1, 3]]]]);
 
-        $response->assertOk()->assertExactJson([...$this->page([3, 1], 2), 'total_capped' => false]);
+        $response->assertOk()->assertExactJson($this->page([3, 1], 2));
         $this->assertSame([['q' => '', 'filter' => 'number IN [1, 3]', 'sort' => ['code:asc']]], $engine->requests);
-    }
-
-    /** @param array<string, mixed> $expected */
-    #[Test]
-    #[DataProvider('caps')]
-    public function it_marks_a_meilisearch_total_capped_at_the_max_total_hits_of_the_index(mixed $settings, array $expected): void
-    {
-        $this->useEngine(new CapturingMeilisearchEngine(new SettingsClient(fn (): mixed => $settings)));
-
-        $response = $this->search('listed-vouchers', ['limit' => 2]);
-
-        $response->assertOk()->assertExactJson([...$this->page([3, 2], 5, 2), ...$expected]);
-    }
-
-    /** @return array<string, array{mixed, array<string, mixed>}> */
-    public static function caps(): array
-    {
-        return [
-            'a total at the cap' => [['maxTotalHits' => 5], ['total_capped' => true]],
-            'a total under the cap' => [['maxTotalHits' => 6], ['total_capped' => false]],
-            'an index that does not report its cap' => [null, []],
-        ];
+        $this->assertSame([], $settings->indexes);
     }
 }

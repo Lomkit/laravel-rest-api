@@ -14,10 +14,7 @@ final readonly class MeilisearchProfile implements ListsWithoutText, MatchesStri
 {
     use PlainLiterals;
 
-    public function __construct(
-        private MeilisearchEngine $engine,
-        private IndexLimits $limits = new IndexLimits,
-    ) {}
+    public function __construct(private MeilisearchEngine $engine) {}
 
     #[\Override]
     public function name(): string
@@ -79,18 +76,11 @@ final readonly class MeilisearchProfile implements ListsWithoutText, MatchesStri
     #[\Override]
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
-        $result = EngineHits::page($this->engine, $builder, $model, $perPage, $page);
-
-        return $result->cappedAt($result->total === 0 ? PHP_INT_MAX : $this->reachable($model));
+        return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
     }
 
     #[\Override]
     public function reachable(ScoutModel $model): ?int
-    {
-        return $this->limits->remember($model->indexName(), fn (): ?int => $this->maxTotalHits($model));
-    }
-
-    private function maxTotalHits(ScoutModel $model): ?int
     {
         try {
             $index = $this->engine->__call('index', [$model->indexName()]);

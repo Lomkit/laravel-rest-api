@@ -13,12 +13,12 @@ class MeilisearchListTest extends MeilisearchTestCase
     use ListsAnIndex;
 
     #[Test]
-    public function it_marks_the_total_capped_at_the_max_total_hits_of_the_index(): void
+    public function it_keeps_the_exact_total_of_a_list_beyond_the_max_total_hits_of_the_index(): void
     {
         $this->indexes->configure($this->index, ['pagination' => ['maxTotalHits' => 3]]);
 
         $response = $this->search('listed-vouchers', ['limit' => 2]);
 
-        $response->assertOk()->assertExactJson([...$this->page([3, 2], 3, 2), 'total_capped' => true]);
+        $response->assertOk()->assertExactJson($this->page([3, 2], 5, 2));
     }
 }

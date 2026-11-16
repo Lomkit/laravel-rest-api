@@ -67,7 +67,7 @@ final readonly class PageSchema
     {
         $type = new BooleanType;
         $type->setDescription($engine
-            ? 'True when more rows match than the total counts: total is then a lower bound. On a page of the search engine, present only when the engine caps its total, such as Meilisearch at the maxTotalHits of its index'
+            ? 'True when more rows match than the total counts: total is then a lower bound. On a page of the search engine, present only when the engine caps its total, such as Turbopuffer at 10,000'
             : 'True when more rows match than the resource counts: total is then a lower bound');
 
         return $type;

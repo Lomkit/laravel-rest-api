@@ -87,7 +87,7 @@ class ScrambleEngineTextTest extends ScrambleTestCase
         $page = app(Generator::class)()['components']['schemas']['CappedVoucherPaginated'];
 
         $this->assertSame(
-            '{"type":"boolean","description":"True when more rows match than the total counts: total is then a lower bound. On a page of the search engine, present only when the engine caps its total, such as Meilisearch at the maxTotalHits of its index"}',
+            '{"type":"boolean","description":"True when more rows match than the total counts: total is then a lower bound. On a page of the search engine, present only when the engine caps its total, such as Turbopuffer at 10,000"}',
             json_encode($page['properties']['total_capped']),
         );
         $this->assertSame(['current_page', 'data', 'from', 'last_page', 'per_page', 'to', 'total', 'meta'], $page['required']);

@@ -214,7 +214,7 @@ class EngineListTest extends EngineSearchTestCase
         $this->assertSame([], $engine->searches);
         $this->assertSame(
             'select vouchers.id, vouchers.code, vouchers.number, vouchers.team, vouchers.title, vouchers.price, vouchers.active from vouchers where (team = ?) and (vouchers.title like ?) and price < ? and vouchers.deleted_at is null order by vouchers.id desc limit 50 offset 0',
-            str_replace(['"', '`'], '', (string) Arr::last(DB::getQueryLog())['query']),
+            str_replace(['"', '`', '::text'], '', (string) Arr::last(DB::getQueryLog())['query']),
         );
     }
 
