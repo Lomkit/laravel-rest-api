@@ -9,7 +9,7 @@ final class InvalidEngineQueryException extends LogicException
 {
     public static function closedGroup(): self
     {
-        return new self("A condition reached an EngineConditionGroup after the closure of its whereAny() or whereAll() returned, so it would be dropped. Add every condition of a group inside its closure.");
+        return new self('A condition reached an EngineConditionGroup after the closure of its whereAny() or whereAll() returned, so it would be dropped. Add every condition of a group inside its closure.');
     }
 
     public static function unmatchedStringList(string $resource, string $attribute, string $engine): self
