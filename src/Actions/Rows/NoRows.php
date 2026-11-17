@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
+/** @internal */
 final readonly class NoRows implements ActionRows
 {
     #[\Override]

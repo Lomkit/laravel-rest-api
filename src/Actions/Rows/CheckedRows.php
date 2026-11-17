@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
+/** @internal */
 final readonly class CheckedRows implements ActionRows
 {
     public function __construct(
@@ -17,7 +18,7 @@ final readonly class CheckedRows implements ActionRows
     public function each(Closure $each): int
     {
         return $this->rows->each(fn (Collection $models): int => $each($models
-            ->filter(fn (Model $model): bool => $this->keys->has($this->rows->keyOf($model)))
+            ->filter(fn (Model $model): bool => $this->keys->covers($model))
             ->values()));
     }
 

@@ -13,9 +13,12 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Authorization\Decision;
 use Lomkit\Rest\Authorization\Denial;
 use Lomkit\Rest\Exceptions\AuthorizationDenied;
+use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Validation\KeysGrammar;
 
+/** @internal */
 final readonly class RowChecks
 {
     /** @param Closure(Model): string $path */
@@ -25,6 +28,7 @@ final readonly class RowChecks
         private string $ability,
         private Closure $path,
         private bool $skip,
+        private ID $id,
         private ?RowCap $cap,
     ) {}
 
@@ -42,6 +46,7 @@ final readonly class RowChecks
             $ability,
             self::paths($request, $action),
             $action->skipUnauthorized,
+            KeysGrammar::idOf($request->resource),
             RowCap::of($action->maxResources),
         );
     }
@@ -53,16 +58,22 @@ final readonly class RowChecks
         }
 
         $denials = [];
+        $targets = [];
         $keys = [];
         $read = 0;
 
-        $rows->each(function (Collection $models) use ($rows, &$denials, &$keys, &$read): int {
+        $rows->each(function (Collection $models) use ($rows, &$denials, &$targets, &$keys, &$read): int {
             $read += $models->count();
             $this->cap?->check($read);
             array_push($denials, ...$this->denials($models));
 
             foreach ($models as $model) {
-                $key = $rows->keyOf($model);
+                $target = $rows->keyOf($model);
+                $key = $this->id->normalizedKey($model->getKey());
+
+                if ($target !== null) {
+                    $targets[$target] = true;
+                }
 
                 if ($key !== null) {
                     $keys[$key] = true;
@@ -76,7 +87,7 @@ final readonly class RowChecks
             throw new AuthorizationDenied($denials);
         }
 
-        return $rows->only(new CheckedKeys($keys));
+        return $rows->only(new CheckedKeys($this->id, $targets, $keys));
     }
 
     /**

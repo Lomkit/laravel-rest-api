@@ -2,29 +2,36 @@
 
 namespace Lomkit\Rest\Actions\Rows;
 
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\ID;
 
-use function Illuminate\Support\enum_value;
-
+/** @internal */
 final readonly class CheckedKeys
 {
-    /** @param array<int|string, true> $keys */
-    public function __construct(private array $keys) {}
+    /**
+     * @param  array<int|string, true>  $targets
+     * @param  array<int|string, true>  $rows
+     */
+    public function __construct(
+        private ID $id,
+        private array $targets,
+        private array $rows,
+    ) {}
 
-    public static function normalize(ID $id, mixed $value): int|string|null
+    public function has(int|string|null $target): bool
     {
-        $key = $id->parseKey(enum_value($value));
-
-        return $key === null ? null : $id->normalizeKey($key);
+        return $target !== null && isset($this->targets[$target]);
     }
 
-    public function has(int|string|null $key): bool
+    public function covers(Model $model): bool
     {
-        return $key !== null && isset($this->keys[$key]);
+        $key = $this->id->normalizedKey($model->getKey());
+
+        return $key !== null && isset($this->rows[$key]);
     }
 
     public function count(): int
     {
-        return count($this->keys);
+        return count($this->targets);
     }
 }

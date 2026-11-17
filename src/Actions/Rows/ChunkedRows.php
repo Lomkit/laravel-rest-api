@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\ID;
 
+/** @internal */
 final readonly class ChunkedRows implements ActionRows
 {
     /** @param Builder<Model> $query */
@@ -55,7 +56,7 @@ final readonly class ChunkedRows implements ActionRows
     #[\Override]
     public function keyOf(Model $model): int|string|null
     {
-        return CheckedKeys::normalize($this->id, $model->getKey());
+        return $this->id->normalizedKey($model->getKey());
     }
 
     #[\Override]

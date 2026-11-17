@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Stringable;
 
+use function Illuminate\Support\enum_value;
+
 class ID extends Field
 {
     /** @var 'int'|'string'|'uuid'|'ulid'|null */
@@ -90,6 +92,13 @@ class ID extends Field
     public function normalizeKey(int|string $key): int|string
     {
         return in_array($this->resolvedKeyType(), ['uuid', 'ulid'], true) ? strtolower((string) $key) : $key;
+    }
+
+    public function normalizedKey(mixed $value): int|string|null
+    {
+        $key = $this->parseKey(enum_value($value));
+
+        return $key === null ? null : $this->normalizeKey($key);
     }
 
     /**

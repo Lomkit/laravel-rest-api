@@ -11,6 +11,7 @@ use Lomkit\Rest\Fields\ID;
 
 use function Illuminate\Support\enum_value;
 
+/** @internal */
 final readonly class KeyChunks implements ActionRows
 {
     /**
@@ -85,13 +86,13 @@ final readonly class KeyChunks implements ActionRows
     #[\Override]
     public function keyOf(Model $model): int|string|null
     {
-        return CheckedKeys::normalize($this->id, $model->getKey());
+        return $this->id->normalizedKey($model->getKey());
     }
 
     #[\Override]
     public function only(CheckedKeys $keys): ActionRows
     {
-        return new self($this->rows, $this->id, array_values(array_filter($this->keys, fn (int|string $key): bool => $keys->has(CheckedKeys::normalize($this->id, $key)))), $this->size);
+        return new self($this->rows, $this->id, array_values(array_filter($this->keys, fn (int|string $key): bool => $keys->has($this->id->normalizedKey($key)))), $this->size);
     }
 
     /** @return Generator<int, Collection<int, Model>> */

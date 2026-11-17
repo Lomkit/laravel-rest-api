@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
+/** @internal */
 interface ActionRows
 {
     /** @param Closure(Collection<int, Model>): int $each */
