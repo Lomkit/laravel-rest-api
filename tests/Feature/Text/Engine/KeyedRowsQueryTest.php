@@ -17,6 +17,7 @@ use Lomkit\Rest\Search\Plan\KeyedRows;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Search\SearchNode;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedEverywhereExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\IntegerKeyVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\EitherTeamVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\NumberedVoucherResource;
@@ -103,6 +104,31 @@ class KeyedRowsQueryTest extends KeyedRowsTestCase
         $this->assertSame([4, 1], $query->get()->modelKeys());
     }
 
+    /**
+     * @param  list<string>  $bindings
+     * @param  list<int>  $ids
+     */
+    #[Test]
+    #[DataProvider('trust')]
+    public function it_applies_the_restrictions_to_engine_keys_unless_they_are_trusted(bool $trusted, array $bindings, array $ids): void
+    {
+        config(['rest.extensions' => [RedEverywhereExtension::class]]);
+
+        $query = $this->keyedQuery(EitherTeamVoucherResource::class, ['V-d', 'V-c'], $trusted);
+
+        $this->assertSame($bindings, $query->getBindings());
+        $this->assertSame($ids, $query->get()->modelKeys());
+    }
+
+    /** @return array<string, array{bool, list<string>, list<int>}> */
+    public static function trust(): array
+    {
+        return [
+            'new engine keys' => [false, ['red', 'V-d', 'V-c'], [1]],
+            'trusted engine keys' => [true, ['V-d', 'V-c'], [4, 1]],
+        ];
+    }
+
     /** @param class-string<Resource> $resource */
     #[Test]
     #[DataProvider('integerKeyTypes')]
@@ -131,11 +157,11 @@ class KeyedRowsQueryTest extends KeyedRowsTestCase
      * @param  list<int|string>  $keys
      * @return Builder<Model>
      */
-    private function keyedQuery(string $class, array $keys): Builder
+    private function keyedQuery(string $class, array $keys, bool $trusted = false): Builder
     {
         $resource = $this->resource($class);
         $model = ScoutModel::tryFrom($resource::newModel()) ?? throw new LogicException($class.' is indexed.');
-        $plan = (new SearchPlanner(new KeyedRows(EngineKeys::of($model, $keys)), ColumnSelection::Every))->plan($resource, SearchNode::empty(), LimitPolicy::none());
+        $plan = (new SearchPlanner(new KeyedRows($trusted ? EngineKeys::trusted($model, $keys) : EngineKeys::of($model, $keys)), ColumnSelection::Every))->plan($resource, SearchNode::empty(), LimitPolicy::none());
 
         return $plan->query();
     }

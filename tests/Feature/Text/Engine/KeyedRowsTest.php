@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedEverywhereExtension;
 use Lomkit\Rest\Tests\Feature\Search\Plan\ParsesSearchNodes;
 use Lomkit\Rest\Tests\Fixtures\Ledger\NumberedVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ScopedVoucherResource;
@@ -36,7 +37,21 @@ class KeyedRowsTest extends KeyedRowsTestCase
      */
     #[Test]
     #[DataProvider('pages')]
-    public function it_loads_the_rows_of_the_engine_keys_in_key_order(string $resource, array $search, array $ids): void
+    public function it_loads_the_page_rows_of_the_engine_keys_in_key_order(string $resource, array $search, array $ids): void
+    {
+        $vouchers = $this->searched($resource, $search, self::ENGINE_KEYS, page: true);
+
+        $this->assertSame($ids, $vouchers->modelKeys());
+    }
+
+    /**
+     * @param  class-string<Resource>  $resource
+     * @param  array<string, mixed>  $search
+     * @param  list<int>  $ids
+     */
+    #[Test]
+    #[DataProvider('pages')]
+    public function it_loads_the_action_rows_of_the_engine_keys_in_key_order(string $resource, array $search, array $ids): void
     {
         $vouchers = $this->searched($resource, $search, self::ENGINE_KEYS);
 
@@ -110,9 +125,10 @@ class KeyedRowsTest extends KeyedRowsTestCase
     }
 
     #[Test]
-    public function it_loads_the_includes_and_aggregates_of_the_page_rows(): void
+    #[DataProvider('paths')]
+    public function it_loads_the_includes_and_aggregates_of_the_rows_of_the_engine_keys(bool $page): void
     {
-        $vouchers = $this->searched(VoucherResource::class, self::INCLUDES_AND_AGGREGATES, ['V-e', 'V-d', 'V-c', 'V-a']);
+        $vouchers = $this->searched(VoucherResource::class, self::INCLUDES_AND_AGGREGATES, ['V-e', 'V-d', 'V-c', 'V-a'], $page);
 
         $this->assertSame(
             [[5, ['l5a'], 1], [4, ['l4a'], 1], [1, ['l1b', 'l1a'], 2], [3, ['l3a'], 1]],
@@ -123,7 +139,8 @@ class KeyedRowsTest extends KeyedRowsTestCase
     }
 
     #[Test]
-    public function it_ignores_the_search_steps_that_ran_on_the_engine(): void
+    #[DataProvider('paths')]
+    public function it_ignores_the_search_steps_that_ran_on_the_engine(bool $page): void
     {
         $vouchers = $this->searched(VoucherResource::class, [
             'text' => ['value' => 'alpha'],
@@ -131,9 +148,39 @@ class KeyedRowsTest extends KeyedRowsTestCase
             'sorts' => [['field' => 'number', 'direction' => 'asc']],
             'limit' => 1,
             'page' => 2,
-        ], ['V-e', 'V-c', 'V-a']);
+        ], ['V-e', 'V-c', 'V-a'], $page);
 
         $this->assertSame([5, 1, 3], $vouchers->modelKeys());
+    }
+
+    /** @param list<int> $ids */
+    #[Test]
+    #[DataProvider('restrictedPaths')]
+    public function it_loads_the_page_rows_without_the_restrictions_and_the_action_rows_through_them(bool $page, array $ids): void
+    {
+        config(['rest.extensions' => [RedEverywhereExtension::class]]);
+
+        $vouchers = $this->searched(VoucherResource::class, [], ['V-d', 'V-c'], $page);
+
+        $this->assertSame($ids, $vouchers->modelKeys());
+    }
+
+    /** @return array<string, array{bool}> */
+    public static function paths(): array
+    {
+        return [
+            'the page rows' => [true],
+            'the action rows' => [false],
+        ];
+    }
+
+    /** @return array<string, array{bool, list<int>}> */
+    public static function restrictedPaths(): array
+    {
+        return [
+            'the page rows' => [true, [4, 1]],
+            'the action rows' => [false, [1]],
+        ];
     }
 
     /**
@@ -142,10 +189,11 @@ class KeyedRowsTest extends KeyedRowsTestCase
      * @param  list<string>  $keys
      * @return Collection<int, Model>
      */
-    private function searched(string $class, array $search, array $keys): Collection
+    private function searched(string $class, array $search, array $keys, bool $page = false): Collection
     {
         $resource = $this->resource($class, $this->context(['search' => $search]));
+        $node = $this->parse($resource, $search);
 
-        return $this->rows($resource, $keys, $this->parse($resource, $search));
+        return $page ? $this->pageRows($resource, $keys, $node) : $this->rows($resource, $keys, $node);
     }
 }

@@ -13,11 +13,9 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Pagination\EnginePaginator;
 use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
 use Lomkit\Rest\Search\Plan\KeyedRows;
-use Lomkit\Rest\Search\Plan\KeySet;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\PlannedPage;
 use Lomkit\Rest\Search\Plan\QueryPlan;
-use Lomkit\Rest\Search\Plan\RestrictedKeys;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Text\Engine\EngineCriteria;
@@ -44,7 +42,7 @@ final readonly class EngineSearch implements SearchSource
             ->defaultLimit;
         $page = $this->search->page ?? 1;
         $result = $query->page($perPage, $page);
-        $plan = $this->plan($this->keys($result->keys), ColumnSelection::of($this->resource), true);
+        $plan = $this->plan(EngineKeys::trusted($this->scout(), $result->keys), ColumnSelection::of($this->resource), true);
         $rows = $result->keys === [] ? new Collection : $this->load($plan);
         $dropped = count(array_flip($result->keys)) - $rows->count();
 
@@ -82,15 +80,16 @@ final readonly class EngineSearch implements SearchSource
      * @param  list<int|string>  $keys
      * @return Collection<int, Model>
      */
-    public function restrictedRows(array $keys): Collection
+    public function rows(array $keys): Collection
     {
         if ($keys === []) {
             return new Collection;
         }
 
-        return $this->load($this->plan(new RestrictedKeys($this->keys($keys)), ColumnSelection::Every, false));
+        return $this->load($this->plan(EngineKeys::of($this->scout(), $keys), ColumnSelection::Every, false));
     }
 
+    /** @internal */
     public function scout(): ScoutModel
     {
         $model = $this->resource::newModel();
@@ -98,13 +97,7 @@ final readonly class EngineSearch implements SearchSource
         return ScoutModel::tryFrom($model) ?? throw InvalidResourceException::unsearchableModel($model::class);
     }
 
-    /** @param list<int|string> $keys */
-    private function keys(array $keys): EngineKeys
-    {
-        return EngineKeys::of($this->scout(), $keys);
-    }
-
-    private function plan(KeySet $keys, ColumnSelection $columns, bool $rendered): QueryPlan
+    private function plan(EngineKeys $keys, ColumnSelection $columns, bool $rendered): QueryPlan
     {
         return (new SearchPlanner(new KeyedRows($keys), $columns, $rendered))->plan($this->resource, $this->search, LimitPolicy::none());
     }

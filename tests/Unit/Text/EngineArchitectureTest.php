@@ -79,6 +79,14 @@ class EngineArchitectureTest extends TestCase
     }
 
     #[Test]
+    public function it_trusts_engine_keys_only_for_the_rows_of_a_page(): void
+    {
+        $root = dirname(__DIR__, 3);
+
+        $this->assertSame(['src/Query/EngineSearch.php'], self::matching($root, self::files("{$root}/src", '.php'), '/EngineKeys::trusted\(/'));
+    }
+
+    #[Test]
     public function it_names_no_backend_in_the_search_parser(): void
     {
         $root = dirname(__DIR__, 3);
