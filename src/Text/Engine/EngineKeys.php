@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Query\Clauses\ExtensionRestrictionClause;
 use Lomkit\Rest\Search\Plan\KeySet;
 
 final readonly class EngineKeys implements KeySet
@@ -58,7 +57,7 @@ final readonly class EngineKeys implements KeySet
     #[\Override]
     public function perimeter(Resource $resource): array
     {
-        return ExtensionRestrictionClause::of($resource);
+        return [];
     }
 
     /**

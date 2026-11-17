@@ -69,13 +69,13 @@ class TurbopufferListTest extends TurbopufferTestCase
 
     #[Test]
     #[WithConfig('rest.extensions', [RedEverywhereExtension::class])]
-    public function it_restricts_a_list_on_the_engine_and_counts_the_rows_that_the_database_read_leaves_out(): void
+    public function it_restricts_a_list_on_the_engine_and_shows_every_row_that_the_engine_returns(): void
     {
         $this->rows(['V-d', 'V-a'], 2);
 
         $response = $this->search('listed-vouchers', []);
 
-        $response->assertOk()->assertExactJson([...$this->page([3], 2), 'from' => 1, 'to' => 1, 'dropped' => 1]);
+        $response->assertOk()->assertExactJson($this->page([4, 3], 2));
         $this->assertSame(['And', [['__soft_deleted', 'Eq', 0], ['team', 'In', ['red']]]], $this->queries()[0]['filters']);
     }
 

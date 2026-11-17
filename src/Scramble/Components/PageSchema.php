@@ -76,7 +76,7 @@ final readonly class PageSchema
     private static function dropped(): IntegerType
     {
         $type = new IntegerType;
-        $type->setDescription('Present on a page of the search engine: the rows that the engine returned for the page and that the database read left out (a deleted row, a global scope, a row restriction). They are missing from data and still counted in total. Above 0, the index is stale, or the restrictions of the engine and of the database disagree');
+        $type->setDescription('Present on a page of the search engine: the rows that the engine returned for the page and that the database read by key left out (a row deleted since indexing, a global scope, trashed). They are missing from data and still counted in total. 0 in the normal case; above 0, the index holds rows that the database no longer serves');
 
         return $type;
     }
