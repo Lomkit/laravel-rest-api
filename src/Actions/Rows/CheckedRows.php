@@ -17,7 +17,7 @@ final readonly class CheckedRows implements ActionRows
     public function each(Closure $each): int
     {
         return $this->rows->each(fn (Collection $models): int => $each($models
-            ->filter(fn (Model $model): bool => $this->keys->has($model->getKey()))
+            ->filter(fn (Model $model): bool => $this->keys->has($this->rows->keyOf($model)))
             ->values()));
     }
 
@@ -25,6 +25,12 @@ final readonly class CheckedRows implements ActionRows
     public function count(): int
     {
         return $this->keys->count();
+    }
+
+    #[\Override]
+    public function keyOf(Model $model): int|string|null
+    {
+        return $this->rows->keyOf($model);
     }
 
     #[\Override]

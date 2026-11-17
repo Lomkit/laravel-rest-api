@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Actions\Rows;
 
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
 final readonly class NoRows implements ActionRows
 {
@@ -17,6 +18,12 @@ final readonly class NoRows implements ActionRows
     public function count(): int
     {
         return 0;
+    }
+
+    #[\Override]
+    public function keyOf(Model $model): int|string|null
+    {
+        return null;
     }
 
     #[\Override]

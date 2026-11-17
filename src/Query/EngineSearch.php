@@ -91,12 +91,22 @@ final readonly class EngineSearch implements SearchSource
         return $this->load($this->plan(new RestrictedKeys($this->keys($keys)), ColumnSelection::Every, false));
     }
 
+    public function keyOf(Model $row): int|string
+    {
+        return $this->scout()->keyOf($row);
+    }
+
     /** @param list<int|string> $keys */
     private function keys(array $keys): EngineKeys
     {
+        return EngineKeys::of($this->scout(), $keys);
+    }
+
+    private function scout(): ScoutModel
+    {
         $model = $this->resource::newModel();
 
-        return EngineKeys::of(ScoutModel::tryFrom($model) ?? throw InvalidResourceException::unsearchableModel($model::class), $keys);
+        return ScoutModel::tryFrom($model) ?? throw InvalidResourceException::unsearchableModel($model::class);
     }
 
     private function plan(KeySet $keys, ColumnSelection $columns, bool $rendered): QueryPlan

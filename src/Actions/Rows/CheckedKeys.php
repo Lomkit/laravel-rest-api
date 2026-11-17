@@ -9,10 +9,7 @@ use function Illuminate\Support\enum_value;
 final readonly class CheckedKeys
 {
     /** @param array<int|string, true> $keys */
-    public function __construct(
-        private ID $id,
-        private array $keys,
-    ) {}
+    public function __construct(private array $keys) {}
 
     public static function normalize(ID $id, mixed $value): int|string|null
     {
@@ -21,10 +18,8 @@ final readonly class CheckedKeys
         return $key === null ? null : $id->normalizeKey($key);
     }
 
-    public function has(mixed $value): bool
+    public function has(int|string|null $key): bool
     {
-        $key = self::normalize($this->id, $value);
-
         return $key !== null && isset($this->keys[$key]);
     }
 

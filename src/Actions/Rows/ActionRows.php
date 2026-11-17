@@ -13,5 +13,7 @@ interface ActionRows
 
     public function count(): int;
 
+    public function keyOf(Model $model): int|string|null;
+
     public function only(CheckedKeys $keys): ActionRows;
 }

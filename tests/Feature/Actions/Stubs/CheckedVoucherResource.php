@@ -9,6 +9,6 @@ class CheckedVoucherResource extends VoucherResource
     #[\Override]
     public function actions(): array
     {
-        return [LockVouchers::make(), LockAllowedVouchers::make()];
+        return [LockVouchers::make(), LockAllowedVouchers::make(), QueuedLockVouchers::make(), BatchedLockVouchers::make()];
     }
 }

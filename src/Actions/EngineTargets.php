@@ -61,6 +61,12 @@ final readonly class EngineTargets implements ActionRows
     }
 
     #[\Override]
+    public function keyOf(Model $model): int|string
+    {
+        return $this->search->keyOf($model);
+    }
+
+    #[\Override]
     public function only(CheckedKeys $keys): ActionRows
     {
         $chunks = array_map(fn (array $chunk): array => array_values(array_filter($chunk, $keys->has(...))), $this->chunks);
