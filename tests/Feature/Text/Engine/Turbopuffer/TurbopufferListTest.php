@@ -8,7 +8,9 @@ use Lomkit\Rest\Actions\QueuedAction;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedEverywhereExtension;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\KeylessListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\TiedVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -28,7 +30,11 @@ class TurbopufferListTest extends TurbopufferTestCase
     {
         parent::defineRoutes($router);
 
-        Route::prefix('api')->group(fn () => Rest::resource('listed-vouchers', ListedVoucherController::class)->withSoftDeletes());
+        Route::prefix('api')->group(function (): void {
+            Rest::resource('listed-vouchers', ListedVoucherController::class)->withSoftDeletes();
+            Rest::resource('tied-vouchers', TiedVoucherController::class)->withSoftDeletes();
+            Rest::resource('keyless-listed-vouchers', KeylessListedVoucherController::class)->withSoftDeletes();
+        });
     }
 
     #[Test]
@@ -40,7 +46,7 @@ class TurbopufferListTest extends TurbopufferTestCase
 
         $response->assertOk()->assertExactJson($this->page([3, 2], 4, 2));
         $this->assertSame([
-            ['rank_by' => ['id', 'asc'], 'filters' => self::FILTERS, 'limit' => 2],
+            ['rank_by' => ['id', 'desc'], 'filters' => self::FILTERS, 'limit' => 2],
             ['aggregate_by' => ['count' => ['Count']], 'filters' => self::FILTERS],
         ], $this->queries());
     }
@@ -90,7 +96,7 @@ class TurbopufferListTest extends TurbopufferTestCase
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [3, 2]]]], $received->calls());
-        $this->assertSame(['rank_by' => ['id', 'asc'], 'filters' => ['And', [['__soft_deleted', 'Eq', 0], ['price', 'Lt', 40], ['team', 'In', ['red']]]]], array_diff_key($this->queries()[0], ['limit' => true]));
+        $this->assertSame(['rank_by' => ['id', 'desc'], 'filters' => ['And', [['__soft_deleted', 'Eq', 0], ['price', 'Lt', 40], ['team', 'In', ['red']]]]], array_diff_key($this->queries()[0], ['limit' => true]));
     }
 
     #[Test]
@@ -108,5 +114,28 @@ class TurbopufferListTest extends TurbopufferTestCase
 
         $this->assertSame([3, 2], $jobs->sole()->rows->keys);
         $this->assertSame([['handle', ['ids' => [3]]]], $received->calls());
+    }
+
+    #[Test]
+    public function it_ranks_a_list_sent_without_a_sort_on_the_tie_breaker_or_the_key_descending(): void
+    {
+        $this->rows(['V-e', 'V-d'], 5);
+
+        $tied = $this->search('tied-vouchers', ['limit' => 2]);
+        $keyless = $this->search('keyless-listed-vouchers', ['limit' => 10]);
+
+        $tied->assertOk()->assertExactJson($this->page([5, 4], 5, 2));
+        $keyless->assertOk()->assertJsonPath('data.*.id', [5, 4]);
+        $this->assertSame([['title', 'desc'], ['id', 'desc']], [$this->queries()[0]['rank_by'], $this->queries()[2]['rank_by']]);
+    }
+
+    #[Test]
+    public function it_ranks_a_list_by_the_requested_sort_alone_since_the_engine_takes_one(): void
+    {
+        $this->rows(['V-e', 'V-b'], 5);
+
+        $this->search('tied-vouchers', ['sorts' => [['field' => 'price', 'direction' => 'desc']], 'limit' => 2])->assertOk();
+
+        $this->assertSame(['price', 'desc'], $this->queries()[0]['rank_by']);
     }
 }

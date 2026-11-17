@@ -64,8 +64,8 @@ class EngineFilterGroupTest extends EngineSearchTestCase
     public static function filterGroups(): iterable
     {
         foreach (self::drivers() as $engine => [$driver]) {
-            yield "an or of two conditions in a list on {$engine}" => [$driver, ['filters' => self::EITHER], [1, 4]];
-            yield "a nested group in a list on {$engine}" => [$driver, ['filters' => self::NESTED], [2, 1]];
+            yield "an or of two conditions in a list on {$engine}" => [$driver, ['filters' => self::EITHER], [4, 1]];
+            yield "a nested group in a list on {$engine}" => [$driver, ['filters' => self::NESTED], [1, 2]];
             yield "an or of two conditions in a text search on {$engine}" => [$driver, ['text' => ['value' => 'report'], 'filters' => self::EITHER, 'sorts' => [['field' => 'code']]], [1, 4]];
         }
     }
@@ -102,8 +102,8 @@ class EngineFilterGroupTest extends EngineSearchTestCase
         return [
             'an or on the database engine' => ['database', self::EITHER, 'select count(*) as aggregate from vouchers where price < ? and team in (?) and (number = ? or number = ?) and vouchers.deleted_at is null'],
             'a nested group on the database engine' => ['database', self::NESTED, 'select count(*) as aggregate from vouchers where price < ? and team in (?) and (active = ? and (number = ? or price > ?)) and vouchers.deleted_at is null'],
-            'an or on the collection engine' => ['collection', self::EITHER, 'select * from vouchers where price < ? and team in (?) and (number = ? or number = ?) and vouchers.deleted_at is null order by code asc'],
-            'a nested group on the collection engine' => ['collection', self::NESTED, 'select * from vouchers where price < ? and team in (?) and (active = ? and (number = ? or price > ?)) and vouchers.deleted_at is null order by code asc'],
+            'an or on the collection engine' => ['collection', self::EITHER, 'select * from vouchers where price < ? and team in (?) and (number = ? or number = ?) and vouchers.deleted_at is null order by code desc'],
+            'a nested group on the collection engine' => ['collection', self::NESTED, 'select * from vouchers where price < ? and team in (?) and (active = ? and (number = ? or price > ?)) and vouchers.deleted_at is null order by code desc'],
         ];
     }
 

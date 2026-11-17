@@ -150,9 +150,10 @@ final class DetailsResponseType
             'max_page_size' => (new IntegerType)->nullable(true),
             'window' => (new IntegerType)->nullable(true)->setDescription('page times limit must not exceed it; null when unbounded'),
             'lists' => (new BooleanType)->setDescription('Present and true when the resource serves its lists through its search engine: a search without text follows this grammar too, and @relevance needs a text'),
-            'max_list_sorts' => (new IntegerType)->nullable(true)->setDescription('With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort'),
+            'max_list_sorts' => (new IntegerType)->nullable(true)->setDescription('With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort, one less when the tie-breaker takes a sort of the engine'),
+            'tie_breaker' => (new StringType)->setDescription('With lists, when the resource declares one: the unique attribute that orders a list sent without a sort, descending, and ends the sorts of a list when the engine has a sort left for it'),
             'groups' => (new BooleanType)->setDescription('Present and true when the engine accepts filters joined with or and nested groups of filters, within the depth and count limits of the filters'),
-        ], ['lists', 'max_list_sorts', 'groups'], 'The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only unless groups is true, no scopes, @relevance alone and desc only; null on the database');
+        ], ['lists', 'max_list_sorts', 'tie_breaker', 'groups'], 'The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only unless groups is true, no scopes, @relevance alone and desc only; null on the database');
 
         return $engine->nullable(true);
     }

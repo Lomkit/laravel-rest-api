@@ -51,16 +51,9 @@ final readonly class EngineListCheck
 
         return match (true) {
             ! $profile instanceof ListsWithoutText => $report->withProblem(InvalidTextSearchException::unlistedEngine($class, $profile->name())->getMessage()),
-            $profile instanceof NullProfile => self::ordered($resource, $text, $profile, $report->withResource($class)->withNote(self::nullEngine($class, $profile))),
-            default => self::ordered($resource, $text, $profile, $report->withResource($class)),
+            $profile instanceof NullProfile => EngineListOrder::check($resource, $text, $profile, $report->withResource($class)->withNote(self::nullEngine($class, $profile))),
+            default => EngineListOrder::check($resource, $text, $profile, $report->withResource($class)),
         };
-    }
-
-    private static function ordered(Resource $resource, ListingTextSearch $text, ListsWithoutText $profile, EngineListReport $report): EngineListReport
-    {
-        $note = EngineListOrder::note($resource, $text, $profile);
-
-        return $note === null ? $report : $report->withNote($note);
     }
 
     private static function overridesPerimeterQuery(Resource $resource): bool

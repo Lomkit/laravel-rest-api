@@ -19,8 +19,8 @@ abstract class TypesenseTestCase extends EngineSearchTestCase
         'collection-schema' => ['fields' => [
             ['name' => 'code', 'type' => 'string', 'sort' => true],
             ['name' => 'number', 'type' => 'int32'],
-            ['name' => 'team', 'type' => 'string'],
-            ['name' => 'title', 'type' => 'string'],
+            ['name' => 'team', 'type' => 'string', 'sort' => true],
+            ['name' => 'title', 'type' => 'string', 'sort' => true],
             ['name' => 'price', 'type' => 'float'],
             ['name' => 'active', 'type' => 'bool'],
             ['name' => '__soft_deleted', 'type' => 'int32'],

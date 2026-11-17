@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedTeamVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\TiedVoucherController;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -19,6 +20,7 @@ trait ListsAnIndex
         $this->afterApplicationCreated(fn () => Route::prefix('api')->group(function (): void {
             Rest::resource('listed-vouchers', ListedVoucherController::class)->withSoftDeletes();
             Rest::resource('listed-team-vouchers', ListedTeamVoucherController::class)->withSoftDeletes();
+            Rest::resource('tied-vouchers', TiedVoucherController::class)->withSoftDeletes();
         }));
     }
 
@@ -27,7 +29,7 @@ trait ListsAnIndex
     {
         $response = $this->search('listed-vouchers', []);
 
-        $response->assertOk()->assertExactJson($this->page([3, 2, 1, 4, 5], 5));
+        $response->assertOk()->assertExactJson($this->page([5, 4, 1, 2, 3], 5));
     }
 
     /**
@@ -47,11 +49,11 @@ trait ListsAnIndex
     public static function listSearches(): array
     {
         return [
-            'integers in a list' => [['filters' => [['field' => 'number', 'operator' => 'in', 'value' => [1, 3]]]], [3, 1], 2, 50, 1],
-            'a number below a bound' => [['filters' => [['field' => 'price', 'operator' => '<', 'value' => 12]]], [3, 1], 2, 50, 1],
+            'integers in a list' => [['filters' => [['field' => 'number', 'operator' => 'in', 'value' => [1, 3]]]], [1, 3], 2, 50, 1],
+            'a number below a bound' => [['filters' => [['field' => 'price', 'operator' => '<', 'value' => 12]]], [1, 3], 2, 50, 1],
             'a sort in descending order' => [['sorts' => [['field' => 'price', 'direction' => 'desc']]], [5, 2, 4, 3, 1], 5, 50, 1],
-            'the second page' => [['limit' => 2, 'page' => 2], [1, 4], 5, 2, 2],
-            'the trashed rows' => [['trashed' => 'with'], [3, 2, 1, 4, 5, 6], 6, 50, 1],
+            'the second page' => [['limit' => 2, 'page' => 2], [1, 2], 5, 2, 2],
+            'the trashed rows' => [['trashed' => 'with'], [6, 5, 4, 1, 2, 3], 6, 50, 1],
         ];
     }
 
@@ -83,6 +85,16 @@ trait ListsAnIndex
     {
         $response = $this->search('listed-vouchers', ['filters' => [['field' => 'active', 'value' => true], ['nested' => [['field' => 'number', 'value' => 3], ['field' => 'price', 'operator' => '>', 'value' => 20, 'type' => 'or']]]]]);
 
-        $response->assertOk()->assertExactJson($this->page([2, 1], 2));
+        $response->assertOk()->assertExactJson($this->page([1, 2], 2));
+    }
+
+    #[Test]
+    public function it_orders_a_list_on_a_string_tie_breaker_alone_and_behind_the_requested_sort(): void
+    {
+        $alone = $this->search('tied-vouchers', []);
+        $behind = $this->search('tied-vouchers', ['sorts' => [['field' => 'team']]]);
+
+        $alone->assertOk()->assertExactJson($this->page([5, 4, 3, 1, 2], 5));
+        $behind->assertOk()->assertExactJson($this->page([4, 5, 3, 1, 2], 5));
     }
 }

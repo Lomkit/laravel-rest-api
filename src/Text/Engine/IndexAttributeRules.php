@@ -58,7 +58,7 @@ final readonly class IndexAttributeRules
             : new IndexAttribute($field, array_values($operators), $profile->literal(), list: true);
     }
 
-    private static function ensureName(string $name, IndexDeclarer $declarer): void
+    public static function ensureName(string $name, IndexDeclarer $declarer): void
     {
         if (preg_match(self::NAME, $name) !== 1 || $name === self::SOFT_DELETED) {
             throw $declarer->invalidName($name);

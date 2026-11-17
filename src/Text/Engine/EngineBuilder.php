@@ -42,7 +42,7 @@ final readonly class EngineBuilder
             null => $builder,
         };
 
-        foreach ($orders === [] ? $this->stableOrder() : $orders as [$attribute, $direction]) {
+        foreach ($this->orders($orders) as [$attribute, $direction]) {
             $builder->orderBy($attribute, $direction->value);
         }
 
@@ -66,16 +66,13 @@ final readonly class EngineBuilder
         return $this->lists()->matchAll();
     }
 
-    /** @return list<array{string, SortDirection}> */
-    private function stableOrder(): array
+    /**
+     * @param  list<array{string, SortDirection}>  $orders
+     * @return list<array{string, SortDirection}>
+     */
+    private function orders(array $orders): array
     {
-        $key = $this->index->model->keyName();
-
-        if ($this->text !== null || $this->lists()->listSortKeys() < 1 || ! $this->index->attributes->sorts($key)) {
-            return [];
-        }
-
-        return [[$key, SortDirection::Asc]];
+        return $this->text === null ? $this->index->listOrder()->orders($orders, $this->index->model->keyName(), $this->index->attributes) : $orders;
     }
 
     private function groups(): FiltersWithGroups

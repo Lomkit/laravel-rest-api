@@ -4,8 +4,10 @@ namespace Lomkit\Rest\Text\Engine;
 
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\Field;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
+use Lomkit\Rest\Text\Engine\Profiles\ReservesSortAttributes;
 use Lomkit\Rest\Text\TextTarget;
 
 final readonly class DeclaredAttributes
@@ -58,6 +60,8 @@ final readonly class DeclaredAttributes
                 throw InvalidTextSearchException::duplicateAttribute($target->resource, $name);
             }
 
+            self::ensureSortable($name, $target->resource, $profile);
+
             $sorts[] = $name;
         }
 
@@ -66,5 +70,13 @@ final readonly class DeclaredAttributes
         }
 
         return $sorts;
+    }
+
+    /** @param class-string<Resource> $resource */
+    public static function ensureSortable(string $attribute, string $resource, EngineProfile $profile): void
+    {
+        if ($profile instanceof ReservesSortAttributes && in_array($attribute, $profile->reservedSorts(), true)) {
+            throw InvalidTextSearchException::reservedSortAttribute($resource, $attribute, $profile->name());
+        }
     }
 }

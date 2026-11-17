@@ -40,6 +40,6 @@ final class EngineSorts
     {
         $profile = $this->index->profile;
 
-        return $this->listing && $profile instanceof ListsWithoutText ? $profile->listSortKeys() : $profile->sortKeys();
+        return $this->listing && $profile instanceof ListsWithoutText ? $this->index->listOrder()->sortKeys() : $profile->sortKeys();
     }
 }

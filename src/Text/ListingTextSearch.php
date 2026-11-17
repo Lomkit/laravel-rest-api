@@ -10,5 +10,7 @@ interface ListingTextSearch extends EngineTextSearch
 {
     public function servingLists(): bool;
 
+    public function listTieBreaker(): ?string;
+
     public function list(TextTarget $target, ?Trashed $trashed = null): EngineQuery;
 }
