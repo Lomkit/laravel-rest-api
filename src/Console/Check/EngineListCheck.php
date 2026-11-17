@@ -11,6 +11,7 @@ use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\Engine\Profiles\NullProfile;
 use Lomkit\Rest\Text\ListingTextSearch;
 use Lomkit\Rest\Text\TextTarget;
+use ReflectionMethod;
 use Throwable;
 
 /** @internal */
@@ -31,6 +32,7 @@ final readonly class EngineListCheck
 
             if ($text instanceof ListingTextSearch && $text->servingLists()) {
                 $report = self::check($resource, $report);
+                $report = self::overridesPerimeterQuery($resource) ? $report->withNote(self::unappliedPerimeterQuery($resource::class)) : $report;
             }
         }
 
@@ -49,13 +51,23 @@ final readonly class EngineListCheck
 
         return match (true) {
             ! $profile instanceof ListsWithoutText => $report->withProblem(InvalidTextSearchException::unlistedEngine($class, $profile->name())->getMessage()),
-            $profile instanceof NullProfile => $report->withProblem(self::nullEngine($class, $profile)),
+            $profile instanceof NullProfile => $report->withResource($class)->withNote(self::nullEngine($class, $profile)),
             default => $report->withResource($class),
         };
     }
 
+    private static function overridesPerimeterQuery(Resource $resource): bool
+    {
+        return (new ReflectionMethod($resource, 'perimeterQuery'))->getDeclaringClass()->getName() !== Resource::class;
+    }
+
+    private static function unappliedPerimeterQuery(string $resource): string
+    {
+        return "{$resource} overrides perimeterQuery(), which does not apply to its lists: they are served through its search engine, restricted by ScoutEngine::perimeter() and the RestrictsEngineQueries extensions. Mirror the perimeter in ScoutEngine::perimeter().";
+    }
+
     private static function nullEngine(string $resource, EngineProfile $profile): string
     {
-        return "The resource [{$resource}] serves its lists through its search engine, but its model uses the Scout null driver [{$profile->name()}] in this environment, so every list answers an empty page. Set scout.driver to an engine that indexes the rows, or remove ->servesLists() from the text search of [{$resource}].";
+        return "The resource [{$resource}] serves its lists through its search engine, but its model uses the Scout null driver [{$profile->name()}] in this environment, so its lists will be empty. Run rest:check with the Scout driver of production (SCOUT_DRIVER).";
     }
 }
