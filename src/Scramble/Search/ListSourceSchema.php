@@ -37,7 +37,12 @@ final readonly class ListSourceSchema
     private function sql(Resource $resource, ObjectType $database): void
     {
         $text = $database->properties['text'] ?? null;
-        $text?->setDescription('A blank text only, without a letter or digit, which keeps the SQL search: a text with a letter or digit runs on the search engine, so send it with source engine');
+        $value = $text instanceof ObjectType ? $text->properties['value'] ?? null : null;
+        $text?->setDescription('A blank text only, which keeps the SQL search: a text with a letter or digit runs on the search engine, so send it with source engine');
+
+        if ($value instanceof StringType) {
+            $value->pattern('^\s*$');
+        }
 
         $sort = (new SortSchema($this->components, $this->records))->sort($resource, false);
 

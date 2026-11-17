@@ -26,7 +26,7 @@ final readonly class SourceParser
             return;
         }
 
-        $context->rules->add($source->path, ['string', Rule::in($sources)]);
+        $context->rules->add($source->path, [Rule::in($sources)]);
 
         if ($source->value === ListSource::Database->value && $text?->hasTerms() === true) {
             $context->rules->reject(Violation::sourceWithText($source->path));

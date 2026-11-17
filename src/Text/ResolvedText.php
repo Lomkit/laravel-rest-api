@@ -42,7 +42,10 @@ final readonly class ResolvedText
         $terms = $query?->hasTerms() ? $query : null;
         $streams = $request instanceof PayloadSearchRequest && $request->streams();
 
-        return self::resolve($resource, $strategy, $terms, $terms === null && ! $streams && self::listsOnEngine($strategy, $request), $streams);
+        $lists = $strategy instanceof ListingTextSearch && $strategy->servingLists();
+        $listing = $terms === null && ! $streams && $lists && $request->input('search.source') === ListSource::Engine->value;
+
+        return self::resolve($resource, $strategy, $terms, $listing, $streams, $lists);
     }
 
     /** @internal */
@@ -136,30 +139,22 @@ final readonly class ResolvedText
         return $this->strategy->run($query, $this->target);
     }
 
-    private static function listsOnEngine(TextSearch $strategy, RestRequest $request): bool
-    {
-        return $strategy instanceof ListingTextSearch && $strategy->servingLists() && $request->input('search.source') === ListSource::Engine->value;
-    }
-
-    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing, bool $streams): self
+    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing, bool $streams, bool $lists): self
     {
         $target = TextTarget::of($resource);
 
         return match (true) {
             $strategy instanceof QueryTextSearch => new self(TextBackend::Query, $query, $target, $strategy->capabilities($target), strategy: $strategy),
-            $strategy instanceof EngineTextSearch => new self(TextBackend::Engine, $query, $target, self::engineCapabilities($resource, $strategy, $target), engine: $strategy, listing: $listing, streams: $streams),
+            $strategy instanceof EngineTextSearch => new self(TextBackend::Engine, $query, $target, self::engineCapabilities($resource, $strategy, $target, $lists), engine: $strategy, listing: $listing, streams: $streams),
             default => throw InvalidTextSearchException::unsupportedStrategy($resource::class, $strategy::class),
         };
     }
 
-    private static function engineCapabilities(Resource $resource, EngineTextSearch $strategy, TextTarget $target): TextCapabilities
+    private static function engineCapabilities(Resource $resource, EngineTextSearch $strategy, TextTarget $target, bool $lists): TextCapabilities
     {
         $capabilities = $strategy->capabilities($target);
+        $engine = $capabilities->engine ?? throw InvalidTextSearchException::missingEngineGrammar($resource::class, $strategy::class);
 
-        if ($capabilities->engine === null) {
-            throw InvalidTextSearchException::missingEngineGrammar($resource::class, $strategy::class);
-        }
-
-        return $capabilities;
+        return $lists || ! $engine->servesLists() ? $capabilities : $capabilities->withEngine($engine->unlisted());
     }
 }

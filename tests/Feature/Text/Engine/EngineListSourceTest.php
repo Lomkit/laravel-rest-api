@@ -15,14 +15,17 @@ use Lomkit\Rest\Actions\QueuedAction;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstHalfExtension;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ContainsVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListSortingVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\MeasuredListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\MeasuredVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -49,6 +52,8 @@ class EngineListSourceTest extends EngineSearchTestCase
             Rest::resource('listed-vouchers', ListedVoucherController::class)->register();
             Rest::resource('measured-vouchers', MeasuredVoucherController::class)->register();
             Rest::resource('measured-listed-vouchers', MeasuredListedVoucherController::class)->register();
+            Rest::resource('contains-vouchers', ContainsVoucherController::class)->register();
+            Rest::resource('list-sorting-vouchers', ListSortingVoucherController::class)->register();
         });
     }
 
@@ -156,6 +161,8 @@ class EngineListSourceTest extends EngineSearchTestCase
             'the engine with a text on a text-only engine resource' => ['vouchers', ['source' => 'engine', 'text' => ['value' => 'report']]],
             'the database on a text-only engine resource' => ['vouchers', ['source' => 'database']],
             'the engine on a resource without text' => ['voucher-lines', ['source' => 'engine']],
+            'the engine on a resource with an SQL text search' => ['contains-vouchers', ['source' => 'engine']],
+            'the engine on a custom engine search that fills the list sorts' => ['list-sorting-vouchers', ['source' => 'engine']],
         ];
     }
 
@@ -283,5 +290,94 @@ class EngineListSourceTest extends EngineSearchTestCase
 
         $response->assertUnprocessable()->assertJsonPath('errors', ['search.includes.0.source' => ['The search.includes.0.source field is prohibited.']]);
         $this->assertSame([], $this->engine->searches);
+    }
+
+    /** @param array<string, mixed> $search */
+    #[Test]
+    #[DataProvider('emptySources')]
+    public function it_refuses_an_empty_or_a_listed_source(array $search): void
+    {
+        $response = $this->postJson('/api/listed-vouchers/search', ['search' => $search]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', ['search.source' => ['The selected search.source is invalid.']]);
+        $this->assertSame([], $this->engine->searches);
+    }
+
+    /** @return array<string, array{array<string, mixed>}> */
+    public static function emptySources(): array
+    {
+        return [
+            'null' => [['source' => null]],
+            'an empty string' => [['source' => '']],
+            'a list' => [['source' => ['engine']]],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('programmaticRuns')]
+    public function it_refuses_the_source_of_every_programmatic_run_of_a_resource_that_does_not_serve_its_lists(string $run): void
+    {
+        $search = Rest::search(VoucherResource::class)->as(new GenericUser(['id' => 1]))->payload(['source' => 'engine']);
+
+        try {
+            match ($run) {
+                'page' => $search->page(),
+                'render' => $search->render(),
+                default => $search->lazy()->all(),
+            };
+            $this->fail("The {$run} run accepted the source.");
+        } catch (ValidationException $exception) {
+            $this->assertSame(['search.source' => [self::PROHIBITED]], $exception->errors());
+        }
+    }
+
+    /** @return array<string, array{string}> */
+    public static function programmaticRuns(): array
+    {
+        return [
+            'page' => ['page'],
+            'render' => ['render'],
+            'lazy' => ['lazy'],
+        ];
+    }
+
+    #[Test]
+    public function it_keeps_a_custom_engine_search_that_fills_the_list_sorts_in_sql(): void
+    {
+        $details = $this->getJson('/api/list-sorting-vouchers?with=text');
+        $list = $this->search('list-sorting-vouchers', ['scopes' => self::CHEAP]);
+
+        $details->assertOk()->assertJsonMissingPath('data.text.engine.lists')->assertJsonMissingPath('data.text.engine.max_list_sorts');
+        $list->assertOk()->assertJsonPath('data.*.id', [3, 1])->assertJsonMissingPath('dropped');
+        $this->assertSame([], $this->engine->searches);
+    }
+
+    #[Test]
+    #[WithConfig('app.key', 'base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=')]
+    public function it_refuses_the_confirmation_of_a_sql_count_for_the_engine_source(): void
+    {
+        $this->travelTo('2026-11-08 10:00:00');
+        $received = $this->app->instance(ReceivedFields::class, new ReceivedFields);
+
+        $asked = $this->postJson('/api/measured-listed-vouchers/actions/confirmed-deactivate-vouchers', ['search' => []]);
+        $switched = $this->postJson('/api/measured-listed-vouchers/actions/confirmed-deactivate-vouchers', ['search' => ['source' => 'engine'], 'confirmation' => $asked->json('confirmation.token')]);
+
+        $asked->assertStatus(428)->assertJsonPath('message', 'Deactivate 4 vouchers?');
+        $switched->assertStatus(428)->assertJsonPath('message', 'Deactivate 5 vouchers?');
+        $this->assertSame([], $received->calls());
+    }
+
+    #[Test]
+    public function it_runs_an_engine_instruction_in_an_action_with_the_engine_source_only(): void
+    {
+        $received = $this->app->instance(ReceivedFields::class, new ReceivedFields);
+        $search = ['instructions' => [['name' => 'numbered-from']]];
+
+        $engine = $this->postJson('/api/listed-vouchers/actions/deactivate-vouchers', ['search' => ['source' => 'engine', ...$search]]);
+        $sql = $this->postJson('/api/listed-vouchers/actions/deactivate-vouchers', ['search' => $search]);
+
+        $engine->assertOk()->assertExactJson(['data' => ['impacted' => 5, 'result' => null]]);
+        $sql->assertUnprocessable()->assertJsonPath('errors', ['search.instructions.0.name' => ['The selected search.instructions.0.name is invalid.']]);
+        $this->assertSame([['handleEngine', ['min' => 1]], ['handle', ['ids' => [5, 4, 1, 2, 3]]]], $received->calls());
     }
 }

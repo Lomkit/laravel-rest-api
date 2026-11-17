@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Text\Engine\Stubs;
 
+use Lomkit\Rest\Tests\Feature\Actions\Stubs\ConfirmedDeactivateVouchers;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\RowCount;
 
 class MeasuredListedVoucherResource extends ListedVoucherResource
@@ -9,7 +10,7 @@ class MeasuredListedVoucherResource extends ListedVoucherResource
     #[\Override]
     public function actions(): array
     {
-        return [...parent::actions(), BatchedDeactivateVouchers::make()];
+        return [...parent::actions(), BatchedDeactivateVouchers::make(), ConfirmedDeactivateVouchers::make()];
     }
 
     #[\Override]
