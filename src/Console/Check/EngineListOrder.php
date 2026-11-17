@@ -17,7 +17,7 @@ final readonly class EngineListOrder
         try {
             $target = TextTarget::of($resource);
             $key = ScoutModel::tryFrom($target->model)?->keyName();
-            $sorts = $profile->listSortKeys() < 1 ? [] : $text->capabilities($target)->engine?->sorts ?? [];
+            $sorts = $profile->listSortKeys() < 1 ? [] : $text->capabilities($target)->engine->sorts ?? [];
         } catch (Throwable) {
             return null;
         }
