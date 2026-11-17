@@ -91,6 +91,27 @@ class StaleEngineRowsTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_answers_false_to_the_restore_gates_of_a_trashed_row_that_the_restriction_excludes_since_indexing(): void
+    {
+        config(['scout.soft_delete' => true]);
+        Voucher::query()->whereKey(3)->update(['team' => 'blue']);
+        Voucher::query()->findOrFail(3)->delete();
+        $this->captureQueries();
+
+        $response = $this->search('stale-vouchers', [...self::REPORT, 'trashed' => 'with', 'gates' => ['view', 'restore', 'forceDelete']]);
+
+        $response->assertOk()->assertJsonPath('data.*.id', [3])->assertJsonPath('data.0.team', 'blue');
+        $this->assertSame([
+            'authorized_to_view' => ['allowed' => true, 'message' => null],
+            'authorized_to_restore' => ['allowed' => false, 'message' => null],
+            'authorized_to_force_delete' => ['allowed' => false, 'message' => null],
+        ], $response->json('data.0.gates'));
+        $this->assertSame([
+            ['select vouchers.id from vouchers where ((team = ? or team = ?) and (vouchers.team = ?)) and vouchers.id in (3)', ['red', 'blue', 'red']],
+        ], $this->keyQueries('vouchers'));
+    }
+
+    #[Test]
     public function it_hands_a_row_that_the_restriction_excludes_since_indexing_to_the_search_hooks(): void
     {
         config(['rest.extensions' => [ForeignEngineProfiles::class, RedEverywhereExtension::class, StaleRowsHooks::class]]);

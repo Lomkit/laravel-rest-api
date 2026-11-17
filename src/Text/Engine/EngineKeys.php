@@ -26,7 +26,11 @@ final readonly class EngineKeys implements KeySet
         return new self($model, self::positions($model, $keys), false);
     }
 
-    /** @param array<mixed> $keys */
+    /**
+     * @internal
+     *
+     * @param  array<mixed>  $keys
+     */
     public static function trusted(ScoutModel $model, array $keys): self
     {
         return new self($model, self::positions($model, $keys), true);
