@@ -48,7 +48,7 @@ final readonly class EngineTargets implements ActionRows
         $impacted = 0;
 
         foreach ($this->chunks as $keys) {
-            $impacted += $each($this->search->rows($keys));
+            $impacted += $each($this->search->restrictedRows($keys));
         }
 
         return $impacted;

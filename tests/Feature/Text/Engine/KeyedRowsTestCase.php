@@ -25,6 +25,6 @@ abstract class KeyedRowsTestCase extends EngineTestCase
      */
     protected function rows(Resource $resource, array $keys, ?SearchNode $search = null): Collection
     {
-        return (new EngineSearch($resource, $resource->context()->text($resource), $search ?? SearchNode::empty()))->rows($keys);
+        return (new EngineSearch($resource, $resource->context()->text($resource), $search ?? SearchNode::empty()))->restrictedRows($keys);
     }
 }

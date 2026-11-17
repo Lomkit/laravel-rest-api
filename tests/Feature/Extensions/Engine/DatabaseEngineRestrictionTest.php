@@ -44,7 +44,7 @@ class DatabaseEngineRestrictionTest extends EngineSearchTestCase
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([5, 1, 3], 3));
-        $this->assertSame(['VoucherResource', 'VoucherResource'], RestrictionLog::$seen);
+        $this->assertSame(['VoucherResource'], RestrictionLog::$seen);
     }
 
     #[Test]
@@ -158,7 +158,7 @@ class DatabaseEngineRestrictionTest extends EngineSearchTestCase
         $page = Rest::search(VoucherResource::class)->as($user)->payload(['text' => ['value' => 'report']])->page();
 
         $this->assertSame(4, $page->total());
-        $this->assertSame([$user, $user], RestrictionLog::$users);
+        $this->assertSame([$user], RestrictionLog::$users);
     }
 
     #[Test]
