@@ -7,6 +7,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\Scout\Engines\CollectionEngine;
+use Laravel\Scout\Engines\DatabaseEngine;
+use Laravel\Scout\Engines\NullEngine;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
@@ -17,6 +19,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EitherEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EmptyGroupEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\OpenGroupEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
@@ -69,8 +72,8 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
         $this->search('grouped-reader-vouchers', ['filters' => self::EITHER])->assertOk();
 
         $this->assertSame([
-            '(price:<35 && team:=[`red`] && readers:=[`ann`]) && (number:=1 || (price:>20 && readers:=[`bob`]))',
-            '(price:<35 && team:=[`red`] && readers:=[`ann`]) && ((number:=1 || (price:>20 && readers:=[`bob`])) && (number:=3 || number:=4))',
+            '(price:<35 && team:=[`red`] && readers:=[`ann`]) && (number:=1 || (price:<5 && readers:=[`bob`] && readers:!=[`cid`]))',
+            '(price:<35 && team:=[`red`] && readers:=[`ann`]) && ((number:=1 || (price:<5 && readers:=[`bob`] && readers:!=[`cid`])) && (number:=3 || number:=4))',
         ], $engine->filters);
     }
 
@@ -86,9 +89,34 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
         $this->search('grouped-reader-vouchers', ['filters' => self::EITHER])->assertOk();
 
         $this->assertSame([
-            '(price<35 AND team IN ["red"] AND readers IN ["ann"]) AND (number=1 OR (price>20 AND readers IN ["bob"]))',
-            '(price<35 AND team IN ["red"] AND readers IN ["ann"]) AND ((number=1 OR (price>20 AND readers IN ["bob"])) AND (number=3 OR number=4))',
+            '(price<35 AND team IN ["red"] AND readers IN ["ann"]) AND (number=1 OR (price<5 AND readers IN ["bob"] AND readers NOT IN ["cid"]))',
+            '(price<35 AND team IN ["red"] AND readers IN ["ann"]) AND ((number=1 OR (price<5 AND readers IN ["bob"] AND readers NOT IN ["cid"])) AND (number=3 OR number=4))',
         ], array_column($engine->requests, 'filter'));
+    }
+
+    #[Test]
+    #[DataProvider('drivers')]
+    public function it_drops_the_whole_condition_of_an_extension_whose_or_group_holds_a_true_condition(string $driver): void
+    {
+        config(['scout.driver' => $driver, 'rest.extensions' => [OpenGroupEngineRestriction::class]]);
+        $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red']]));
+
+        $response = $this->search('listed-team-vouchers', []);
+
+        $response->assertOk()->assertExactJson($this->page([5, 1, 2, 3], 4));
+    }
+
+    #[Test]
+    public function it_ands_the_groups_of_two_extensions(): void
+    {
+        $engine = new FilterCapturingTypesenseEngine;
+        $this->useEngine($engine);
+        config(['rest.extensions' => [ReadersExtension::class, CheapEngineRestriction::class, ReaderGroupEngineRestriction::class, EitherEngineRestriction::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+
+        $this->search('grouped-reader-vouchers', [])->assertOk();
+
+        $this->assertSame(['(price:<35 && team:=[`red`] && readers:=[`ann`]) && ((number:=5 || number:=[4] || (active:=true && price:>20)) && (number:=1 || (price:<5 && readers:=[`bob`] && readers:!=[`cid`])))'], $engine->filters);
     }
 
     /** @param list<array<string, mixed>> $filters */
@@ -208,6 +236,8 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
     {
         return [
             'the collection engine' => [RecordingCollectionEngine::class, [], 'vouchers', true, [5, 4]],
+            'the database engine' => [DatabaseEngine::class, [], 'vouchers', true, [5, 4]],
+            'the null engine' => [NullEngine::class, [], 'vouchers', true, []],
             'algolia' => [FakeAlgolia4Engine::class, [], 'listed-unsorted-vouchers', false, []],
             'a provided profile' => [ForeignEngine::class, [ForeignEngineProfiles::class], 'vouchers', false, []],
         ];
@@ -218,6 +248,8 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
         return match ($class) {
             ForeignEngine::class => new ForeignEngine,
             FakeAlgolia4Engine::class => new FakeAlgolia4Engine(new SettingsClient(fn (): array => [])),
+            DatabaseEngine::class => new DatabaseEngine,
+            NullEngine::class => new NullEngine,
             default => new RecordingCollectionEngine,
         };
     }

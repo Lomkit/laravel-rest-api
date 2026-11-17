@@ -27,6 +27,6 @@ final class ReaderGroupEngineRestriction extends Extension implements RestrictsE
     {
         $context->query->whereAny(fn (EngineConditionGroup $group): EngineConditionGroup => $group
             ->where('number', '=', 1)
-            ->whereAll(fn (EngineConditionGroup $all): EngineConditionGroup => $all->where('price', '>', 20)->whereIn('readers', ['bob'])));
+            ->whereAll(fn (EngineConditionGroup $all): EngineConditionGroup => $all->where('price', '<', 5)->whereIn('readers', ['bob'])->whereNotIn('readers', ['cid'])));
     }
 }

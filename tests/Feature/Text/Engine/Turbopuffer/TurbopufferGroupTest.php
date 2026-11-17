@@ -59,7 +59,7 @@ class TurbopufferGroupTest extends TurbopufferTestCase
 
         $flat = ['And', [['__soft_deleted', 'Eq', 0], ['price', 'Lt', 35], ['team', 'In', ['red']]]];
         $readers = ['readers', 'ContainsAny', ['ann']];
-        $group = ['Or', [['number', 'Eq', 1], ['And', [['price', 'Gt', 20], ['readers', 'ContainsAny', ['bob']]]]]];
+        $group = ['Or', [['number', 'Eq', 1], ['And', [['price', 'Lt', 5], ['readers', 'ContainsAny', ['bob']], ['readers', 'NotContainsAny', ['cid']]]]]];
         $alone = ['And', [['And', [$readers, $group]], $flat]];
         $beside = ['And', [['And', [$readers, ['And', [$group, ['Or', [['number', 'Eq', 3], ['number', 'Eq', 4]]]]]]], $flat]];
         $this->assertSame([$alone, $alone, $beside, $beside], array_column($this->queries(), 'filters'));

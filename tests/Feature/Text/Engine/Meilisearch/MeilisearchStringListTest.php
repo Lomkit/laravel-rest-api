@@ -6,6 +6,7 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
@@ -80,5 +81,17 @@ class MeilisearchStringListTest extends MeilisearchTestCase
             'the rows that hold none of two groups' => [['ann', 'cid'], true, [1, 5]],
             'a row that holds one of two groups beside another value left out' => [['bob', 'cid'], true, [5]],
         ];
+    }
+
+    #[Test]
+    public function it_matches_a_list_inside_an_extension_group(): void
+    {
+        ReadersExtension::$groups = ['ann', 'bob', 'cid'];
+        config(['rest.extensions' => [ReadersExtension::class, ReaderGroupEngineRestriction::class]]);
+
+        $response = $this->actingAs(new GenericUser(['id' => 'reader']))->search('reader-vouchers', ['text' => ['value' => 'report']]);
+
+        $response->assertOk()->assertJsonPath('total', 2);
+        $this->assertEqualsCanonicalizing([1, 3], $response->json('data.*.id'));
     }
 }

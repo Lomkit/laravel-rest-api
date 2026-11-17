@@ -37,7 +37,7 @@ final readonly class EngineRestriction
     }
 
     /** @param Closure(EngineConditionGroup): mixed $group */
-    public function whereAny(Closure $group): static
+    public function whereAny(Closure $group): self
     {
         $profile = $this->query->profile();
 
