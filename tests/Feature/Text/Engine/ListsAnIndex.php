@@ -5,6 +5,9 @@ namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CheapEngineRestriction;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EitherEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedTeamVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\TiedVoucherController;
@@ -14,6 +17,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 trait ListsAnIndex
 {
+    use ResetsExtensionStubs;
+
     #[Before]
     public function registerTheListedResources(): void
     {
@@ -96,5 +101,19 @@ trait ListsAnIndex
 
         $alone->assertOk()->assertExactJson($this->page([5, 4, 3, 1, 2], 5));
         $behind->assertOk()->assertExactJson($this->page([4, 5, 3, 1, 2], 5));
+    }
+
+    #[Test]
+    public function it_never_returns_a_row_that_the_perimeter_or_another_restriction_excludes_through_an_extension_group(): void
+    {
+        $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red']]));
+        config(['rest.extensions' => [EitherEngineRestriction::class]]);
+        $grouped = $this->search('listed-team-vouchers', []);
+        config(['rest.extensions' => [CheapEngineRestriction::class, EitherEngineRestriction::class]]);
+
+        $restricted = $this->search('listed-team-vouchers', ['filters' => [['field' => 'number', 'value' => 5], ['field' => 'number', 'value' => 4, 'type' => 'or'], ['field' => 'number', 'value' => 2, 'type' => 'or']]]);
+
+        $grouped->assertOk()->assertExactJson($this->page([5, 2], 2));
+        $restricted->assertOk()->assertExactJson($this->page([2], 1));
     }
 }

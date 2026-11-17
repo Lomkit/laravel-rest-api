@@ -7,6 +7,11 @@ use LogicException;
 
 final class InvalidEngineQueryException extends LogicException
 {
+    public static function closedGroup(): self
+    {
+        return new self('A condition reached an EngineConditionGroup after the closure of its whereAny() or whereAll() returned, so it would be dropped. Add every condition of a group inside its closure.');
+    }
+
     public static function unmatchedStringList(string $resource, string $attribute, string $engine): self
     {
         return new self("The engine query of {$resource} compares the list attribute [{$attribute}], but the engine [{$engine}] compares single values only. Compare lists of strings on an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists, and check \$context->matchesStringLists before comparing the list.");

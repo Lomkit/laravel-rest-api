@@ -16,5 +16,6 @@ final readonly class EngineRestrictionContext
         public bool $rowsRestrictedInSql,
         public bool $comparesColumns,
         public object $engine,
+        public bool $filtersWithGroups,
     ) {}
 }

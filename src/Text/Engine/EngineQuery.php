@@ -8,11 +8,11 @@ use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Text\Engine\Groups\FilterLeaf;
 use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\Engine\Profiles\FiltersWithGroups;
-use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use Lomkit\Rest\Text\TextQuery;
 
 final class EngineQuery
@@ -63,7 +63,7 @@ final class EngineQuery
      */
     public function restrictIn(string $attribute, array $values, ?RestrictingExtension $by = null): static
     {
-        $declared = $this->compared($attribute);
+        $declared = $this->leaves()->compared($attribute);
 
         $this->conditions->include($attribute, $declared->members(FilterOperator::In, $values), $declared->list, $by);
 
@@ -73,7 +73,7 @@ final class EngineQuery
     /** @param array<mixed> $values */
     public function whereNotIn(string $attribute, array $values): static
     {
-        $declared = $this->compared($attribute);
+        $declared = $this->leaves()->compared($attribute);
 
         $this->conditions->exclude($attribute, $declared->members(FilterOperator::NotIn, $values), $declared->list);
 
@@ -115,10 +115,24 @@ final class EngineQuery
             return EnginePage::empty();
         }
 
-        $builder = (new EngineBuilder($this->index, $this->text, $this->trashed))->build($this->conditions, $this->sorts->all(), $this->options, $this->tree);
+        $builder = (new EngineBuilder($this->index, $this->text, $this->trashed))->build($this->conditions, $this->sorts->all(), $this->options, $this->conditions->tree($this->tree));
 
         return $this->restricted?->read($builder, $this->index->model, $perPage, $page)
             ?? $this->index->profile->page($builder, $this->index->model, $perPage, $page);
+    }
+
+    /** @internal */
+    public function restrictGroup(FilterTree|FilterLeaf|bool $group): static
+    {
+        $this->conditions->group($group);
+
+        return $this;
+    }
+
+    /** @internal */
+    public function leaves(): IndexLeaves
+    {
+        return new IndexLeaves($this->index);
     }
 
     /** @internal */
@@ -171,16 +185,5 @@ final class EngineQuery
     public function paging(): EnginePaging
     {
         return new EnginePaging($this->index->profile);
-    }
-
-    private function compared(string $attribute): IndexAttribute
-    {
-        $declared = $this->index->attributes->declared($attribute);
-
-        if ($declared->list && ! $this->index->profile instanceof MatchesStringLists) {
-            throw InvalidEngineQueryException::unmatchedStringList($this->index->searchedClass(), $attribute, $this->index->profile->name());
-        }
-
-        return $declared;
     }
 }

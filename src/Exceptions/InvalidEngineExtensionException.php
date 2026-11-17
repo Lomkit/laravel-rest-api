@@ -53,6 +53,11 @@ final class InvalidEngineExtensionException extends ExtensionException
         return self::about($secondClass, "The [{$first}] extension {$firstClass} and the [{$second}] extension {$secondClass} both provide the engine profile of [{$engine}] for {$resource}. Let one of them provide it: return null from engineProfile() of the other for this engine, or add one of them to the [rest.disabled_extensions] config.");
     }
 
+    public static function ungroupedRestriction(string $name, string $class, string $resource, string $engine): self
+    {
+        return self::about($class, "The [{$name}] extension {$class} restricts the engine search of {$resource} with whereAny(), but the engine [{$engine}] does not accept grouped conditions. Check \$context->filtersWithGroups before grouping, and restrict with where(), whereIn() and whereNotIn() on this engine.");
+    }
+
     public static function refusedEngineCondition(string $name, string $class, string $resource, InvalidEngineQueryException $reason): self
     {
         return self::about($class, "The [{$name}] extension {$class} restricts the engine search of {$resource} with a condition that the engine query refuses: {$reason->getMessage()}", $reason);
