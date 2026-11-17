@@ -2,8 +2,10 @@
 
 namespace Lomkit\Rest\Text\Engine\Groups;
 
+use BackedEnum;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
+use LogicException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
 /** @internal */
@@ -25,8 +27,7 @@ final readonly class MeilisearchFilter
 
         foreach ($builder->wheres as $where) {
             if (is_array($where) && is_string($where['field'] ?? null)) {
-                $operator = FilterOperator::tryFrom(is_string($where['operator'] ?? null) ? $where['operator'] : '=') ?? FilterOperator::Equal;
-                $conditions[] = self::leaf($where['field'], $operator, self::scalar($where['value'] ?? null));
+                $conditions[] = self::where($where['field'], is_string($where['operator'] ?? null) ? $where['operator'] : '=', $where['value'] ?? null);
             }
         }
 
@@ -47,7 +48,17 @@ final readonly class MeilisearchFilter
         return match ($operator) {
             FilterOperator::In => $attribute.' IN ['.self::list($value).']',
             FilterOperator::NotIn => $attribute.' NOT IN ['.self::list($value).']',
-            default => $attribute.$operator->value.self::value(is_array($value) ? '' : $value),
+            FilterOperator::Equal, FilterOperator::NotEqual, FilterOperator::LessThan, FilterOperator::GreaterThan, FilterOperator::LessThanOrEqual, FilterOperator::GreaterThanOrEqual => $attribute.$operator->value.self::value(is_array($value) ? '' : $value),
+            default => throw new LogicException("The [{$operator->value}] operator does not apply to a Meilisearch filter."),
+        };
+    }
+
+    private static function where(string $attribute, string $operator, mixed $value): string
+    {
+        return match (true) {
+            $value instanceof BackedEnum => $attribute.$operator.$value->value,
+            $value === null => $attribute.($operator === '!=' ? ' IS NOT NULL' : ' IS NULL'),
+            default => $attribute.$operator.self::value(self::scalar($value)),
         };
     }
 

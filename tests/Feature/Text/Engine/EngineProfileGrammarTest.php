@@ -81,7 +81,6 @@ class EngineProfileGrammarTest extends EngineSearchTestCase
     public static function searchesBeyondTheEngine(): array
     {
         return [
-
             'a page larger than Typesense returns' => [FakeTypesenseEngine::class, 'unsorted-vouchers', ['limit' => 300], [
                 'search.limit' => ['The search.limit field must not be greater than 250.'],
             ]],

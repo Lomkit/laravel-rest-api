@@ -90,6 +90,13 @@ final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithout
         if (! is_string($queryBy) || trim($queryBy) === '') {
             throw InvalidTextSearchException::missingQueryBy($target->resource, $target->model::class);
         }
+
+        $parameters = method_exists($target->model, 'typesenseSearchParameters') ? $target->model->typesenseSearchParameters() : null;
+        $owned = is_array($parameters) ? array_values(array_intersect($this->ownedOptions(), array_keys($parameters))) : [];
+
+        if ($owned !== []) {
+            throw InvalidTextSearchException::ownedSearchParameter($target->resource, $target->model::class, $owned[0]);
+        }
     }
 
     #[\Override]

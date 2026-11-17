@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Text\Engine\Groups;
 
+use LogicException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
 /** @internal */
@@ -23,7 +24,8 @@ final readonly class TypesenseFilter
             FilterOperator::NotIn => $leaf->attribute.':!=['.self::list($leaf).']',
             FilterOperator::NotEqual => $leaf->attribute.':!='.self::value($leaf->scalar()),
             FilterOperator::LessThan, FilterOperator::GreaterThan, FilterOperator::LessThanOrEqual, FilterOperator::GreaterThanOrEqual => $leaf->attribute.':'.$leaf->operator->value.self::value($leaf->scalar()),
-            default => $leaf->attribute.':='.self::value($leaf->scalar()),
+            FilterOperator::Equal => $leaf->attribute.':='.self::value($leaf->scalar()),
+            default => throw new LogicException("The [{$leaf->operator->value}] operator does not apply to a Typesense filter."),
         };
     }
 

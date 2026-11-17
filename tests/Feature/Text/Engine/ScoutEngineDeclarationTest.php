@@ -11,6 +11,7 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeAlgolia3Engine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeAlgolia4Engine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTurbopufferEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilteringVoucher;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\QueryByVoucher;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
@@ -168,5 +169,16 @@ class ScoutEngineDeclarationTest extends ScoutEngineDeclarationTestCase
 
         $this->assertSame(['price'], $configured->engine?->sorts);
         $this->assertSame([], $declaredOnModel->engine?->sorts);
+    }
+
+    #[Test]
+    public function it_refuses_a_typesense_model_that_sends_a_parameter_of_the_package(): void
+    {
+        $this->useEngine(new FakeTypesenseEngine);
+        $declared = $this->resource(VoucherResource::class)->definition()->fields();
+
+        $this->expectExceptionObject(InvalidTextSearchException::ownedSearchParameter(VoucherResource::class, FilteringVoucher::class, 'filter_by'));
+
+        $this->open()->capabilities(new TextTarget(VoucherResource::class, FieldSet::of([]), new FilteringVoucher, $declared));
     }
 }
