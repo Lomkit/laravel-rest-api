@@ -14,6 +14,7 @@ final readonly class FilterLeaf
         public string $attribute,
         public FilterOperator $operator,
         public int|float|string|bool|array $value,
+        public bool $list = false,
     ) {}
 
     public static function of(EngineFilterCondition $condition): self

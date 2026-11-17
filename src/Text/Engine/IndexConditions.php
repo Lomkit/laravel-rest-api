@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Exceptions\ConflictingListsException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Text\Engine\Groups\FilterLeaf;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\Engine\Profiles\FiltersStringLists;
 
@@ -26,6 +28,9 @@ final class IndexConditions
 
     /** @var array<string, true> */
     private array $lists = [];
+
+    /** @var list<FilterTree|FilterLeaf> */
+    private array $groups = [];
 
     private bool $nothing = false;
 
@@ -72,6 +77,30 @@ final class IndexConditions
         $this->mark($attribute, $list);
 
         $this->exclusions[$attribute] = self::unique([...$this->exclusions[$attribute] ?? [], ...$values]);
+    }
+
+    public function group(FilterTree|FilterLeaf|bool $group): void
+    {
+        if ($group === false) {
+            $this->nothing();
+
+            return;
+        }
+
+        if ($group !== true) {
+            $this->groups[] = $group;
+        }
+    }
+
+    public function tree(?FilterTree $client): ?FilterTree
+    {
+        $members = $client === null ? $this->groups : [...$this->groups, $client];
+
+        return match (true) {
+            $members === [] => null,
+            count($members) === 1 && $members[0] instanceof FilterTree => $members[0],
+            default => new FilterTree(false, $members),
+        };
     }
 
     public function nothing(): void
