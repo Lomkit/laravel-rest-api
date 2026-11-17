@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Validation\Search;
 
 use Illuminate\Validation\Rule;
-use Lomkit\Rest\Text\ListingTextSearch;
 use Lomkit\Rest\Text\ListSource;
 use Lomkit\Rest\Text\TextQuery;
 use Lomkit\Rest\Validation\Cursor;
@@ -19,9 +18,7 @@ final readonly class SourceParser
             return;
         }
 
-        $search = $context->resource->text();
-
-        if (! $search instanceof ListingTextSearch || ! $search->databaseListsAllowed()) {
+        if (! $context->grammar->choosesSource()) {
             $context->rules->reject(Violation::unknown($source->path));
 
             return;
@@ -30,7 +27,7 @@ final readonly class SourceParser
         $context->rules->add($source->path, [Rule::enum(ListSource::class)]);
 
         if ($source->value === ListSource::Database->value && $text?->hasTerms() === true) {
-            $context->rules->reject(Violation::textOnEngine($source->path));
+            $context->rules->reject(Violation::sourceWithText($source->path));
         }
     }
 }

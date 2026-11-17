@@ -19,7 +19,7 @@ return [
     'owner_include' => 'The :attribute field is prohibited: this relation loads at most one record per parent.',
     'gates_off' => 'The :attribute field is prohibited: the included resource turns its gates off.',
     'served_list' => 'The :attribute field is refused: this resource serves its lists through its search engine, which does not run it.',
-    'text_on_engine' => 'The :attribute field cannot be database with a text: a text search runs on the search engine.',
+    'source_with_text' => 'The :attribute field cannot be database with a text: a text search runs on the search engine.',
     'several_types' => 'The :attribute field is prohibited: this relation has several types. Set it for each type, under types.',
     'held_record' => 'The :attribute field is prohibited: this relation already holds a record. Detach it first.',
     'attached_record' => 'The :attribute field holds a record that is already attached. Use update or sync to change its pivot.',

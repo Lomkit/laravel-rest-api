@@ -34,6 +34,12 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     ) {}
 
     #[\Override]
+    public function choosesSource(): bool
+    {
+        return $this->engine->databaseLists;
+    }
+
+    #[\Override]
     public function backend(): TextBackend
     {
         return TextBackend::Engine;

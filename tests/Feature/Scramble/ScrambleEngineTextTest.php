@@ -122,6 +122,7 @@ class ScrambleEngineTextTest extends ScrambleTestCase
         $this->assertSame(['type' => 'integer', 'description' => 'Present on a page of the search engine: the rows that the engine returned for the page and that the database read by key left out (a row deleted since indexing, a global scope, trashed). They are missing from data and still counted in total. 0 in the normal case; above 0, the index holds rows that the database no longer serves'], $schemas['ListedVoucherPaginated']['properties']['dropped']);
         $this->assertSame(['current_page', 'data', 'from', 'last_page', 'per_page', 'to', 'total', 'meta'], $schemas['ListedVoucherPaginated']['required']);
     }
+
     #[Test]
     public function it_documents_the_engine_and_the_database_grammars_of_a_resource_that_allows_database_lists(): void
     {

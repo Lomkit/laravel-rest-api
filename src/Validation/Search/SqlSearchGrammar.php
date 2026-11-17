@@ -35,6 +35,12 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     ) {}
 
     #[\Override]
+    public function choosesSource(): bool
+    {
+        return $this->text?->databaseLists() === true;
+    }
+
+    #[\Override]
     public function backend(): TextBackend
     {
         return TextBackend::Query;

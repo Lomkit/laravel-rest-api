@@ -30,6 +30,12 @@ final readonly class TextCapabilities implements JsonSerializable
     }
 
     /** @internal */
+    public function databaseLists(): bool
+    {
+        return $this->engine?->databaseLists === true;
+    }
+
+    /** @internal */
     public function withEngine(EngineGrammar $engine): self
     {
         return new self($this->fields, $this->modes, $this->relevance, $this->trashed, $this->maxLength, $engine);
