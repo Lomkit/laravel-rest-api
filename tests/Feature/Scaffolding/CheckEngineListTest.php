@@ -12,6 +12,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\CheapEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SingleSortEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CapturingMeilisearchEngine;
@@ -31,11 +32,15 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\OpenListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\OpenListedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\OrderedListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\OrderedListedVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterDatabaseVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterDatabaseVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterListedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\TiedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\TiedVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnlistedDatabaseVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnlistedDatabaseVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Ledger;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherController;
@@ -258,6 +263,43 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         $this->assertSame([[InvalidTextSearchException::missingQueryBy(OpenListedVoucherResource::class, Voucher::class)->getMessage()], []], [$report['rows']['problems'], $report['engine_lists']['problems']]);
     }
 
+    #[Test]
+    public function it_reports_database_lists_without_served_lists_under_rows(): void
+    {
+        config(['scout.driver' => 'collection']);
+        Route::prefix('api')->group(fn () => Rest::resource('unlisted-database-vouchers', UnlistedDatabaseVoucherController::class)->middleware('auth:sanctum')->register());
+
+        $report = $this->report(UnlistedDatabaseVoucherController::class);
+
+        $this->assertSame([InvalidTextSearchException::unlistedDatabaseLists(UnlistedDatabaseVoucherResource::class)->getMessage()], $report['rows']['problems']);
+    }
+
+    #[Test]
+    public function it_reports_a_sql_search_that_misses_the_engine_perimeter_of_database_lists(): void
+    {
+        config(['scout.driver' => 'collection']);
+        Route::prefix('api')->group(fn () => Rest::resource('perimeter-database-vouchers', PerimeterDatabaseVoucherController::class)->middleware('auth:sanctum')->register());
+        $problem = PerimeterDatabaseVoucherResource::class.' allows database lists and restricts its engine search with ScoutEngine::perimeter(), but its SQL search has no perimeterQuery() of its own: a request with source: database lists the rows that the engine perimeter keeps out. Mirror ScoutEngine::perimeter() in perimeterQuery(), or remove ->allowsDatabaseLists().';
+
+        $report = $this->report(PerimeterDatabaseVoucherController::class);
+        Artisan::call('rest:check', ['controllers' => [PerimeterDatabaseVoucherController::class]], $text = new BufferedOutput);
+
+        $this->assertSame([$problem], $report['rows']['problems']);
+        $this->assertStringContainsString('  ⇂ '.rtrim($problem, '.')."\n", $this->summary($text->fetch()));
+    }
+
+    #[Test]
+    public function it_reports_an_engine_only_extension_on_a_resource_that_allows_database_lists(): void
+    {
+        config(['scout.driver' => 'collection', 'rest.extensions' => [CheapEngineRestriction::class]]);
+        Route::prefix('api')->group(fn () => Rest::resource('database-listed-vouchers', DatabaseListedVoucherController::class)->middleware('auth:sanctum')->register());
+        $problem = 'The [cheap] extension '.CheapEngineRestriction::class.' restricts the engine search of '.DatabaseListedVoucherResource::class.' through RestrictsEngineQueries but not its SQL search, which '.DatabaseListedVoucherResource::class.' runs on request with ->allowsDatabaseLists(): a request with source: database lists the rows that the extension keeps out. Implement RestrictsQueries in '.CheapEngineRestriction::class.' too, or remove ->allowsDatabaseLists().';
+
+        $report = $this->report(DatabaseListedVoucherController::class);
+
+        $this->assertContains($problem, $report['rows']['problems']);
+    }
+
     /** @return array<string, mixed> */
     private function report(string $controller): array
     {
@@ -276,7 +318,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         [, $lists] = $this->lists(DatabaseListedVoucherController::class);
         Artisan::call('rest:check', ['controllers' => [DatabaseListedVoucherController::class]], $text = new BufferedOutput);
 
-        $this->assertSame(['resources' => [DatabaseListedVoucherResource::class], 'problems' => [], 'notes' => [self::unappliedPerimeterQuery(DatabaseListedVoucherResource::class)], 'database_lists' => [DatabaseListedVoucherResource::class]], $lists);
+        $this->assertSame(['resources' => [DatabaseListedVoucherResource::class], 'problems' => [], 'notes' => [DatabaseListedVoucherResource::class.' overrides perimeterQuery(), which does not apply to its engine lists, only to the SQL lists that it runs on request: the engine lists are restricted by ScoutEngine::perimeter() and the RestrictsEngineQueries extensions. Mirror the perimeter in ScoutEngine::perimeter().'], 'database_lists' => [DatabaseListedVoucherResource::class]], $lists);
         $this->assertStringContainsString('  '.DatabaseListedVoucherResource::class."  lists through the search engine, or in SQL on request\n", $this->summary($text->fetch()));
     }
 

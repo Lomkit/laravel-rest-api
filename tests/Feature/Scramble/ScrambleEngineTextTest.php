@@ -132,17 +132,24 @@ class ScrambleEngineTextTest extends ScrambleTestCase
         });
         $schemas = app(Generator::class)()['components']['schemas'];
 
-        foreach (['DatabaseListedVoucherSearch', 'DatabaseListedVoucherActionSearch'] as $name) {
-            [$engine, $database] = $schemas[$name]['oneOf'];
-            $this->assertSame(['type' => 'string', 'enum' => ['engine']], $engine['properties']['source']);
-            $this->assertFalse($engine['properties']['scopes']);
-            $this->assertSame(['$ref' => '#/components/schemas/DatabaseListedVoucherEngineFilter'], $engine['properties']['filters']['items']);
-            $this->assertSame(['type' => 'string', 'enum' => ['database']], $database['properties']['source']);
+        foreach (['Search', 'ActionSearch'] as $suffix) {
+            $this->assertSame([['$ref' => "#/components/schemas/DatabaseListedVoucherEngine{$suffix}"], ['$ref' => "#/components/schemas/DatabaseListedVoucherDatabase{$suffix}"]], $schemas["DatabaseListedVoucher{$suffix}"]['oneOf']);
+            $engine = $schemas["DatabaseListedVoucherEngine{$suffix}"]['properties'];
+            $database = $schemas["DatabaseListedVoucherDatabase{$suffix}"];
+            $this->assertSame(['engine'], $engine['source']['enum']);
+            $this->assertFalse($engine['scopes']);
+            $this->assertSame(['$ref' => '#/components/schemas/DatabaseListedVoucherEngineFilter'], $engine['filters']['items']);
+            $this->assertSame(['database'], $database['properties']['source']['enum']);
             $this->assertSame(['source'], $database['required']);
             $this->assertFalse($database['properties']['text']);
             $this->assertSame(['$ref' => '#/components/schemas/DatabaseListedVoucherFilter'], $database['properties']['filters']['items']);
             $this->assertSame(['$ref' => '#/components/schemas/DatabaseListedVoucherScope'], $database['properties']['scopes']['items']);
+            $this->assertSame(['$ref' => '#/components/schemas/DatabaseListedVoucherInstruction'], $database['properties']['instructions']['items']);
+            $this->assertSame(['$ref' => '#/components/schemas/DatabaseListedVoucherSort'], $database['properties']['sorts']['items']);
+            $this->assertSame(['type' => 'string', 'enum' => ['with', 'only']], $database['properties']['trashed']);
         }
+
+        $this->assertNotContains('@relevance', $schemas['DatabaseListedVoucherSort']['properties']['field']['enum']);
 
         $this->assertArrayNotHasKey('source', $schemas['ListedVoucherSearch']['properties']);
         $this->assertArrayNotHasKey('oneOf', $schemas['ListedVoucherSearch']);

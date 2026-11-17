@@ -3,10 +3,15 @@
 namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 
 use Illuminate\Auth\GenericUser;
+use Illuminate\Bus\PendingBatch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\ValidationException;
+use Lomkit\Rest\Actions\QueuedAction;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
@@ -14,7 +19,10 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstHalfExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\DatabaseListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\DatabaseListedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\MeasuredVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
+use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 use Lomkit\Rest\Text\ScoutEngine;
@@ -41,6 +49,7 @@ class EngineDatabaseListTest extends EngineSearchTestCase
         Route::prefix('api')->group(function (): void {
             Rest::resource('listed-vouchers', ListedVoucherController::class)->register();
             Rest::resource('database-listed-vouchers', DatabaseListedVoucherController::class)->register();
+            Rest::resource('measured-vouchers', MeasuredVoucherController::class)->register();
         });
     }
 
@@ -61,7 +70,8 @@ class EngineDatabaseListTest extends EngineSearchTestCase
         return [
             'the database on a resource that serves its lists' => ['listed-vouchers', ['source' => 'database']],
             'the engine on a resource that serves its lists' => ['listed-vouchers', ['source' => 'engine']],
-            'the database on a resource searched in SQL' => ['vouchers', ['source' => 'database']],
+            'the database on a text-only engine resource' => ['vouchers', ['source' => 'database']],
+            'the database on a resource without text' => ['voucher-lines', ['source' => 'database']],
         ];
     }
 
@@ -146,6 +156,65 @@ class EngineDatabaseListTest extends EngineSearchTestCase
         $this->assertSame([3, 1], array_map(fn (Model $row): mixed => $row->getKey(), $database->items()));
         $this->assertSame([5, 4, 1, 2, 3], array_map(fn (Model $row): mixed => $row->getKey(), $engine->items()));
         $this->assertCount(1, $this->engine->searches);
+    }
+
+    #[Test]
+    public function it_refuses_the_source_of_an_action_search_or_a_metric_search(): void
+    {
+        $action = $this->postJson('/api/listed-vouchers/actions/deactivate-vouchers', ['search' => ['source' => 'database']]);
+        $metric = $this->postJson('/api/measured-vouchers/metrics/row-count', ['search' => ['source' => 'database']]);
+
+        $action->assertUnprocessable()->assertJsonPath('errors', ['search.source' => ['The search.source field is prohibited.']]);
+        $metric->assertUnprocessable()->assertJsonPath('errors', ['search.source' => ['The search.source field is prohibited.']]);
+        $this->assertSame([], $this->engine->searches);
+    }
+
+    #[Test]
+    public function it_queues_the_sql_rows_of_the_database_source_and_reads_them_again_through_the_perimeter_in_the_worker(): void
+    {
+        Queue::fake();
+        $received = $this->app->instance(ReceivedFields::class, new ReceivedFields);
+
+        $this->postJson('/api/database-listed-vouchers/actions/queued-deactivate-vouchers', ['search' => ['source' => 'database']])->assertOk();
+        Voucher::query()->whereKey(2)->update(['team' => 'blue']);
+        $job = Queue::pushed(QueuedAction::class)->sole();
+        $this->app->call([$job, 'handle']);
+
+        $this->assertSame([[1, 2, 3, 5], true], [$job->rows->keys, $job->rows->perimeter]);
+        $this->assertSame([['handle', ['ids' => [1, 3, 5]]]], $received->calls());
+        $this->assertSame([], $this->engine->searches);
+    }
+
+    #[Test]
+    public function it_batches_the_sql_rows_of_the_database_source_with_the_perimeter(): void
+    {
+        Bus::fake();
+
+        $this->postJson('/api/database-listed-vouchers/actions/batched-review-vouchers', ['search' => ['source' => 'database', 'scopes' => [['name' => 'cheap']]]])->assertOk();
+
+        Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->map(fn (QueuedAction $job): array => [$job->rows->keys, $job->rows->perimeter])->all() === [[[1, 3], true]]);
+        $this->assertSame([], $this->engine->searches);
+    }
+
+    #[Test]
+    public function it_streams_the_database_source_and_refuses_the_engine_source_of_a_stream(): void
+    {
+        $search = Rest::search(DatabaseListedVoucherResource::class)->as(new GenericUser(['id' => 1]));
+
+        $streamed = $search->payload(['source' => 'database', 'scopes' => [['name' => 'cheap']]])->lazy()->all();
+
+        $this->assertSame([3, 1], array_column($streamed, 'id'));
+        $this->expectException(ValidationException::class);
+
+        $search->payload(['source' => 'engine'])->lazy()->all();
+    }
+
+    #[Test]
+    public function it_throws_for_the_source_of_a_programmatic_search_without_the_opt_in(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        Rest::search(ListedVoucherResource::class)->as(new GenericUser(['id' => 1]))->payload(['source' => 'database'])->page();
     }
 
     #[Test]

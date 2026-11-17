@@ -13,9 +13,7 @@ use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Types\Nothing;
-use Lomkit\Rest\Scramble\Types\OneOf;
 use Lomkit\Rest\Text\Engine\EngineGrammar;
-use Lomkit\Rest\Text\ListSource;
 use Lomkit\Rest\Text\TextBackend;
 use Lomkit\Rest\Validation\Search\RowKeys;
 use Lomkit\Rest\Validation\Search\SearchShape;
@@ -50,7 +48,7 @@ final readonly class SearchSchema
 
         $lists = $shape === SearchShape::Aggregate ? null : EngineSearchSchema::lists($resource);
 
-        return $this->components->schema($name, $resource::class, fn (): Type => $this->search($resource, array_keys($shape->keys()), $shape === SearchShape::Page, $lists));
+        return $this->components->schema($name, $resource::class, fn (): Type => $this->search($resource, $name, array_keys($shape->keys()), $shape === SearchShape::Page, $lists));
     }
 
     public static function rows(Resource $resource, string $roots): string
@@ -80,7 +78,7 @@ final readonly class SearchSchema
     }
 
     /** @param list<string> $keys */
-    private function search(Resource $resource, array $keys, bool $paged, ?EngineGrammar $lists): Type
+    private function search(Resource $resource, string $name, array $keys, bool $paged, ?EngineGrammar $lists): Type
     {
         $search = $this->object($resource, $keys, $paged, $lists);
 
@@ -88,13 +86,7 @@ final readonly class SearchSchema
             return $search;
         }
 
-        $database = $this->object($resource, $keys, $paged, null);
-        $database->addProperty('text', new Nothing);
-        $database->addProperty('source', (new StringType)->enum([ListSource::Database->value]));
-        $database->setRequired(['source']);
-        $search->addProperty('source', (new StringType)->enum([ListSource::Engine->value]));
-
-        return new OneOf([$search, $database]);
+        return (new DatabaseListSchema($this->components, $this->records))->oneOf($resource, $name, $search, $this->object($resource, $keys, $paged, null));
     }
 
     /** @param list<string> $keys */

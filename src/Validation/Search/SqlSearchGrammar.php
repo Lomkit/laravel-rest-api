@@ -18,6 +18,7 @@ use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\RelationSort;
 use Lomkit\Rest\Search\RelevanceSort;
 use Lomkit\Rest\Search\SortNode;
+use Lomkit\Rest\Text\ListSource;
 use Lomkit\Rest\Text\TextBackend;
 use Lomkit\Rest\Text\TextCapabilities;
 use Lomkit\Rest\Text\TextQuery;
@@ -32,12 +33,17 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     public function __construct(
         private ?TextCapabilities $text,
         private bool $ranks,
+        private bool $streams = false,
     ) {}
 
     #[\Override]
-    public function choosesSource(): bool
+    public function sources(): array
     {
-        return $this->text?->databaseLists() === true;
+        return match (true) {
+            $this->text?->databaseLists() !== true => [],
+            $this->streams => [ListSource::Database->value],
+            default => array_column(ListSource::cases(), 'value'),
+        };
     }
 
     #[\Override]

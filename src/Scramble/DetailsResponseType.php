@@ -149,7 +149,7 @@ final class DetailsResponseType
             'max_sorts' => (new IntegerType)->nullable(true)->setDescription('The most sorts in one search; null when unbounded, 0 when only @relevance is accepted'),
             'max_page_size' => (new IntegerType)->nullable(true),
             'window' => (new IntegerType)->nullable(true)->setDescription('page times limit must not exceed it; null when unbounded'),
-            'lists' => (new BooleanType)->setDescription('Present and true when the resource serves its lists through its search engine: a search without text follows this grammar too, and @relevance needs a text'),
+            'lists' => (new BooleanType)->setDescription('Present and true when the resource serves its lists through its search engine: a search without text follows this grammar too, and @relevance needs a text, except with source: database, where the field entries apply'),
             'max_list_sorts' => (new IntegerType)->nullable(true)->setDescription('With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort, one less when the tie-breaker takes a sort of the engine'),
             'tie_breaker' => (new StringType)->setDescription('With lists, when the resource declares one: the unique attribute that orders a list sent without a sort, descending, and ends the sorts of a list when the engine has a sort left for it'),
             'database_lists' => (new BooleanType)->setDescription('With lists: present and true when a search without text may send source: database to run the SQL search of the resource'),

@@ -18,13 +18,15 @@ final readonly class SourceParser
             return;
         }
 
-        if (! $context->grammar->choosesSource()) {
+        $sources = $context->grammar->sources();
+
+        if ($sources === []) {
             $context->rules->reject(Violation::unknown($source->path));
 
             return;
         }
 
-        $context->rules->add($source->path, [Rule::enum(ListSource::class)]);
+        $context->rules->add($source->path, ['string', Rule::in($sources)]);
 
         if ($source->value === ListSource::Database->value && $text?->hasTerms() === true) {
             $context->rules->reject(Violation::sourceWithText($source->path));

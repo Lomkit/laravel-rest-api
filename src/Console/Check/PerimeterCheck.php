@@ -27,6 +27,10 @@ final readonly class PerimeterCheck
             $report = $problem === null ? $report : $report->withRowProblem($problem);
             $unusable = $engines->unusable($context->resource($resource));
             $report = $unusable === null ? $report : $report->withRowProblem($unusable);
+
+            foreach (DatabaseListReach::problems($context->resource($resource), $engines->extensionsBuilt()) as $problem) {
+                $report = $report->withRowProblem($problem);
+            }
         }
 
         foreach ($resources as $resource) {
@@ -87,7 +91,7 @@ final readonly class PerimeterCheck
     }
 
     /** @param class-string<Resource> $resource */
-    private static function marksWithoutPerimeter(string $resource): bool
+    public static function marksWithoutPerimeter(string $resource): bool
     {
         for ($class = new ReflectionClass($resource); $class !== false; $class = $class->getParentClass()) {
             if ($class->getAttributes(WithoutPerimeter::class) !== []) {

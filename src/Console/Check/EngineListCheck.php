@@ -33,7 +33,7 @@ final readonly class EngineListCheck
             if ($text instanceof ListingTextSearch && $text->servingLists()) {
                 $report = self::check($resource, $text, $report);
                 $report = $text->databaseListsAllowed() ? $report->withDatabaseLists($resource::class) : $report;
-                $report = self::overrides($resource, 'perimeterQuery') ? $report->withNote(self::unappliedPerimeterQuery($resource::class)) : $report;
+                $report = self::overrides($resource, 'perimeterQuery') ? $report->withNote(self::unappliedPerimeterQuery($resource::class, $text->databaseListsAllowed())) : $report;
                 $report = self::overrides($resource, 'defaultOrderBy') ? $report->withNote(EngineListNotes::unappliedDefaultOrder($resource::class)) : $report;
             }
         }
@@ -63,9 +63,11 @@ final readonly class EngineListCheck
         return (new ReflectionMethod($resource, $method))->getDeclaringClass()->getName() !== Resource::class;
     }
 
-    private static function unappliedPerimeterQuery(string $resource): string
+    private static function unappliedPerimeterQuery(string $resource, bool $database): string
     {
-        return "{$resource} overrides perimeterQuery(), which does not apply to its lists: they are served through its search engine, restricted by ScoutEngine::perimeter() and the RestrictsEngineQueries extensions. Mirror the perimeter in ScoutEngine::perimeter().";
+        return $database
+            ? "{$resource} overrides perimeterQuery(), which does not apply to its engine lists, only to the SQL lists that it runs on request: the engine lists are restricted by ScoutEngine::perimeter() and the RestrictsEngineQueries extensions. Mirror the perimeter in ScoutEngine::perimeter()."
+            : "{$resource} overrides perimeterQuery(), which does not apply to its lists: they are served through its search engine, restricted by ScoutEngine::perimeter() and the RestrictsEngineQueries extensions. Mirror the perimeter in ScoutEngine::perimeter().";
     }
 
     private static function nullEngine(string $resource, EngineProfile $profile): string

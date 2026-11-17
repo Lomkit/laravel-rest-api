@@ -94,6 +94,12 @@ final readonly class ScoutEngine implements ListingTextSearch
     }
 
     /** @internal */
+    public function declaresPerimeter(): bool
+    {
+        return $this->perimeter !== null;
+    }
+
+    /** @internal */
     #[\Override]
     public function databaseListsAllowed(): bool
     {

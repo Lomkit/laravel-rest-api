@@ -49,7 +49,7 @@ enum SearchShape
         return match ($this) {
             self::Page => [],
             self::Rows => ['page'],
-            self::Aggregate => ['gates', 'sorts', 'selects', 'aggregates', 'includes', 'limit', 'page'],
+            self::Aggregate => ['gates', 'sorts', 'selects', 'aggregates', 'includes', 'limit', 'page', 'source'],
         };
     }
 
