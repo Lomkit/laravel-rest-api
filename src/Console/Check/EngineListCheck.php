@@ -31,7 +31,7 @@ final readonly class EngineListCheck
             }
 
             if ($text instanceof ListingTextSearch && $text->servingLists()) {
-                $report = self::check($resource, $report);
+                $report = self::check($resource, $text, $report);
                 $report = self::overridesPerimeterQuery($resource) ? $report->withNote(self::unappliedPerimeterQuery($resource::class)) : $report;
             }
         }
@@ -39,7 +39,7 @@ final readonly class EngineListCheck
         return $report;
     }
 
-    private static function check(Resource $resource, EngineListReport $report): EngineListReport
+    private static function check(Resource $resource, ListingTextSearch $text, EngineListReport $report): EngineListReport
     {
         $class = $resource::class;
 
@@ -51,9 +51,16 @@ final readonly class EngineListCheck
 
         return match (true) {
             ! $profile instanceof ListsWithoutText => $report->withProblem(InvalidTextSearchException::unlistedEngine($class, $profile->name())->getMessage()),
-            $profile instanceof NullProfile => $report->withResource($class)->withNote(self::nullEngine($class, $profile)),
-            default => $report->withResource($class),
+            $profile instanceof NullProfile => self::ordered($resource, $text, $profile, $report->withResource($class)->withNote(self::nullEngine($class, $profile))),
+            default => self::ordered($resource, $text, $profile, $report->withResource($class)),
         };
+    }
+
+    private static function ordered(Resource $resource, ListingTextSearch $text, ListsWithoutText $profile, EngineListReport $report): EngineListReport
+    {
+        $note = EngineListOrder::note($resource, $text, $profile);
+
+        return $note === null ? $report : $report->withNote($note);
     }
 
     private static function overridesPerimeterQuery(Resource $resource): bool

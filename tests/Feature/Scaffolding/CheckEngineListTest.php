@@ -13,13 +13,17 @@ use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeAlgolia4Engine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\KeylessListedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\KeylessListedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\OpenListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\OpenListedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterListedVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Ledger;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherController;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
@@ -106,6 +110,36 @@ final class CheckEngineListTest extends ScaffoldingTestCase
     }
 
     #[Test]
+    public function it_notes_a_resource_whose_sorts_leave_out_the_scout_key(): void
+    {
+        config(['scout.driver' => 'collection']);
+        $note = KeylessListedVoucherResource::class.' serves its lists through its search engine but sortable() does not declare its key [code]: a list sent without a sort follows the engine order, which can repeat or skip rows between pages. Add [code] to sortable() (and to the sortable settings of the index).';
+
+        [$exitCode, $lists, $text] = $this->keyless();
+
+        $this->assertSame([0, ['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], [$exitCode, $lists]);
+        $this->assertStringContainsString(
+            "  engine lists ... 1 resource lists through the search engine\n"
+            .'  ⇂ '.rtrim($note, '.')."\n"
+            .'  '.KeylessListedVoucherResource::class." ... lists through the search engine\n",
+            $text,
+        );
+    }
+
+    #[Test]
+    public function it_notes_the_unstable_order_of_an_engine_that_sorts_no_list(): void
+    {
+        $this->app?->make(EngineManager::class)->extend('algolia', fn (): FakeAlgolia4Engine => new FakeAlgolia4Engine(new SettingsClient(fn (): array => [])));
+        config(['scout.driver' => 'algolia']);
+        $note = KeylessListedVoucherResource::class.' serves its lists through its search engine ['.FakeAlgolia4Engine::class.'], which takes no sort without text: its lists follow the engine order, which is not stable and can repeat or skip rows between pages. Give the index a ranking that ends on a unique attribute, such as [code], so that the engine order is stable.';
+
+        [$exitCode, $lists, $text] = $this->keyless();
+
+        $this->assertSame([0, ['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], [$exitCode, $lists]);
+        $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine\n  ⇂ ".rtrim($note, '.')."\n", $text);
+    }
+
+    #[Test]
     public function it_reports_a_resource_that_serves_its_lists_on_a_profile_that_does_not_list_without_text(): void
     {
         $this->app?->make(EngineManager::class)->extend('foreign', fn (): ForeignEngine => new ForeignEngine);
@@ -122,6 +156,16 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         $exitCode = Artisan::call('rest:check', ['controllers' => [$controller], '--json' => true], $output = new BufferedOutput);
 
         return [$exitCode, json_decode($output->fetch(), true)['engine_lists']];
+    }
+
+    /** @return array{int, mixed, string} */
+    private function keyless(): array
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('keyless-listed-vouchers', KeylessListedVoucherController::class)->middleware('auth:sanctum')->register());
+        [$exitCode, $lists] = $this->lists(KeylessListedVoucherController::class);
+        Artisan::call('rest:check', ['controllers' => [KeylessListedVoucherController::class]], $text = new BufferedOutput);
+
+        return [$exitCode, $lists, $this->summary($text->fetch())];
     }
 
     private static function unappliedPerimeterQuery(string $resource): string

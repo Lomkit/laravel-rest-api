@@ -25,6 +25,6 @@ class OpenListedVoucherResource extends Resource
     #[\Override]
     public function text(): ?TextSearch
     {
-        return ScoutEngine::make()->filterable(['number'])->withoutPerimeter()->servesLists();
+        return ScoutEngine::make()->filterable(['number', 'code'])->sortable(['code'])->withoutPerimeter()->servesLists();
     }
 }
