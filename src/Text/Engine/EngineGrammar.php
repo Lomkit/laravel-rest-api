@@ -21,6 +21,7 @@ final readonly class EngineGrammar implements JsonSerializable
         public ?int $window = null,
         public ?int $listSortKeys = null,
         public bool $groups = false,
+        public ?string $tieBreaker = null,
     ) {}
 
     /** @return list<FilterOperator> */
@@ -54,13 +55,14 @@ final readonly class EngineGrammar implements JsonSerializable
             $this->window,
             $this->listSortKeys,
             $this->groups,
+            $this->tieBreaker,
         );
     }
 
     /** @internal */
-    public function listing(int $sortKeys): self
+    public function listing(int $sortKeys, ?string $tieBreaker = null): self
     {
-        return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, $sortKeys, $this->groups);
+        return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, $sortKeys, $this->groups, $tieBreaker);
     }
 
     /** @internal */
@@ -75,11 +77,12 @@ final readonly class EngineGrammar implements JsonSerializable
         return new EngineSearchGrammar($this, $text, $listing && $this->servesLists());
     }
 
-    /** @return array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null, lists?: true, max_list_sorts?: int|null, groups?: true} */
+    /** @return array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null, lists?: true, max_list_sorts?: int|null, tie_breaker?: string, groups?: true} */
     #[\Override]
     public function jsonSerialize(): array
     {
         $lists = $this->listSortKeys === null ? [] : ['lists' => true, 'max_list_sorts' => self::bound($this->listSortKeys)];
+        $tieBreaker = $this->tieBreaker === null ? [] : ['tie_breaker' => $this->tieBreaker];
         $groups = $this->groups ? ['groups' => true] : [];
 
         return [
@@ -89,6 +92,7 @@ final readonly class EngineGrammar implements JsonSerializable
             'max_page_size' => $this->maxPageSize,
             'window' => $this->window,
             ...$lists,
+            ...$tieBreaker,
             ...$groups,
         ];
     }

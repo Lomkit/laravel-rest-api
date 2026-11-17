@@ -134,6 +134,21 @@ final class InvalidTextSearchException extends LogicException
         return new self("The ScoutEngine of the resource [{$resource}] declares sortable() attributes, but the engine [{$engine}] does not sort text searches.");
     }
 
+    public static function reservedSortAttribute(string $resource, string $attribute, string $engine): self
+    {
+        return new self("The ScoutEngine of the resource [{$resource}] sorts on [{$attribute}], which the engine [{$engine}] reserves and does not sort. Index a unique copy of the key under another name, sortable in the index, and declare it in sortable() or tieBreaker() instead.");
+    }
+
+    public static function unlistedTieBreaker(string $resource, string $attribute): self
+    {
+        return new self("The ScoutEngine of the resource [{$resource}] declares tieBreaker('{$attribute}') without ->servesLists(): the tie-breaker orders the lists served through the engine, and a text search keeps its relevance order. Add ->servesLists(), or remove ->tieBreaker().");
+    }
+
+    public static function unsortedTieBreaker(string $resource, string $attribute, string $engine): self
+    {
+        return new self("The ScoutEngine of the resource [{$resource}] declares tieBreaker('{$attribute}'), but the engine [{$engine}] takes no sort without text, so its lists follow the ranking of the index. Remove ->tieBreaker() and end the customRanking of the index on a unique attribute, such as [{$attribute}].");
+    }
+
     public static function missingQueryBy(string $resource, string $model): self
     {
         return new self("The ScoutEngine of the resource [{$resource}] runs on Typesense, which needs the attributes to search. Set scout.typesense.model-settings.{$model}.search-parameters.query_by.");

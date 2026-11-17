@@ -6,6 +6,7 @@ use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Http\Resource;
 
+/** @internal */
 final readonly class IndexDeclarer
 {
     /** @param class-string<Resource> $resource */

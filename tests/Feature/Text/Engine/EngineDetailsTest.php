@@ -4,9 +4,13 @@ namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
+use Laravel\Scout\EngineManager;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ContainsVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\TiedVoucherController;
+use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -37,6 +41,31 @@ class EngineDetailsTest extends EngineTestCase
         $grammar = str_replace('"sorts":["price","number"],"max_sorts":null,"max_page_size":null,"window":null,"groups":true}', '"sorts":["price","number","code"],"max_sorts":null,"max_page_size":null,"window":null,"lists":true,"max_list_sorts":null,"groups":true}', self::GRAMMAR);
 
         $this->assertTextDetails('{"fields":[],"modes":["words"],"relevance":true,"trashed":false,"max_length":255,"engine":'.$grammar.'}', $this->getJson('/api/listed-vouchers?with=text'));
+    }
+
+    #[Test]
+    #[DataProvider('tieBreakers')]
+    public function it_describes_the_tie_breaker_and_the_sorts_left_to_the_client(string $driver, string $bounds): void
+    {
+        $this->app?->make(EngineManager::class)->extend('typesense', fn (): FakeTypesenseEngine => new FakeTypesenseEngine);
+        config(['scout.driver' => $driver, 'scout.typesense.model-settings.'.Voucher::class.'.search-parameters.query_by' => 'title']);
+
+        Route::prefix('api')->group(fn () => Rest::resource('tied-vouchers', TiedVoucherController::class)->register());
+        $filters = '{"name":"number","type":"integer","operators":["=","!=",">",">=","<","<=","in","not in"]},'
+            .'{"name":"price","type":"number","operators":["=","!=",">",">=","<","<=","in","not in"]},'
+            .'{"name":"team","type":"text","operators":["=","!=","in","not in"]},'
+            .'{"name":"title","type":"text","operators":["=","!=","in","not in"]}';
+
+        $this->assertTextDetails('{"fields":[],"modes":["words"],"relevance":true,"trashed":false,"max_length":255,"engine":{"filters":['.$filters.'],"sorts":["price","number","team","title"],'.$bounds.',"tie_breaker":"title","groups":true}}', $this->getJson('/api/tied-vouchers?with=text'));
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function tieBreakers(): array
+    {
+        return [
+            'an engine without a sort limit' => ['collection', '"max_sorts":null,"max_page_size":null,"window":null,"lists":true,"max_list_sorts":null'],
+            'typesense, which keeps a sort for the tie-breaker' => ['typesense', '"max_sorts":3,"max_page_size":250,"window":null,"lists":true,"max_list_sorts":2'],
+        ];
     }
 
     #[Test]

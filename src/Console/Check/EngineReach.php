@@ -10,6 +10,7 @@ use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfiles;
+use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\EngineTextSearch;
 use Lomkit\Rest\Text\ScoutEngine;
 use Lomkit\Rest\Text\TextQuery;
@@ -55,8 +56,9 @@ final class EngineReach
     public function unusable(Resource $resource): ?string
     {
         try {
+            $text = $resource->text();
             $target = TextTarget::of($resource);
-            $profile = $resource->text() instanceof ScoutEngine ? EngineProfiles::forTarget($target) : null;
+            $profile = $text instanceof ScoutEngine ? EngineProfiles::forTarget($target) : null;
         } catch (Throwable) {
             return null;
         }
@@ -64,6 +66,21 @@ final class EngineReach
         try {
             $profile?->ensureUsableBy($target);
         } catch (Throwable $exception) {
+            return $exception->getMessage();
+        }
+
+        return $text instanceof ScoutEngine && $profile !== null ? self::undeclared($text, $target, $profile) : null;
+    }
+
+    private static function undeclared(ScoutEngine $text, TextTarget $target, EngineProfile $profile): ?string
+    {
+        if ($text->servingLists() && ! $profile instanceof ListsWithoutText) {
+            return null;
+        }
+
+        try {
+            $text->capabilities($target);
+        } catch (InvalidTextSearchException $exception) {
             return $exception->getMessage();
         }
 

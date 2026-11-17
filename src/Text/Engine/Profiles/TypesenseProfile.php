@@ -15,7 +15,7 @@ use Lomkit\Rest\Text\Engine\Groups\TypesenseFilter;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithoutText, MatchesStringLists
+final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithoutText, MatchesStringLists, ReservesSortAttributes
 {
     public function __construct(private TypesenseEngine $engine) {}
 
@@ -53,6 +53,12 @@ final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithout
     public function listSortKeys(): int
     {
         return $this->sortKeys();
+    }
+
+    #[\Override]
+    public function reservedSorts(): array
+    {
+        return ['id'];
     }
 
     #[\Override]

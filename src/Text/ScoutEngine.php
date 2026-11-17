@@ -12,6 +12,7 @@ use Lomkit\Rest\Text\Engine\IndexAttributes;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfiles;
 use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\Engine\ScoutModel;
+use Lomkit\Rest\Text\Engine\TieBreaker;
 
 final readonly class ScoutEngine implements ListingTextSearch
 {
@@ -28,6 +29,7 @@ final readonly class ScoutEngine implements ListingTextSearch
         private array $perimeterAttributes = [],
         private bool $withoutPerimeter = false,
         private bool $lists = false,
+        private ?string $tieBreaker = null,
     ) {}
 
     public static function make(): self
@@ -38,13 +40,13 @@ final readonly class ScoutEngine implements ListingTextSearch
     /** @param array<mixed> $attributes */
     public function filterable(array $attributes): self
     {
-        return new self($attributes, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists);
+        return new self($attributes, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker);
     }
 
     /** @param array<mixed> $attributes */
     public function sortable(array $attributes): self
     {
-        return new self($this->filterable, $attributes, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists);
+        return new self($this->filterable, $attributes, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker);
     }
 
     /**
@@ -53,17 +55,22 @@ final readonly class ScoutEngine implements ListingTextSearch
      */
     public function perimeter(Closure $perimeter, array $attributes = []): self
     {
-        return new self($this->filterable, $this->sortable, $perimeter, $attributes, $this->withoutPerimeter, $this->lists);
+        return new self($this->filterable, $this->sortable, $perimeter, $attributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker);
     }
 
     public function withoutPerimeter(): self
     {
-        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, true, $this->lists);
+        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, true, $this->lists, $this->tieBreaker);
     }
 
     public function servesLists(bool $serves = true): static
     {
-        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $serves);
+        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $serves, $this->tieBreaker);
+    }
+
+    public function tieBreaker(string $attribute): self
+    {
+        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $attribute);
     }
 
     /** @internal */
@@ -71,6 +78,13 @@ final readonly class ScoutEngine implements ListingTextSearch
     public function servingLists(): bool
     {
         return $this->lists;
+    }
+
+    /** @internal */
+    #[\Override]
+    public function listTieBreaker(): ?string
+    {
+        return $this->tieBreaker;
     }
 
     /**
@@ -140,8 +154,9 @@ final readonly class ScoutEngine implements ListingTextSearch
             throw InvalidTextSearchException::unlistedEngine($target->resource, $profile->name());
         }
 
+        $tieBreaker = $this->tieBreaker === null ? null : TieBreaker::declared($this->tieBreaker, $target->resource, $profile, $this->lists);
         $attributes = IndexAttributes::of($target, $profile, $this->filterable, $this->sortable, $this->perimeterAttributes, $this->lists);
 
-        return new EngineIndex($model, $profile, $attributes, $target->resource, $this->lists);
+        return new EngineIndex($model, $profile, $attributes, $target->resource, $this->lists, $tieBreaker);
     }
 }

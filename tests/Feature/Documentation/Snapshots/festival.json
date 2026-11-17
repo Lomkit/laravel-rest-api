@@ -5905,7 +5905,11 @@
                                                     "integer",
                                                     "null"
                                                 ],
-                                                "description": "With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort"
+                                                "description": "With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort, one less when the tie-breaker takes a sort of the engine"
+                                            },
+                                            "tie_breaker": {
+                                                "type": "string",
+                                                "description": "With lists, when the resource declares one: the unique attribute that orders a list sent without a sort, descending, and ends the sorts of a list when the engine has a sort left for it"
                                             },
                                             "groups": {
                                                 "type": "boolean",
@@ -9405,7 +9409,11 @@
                                                     "integer",
                                                     "null"
                                                 ],
-                                                "description": "With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort"
+                                                "description": "With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort, one less when the tie-breaker takes a sort of the engine"
+                                            },
+                                            "tie_breaker": {
+                                                "type": "string",
+                                                "description": "With lists, when the resource declares one: the unique attribute that orders a list sent without a sort, descending, and ends the sorts of a list when the engine has a sort left for it"
                                             },
                                             "groups": {
                                                 "type": "boolean",
@@ -14986,7 +14994,11 @@
                                                     "integer",
                                                     "null"
                                                 ],
-                                                "description": "With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort"
+                                                "description": "With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort, one less when the tie-breaker takes a sort of the engine"
+                                            },
+                                            "tie_breaker": {
+                                                "type": "string",
+                                                "description": "With lists, when the resource declares one: the unique attribute that orders a list sent without a sort, descending, and ends the sorts of a list when the engine has a sort left for it"
                                             },
                                             "groups": {
                                                 "type": "boolean",

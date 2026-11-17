@@ -13,6 +13,7 @@ use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 
+/** @internal */
 final readonly class IndexAttributeRules
 {
     private const string NAME = '/\A[A-Za-z_][A-Za-z0-9_]*\z/';
@@ -58,7 +59,7 @@ final readonly class IndexAttributeRules
             : new IndexAttribute($field, array_values($operators), $profile->literal(), list: true);
     }
 
-    private static function ensureName(string $name, IndexDeclarer $declarer): void
+    public static function ensureName(string $name, IndexDeclarer $declarer): void
     {
         if (preg_match(self::NAME, $name) !== 1 || $name === self::SOFT_DELETED) {
             throw $declarer->invalidName($name);

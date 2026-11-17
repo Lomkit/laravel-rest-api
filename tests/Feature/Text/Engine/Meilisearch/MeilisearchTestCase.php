@@ -44,7 +44,7 @@ abstract class MeilisearchTestCase extends EngineSearchTestCase
         $this->beforeApplicationDestroyed(fn () => $this->indexes->drop($this->index));
         $this->indexes->reset($this->index, (new Voucher)->getScoutKeyName(), [
             'filterableAttributes' => ['number', 'price', 'active', 'code', 'team', 'title', '__soft_deleted'],
-            'sortableAttributes' => ['price', 'number', 'code'],
+            'sortableAttributes' => ['price', 'number', 'code', 'team', 'title'],
             'typoTolerance' => ['enabled' => false],
         ]);
 

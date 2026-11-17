@@ -34,7 +34,7 @@ class EngineListRequestTest extends EngineSearchTestCase
 
         $response->assertOk();
         $this->assertSame(
-            ['q' => '*', 'filter_by' => 'price:<40', 'per_page' => 2, 'page' => 2, 'sort_by' => 'code:asc'],
+            ['q' => '*', 'filter_by' => 'price:<40', 'per_page' => 2, 'page' => 2, 'sort_by' => 'code:desc'],
             array_intersect_key($engine->parameters[0], array_flip(['q', 'filter_by', 'per_page', 'page', 'sort_by'])),
         );
     }
@@ -60,8 +60,8 @@ class EngineListRequestTest extends EngineSearchTestCase
 
         $response = $this->search('listed-vouchers', ['filters' => [['field' => 'number', 'operator' => 'in', 'value' => [1, 3]]]]);
 
-        $response->assertOk()->assertExactJson($this->page([3, 1], 2));
-        $this->assertSame([['q' => '', 'filter' => 'number IN [1, 3]', 'sort' => ['code:asc']]], $engine->requests);
+        $response->assertOk()->assertExactJson($this->page([1, 3], 2));
+        $this->assertSame([['q' => '', 'filter' => 'number IN [1, 3]', 'sort' => ['code:desc']]], $engine->requests);
         $this->assertSame([], $settings->indexes);
     }
 }

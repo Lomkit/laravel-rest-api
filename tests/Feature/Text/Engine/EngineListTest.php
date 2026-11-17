@@ -47,7 +47,7 @@ class EngineListTest extends EngineSearchTestCase
 
         $response = $this->search('listed-vouchers', []);
 
-        $response->assertOk()->assertExactJson($this->page([3, 2, 1, 4, 5], 5));
+        $response->assertOk()->assertExactJson($this->page([5, 4, 1, 2, 3], 5));
     }
 
     #[Test]
@@ -58,15 +58,15 @@ class EngineListTest extends EngineSearchTestCase
 
         $response = $this->search('listed-vouchers', ['filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]], 'limit' => 2, 'page' => 2]);
 
-        $response->assertOk()->assertExactJson($this->page([1, 4], 4, 2, 2));
+        $response->assertOk()->assertExactJson($this->page([2, 3], 4, 2, 2));
         $this->assertSame([[2, 2]], $engine->pages);
         $this->assertSame('', $engine->searches[0]->query);
         $this->assertSame([['field' => 'price', 'operator' => '<', 'value' => 40]], $engine->searches[0]->wheres);
-        $this->assertSame([['column' => 'code', 'direction' => 'asc']], $engine->searches[0]->orders);
+        $this->assertSame([['column' => 'code', 'direction' => 'desc']], $engine->searches[0]->orders);
     }
 
     #[Test]
-    public function it_keeps_the_requested_sort_in_place_of_the_key_order(): void
+    public function it_keeps_the_requested_sort_and_ends_it_on_the_key(): void
     {
         $engine = new RecordingCollectionEngine;
         $this->useEngine($engine);
@@ -74,7 +74,7 @@ class EngineListTest extends EngineSearchTestCase
         $response = $this->search('listed-vouchers', ['sorts' => [['field' => 'price', 'direction' => 'desc']]]);
 
         $response->assertOk()->assertJsonPath('data.*.id', [5, 2, 4, 3, 1]);
-        $this->assertSame([['column' => 'price', 'direction' => 'desc']], $engine->searches[0]->orders);
+        $this->assertSame([['column' => 'price', 'direction' => 'desc'], ['column' => 'code', 'direction' => 'desc']], $engine->searches[0]->orders);
     }
 
     /**
@@ -96,10 +96,10 @@ class EngineListTest extends EngineSearchTestCase
     public static function lists(): iterable
     {
         foreach (self::drivers() as $engine => [$driver]) {
-            yield "integers in a list on {$engine}" => [$driver, ['filters' => [['field' => 'number', 'operator' => 'in', 'value' => [1, 3]]]], [3, 1], 2, 50, 1];
+            yield "integers in a list on {$engine}" => [$driver, ['filters' => [['field' => 'number', 'operator' => 'in', 'value' => [1, 3]]]], [1, 3], 2, 50, 1];
             yield "a false boolean on {$engine}" => [$driver, ['filters' => [['field' => 'active', 'value' => false]]], [5], 1, 50, 1];
             yield "two sorts on {$engine}" => [$driver, ['sorts' => [['field' => 'number', 'direction' => 'desc'], ['field' => 'price']]], [5, 4, 1, 2, 3], 5, 50, 1];
-            yield "the second page on {$engine}" => [$driver, ['limit' => 2, 'page' => 2], [1, 4], 5, 2, 2];
+            yield "the second page on {$engine}" => [$driver, ['limit' => 2, 'page' => 2], [1, 2], 5, 2, 2];
             yield "a page past the last on {$engine}" => [$driver, ['limit' => 2, 'page' => 4], [], 5, 2, 4];
         }
     }
@@ -124,7 +124,7 @@ class EngineListTest extends EngineSearchTestCase
     public static function perimeters(): array
     {
         return [
-            'two teams' => [['red', 'blue'], [3, 2, 1, 4, 5]],
+            'two teams' => [['red', 'blue'], [5, 4, 1, 2, 3]],
             'one team' => [['blue'], [4]],
             'no team' => [[], []],
         ];
@@ -139,7 +139,7 @@ class EngineListTest extends EngineSearchTestCase
         $with = $this->search('listed-vouchers', ['trashed' => 'with']);
         $only = $this->search('listed-vouchers', ['trashed' => 'only']);
 
-        $with->assertOk()->assertExactJson($this->page([3, 2, 1, 4, 5, 6], 6));
+        $with->assertOk()->assertExactJson($this->page([6, 5, 4, 1, 2, 3], 6));
         $only->assertOk()->assertExactJson($this->page([6], 1));
     }
 
@@ -154,8 +154,8 @@ class EngineListTest extends EngineSearchTestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.*.id', [3, 2, 1, 4, 5])
-            ->assertJsonPath('data.*.lines_count', [1, 0, 2, 1, 1])
+            ->assertJsonPath('data.*.id', [5, 4, 1, 2, 3])
+            ->assertJsonPath('data.*.lines_count', [1, 1, 2, 0, 1])
             ->assertJsonPath('data.2.lines.*.label', ['l1b', 'l1a']);
     }
 
@@ -241,9 +241,9 @@ class EngineListTest extends EngineSearchTestCase
         $rendered = $search->render();
         $streamed = $search->lazy()->all();
 
-        $this->assertSame([3, 2, 1, 4, 5], array_map(fn (Model $row): mixed => $row->getKey(), $page->items()));
+        $this->assertSame([5, 4, 1, 2, 3], array_map(fn (Model $row): mixed => $row->getKey(), $page->items()));
         $this->assertSame([[50, 1], [50, 1]], $engine->pages);
-        $this->assertSame([3, 2, 1, 4, 5], array_column($rendered['data'], 'id'));
+        $this->assertSame([5, 4, 1, 2, 3], array_column($rendered['data'], 'id'));
         $this->assertSame([5, 3, 2, 1], array_column($streamed, 'id'));
     }
 }

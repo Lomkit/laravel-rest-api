@@ -32,7 +32,8 @@ final readonly class EngineListCheck
 
             if ($text instanceof ListingTextSearch && $text->servingLists()) {
                 $report = self::check($resource, $text, $report);
-                $report = self::overridesPerimeterQuery($resource) ? $report->withNote(self::unappliedPerimeterQuery($resource::class)) : $report;
+                $report = self::overrides($resource, 'perimeterQuery') ? $report->withNote(self::unappliedPerimeterQuery($resource::class)) : $report;
+                $report = self::overrides($resource, 'defaultOrderBy') ? $report->withNote(EngineListNotes::unappliedDefaultOrder($resource::class)) : $report;
             }
         }
 
@@ -51,21 +52,14 @@ final readonly class EngineListCheck
 
         return match (true) {
             ! $profile instanceof ListsWithoutText => $report->withProblem(InvalidTextSearchException::unlistedEngine($class, $profile->name())->getMessage()),
-            $profile instanceof NullProfile => self::ordered($resource, $text, $profile, $report->withResource($class)->withNote(self::nullEngine($class, $profile))),
-            default => self::ordered($resource, $text, $profile, $report->withResource($class)),
+            $profile instanceof NullProfile => EngineListOrder::check($resource, $text, $profile, $report->withResource($class)->withNote(self::nullEngine($class, $profile))),
+            default => EngineListOrder::check($resource, $text, $profile, $report->withResource($class)),
         };
     }
 
-    private static function ordered(Resource $resource, ListingTextSearch $text, ListsWithoutText $profile, EngineListReport $report): EngineListReport
+    private static function overrides(Resource $resource, string $method): bool
     {
-        $note = EngineListOrder::note($resource, $text, $profile);
-
-        return $note === null ? $report : $report->withNote($note);
-    }
-
-    private static function overridesPerimeterQuery(Resource $resource): bool
-    {
-        return (new ReflectionMethod($resource, 'perimeterQuery'))->getDeclaringClass()->getName() !== Resource::class;
+        return (new ReflectionMethod($resource, $method))->getDeclaringClass()->getName() !== Resource::class;
     }
 
     private static function unappliedPerimeterQuery(string $resource): string

@@ -11,7 +11,7 @@ use Lomkit\Rest\Text\Engine\Groups\TurbopufferFilter;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class TurbopufferProfile implements FiltersStringLists, FiltersWithGroups, ListsWithoutText, MatchesStringLists
+final readonly class TurbopufferProfile implements FiltersStringLists, FiltersWithGroups, ListsWithoutText, MatchesStringLists, RanksByKey
 {
     use PlainLiterals;
 

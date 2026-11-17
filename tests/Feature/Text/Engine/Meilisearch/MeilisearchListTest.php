@@ -19,6 +19,6 @@ class MeilisearchListTest extends MeilisearchTestCase
 
         $response = $this->search('listed-vouchers', ['limit' => 2]);
 
-        $response->assertOk()->assertExactJson($this->page([3, 2], 5, 2));
+        $response->assertOk()->assertExactJson($this->page([5, 4], 5, 2));
     }
 }
