@@ -8,11 +8,13 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
+use Lomkit\Rest\Text\Engine\Groups\EloquentFilter;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class DatabaseProfile implements AppliesRowRestrictions, ComparesColumns, ListsWithoutText
+final readonly class DatabaseProfile implements AppliesRowRestrictions, ComparesColumns, FiltersWithGroups, ListsWithoutText
 {
     use PlainLiterals;
 
@@ -52,6 +54,12 @@ final readonly class DatabaseProfile implements AppliesRowRestrictions, Compares
     public function listSortKeys(): int
     {
         return PHP_INT_MAX;
+    }
+
+    #[\Override]
+    public function filterGroups(Builder $builder, FilterTree $tree): void
+    {
+        $builder->query(fn (EloquentBuilder $query) => EloquentFilter::apply($query, $tree));
     }
 
     #[\Override]
@@ -96,7 +104,13 @@ final readonly class DatabaseProfile implements AppliesRowRestrictions, Compares
     /** @param Builder<Model> $builder */
     private function read(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows): EnginePage
     {
-        $builder->query(function (EloquentBuilder $query) use ($model, $rows): EloquentBuilder {
+        $groups = $builder->queryCallback;
+
+        $builder->query(function (EloquentBuilder $query) use ($model, $rows, $groups): EloquentBuilder {
+            if ($groups !== null) {
+                $groups($query);
+            }
+
             $query->select($model->keyColumn())->setEagerLoads([]);
             $rows?->apply($query);
 

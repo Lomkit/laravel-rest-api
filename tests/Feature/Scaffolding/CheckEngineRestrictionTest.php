@@ -19,11 +19,17 @@ use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\RouteBoundVoucherController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\RouteBoundVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilteringVoucher;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilteringVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilteringVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\OpenListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainEngineVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainEngineVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainProfile;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Ledger;
+use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\After;
@@ -157,7 +163,7 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
 
         $exitCode = Artisan::call('rest:check', ['controllers' => [RouteBoundVoucherController::class], '--json' => true], $output = new BufferedOutput);
 
-        $this->assertSame([0, ['perimeter' => [RouteBoundVoucherResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [], 'extension_perimeter' => []], 1], [$exitCode, json_decode($output->fetch(), true)['rows'], RouteBoundVoucherResource::$textCalls]);
+        $this->assertSame([0, ['perimeter' => [RouteBoundVoucherResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [], 'extension_perimeter' => []], 2], [$exitCode, json_decode($output->fetch(), true)['rows'], RouteBoundVoucherResource::$textCalls]);
     }
 
     #[Test]
@@ -173,6 +179,40 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
             [InvalidTextSearchException::unresolvedEngine(RouteBoundVoucherResource::class, 'red', RedRowsExtension::class, new RuntimeException('text() needs the request route'))->getMessage()],
             json_decode($output->fetch(), true)['rows']['problems'],
         );
+    }
+
+    #[Test]
+    public function it_reports_a_typesense_model_that_sends_a_parameter_of_the_package(): void
+    {
+        $this->useTypesense();
+        $problem = InvalidTextSearchException::ownedSearchParameter(FilteringVoucherResource::class, FilteringVoucher::class, 'filter_by')->getMessage();
+
+        $exitCode = Artisan::call('rest:check', ['controllers' => [FilteringVoucherController::class], '--json' => true], $output = new BufferedOutput);
+        Artisan::call('rest:check', ['controllers' => [FilteringVoucherController::class]], $text = new BufferedOutput);
+
+        $this->assertSame([1, [$problem]], [$exitCode, json_decode($output->fetch(), true)['rows']['problems']]);
+        $this->assertStringContainsString("  rows ... FAILED\n  ⇂ ".rtrim($problem, '.')."\n", $this->summary($text->fetch()));
+    }
+
+    #[Test]
+    public function it_reports_nothing_for_a_typesense_model_that_leaves_the_parameters_of_the_package(): void
+    {
+        $this->useTypesense();
+        config(['scout.typesense.model-settings.'.Voucher::class.'.search-parameters.query_by' => 'title']);
+
+        $exitCode = Artisan::call('rest:check', ['controllers' => [OpenListedVoucherController::class], '--json' => true], $output = new BufferedOutput);
+
+        $this->assertSame([0, []], [$exitCode, json_decode($output->fetch(), true)['rows']['problems']]);
+    }
+
+    private function useTypesense(): void
+    {
+        Route::prefix('api')->group(function (): void {
+            Rest::resource('filtering-vouchers', FilteringVoucherController::class)->middleware('auth:sanctum')->register();
+            Rest::resource('open-listed-vouchers', OpenListedVoucherController::class)->middleware('auth:sanctum')->register();
+        });
+        $this->app->make(EngineManager::class)->extend('typesense', fn (): FakeTypesenseEngine => new FakeTypesenseEngine);
+        config(['scout.driver' => 'typesense']);
     }
 
     /** @param list<string> $extensions */

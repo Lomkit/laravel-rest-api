@@ -10,10 +10,12 @@ use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\BacktickLiteral;
 use Lomkit\Rest\Text\Engine\EngineLiteral;
 use Lomkit\Rest\Text\Engine\EnginePage;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
+use Lomkit\Rest\Text\Engine\Groups\TypesenseFilter;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class TypesenseProfile implements ListsWithoutText, MatchesStringLists
+final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithoutText, MatchesStringLists
 {
     public function __construct(private TypesenseEngine $engine) {}
 
@@ -54,6 +56,15 @@ final readonly class TypesenseProfile implements ListsWithoutText, MatchesString
     }
 
     #[\Override]
+    public function filterGroups(Builder $builder, FilterTree $tree): void
+    {
+        $flat = $this->engine->buildSearchParameters($builder, 1, 1)['filter_by'] ?? '';
+        $client = TypesenseFilter::of($tree);
+
+        $builder->options([...$builder->options, 'filter_by' => is_string($flat) && $flat !== '' ? "({$flat}) && {$client}" : $client]);
+    }
+
+    #[\Override]
     public function exactTotal(): bool
     {
         return true;
@@ -78,6 +89,13 @@ final readonly class TypesenseProfile implements ListsWithoutText, MatchesString
 
         if (! is_string($queryBy) || trim($queryBy) === '') {
             throw InvalidTextSearchException::missingQueryBy($target->resource, $target->model::class);
+        }
+
+        $parameters = method_exists($target->model, 'typesenseSearchParameters') ? $target->model->typesenseSearchParameters() : null;
+        $owned = is_array($parameters) ? array_values(array_intersect($this->ownedOptions(), array_keys($parameters))) : [];
+
+        if ($owned !== []) {
+            throw InvalidTextSearchException::ownedSearchParameter($target->resource, $target->model::class, $owned[0]);
         }
     }
 

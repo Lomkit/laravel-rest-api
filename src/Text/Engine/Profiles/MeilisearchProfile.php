@@ -6,11 +6,13 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
+use Lomkit\Rest\Text\Engine\Groups\MeilisearchFilter;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 use Throwable;
 
-final readonly class MeilisearchProfile implements ListsWithoutText, MatchesStringLists
+final readonly class MeilisearchProfile implements FiltersWithGroups, ListsWithoutText, MatchesStringLists
 {
     use PlainLiterals;
 
@@ -50,6 +52,18 @@ final readonly class MeilisearchProfile implements ListsWithoutText, MatchesStri
     public function listSortKeys(): int
     {
         return PHP_INT_MAX;
+    }
+
+    #[\Override]
+    public function filterGroups(Builder $builder, FilterTree $tree): void
+    {
+        $flat = MeilisearchFilter::flat($builder);
+        $client = MeilisearchFilter::of($tree);
+
+        $builder->wheres = [];
+        $builder->whereIns = [];
+        $builder->whereNotIns = [];
+        $builder->options([...$builder->options, 'filter' => $flat === '' ? $client : "({$flat}) AND {$client}"]);
     }
 
     #[\Override]

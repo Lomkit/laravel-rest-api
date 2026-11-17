@@ -19,7 +19,7 @@ class EngineDetailsTest extends EngineTestCase
         .'{"name":"price","type":"number","operators":["=","!=",">",">=","<","<=","in","not in"]},'
         .'{"name":"active","type":"boolean","operators":["=","!="]},'
         .'{"name":"code","type":"text","operators":["=","!=","in","not in"]}'
-        .'],"sorts":["price","number"],"max_sorts":null,"max_page_size":null,"window":null}';
+        .'],"sorts":["price","number"],"max_sorts":null,"max_page_size":null,"window":null,"groups":true}';
 
     #[\Override]
     protected function setUp(): void
@@ -34,7 +34,7 @@ class EngineDetailsTest extends EngineTestCase
     #[Test]
     public function it_describes_a_resource_that_serves_its_lists_through_the_engine(): void
     {
-        $grammar = str_replace('"sorts":["price","number"],"max_sorts":null,"max_page_size":null,"window":null}', '"sorts":["price","number","code"],"max_sorts":null,"max_page_size":null,"window":null,"lists":true,"max_list_sorts":null}', self::GRAMMAR);
+        $grammar = str_replace('"sorts":["price","number"],"max_sorts":null,"max_page_size":null,"window":null,"groups":true}', '"sorts":["price","number","code"],"max_sorts":null,"max_page_size":null,"window":null,"lists":true,"max_list_sorts":null,"groups":true}', self::GRAMMAR);
 
         $this->assertTextDetails('{"fields":[],"modes":["words"],"relevance":true,"trashed":false,"max_length":255,"engine":'.$grammar.'}', $this->getJson('/api/listed-vouchers?with=text'));
     }

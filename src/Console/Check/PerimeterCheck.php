@@ -25,6 +25,8 @@ final readonly class PerimeterCheck
             $report = self::checkRows($resource, $restrictions, self::providers($context, $restrictions), $report);
             $problem = $engines->problem($context->resource($resource));
             $report = $problem === null ? $report : $report->withRowProblem($problem);
+            $unusable = $engines->unusable($context->resource($resource));
+            $report = $unusable === null ? $report : $report->withRowProblem($unusable);
         }
 
         foreach ($resources as $resource) {

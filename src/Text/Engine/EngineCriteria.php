@@ -8,6 +8,7 @@ use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\RelevanceSort;
 use Lomkit\Rest\Search\SortNode;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 
 final readonly class EngineCriteria
 {
@@ -18,14 +19,16 @@ final readonly class EngineCriteria
     private function __construct(
         private array $filters,
         private array $sorts,
+        private ?FilterTree $tree = null,
     ) {}
 
     /** @param list<SortNode> $sorts */
     public static function of(FilterGroup $filters, array $sorts): self
     {
+        $grouped = FilterTree::needed($filters);
         $conditions = [];
 
-        foreach ($filters->filters as $node) {
+        foreach ($grouped ? [] : $filters->filters as $node) {
             $conditions[] = $node instanceof EngineFilterCondition ? $node : throw self::foreign($node);
         }
 
@@ -39,11 +42,15 @@ final readonly class EngineCriteria
             $orders[] = $sort instanceof EngineSort ? $sort : throw self::foreign($sort);
         }
 
-        return new self($conditions, $orders);
+        return new self($conditions, $orders, $grouped ? FilterTree::of($filters) : null);
     }
 
     public function applyTo(EngineQuery $query): void
     {
+        if ($this->tree !== null) {
+            $query->whereGroups($this->tree);
+        }
+
         foreach ($this->filters as $filter) {
             match ($filter->operator) {
                 FilterOperator::In => $query->whereIn($filter->name, self::members($filter)),

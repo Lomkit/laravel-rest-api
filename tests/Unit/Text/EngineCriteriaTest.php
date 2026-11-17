@@ -7,9 +7,12 @@ use LogicException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Search\FieldSort;
 use Lomkit\Rest\Search\FilterGroup;
+use Lomkit\Rest\Search\RelationFilterGroup;
 use Lomkit\Rest\Search\RelevanceSort;
+use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherLineResource;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Lomkit\Rest\Text\Engine\EngineCriteria;
 use Lomkit\Rest\Text\Engine\EngineFilterCondition;
@@ -33,9 +36,13 @@ class EngineCriteriaTest extends PackageTestCase
     /** @return iterable<string, array{Closure(): EngineCriteria, class-string}> */
     public static function foreignNodes(): iterable
     {
-        yield 'a database filter group' => [
-            static fn (): EngineCriteria => EngineCriteria::of(new FilterGroup([new FilterGroup]), []),
-            FilterGroup::class,
+        yield 'a relation group' => [
+            static fn (): EngineCriteria => EngineCriteria::of(new FilterGroup([new RelationFilterGroup(HasMany::make('lines', VoucherLineResource::class), true, new FilterGroup)]), []),
+            RelationFilterGroup::class,
+        ];
+        yield 'a relation group inside a group' => [
+            static fn (): EngineCriteria => EngineCriteria::of(new FilterGroup([new FilterGroup([new RelationFilterGroup(HasMany::make('lines', VoucherLineResource::class), true, new FilterGroup)])]), []),
+            RelationFilterGroup::class,
         ];
         yield 'a field sort' => [
             static fn (): EngineCriteria => EngineCriteria::of(new FilterGroup, [new FieldSort(Integer::make('price'), null)]),

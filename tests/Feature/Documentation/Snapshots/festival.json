@@ -5820,7 +5820,7 @@
                                             "object",
                                             "null"
                                         ],
-                                        "description": "The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only, no scopes, @relevance alone and desc only; null on the database",
+                                        "description": "The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only unless groups is true, no scopes, @relevance alone and desc only; null on the database",
                                         "properties": {
                                             "filters": {
                                                 "type": "array",
@@ -5906,6 +5906,10 @@
                                                     "null"
                                                 ],
                                                 "description": "With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort"
+                                            },
+                                            "groups": {
+                                                "type": "boolean",
+                                                "description": "Present and true when the engine accepts filters joined with or and nested groups of filters, within the depth and count limits of the filters"
                                             }
                                         },
                                         "required": [
@@ -9316,7 +9320,7 @@
                                             "object",
                                             "null"
                                         ],
-                                        "description": "The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only, no scopes, @relevance alone and desc only; null on the database",
+                                        "description": "The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only unless groups is true, no scopes, @relevance alone and desc only; null on the database",
                                         "properties": {
                                             "filters": {
                                                 "type": "array",
@@ -9402,6 +9406,10 @@
                                                     "null"
                                                 ],
                                                 "description": "With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort"
+                                            },
+                                            "groups": {
+                                                "type": "boolean",
+                                                "description": "Present and true when the engine accepts filters joined with or and nested groups of filters, within the depth and count limits of the filters"
                                             }
                                         },
                                         "required": [
@@ -14893,7 +14901,7 @@
                                             "object",
                                             "null"
                                         ],
-                                        "description": "The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only, no scopes, @relevance alone and desc only; null on the database",
+                                        "description": "The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only unless groups is true, no scopes, @relevance alone and desc only; null on the database",
                                         "properties": {
                                             "filters": {
                                                 "type": "array",
@@ -14979,6 +14987,10 @@
                                                     "null"
                                                 ],
                                                 "description": "With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort"
+                                            },
+                                            "groups": {
+                                                "type": "boolean",
+                                                "description": "Present and true when the engine accepts filters joined with or and nested groups of filters, within the depth and count limits of the filters"
                                             }
                                         },
                                         "required": [

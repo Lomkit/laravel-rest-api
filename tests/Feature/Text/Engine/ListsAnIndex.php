@@ -64,4 +64,25 @@ trait ListsAnIndex
 
         $response->assertOk()->assertExactJson($this->page([4], 1));
     }
+
+    #[Test]
+    public function it_never_returns_a_row_outside_the_index_perimeter_through_an_or_filter(): void
+    {
+        $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red']]));
+        $filters = [['field' => 'number', 'value' => 4], ['field' => 'number', 'value' => 3, 'type' => 'or']];
+
+        $list = $this->search('listed-team-vouchers', ['filters' => $filters]);
+        $text = $this->search('listed-team-vouchers', ['text' => ['value' => 'report'], 'filters' => $filters]);
+
+        $list->assertOk()->assertExactJson($this->page([1], 1));
+        $text->assertOk()->assertExactJson($this->page([1], 1));
+    }
+
+    #[Test]
+    public function it_lists_with_a_nested_group_of_filters(): void
+    {
+        $response = $this->search('listed-vouchers', ['filters' => [['field' => 'active', 'value' => true], ['nested' => [['field' => 'number', 'value' => 3], ['field' => 'price', 'operator' => '>', 'value' => 20, 'type' => 'or']]]]]);
+
+        $response->assertOk()->assertExactJson($this->page([2, 1], 2));
+    }
 }

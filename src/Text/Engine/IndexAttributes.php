@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Text\Engine;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+use Lomkit\Rest\Text\Engine\Profiles\FiltersWithGroups;
 use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\TextTarget;
 
@@ -61,7 +62,7 @@ final readonly class IndexAttributes
 
     public function grammar(EngineProfile $profile, bool $lists = false): EngineGrammar
     {
-        $grammar = new EngineGrammar($this->filterable, $this->sortable, $profile->sortKeys(), $profile->maxPageSize(), $profile->window());
+        $grammar = new EngineGrammar($this->filterable, $this->sortable, $profile->sortKeys(), $profile->maxPageSize(), $profile->window(), groups: $profile instanceof FiltersWithGroups);
 
         return $lists && $profile instanceof ListsWithoutText ? $grammar->listing($profile->listSortKeys()) : $grammar;
     }

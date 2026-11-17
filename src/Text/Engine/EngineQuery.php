@@ -8,9 +8,10 @@ use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
-use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
+use Lomkit\Rest\Text\Engine\Profiles\FiltersWithGroups;
 use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use Lomkit\Rest\Text\TextQuery;
 
@@ -18,8 +19,9 @@ final class EngineQuery
 {
     private readonly IndexConditions $conditions;
 
-    /** @var list<array{string, SortDirection}> */
-    private array $orders = [];
+    private readonly EngineSorts $sorts;
+
+    private ?FilterTree $tree = null;
 
     /** @var array<string, mixed> */
     private array $options = [];
@@ -36,6 +38,7 @@ final class EngineQuery
         }
 
         $this->conditions = new IndexConditions($index->searchedClass());
+        $this->sorts = new EngineSorts($index, $text === null);
     }
 
     public function where(string $attribute, FilterOperator|string $operator, mixed $value): static
@@ -79,15 +82,19 @@ final class EngineQuery
 
     public function orderBy(string $attribute, SortDirection|string $direction = SortDirection::Asc): static
     {
-        if (! $this->index->attributes->sorts($attribute)) {
-            throw InvalidEngineQueryException::notSortable($attribute);
+        $this->sorts->add($attribute, $direction);
+
+        return $this;
+    }
+
+    /** @internal */
+    public function whereGroups(FilterTree $tree): static
+    {
+        if (! $this->index->profile instanceof FiltersWithGroups) {
+            throw InvalidEngineQueryException::ungroupedFilters($this->index->searchedClass(), $this->index->profile->name());
         }
 
-        if (count($this->orders) >= $this->sortKeys()) {
-            throw InvalidEngineQueryException::tooManySorts($this->sortKeys());
-        }
-
-        $this->orders[] = [$attribute, SortDirection::parse($direction)];
+        $this->tree = $tree;
 
         return $this;
     }
@@ -108,7 +115,7 @@ final class EngineQuery
             return EnginePage::empty();
         }
 
-        $builder = (new EngineBuilder($this->index, $this->text, $this->trashed))->build($this->conditions, $this->orders, $this->options);
+        $builder = (new EngineBuilder($this->index, $this->text, $this->trashed))->build($this->conditions, $this->sorts->all(), $this->options, $this->tree);
 
         return $this->restricted?->read($builder, $this->index->model, $perPage, $page)
             ?? $this->index->profile->page($builder, $this->index->model, $perPage, $page);
@@ -164,13 +171,6 @@ final class EngineQuery
     public function paging(): EnginePaging
     {
         return new EnginePaging($this->index->profile);
-    }
-
-    private function sortKeys(): int
-    {
-        $profile = $this->index->profile;
-
-        return $this->text === null && $profile instanceof ListsWithoutText ? $profile->listSortKeys() : $profile->sortKeys();
     }
 
     private function compared(string $attribute): IndexAttribute
