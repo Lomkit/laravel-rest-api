@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Query\Clauses\ExtensionRestrictionClause;
 use Lomkit\Rest\Search\Plan\KeySet;
 
 final readonly class EngineKeys implements KeySet
@@ -16,18 +17,19 @@ final readonly class EngineKeys implements KeySet
     private function __construct(
         private ScoutModel $model,
         private array $positions,
+        private bool $trusted,
     ) {}
 
     /** @param array<mixed> $keys */
     public static function of(ScoutModel $model, array $keys): self
     {
-        $positions = [];
+        return new self($model, self::positions($model, $keys), false);
+    }
 
-        foreach ($model->keys($keys) as $position => $key) {
-            $positions[$key] ??= $position;
-        }
-
-        return new self($model, $positions);
+    /** @param array<mixed> $keys */
+    public static function trusted(ScoutModel $model, array $keys): self
+    {
+        return new self($model, self::positions($model, $keys), true);
     }
 
     #[\Override]
@@ -57,7 +59,7 @@ final readonly class EngineKeys implements KeySet
     #[\Override]
     public function perimeter(Resource $resource): array
     {
-        return [];
+        return $this->trusted ? [] : ExtensionRestrictionClause::of($resource);
     }
 
     /**
@@ -70,5 +72,20 @@ final readonly class EngineKeys implements KeySet
             ->filter(fn (Model $model): bool => isset($this->positions[$this->model->keyOf($model)]))
             ->sortBy(fn (Model $model): int => $this->positions[$this->model->keyOf($model)])
             ->values();
+    }
+
+    /**
+     * @param  array<mixed>  $keys
+     * @return array<int|string, int>
+     */
+    private static function positions(ScoutModel $model, array $keys): array
+    {
+        $positions = [];
+
+        foreach ($model->keys($keys) as $position => $key) {
+            $positions[$key] ??= $position;
+        }
+
+        return $positions;
     }
 }

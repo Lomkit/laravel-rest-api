@@ -84,7 +84,7 @@ final readonly class EngineTargets implements ActionRows
      */
     private function rows(array $keys): Collection
     {
-        $rows = $this->search->restrictedRows($keys);
+        $rows = $this->search->rows($keys);
 
         return $this->checked === null ? $rows : $rows->filter($this->checked->covers(...))->values();
     }
