@@ -26,6 +26,10 @@ final readonly class SearchParser
         $body = $this->shape->body($search, $context);
         $text = $this->text($search->at('text'), $context);
 
+        if ($this->shape !== SearchShape::Aggregate) {
+            (new SourceParser)->parse($search->at('source'), $text, $context);
+        }
+
         return $body->node($text, $this->trashed($search->at('trashed'), $context));
     }
 

@@ -47,7 +47,7 @@ final readonly class EngineListCheck
         try {
             $profile = EngineProfiles::forTarget(TextTarget::of($resource));
         } catch (Throwable $exception) {
-            return $report->withProblem("The resource [{$class}] serves its lists through its search engine, which cannot be resolved ({$exception->getMessage()}). Configure the Scout engine of its model, or remove ->servesLists() from its text search.");
+            return $report->withProblem("The resource [{$class}] serves its lists through its search engine on request, but the engine cannot be resolved ({$exception->getMessage()}). Configure the Scout engine of its model, or remove ->servesLists() from its text search.");
         }
 
         return match (true) {
@@ -64,11 +64,11 @@ final readonly class EngineListCheck
 
     private static function unappliedPerimeterQuery(string $resource): string
     {
-        return "{$resource} overrides perimeterQuery(), which does not apply to its lists: they are served through its search engine, restricted by ScoutEngine::perimeter() and the RestrictsEngineQueries extensions. Mirror the perimeter in ScoutEngine::perimeter().";
+        return "{$resource} overrides perimeterQuery(), which does not apply to its engine lists: a list sent with source: engine is restricted by ScoutEngine::perimeter() and the RestrictsEngineQueries extensions only. Mirror the perimeter in ScoutEngine::perimeter().";
     }
 
     private static function nullEngine(string $resource, EngineProfile $profile): string
     {
-        return "The resource [{$resource}] serves its lists through its search engine, but its model uses the Scout null driver [{$profile->name()}] in this environment, so its lists will be empty. Run rest:check with the Scout driver of production (SCOUT_DRIVER).";
+        return "The resource [{$resource}] serves its lists through its search engine on request, but its model uses the Scout null driver [{$profile->name()}] in this environment, so its engine lists will be empty. Run rest:check with the Scout driver of production (SCOUT_DRIVER).";
     }
 }

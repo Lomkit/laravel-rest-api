@@ -55,7 +55,7 @@ class EngineFilterGroupTest extends EngineSearchTestCase
     {
         config(['scout.driver' => $driver]);
 
-        $response = $this->search('listed-vouchers', $search);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', ...$search]);
 
         $response->assertOk()->assertJsonPath('data.*.id', $ids)->assertJsonPath('total', count($ids));
     }
@@ -77,7 +77,7 @@ class EngineFilterGroupTest extends EngineSearchTestCase
         config(['scout.driver' => $driver, 'rest.extensions' => [CheapEngineRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red']]));
 
-        $response = $this->search('listed-team-vouchers', ['filters' => [['field' => 'number', 'value' => 5], ['field' => 'number', 'value' => 3, 'type' => 'or'], ['field' => 'number', 'value' => 4, 'type' => 'or']]]);
+        $response = $this->search('listed-team-vouchers', ['source' => 'engine', 'filters' => [['field' => 'number', 'value' => 5], ['field' => 'number', 'value' => 3, 'type' => 'or'], ['field' => 'number', 'value' => 4, 'type' => 'or']]]);
 
         $response->assertOk()->assertExactJson($this->page([1], 1));
     }
@@ -91,7 +91,7 @@ class EngineFilterGroupTest extends EngineSearchTestCase
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red']]));
         DB::enableQueryLog();
 
-        $this->search('listed-team-vouchers', ['filters' => $filters])->assertOk();
+        $this->search('listed-team-vouchers', ['source' => 'engine', 'filters' => $filters])->assertOk();
 
         $this->assertSame($sql, str_replace(['"', '`'], '', (string) (Arr::first(DB::getQueryLog(), fn (array $query): bool => str_contains((string) $query['query'], 'number'))['query'] ?? '')));
     }
@@ -115,8 +115,8 @@ class EngineFilterGroupTest extends EngineSearchTestCase
         config(['rest.extensions' => [ReadersExtension::class, CheapEngineRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
 
-        $this->search('grouped-reader-vouchers', ['filters' => self::EITHER])->assertOk();
-        $this->search('grouped-reader-vouchers', ['filters' => self::NESTED])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine', 'filters' => self::EITHER])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine', 'filters' => self::NESTED])->assertOk();
 
         $this->assertSame([
             '(price:<35 && team:=[`red`] && readers:=[`ann`]) && (number:=3 || number:=4)',
@@ -133,8 +133,8 @@ class EngineFilterGroupTest extends EngineSearchTestCase
         config(['rest.extensions' => [ReadersExtension::class, CheapEngineRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
 
-        $this->search('grouped-reader-vouchers', ['filters' => self::EITHER])->assertOk();
-        $this->search('grouped-reader-vouchers', ['filters' => self::NESTED])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine', 'filters' => self::EITHER])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine', 'filters' => self::NESTED])->assertOk();
 
         $this->assertSame([
             '(price<35 AND team IN ["red"] AND readers IN ["ann"]) AND (number=3 OR number=4)',
@@ -147,7 +147,7 @@ class EngineFilterGroupTest extends EngineSearchTestCase
     {
         $this->useEngine(new NullEngine);
 
-        $response = $this->search('listed-vouchers', ['filters' => self::NESTED]);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', 'filters' => self::NESTED]);
 
         $response->assertOk()->assertExactJson($this->page([], 0));
     }
@@ -164,7 +164,7 @@ class EngineFilterGroupTest extends EngineSearchTestCase
         $this->useEngine($engine);
         config(['rest.limits.totals.filters' => 5]);
 
-        $response = $this->search('listed-vouchers', ['filters' => $filters]);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', 'filters' => $filters]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', $errors);
         $this->assertSame([], $engine->searches);

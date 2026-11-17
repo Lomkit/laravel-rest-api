@@ -66,6 +66,12 @@ final readonly class EngineGrammar implements JsonSerializable
     }
 
     /** @internal */
+    public function unlisted(): self
+    {
+        return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, groups: $this->groups);
+    }
+
+    /** @internal */
     public function servesLists(): bool
     {
         return $this->listSortKeys !== null;

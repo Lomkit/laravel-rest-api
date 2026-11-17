@@ -13,6 +13,7 @@ use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\RelevanceSort;
 use Lomkit\Rest\Search\SortNode;
+use Lomkit\Rest\Text\ListSource;
 use Lomkit\Rest\Text\TextBackend;
 use Lomkit\Rest\Text\TextCapabilities;
 use Lomkit\Rest\Text\TextQuery;
@@ -32,6 +33,12 @@ final readonly class EngineSearchGrammar implements SearchGrammar
         private TextCapabilities $text,
         private bool $listing = false,
     ) {}
+
+    #[\Override]
+    public function sources(): array
+    {
+        return $this->engine->servesLists() ? array_column(ListSource::cases(), 'value') : [];
+    }
 
     #[\Override]
     public function backend(): TextBackend

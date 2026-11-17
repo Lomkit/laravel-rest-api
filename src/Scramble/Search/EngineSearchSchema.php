@@ -64,7 +64,7 @@ final readonly class EngineSearchSchema
             }
 
             return $this->components->discriminated('field', $resource::class, $branches)
-                ->setDescription('A condition on an attribute of the search index: the resource serves its lists through its search engine, with or without a text. Without `operator`, the condition is `=`.'.($engine->groups ? '' : ' Filters combine with `and`.'));
+                ->setDescription('A condition on an attribute of the search index, for a search on the search engine: with source engine, with or without a text. Without `operator`, the condition is `=`.'.($engine->groups ? '' : ' Filters combine with `and`.'));
         });
     }
 
@@ -84,6 +84,6 @@ final readonly class EngineSearchSchema
         return $this->components->schema($this->records->name($resource).'EngineSort', $resource::class, fn (): Type => Schemas::closed([
             'field' => (new StringType)->enum([...$engine->sorts, RelevanceClause::FIELD]),
             'direction' => (new StringType)->enum(array_column(SortDirection::cases(), 'value')),
-        ], ['field'], 'An attribute of the search index: the resource serves its lists through its search engine. `@relevance` is accepted with a text only, alone and `desc`.'));
+        ], ['field'], 'An attribute of the search index, for a search on the search engine: with source engine, with or without a text. `@relevance` is accepted with a text only, alone and `desc`.'));
     }
 }

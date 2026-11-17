@@ -27,6 +27,7 @@ final readonly class ResolvedText
         private ?QueryTextSearch $strategy = null,
         private ?EngineTextSearch $engine = null,
         private bool $listing = false,
+        private bool $streams = false,
     ) {}
 
     public static function of(Resource $resource, RestRequest $request): self
@@ -41,7 +42,10 @@ final readonly class ResolvedText
         $terms = $query?->hasTerms() ? $query : null;
         $streams = $request instanceof PayloadSearchRequest && $request->streams();
 
-        return self::resolve($resource, $strategy, $terms, $terms === null && ! $streams && $strategy instanceof ListingTextSearch && $strategy->servingLists());
+        $lists = $strategy instanceof ListingTextSearch && $strategy->servingLists();
+        $listing = $terms === null && ! $streams && $lists && $request->input('search.source') === ListSource::Engine->value;
+
+        return self::resolve($resource, $strategy, $terms, $listing, $streams, $lists);
     }
 
     /** @internal */
@@ -55,7 +59,7 @@ final readonly class ResolvedText
 
         $narrowed = $engine->without($narrowing->unfilterableNames(), $narrowing->unsortableNames());
 
-        return new self($this->backend, $this->query, $this->target, $this->capabilities->withEngine($narrowed), $this->strategy, $this->engine, $this->listing);
+        return new self($this->backend, $this->query, $this->target, $this->capabilities->withEngine($narrowed), $this->strategy, $this->engine, $this->listing, $this->streams);
     }
 
     public function usesEngine(): bool
@@ -78,7 +82,7 @@ final readonly class ResolvedText
         $engine = $this->engineGrammar();
 
         if ($engine === null || $this->capabilities === null) {
-            return new SqlSearchGrammar($this->capabilities, $this->ranks());
+            return new SqlSearchGrammar($this->capabilities, $this->ranks(), $this->streams);
         }
 
         return $engine->searchGrammar($this->capabilities, $this->listing);
@@ -135,25 +139,22 @@ final readonly class ResolvedText
         return $this->strategy->run($query, $this->target);
     }
 
-    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing): self
+    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing, bool $streams, bool $lists): self
     {
         $target = TextTarget::of($resource);
 
         return match (true) {
             $strategy instanceof QueryTextSearch => new self(TextBackend::Query, $query, $target, $strategy->capabilities($target), strategy: $strategy),
-            $strategy instanceof EngineTextSearch => new self(TextBackend::Engine, $query, $target, self::engineCapabilities($resource, $strategy, $target), engine: $strategy, listing: $listing),
+            $strategy instanceof EngineTextSearch => new self(TextBackend::Engine, $query, $target, self::engineCapabilities($resource, $strategy, $target, $lists), engine: $strategy, listing: $listing, streams: $streams),
             default => throw InvalidTextSearchException::unsupportedStrategy($resource::class, $strategy::class),
         };
     }
 
-    private static function engineCapabilities(Resource $resource, EngineTextSearch $strategy, TextTarget $target): TextCapabilities
+    private static function engineCapabilities(Resource $resource, EngineTextSearch $strategy, TextTarget $target, bool $lists): TextCapabilities
     {
         $capabilities = $strategy->capabilities($target);
+        $engine = $capabilities->engine ?? throw InvalidTextSearchException::missingEngineGrammar($resource::class, $strategy::class);
 
-        if ($capabilities->engine === null) {
-            throw InvalidTextSearchException::missingEngineGrammar($resource::class, $strategy::class);
-        }
-
-        return $capabilities;
+        return $lists || ! $engine->servesLists() ? $capabilities : $capabilities->withEngine($engine->unlisted());
     }
 }

@@ -25,7 +25,7 @@ class AlgoliaListTest extends AlgoliaTestCase
     {
         $this->hits(['V-a', 'V-b'], 5, 1, 2);
 
-        $response = $this->search('listed-unsorted-vouchers', ['filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]], 'limit' => 2, 'page' => 2]);
+        $response = $this->search('listed-unsorted-vouchers', ['source' => 'engine', 'filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]], 'limit' => 2, 'page' => 2]);
 
         $response->assertOk()->assertExactJson($this->page([3, 2], 5, 2, 2));
         $this->assertSame([['POST', "/1/indexes/{$this->index}/query", [
@@ -39,17 +39,17 @@ class AlgoliaListTest extends AlgoliaTestCase
     #[Test]
     public function it_refuses_a_sort_in_a_list_on_algolia(): void
     {
-        $response = $this->search('listed-unsorted-vouchers', ['sorts' => [['field' => 'price']]]);
+        $response = $this->search('listed-unsorted-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'price']]]);
 
-        $response->assertUnprocessable()->assertJsonPath('errors', ['search.sorts.0.field' => ['The search.sorts.0.field field is refused: this resource serves its lists through its search engine, which does not run it.']]);
+        $response->assertUnprocessable()->assertJsonPath('errors', ['search.sorts.0.field' => ['The search.sorts.0.field field is refused: a list sent with source engine runs on the search engine, which does not run it.']]);
         $this->assertSame([], $this->algolia->sent('POST', "/1/indexes/{$this->index}/query"));
     }
 
     #[Test]
     public function it_refuses_or_and_nested_filters_on_algolia(): void
     {
-        $either = $this->search('listed-unsorted-vouchers', ['filters' => [['field' => 'number', 'value' => 3], ['field' => 'number', 'value' => 4, 'type' => 'or']]]);
-        $nested = $this->search('listed-unsorted-vouchers', ['filters' => [['nested' => [['field' => 'number', 'value' => 3]]]]]);
+        $either = $this->search('listed-unsorted-vouchers', ['source' => 'engine', 'filters' => [['field' => 'number', 'value' => 3], ['field' => 'number', 'value' => 4, 'type' => 'or']]]);
+        $nested = $this->search('listed-unsorted-vouchers', ['source' => 'engine', 'filters' => [['nested' => [['field' => 'number', 'value' => 3]]]]]);
 
         $either->assertUnprocessable()->assertJsonPath('errors', ['search.filters.1.type' => ['The selected search.filters.1.type is invalid.']]);
         $nested->assertUnprocessable()->assertJsonPath('errors', [

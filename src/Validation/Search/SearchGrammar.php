@@ -64,5 +64,8 @@ interface SearchGrammar
 
     public function trashed(Resource $resource): bool;
 
+    /** @return list<string> */
+    public function sources(): array;
+
     public function nested(): SearchGrammar;
 }

@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Scramble\Search;
 use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Http\Resource;
@@ -47,7 +48,7 @@ final readonly class SearchSchema
 
         $lists = $shape === SearchShape::Aggregate ? null : EngineSearchSchema::lists($resource);
 
-        return $this->components->schema($name, $resource::class, fn (): Type => $this->search($resource, array_keys($shape->keys()), $shape === SearchShape::Page, $lists));
+        return $this->components->schema($name, $resource::class, fn (): Type => $this->search($resource, $name, array_keys($shape->keys()), $shape === SearchShape::Page, $lists));
     }
 
     public static function rows(Resource $resource, string $roots): string
@@ -77,7 +78,19 @@ final readonly class SearchSchema
     }
 
     /** @param list<string> $keys */
-    private function search(Resource $resource, array $keys, bool $paged, ?EngineGrammar $lists): Type
+    private function search(Resource $resource, string $name, array $keys, bool $paged, ?EngineGrammar $lists): Type
+    {
+        $search = $this->object($resource, $keys, $paged, null);
+
+        if ($lists === null) {
+            return $search;
+        }
+
+        return (new ListSourceSchema($this->components, $this->records))->oneOf($resource, $name, $search, $this->object($resource, $keys, $paged, $lists));
+    }
+
+    /** @param list<string> $keys */
+    private function object(Resource $resource, array $keys, bool $paged, ?EngineGrammar $lists): ObjectType
     {
         $refused = array_fill_keys(array_intersect($lists === null ? ['text', 'trashed'] : ['text', 'trashed', 'scopes'], $keys), new Nothing);
         $search = Schemas::object(array_replace($refused, $this->properties($resource, $keys, true, $lists)));

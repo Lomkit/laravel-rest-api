@@ -84,7 +84,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         Artisan::call('rest:check', ['controllers' => [OpenListedVoucherController::class]], $text = new BufferedOutput);
 
         $this->assertSame(['resources' => [OpenListedVoucherResource::class], 'problems' => [], 'notes' => []], $lists);
-        $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine\n  ".OpenListedVoucherResource::class." ... lists through the search engine\n", $this->summary($text->fetch()));
+        $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine on request\n  ".OpenListedVoucherResource::class." ... lists through the search engine on request\n", $this->summary($text->fetch()));
     }
 
     #[Test]
@@ -99,9 +99,9 @@ final class CheckEngineListTest extends ScaffoldingTestCase
 
         $this->assertSame([0, ['resources' => [PerimeterListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], [$exitCode, $lists]);
         $this->assertStringContainsString(
-            "  engine lists ... 1 resource lists through the search engine\n"
+            "  engine lists ... 1 resource lists through the search engine on request\n"
             .'  ⇂ '.rtrim($note, '.')."\n"
-            .'  '.PerimeterListedVoucherResource::class." ... lists through the search engine\n",
+            .'  '.PerimeterListedVoucherResource::class."  lists through the search engine on request\n",
             $this->summary($text->fetch()),
         );
     }
@@ -111,13 +111,13 @@ final class CheckEngineListTest extends ScaffoldingTestCase
     {
         config(['scout.driver' => 'null']);
         Route::prefix('api')->group(fn () => Rest::resource('open-listed-vouchers', OpenListedVoucherController::class)->middleware('auth:sanctum')->register());
-        $note = 'The resource ['.OpenListedVoucherResource::class.'] serves its lists through its search engine, but its model uses the Scout null driver ['.NullEngine::class.'] in this environment, so its lists will be empty. Run rest:check with the Scout driver of production (SCOUT_DRIVER).';
+        $note = 'The resource ['.OpenListedVoucherResource::class.'] serves its lists through its search engine on request, but its model uses the Scout null driver ['.NullEngine::class.'] in this environment, so its engine lists will be empty. Run rest:check with the Scout driver of production (SCOUT_DRIVER).';
 
         [$exitCode, $lists] = $this->lists(OpenListedVoucherController::class);
         Artisan::call('rest:check', ['controllers' => [OpenListedVoucherController::class]], $text = new BufferedOutput);
 
         $this->assertSame([0, ['resources' => [OpenListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], [$exitCode, $lists]);
-        $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine\n  ⇂ ".rtrim($note, '.')."\n", $this->summary($text->fetch()));
+        $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine on request\n  ⇂ ".rtrim($note, '.')."\n", $this->summary($text->fetch()));
     }
 
     #[Test]
@@ -125,15 +125,15 @@ final class CheckEngineListTest extends ScaffoldingTestCase
     {
         $this->app?->make(EngineManager::class)->extend('meilisearch', fn (): CapturingMeilisearchEngine => new CapturingMeilisearchEngine(new SettingsClient(fn (): array => [])));
         config(['scout.driver' => 'meilisearch']);
-        $note = KeylessListedVoucherResource::class.' serves its lists through its search engine but declares neither ->tieBreaker() nor its key [code] in sortable(): a list sent without a sort follows the engine order, which can repeat or skip rows between pages. Declare ->tieBreaker() with a unique attribute that the index sorts, or add [code] to sortable() (and to the sortable settings of the index): a list sent without a sort then follows it, descending.';
+        $note = KeylessListedVoucherResource::class.' serves its lists through its search engine on request but declares neither ->tieBreaker() nor its key [code] in sortable(): an engine list sent without a sort follows the engine order, which can repeat or skip rows between pages. Declare ->tieBreaker() with a unique attribute that the index sorts, or add [code] to sortable() (and to the sortable settings of the index): an engine list sent without a sort then follows it, descending.';
 
         [$exitCode, $lists, $text] = $this->keyless();
 
         $this->assertSame([0, ['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], [$exitCode, $lists]);
         $this->assertStringContainsString(
-            "  engine lists ... 1 resource lists through the search engine\n"
+            "  engine lists ... 1 resource lists through the search engine on request\n"
             .'  ⇂ '.rtrim($note, '.')."\n"
-            .'  '.KeylessListedVoucherResource::class." ... lists through the search engine\n",
+            .'  '.KeylessListedVoucherResource::class."  lists through the search engine on request\n",
             $text,
         );
     }
@@ -143,12 +143,12 @@ final class CheckEngineListTest extends ScaffoldingTestCase
     {
         $this->app?->make(EngineManager::class)->extend('algolia', fn (): FakeAlgolia4Engine => new FakeAlgolia4Engine(new SettingsClient(fn (): array => [])));
         config(['scout.driver' => 'algolia']);
-        $note = KeylessListedVoucherResource::class.' serves its lists through its search engine ['.FakeAlgolia4Engine::class.'], which takes no sort without text: its lists follow the ranking of the index, which can repeat or skip rows between pages. End the customRanking of the index on a unique attribute, such as [code], so that the order is stable.';
+        $note = KeylessListedVoucherResource::class.' serves its lists through its search engine ['.FakeAlgolia4Engine::class.'] on request, which takes no sort without text: its engine lists follow the ranking of the index, which can repeat or skip rows between pages. End the customRanking of the index on a unique attribute, such as [code], so that the order is stable.';
 
         [$exitCode, $lists, $text] = $this->keyless();
 
         $this->assertSame([0, ['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], [$exitCode, $lists]);
-        $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine\n  ⇂ ".rtrim($note, '.')."\n", $text);
+        $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine on request\n  ⇂ ".rtrim($note, '.')."\n", $text);
     }
 
     #[Test]
@@ -166,7 +166,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
     public function it_asks_for_a_tie_breaker_on_typesense_and_never_for_its_document_id(): void
     {
         $this->useTypesense();
-        $note = ListedVoucherResource::class.' serves its lists through its search engine ['.FakeTypesenseEngine::class.'] without ->tieBreaker(): rows with equal sort values can repeat or skip between pages. Declare ->tieBreaker() with a unique attribute that the index sorts, never [id], which the engine does not sort: every list then ends its order on it, descending, and the client keeps one sort less.';
+        $note = ListedVoucherResource::class.' serves its lists through its search engine ['.FakeTypesenseEngine::class.'] on request without ->tieBreaker(): rows with equal sort values can repeat or skip between the pages of its engine lists. Declare ->tieBreaker() with a unique attribute that the index sorts, never [id], which the engine does not sort: every engine list then ends its order on it, descending, and the client keeps one sort less.';
 
         $this->assertSame(['resources' => [ListedVoucherResource::class], 'problems' => [], 'notes' => [$note, self::unappliedPerimeterQuery(ListedVoucherResource::class)]], $this->lists(ListedVoucherController::class)[1]);
     }
@@ -188,7 +188,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
     {
         $this->app?->make(EngineManager::class)->extend('turbopuffer', fn (): FakeTurbopufferEngine => new FakeTurbopufferEngine);
         config(['scout.driver' => 'turbopuffer']);
-        $note = ListedVoucherResource::class.' serves its lists through its search engine ['.FakeTurbopufferEngine::class.'], which takes one sort without text: a list that the client sorts follows that sort alone, so its order is not stable unless the sorted attribute is unique.';
+        $note = ListedVoucherResource::class.' serves its lists through its search engine ['.FakeTurbopufferEngine::class.'] on request, which takes one sort without text: an engine list that the client sorts follows that sort alone, so its order is not stable unless the sorted attribute is unique.';
 
         [$exitCode, $keyless] = $this->keyless();
 
@@ -216,7 +216,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
     {
         $this->app?->make(EngineManager::class)->extend('foreign', fn (): ForeignEngine => new ForeignEngine);
         config(['scout.driver' => 'foreign', 'rest.extensions' => [SingleSortEngineProfiles::class]]);
-        $note = KeylessListedVoucherResource::class.' serves its lists through its search engine but declares neither ->tieBreaker() nor its key [code] in sortable(): a list sent without a sort follows the engine order, which can repeat or skip rows between pages. Declare ->tieBreaker() with a unique attribute that the index sorts, or add [code] to sortable() (and to the sortable settings of the index): a list sent without a sort then follows it, descending.';
+        $note = KeylessListedVoucherResource::class.' serves its lists through its search engine on request but declares neither ->tieBreaker() nor its key [code] in sortable(): an engine list sent without a sort follows the engine order, which can repeat or skip rows between pages. Declare ->tieBreaker() with a unique attribute that the index sorts, or add [code] to sortable() (and to the sortable settings of the index): an engine list sent without a sort then follows it, descending.';
 
         [, $lists] = $this->keyless();
 
@@ -228,7 +228,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
     {
         config(['scout.driver' => 'collection']);
         Route::prefix('api')->group(fn () => Rest::resource('ordered-listed-vouchers', OrderedListedVoucherController::class)->middleware('auth:sanctum')->register());
-        $note = OrderedListedVoucherResource::class.' overrides defaultOrderBy(), which does not apply to its lists: a list sent without a sort follows the tie-breaker or the key of its search engine, descending. Declare ScoutEngine::tieBreaker() with the attribute to order by.';
+        $note = OrderedListedVoucherResource::class.' overrides defaultOrderBy(), which does not apply to its engine lists: an engine list sent without a sort follows the tie-breaker or the key of its search engine, descending. Declare ScoutEngine::tieBreaker() with the attribute to order by.';
 
         $this->assertSame([0, ['resources' => [OrderedListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], $this->lists(OrderedListedVoucherController::class));
     }
@@ -291,6 +291,6 @@ final class CheckEngineListTest extends ScaffoldingTestCase
 
     private static function unappliedPerimeterQuery(string $resource): string
     {
-        return $resource.' overrides perimeterQuery(), which does not apply to its lists: they are served through its search engine, restricted by ScoutEngine::perimeter() and the RestrictsEngineQueries extensions. Mirror the perimeter in ScoutEngine::perimeter().';
+        return $resource.' overrides perimeterQuery(), which does not apply to its engine lists: a list sent with source: engine is restricted by ScoutEngine::perimeter() and the RestrictsEngineQueries extensions only. Mirror the perimeter in ScoutEngine::perimeter().';
     }
 }
