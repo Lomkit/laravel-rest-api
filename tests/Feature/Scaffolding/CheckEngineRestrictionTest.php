@@ -150,14 +150,14 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_does_not_read_the_text_search_without_an_extension(): void
+    public function it_reports_no_row_problem_for_a_text_search_that_throws_without_an_extension(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('route-bound-vouchers', RouteBoundVoucherController::class)->middleware('auth:sanctum')->register());
         config(['scout.driver' => 'collection', 'rest.extensions' => []]);
 
         $exitCode = Artisan::call('rest:check', ['controllers' => [RouteBoundVoucherController::class], '--json' => true], $output = new BufferedOutput);
 
-        $this->assertSame([0, ['perimeter' => [RouteBoundVoucherResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [], 'extension_perimeter' => []], 0], [$exitCode, json_decode($output->fetch(), true)['rows'], RouteBoundVoucherResource::$textCalls]);
+        $this->assertSame([0, ['perimeter' => [RouteBoundVoucherResource::class], 'without_perimeter' => [], 'problems' => [], 'restricted' => [], 'extension_perimeter' => []], 1], [$exitCode, json_decode($output->fetch(), true)['rows'], RouteBoundVoucherResource::$textCalls]);
     }
 
     #[Test]

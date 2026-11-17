@@ -149,7 +149,9 @@ final class DetailsResponseType
             'max_sorts' => (new IntegerType)->nullable(true)->setDescription('The most sorts in one search; null when unbounded, 0 when only @relevance is accepted'),
             'max_page_size' => (new IntegerType)->nullable(true),
             'window' => (new IntegerType)->nullable(true)->setDescription('page times limit must not exceed it; null when unbounded'),
-        ], description: 'The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only, no scopes, @relevance alone and desc only; null on the database');
+            'lists' => (new BooleanType)->setDescription('Present and true when the resource serves its lists through its search engine: a search without text follows this grammar too, and @relevance needs a text'),
+            'max_list_sorts' => (new IntegerType)->nullable(true)->setDescription('With lists: the most sorts in one search without text; null when unbounded, 0 when such a search does not sort'),
+        ], ['lists', 'max_list_sorts'], 'The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only, no scopes, @relevance alone and desc only; null on the database');
 
         return $engine->nullable(true);
     }

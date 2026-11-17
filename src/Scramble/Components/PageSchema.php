@@ -57,17 +57,26 @@ final readonly class PageSchema
             'per_page' => new IntegerType,
             'to' => (new IntegerType)->nullable(true),
             'total' => new IntegerType,
-            ...($capped ? ['total_capped' => self::capped($engine)] : []),
+            ...($capped || $engine ? ['total_capped' => self::capped($engine)] : []),
+            ...($engine ? ['dropped' => self::dropped()] : []),
             'meta' => $this->meta($resource),
-        ], $optional ? ['total_capped'] : [], 'A page of rows');
+        ], $optional ? ['total_capped', 'dropped'] : [], 'A page of rows');
     }
 
     private static function capped(bool $engine): BooleanType
     {
         $type = new BooleanType;
         $type->setDescription($engine
-            ? 'True when more rows match than the resource counts: total is then a lower bound. Absent on a text search, which takes its total from the search index'
+            ? 'True when more rows match than the total counts: total is then a lower bound. On a page of the search engine, present only when the engine caps its total, such as Turbopuffer at 10,000'
             : 'True when more rows match than the resource counts: total is then a lower bound');
+
+        return $type;
+    }
+
+    private static function dropped(): IntegerType
+    {
+        $type = new IntegerType;
+        $type->setDescription('Present on a page of the search engine: the rows that the engine returned for the page and that the database read left out (a deleted row, a global scope, a row restriction). They are missing from data and still counted in total. Above 0, the index is stale, or the restrictions of the engine and of the database disagree');
 
         return $type;
     }

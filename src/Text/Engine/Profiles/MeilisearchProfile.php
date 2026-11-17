@@ -10,7 +10,7 @@ use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 use Throwable;
 
-final readonly class MeilisearchProfile implements MatchesStringLists
+final readonly class MeilisearchProfile implements ListsWithoutText, MatchesStringLists
 {
     use PlainLiterals;
 
@@ -38,6 +38,18 @@ final readonly class MeilisearchProfile implements MatchesStringLists
     public function ownedOptions(): array
     {
         return ['filter', 'sort', 'page', 'hitsPerPage', 'limit', 'offset', 'q', 'attributesToRetrieve'];
+    }
+
+    #[\Override]
+    public function matchAll(): string
+    {
+        return '';
+    }
+
+    #[\Override]
+    public function listSortKeys(): int
+    {
+        return PHP_INT_MAX;
     }
 
     #[\Override]

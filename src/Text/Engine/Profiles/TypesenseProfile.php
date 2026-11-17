@@ -13,7 +13,7 @@ use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class TypesenseProfile implements MatchesStringLists
+final readonly class TypesenseProfile implements ListsWithoutText, MatchesStringLists
 {
     public function __construct(private TypesenseEngine $engine) {}
 
@@ -39,6 +39,18 @@ final readonly class TypesenseProfile implements MatchesStringLists
     public function ownedOptions(): array
     {
         return ['q', 'filter_by', 'sort_by', 'per_page', 'page', 'group_by'];
+    }
+
+    #[\Override]
+    public function matchAll(): string
+    {
+        return '*';
+    }
+
+    #[\Override]
+    public function listSortKeys(): int
+    {
+        return $this->sortKeys();
     }
 
     #[\Override]

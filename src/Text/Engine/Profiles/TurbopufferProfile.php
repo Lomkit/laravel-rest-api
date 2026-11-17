@@ -9,7 +9,7 @@ use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class TurbopufferProfile implements FiltersStringLists, MatchesStringLists
+final readonly class TurbopufferProfile implements FiltersStringLists, ListsWithoutText, MatchesStringLists
 {
     use PlainLiterals;
 
@@ -40,6 +40,18 @@ final readonly class TurbopufferProfile implements FiltersStringLists, MatchesSt
     }
 
     #[\Override]
+    public function matchAll(): string
+    {
+        return '';
+    }
+
+    #[\Override]
+    public function listSortKeys(): int
+    {
+        return 1;
+    }
+
+    #[\Override]
     public function exactTotal(): bool
     {
         return false;
@@ -63,7 +75,7 @@ final readonly class TurbopufferProfile implements FiltersStringLists, MatchesSt
     #[\Override]
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
-        return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
+        return EngineHits::page($this->engine, $builder, $model, $perPage, $page)->cappedAt($this->window());
     }
 
     #[\Override]

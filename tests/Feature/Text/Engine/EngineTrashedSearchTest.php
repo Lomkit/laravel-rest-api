@@ -52,6 +52,6 @@ class EngineTrashedSearchTest extends EngineSearchTestCase
 
         $response = $this->search('vouchers', ['text' => ['value' => ' '], 'trashed' => 'only']);
 
-        $response->assertOk()->assertExactJson($this->page([6], 1));
+        $response->assertOk()->assertExactJson($this->sqlPage([6], 1));
     }
 }

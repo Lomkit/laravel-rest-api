@@ -89,7 +89,7 @@ class EngineProfileGrammarTest extends EngineSearchTestCase
 
         $response = $this->search('unsorted-vouchers', ['limit' => 2, 'page' => 5001]);
 
-        $response->assertOk()->assertExactJson($this->page([], 4, 2, 5001));
+        $response->assertOk()->assertExactJson($this->sqlPage([], 4, 2, 5001));
     }
 
     #[Test]

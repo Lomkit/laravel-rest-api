@@ -12,7 +12,7 @@ use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class DatabaseProfile implements AppliesRowRestrictions, ComparesColumns
+final readonly class DatabaseProfile implements AppliesRowRestrictions, ComparesColumns, ListsWithoutText
 {
     use PlainLiterals;
 
@@ -40,6 +40,18 @@ final readonly class DatabaseProfile implements AppliesRowRestrictions, Compares
     public function ownedOptions(): array
     {
         return [];
+    }
+
+    #[\Override]
+    public function matchAll(): string
+    {
+        return '';
+    }
+
+    #[\Override]
+    public function listSortKeys(): int
+    {
+        return PHP_INT_MAX;
     }
 
     #[\Override]

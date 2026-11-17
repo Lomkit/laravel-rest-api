@@ -3,7 +3,7 @@
 namespace Lomkit\Rest\Validation\Search;
 
 use Lomkit\Rest\Instructions\Instruction;
-use Lomkit\Rest\Rules\OneOf;
+use Lomkit\Rest\Rules\AllowedValues;
 use Lomkit\Rest\Search\InstructionNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\InputSet;
@@ -26,10 +26,10 @@ final readonly class InstructionParser
 
         $resource = $context->resource;
         $declared = $context->grammar->instructions($resource->definition()->instructions());
-        $names = $context->vocabulary->of($resource, $context->grammar, 'instructions', fn (): array => array_values(array_map(
+        $names = $context->grammar->allowed($context->vocabulary->of($resource, $context->grammar, 'instructions', fn (): array => array_values(array_map(
             fn (Instruction $instruction): string => $instruction->publicUriKey(),
             $declared,
-        )));
+        ))));
         $keys = InstructionAlias::of($entries);
         $instructions = [];
 
@@ -45,7 +45,7 @@ final readonly class InstructionParser
     }
 
     /** @param array<int, Instruction> $declared */
-    private function instruction(Cursor $entry, array $declared, OneOf $names, InstructionAlias $keys, ValidationContext $context): ?InstructionNode
+    private function instruction(Cursor $entry, array $declared, AllowedValues $names, InstructionAlias $keys, ValidationContext $context): ?InstructionNode
     {
         if (! $context->reader->object($entry)) {
             return null;

@@ -33,6 +33,22 @@ class EngineGrammarDetailsTest extends TestCase
     }
 
     #[Test]
+    #[DataProvider('lists')]
+    public function it_describes_the_lists_that_an_engine_serves(int $listSortKeys, string $expected): void
+    {
+        $this->assertSame($expected, json_encode((new EngineGrammar([], ['price'], 0, null, 10000))->listing($listSortKeys)));
+    }
+
+    /** @return array<string, array{int, string}> */
+    public static function lists(): array
+    {
+        return [
+            'one sort without text' => [1, '{"filters":[],"sorts":["price"],"max_sorts":0,"max_page_size":null,"window":10000,"lists":true,"max_list_sorts":1}'],
+            'any number of sorts without text' => [PHP_INT_MAX, '{"filters":[],"sorts":["price"],"max_sorts":0,"max_page_size":null,"window":10000,"lists":true,"max_list_sorts":null}'],
+        ];
+    }
+
+    #[Test]
     public function it_lists_the_values_of_an_enum_attribute(): void
     {
         $attribute = new IndexAttribute(Enum::make('status', PostStatus::class), [FilterOperator::Equal, FilterOperator::In]);

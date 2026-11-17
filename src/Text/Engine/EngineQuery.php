@@ -10,6 +10,7 @@ use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use Lomkit\Rest\Text\TextQuery;
 
@@ -27,7 +28,7 @@ final class EngineQuery
 
     public function __construct(
         private readonly EngineIndex $index,
-        private readonly TextQuery $text,
+        private readonly ?TextQuery $text,
         private readonly ?Trashed $trashed = null,
     ) {
         if ($trashed !== null && ! $index->model->softDeletes()) {
@@ -82,8 +83,8 @@ final class EngineQuery
             throw InvalidEngineQueryException::notSortable($attribute);
         }
 
-        if (count($this->orders) >= $this->index->profile->sortKeys()) {
-            throw InvalidEngineQueryException::tooManySorts($this->index->profile->sortKeys());
+        if (count($this->orders) >= $this->sortKeys()) {
+            throw InvalidEngineQueryException::tooManySorts($this->sortKeys());
         }
 
         $this->orders[] = [$attribute, SortDirection::parse($direction)];
@@ -163,6 +164,13 @@ final class EngineQuery
     public function paging(): EnginePaging
     {
         return new EnginePaging($this->index->profile);
+    }
+
+    private function sortKeys(): int
+    {
+        $profile = $this->index->profile;
+
+        return $this->text === null && $profile instanceof ListsWithoutText ? $profile->listSortKeys() : $profile->sortKeys();
     }
 
     private function compared(string $attribute): IndexAttribute

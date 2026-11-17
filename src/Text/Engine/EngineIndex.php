@@ -15,11 +15,12 @@ final readonly class EngineIndex
         public EngineProfile $profile,
         public IndexAttributes $attributes,
         public ?string $resource = null,
+        public bool $lists = false,
     ) {}
 
     public function capabilities(): TextCapabilities
     {
-        return new TextCapabilities([], [TextMode::Words], true, $this->model->softDeletes(), engine: $this->attributes->grammar($this->profile));
+        return new TextCapabilities([], [TextMode::Words], true, $this->model->softDeletes(), engine: $this->attributes->grammar($this->profile, $this->lists));
     }
 
     public function searchedClass(): string

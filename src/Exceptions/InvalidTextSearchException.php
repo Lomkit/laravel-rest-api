@@ -149,6 +149,11 @@ final class InvalidTextSearchException extends LogicException
         return new self("The text search of the resource [{$resource}] runs on its search engine, not in a database query.");
     }
 
+    public static function unlistedEngine(string $resource, string $engine): self
+    {
+        return new self("The ScoutEngine of the resource [{$resource}] serves its lists with ->servesLists(), but the profile of the engine [{$engine}] does not implement Lomkit\\Rest\\Text\\Engine\\Profiles\\ListsWithoutText, so a list without text cannot run on it. Implement ListsWithoutText in the profile of the engine, or remove ->servesLists() from the text search of [{$resource}] to list its rows in SQL.");
+    }
+
     public static function notOnEngine(string $resource): self
     {
         return new self("The text search of the resource [{$resource}] does not run on a search engine.");

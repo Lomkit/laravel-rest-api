@@ -12,6 +12,8 @@ use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Types\Nothing;
+use Lomkit\Rest\Text\Engine\EngineGrammar;
+use Lomkit\Rest\Text\TextBackend;
 use Lomkit\Rest\Validation\Search\RowKeys;
 use Lomkit\Rest\Validation\Search\SearchShape;
 
@@ -43,7 +45,9 @@ final readonly class SearchSchema
             SearchShape::Aggregate => 'MetricSearch',
         };
 
-        return $this->components->schema($name, $resource::class, fn (): Type => $this->search($resource, array_keys($shape->keys()), $shape === SearchShape::Page));
+        $lists = $shape === SearchShape::Aggregate ? null : EngineSearchSchema::lists($resource);
+
+        return $this->components->schema($name, $resource::class, fn (): Type => $this->search($resource, array_keys($shape->keys()), $shape === SearchShape::Page, $lists));
     }
 
     public static function rows(Resource $resource, string $roots): string
@@ -57,12 +61,12 @@ final readonly class SearchSchema
      * @param  list<string>  $keys
      * @return array<string, Type>
      */
-    public function properties(Resource $resource, array $keys, bool $root): array
+    public function properties(Resource $resource, array $keys, bool $root, ?EngineGrammar $lists = null): array
     {
         $properties = [];
 
         foreach ($keys as $key) {
-            $type = $this->property($resource, $key, $root);
+            $type = $lists === null ? $this->property($resource, $key, $root) : $this->listed($resource, $key, $lists);
 
             if ($type !== null) {
                 $properties[$key] = $type;
@@ -73,10 +77,10 @@ final readonly class SearchSchema
     }
 
     /** @param list<string> $keys */
-    private function search(Resource $resource, array $keys, bool $paged): Type
+    private function search(Resource $resource, array $keys, bool $paged, ?EngineGrammar $lists): Type
     {
-        $refused = array_fill_keys(array_intersect(['text', 'trashed'], $keys), new Nothing);
-        $search = Schemas::object(array_replace($refused, $this->properties($resource, $keys, true)));
+        $refused = array_fill_keys(array_intersect($lists === null ? ['text', 'trashed'] : ['text', 'trashed', 'scopes'], $keys), new Nothing);
+        $search = Schemas::object(array_replace($refused, $this->properties($resource, $keys, true, $lists)));
 
         if ($paged) {
             $search->setDescription(self::rows($resource, 'the page limit'));
@@ -103,6 +107,20 @@ final readonly class SearchSchema
             'limit' => (new IntegerType)->enum($resource->definition()->declaredLimits()->allowed),
             'page' => self::page($resource),
             default => null,
+        };
+    }
+
+    private function listed(Resource $resource, string $key, EngineGrammar $engine): ?Type
+    {
+        $schema = new EngineSearchSchema($this->components, $this->records);
+        $sizes = $resource->context()->limits()->sizes;
+
+        return match ($key) {
+            'filters' => $schema->filters($resource, $engine),
+            'scopes' => null,
+            'sorts' => self::capped($schema->sort($resource, $engine), min($sizes->sorts, max(1, $engine->sortKeys, $engine->listSortKeys ?? 0))),
+            'instructions' => self::capped((new InputSchema($this->components))->instruction($resource, TextBackend::Engine), $sizes->instructions),
+            default => $this->property($resource, $key, true),
         };
     }
 

@@ -55,6 +55,12 @@ abstract class TurbopufferTestCase extends EngineSearchTestCase
     }
 
     #[\Override]
+    protected function capped(int $total): array
+    {
+        return ['total_capped' => $total >= 10000];
+    }
+
+    #[\Override]
     protected function seedLedger(): void
     {
         Http::preventStrayRequests();

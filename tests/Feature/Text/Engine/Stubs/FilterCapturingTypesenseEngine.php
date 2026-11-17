@@ -10,6 +10,9 @@ class FilterCapturingTypesenseEngine extends FakeTypesenseEngine
     /** @var list<string> */
     public array $filters = [];
 
+    /** @var list<array<string, mixed>> */
+    public array $parameters = [];
+
     /**
      * @param  Builder<Model>  $builder
      * @return array{hits: list<never>, found: int}
@@ -17,7 +20,9 @@ class FilterCapturingTypesenseEngine extends FakeTypesenseEngine
     #[\Override]
     public function paginate(Builder $builder, $perPage, $page)
     {
-        $this->filters[] = $this->buildSearchParameters($builder, (int) $page, (int) $perPage)['filter_by'];
+        $parameters = $this->buildSearchParameters($builder, (int) $page, (int) $perPage);
+        $this->filters[] = $parameters['filter_by'];
+        $this->parameters[] = $parameters;
 
         return ['hits' => [], 'found' => 0];
     }

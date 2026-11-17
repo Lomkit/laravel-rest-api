@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Rules\AllowedValues;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Search\AggregateSort;
@@ -55,6 +56,12 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     public function scopeRules(): array
     {
         return [];
+    }
+
+    #[\Override]
+    public function prohibited(): string
+    {
+        return 'prohibited';
     }
 
     #[\Override]
@@ -127,6 +134,12 @@ final readonly class SqlSearchGrammar implements SearchGrammar
         }
 
         return $context->vocabulary->of($resource, $this, 'sorts+relevance', fn (): array => [...$names(), RelevanceClause::FIELD]);
+    }
+
+    #[\Override]
+    public function allowed(OneOf $values): AllowedValues
+    {
+        return $values;
     }
 
     #[\Override]
