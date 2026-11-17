@@ -23,6 +23,11 @@ final readonly class EngineListNotes
         return "{$resource} serves its lists through its search engine [{$engine}], which takes one sort without text: a list that the client sorts follows that sort alone, so its order is not stable unless the sorted attribute is unique.";
     }
 
+    public static function unappliedDefaultOrder(string $resource): string
+    {
+        return "{$resource} overrides defaultOrderBy(), which does not apply to its lists: a list sent without a sort follows the tie-breaker or the key of its search engine, descending. Declare ScoutEngine::tieBreaker() with the attribute to order by.";
+    }
+
     public static function unranked(string $resource, string $engine, string $key): string
     {
         return "{$resource} serves its lists through its search engine [{$engine}], which takes no sort without text: its lists follow the ranking of the index, which can repeat or skip rows between pages. End the customRanking of the index on a unique attribute, such as [{$key}], so that the order is stable.";

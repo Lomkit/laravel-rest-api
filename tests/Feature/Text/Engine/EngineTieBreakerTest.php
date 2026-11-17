@@ -114,6 +114,28 @@ class EngineTieBreakerTest extends EngineSearchTestCase
         $this->search('tied-vouchers', []);
     }
 
+    #[Test]
+    public function it_sends_no_tie_breaker_to_typesense_behind_a_sort_that_holds_it_or_behind_a_text(): void
+    {
+        $engine = $this->useTypesense();
+
+        $this->search('tied-vouchers', ['sorts' => [['field' => 'price'], ['field' => 'title', 'direction' => 'desc']]])->assertOk();
+        $this->search('tied-vouchers', ['text' => ['value' => 'report'], 'sorts' => [['field' => 'price'], ['field' => 'number'], ['field' => 'team']]])->assertOk();
+
+        $this->assertSame(['price:asc,title:desc', 'price:asc,number:asc,team:asc'], array_column($engine->parameters, 'sort_by'));
+    }
+
+    #[Test]
+    #[DataProvider('drivers')]
+    public function it_pages_the_ties_of_a_requested_sort_without_overlap(string $driver): void
+    {
+        config(['scout.driver' => $driver]);
+
+        $pages = array_map(fn (int $page): array => $this->search('tied-vouchers', ['sorts' => [['field' => 'team']], 'limit' => 2, 'page' => $page])->assertOk()->json('data.*.id'), [1, 2, 3]);
+
+        $this->assertSame([[4, 5], [3, 1], [2]], $pages);
+    }
+
     private function useTypesense(): FilterCapturingTypesenseEngine
     {
         config(['scout.typesense.model-settings.'.Voucher::class.'.search-parameters.query_by' => 'title']);

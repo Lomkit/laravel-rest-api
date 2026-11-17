@@ -13,6 +13,7 @@ use Lomkit\Rest\Text\Engine\Profiles\FiltersWithGroups;
 use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\TextQuery;
 
+/** @internal */
 final readonly class EngineBuilder
 {
     public function __construct(

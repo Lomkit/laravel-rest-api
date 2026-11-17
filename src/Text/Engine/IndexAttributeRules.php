@@ -13,6 +13,7 @@ use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 
+/** @internal */
 final readonly class IndexAttributeRules
 {
     private const string NAME = '/\A[A-Za-z_][A-Za-z0-9_]*\z/';

@@ -68,7 +68,7 @@ final readonly class ScoutEngine implements ListingTextSearch
         return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $serves, $this->tieBreaker);
     }
 
-    public function tieBreaker(string $attribute): static
+    public function tieBreaker(string $attribute): self
     {
         return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $attribute);
     }

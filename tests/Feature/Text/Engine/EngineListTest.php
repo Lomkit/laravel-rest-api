@@ -66,7 +66,7 @@ class EngineListTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_keeps_the_requested_sort_in_place_of_the_key_order(): void
+    public function it_keeps_the_requested_sort_and_ends_it_on_the_key(): void
     {
         $engine = new RecordingCollectionEngine;
         $this->useEngine($engine);
@@ -74,7 +74,7 @@ class EngineListTest extends EngineSearchTestCase
         $response = $this->search('listed-vouchers', ['sorts' => [['field' => 'price', 'direction' => 'desc']]]);
 
         $response->assertOk()->assertJsonPath('data.*.id', [5, 2, 4, 3, 1]);
-        $this->assertSame([['column' => 'price', 'direction' => 'desc']], $engine->searches[0]->orders);
+        $this->assertSame([['column' => 'price', 'direction' => 'desc'], ['column' => 'code', 'direction' => 'desc']], $engine->searches[0]->orders);
     }
 
     /**

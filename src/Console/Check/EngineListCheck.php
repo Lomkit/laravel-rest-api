@@ -32,7 +32,8 @@ final readonly class EngineListCheck
 
             if ($text instanceof ListingTextSearch && $text->servingLists()) {
                 $report = self::check($resource, $text, $report);
-                $report = self::overridesPerimeterQuery($resource) ? $report->withNote(self::unappliedPerimeterQuery($resource::class)) : $report;
+                $report = self::overrides($resource, 'perimeterQuery') ? $report->withNote(self::unappliedPerimeterQuery($resource::class)) : $report;
+                $report = self::overrides($resource, 'defaultOrderBy') ? $report->withNote(EngineListNotes::unappliedDefaultOrder($resource::class)) : $report;
             }
         }
 
@@ -56,9 +57,9 @@ final readonly class EngineListCheck
         };
     }
 
-    private static function overridesPerimeterQuery(Resource $resource): bool
+    private static function overrides(Resource $resource, string $method): bool
     {
-        return (new ReflectionMethod($resource, 'perimeterQuery'))->getDeclaringClass()->getName() !== Resource::class;
+        return (new ReflectionMethod($resource, $method))->getDeclaringClass()->getName() !== Resource::class;
     }
 
     private static function unappliedPerimeterQuery(string $resource): string

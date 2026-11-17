@@ -10,6 +10,7 @@ use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\Engine\Profiles\ReservesSortAttributes;
 use Lomkit\Rest\Text\TextTarget;
 
+/** @internal */
 final readonly class DeclaredAttributes
 {
     /**

@@ -59,10 +59,10 @@ final readonly class IndexAttributes
         return in_array($name, $this->sortable, true);
     }
 
-    public function grammar(EngineProfile $profile, ?ListOrder $lists = null): EngineGrammar
+    public function grammar(EngineProfile $profile, ?ListOrder $listOrder = null): EngineGrammar
     {
         $grammar = new EngineGrammar($this->filterable, $this->sortable, $profile->sortKeys(), $profile->maxPageSize(), $profile->window(), groups: $profile instanceof FiltersWithGroups);
 
-        return $lists === null ? $grammar : $grammar->listing($lists->sortKeys(), $lists->tieBreaker?->attribute);
+        return $listOrder === null ? $grammar : $grammar->listing($listOrder->sortKeys(), $listOrder->tieBreaker?->attribute);
     }
 }

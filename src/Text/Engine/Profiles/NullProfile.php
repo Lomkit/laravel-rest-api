@@ -11,7 +11,7 @@ use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class NullProfile implements AppliesRowRestrictions, FiltersWithGroups, ListsWithoutText
+final readonly class NullProfile implements AppliesRowRestrictions, FiltersWithGroups, ListsWithoutText, RanksByKey
 {
     use PlainLiterals;
 

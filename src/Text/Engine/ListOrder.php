@@ -27,27 +27,22 @@ final readonly class ListOrder
      */
     public function orders(array $orders, string $key, IndexAttributes $attributes): array
     {
-        if ($orders === []) {
-            $stable = $this->stable($key, $attributes);
+        $tieBreaker = $this->tieBreaker($key, $attributes, $orders === []);
 
-            return $stable === null ? [] : [[$stable, SortDirection::Desc]];
-        }
-
-        $tieBreaker = $this->tieBreaker?->attribute;
-
-        if ($tieBreaker === null || $this->profile->listSortKeys() < 2 || in_array($tieBreaker, array_column($orders, 0), true)) {
+        if ($tieBreaker === null || in_array($tieBreaker, array_column($orders, 0), true)) {
             return $orders;
         }
 
-        return [...$orders, [$tieBreaker, SortDirection::Desc]];
+        return $orders === [] || $this->profile->listSortKeys() > 1 ? [...$orders, [$tieBreaker, SortDirection::Desc]] : $orders;
     }
 
-    private function stable(string $key, IndexAttributes $attributes): ?string
+    private function tieBreaker(string $key, IndexAttributes $attributes, bool $unsorted): ?string
     {
         return match (true) {
             $this->profile->listSortKeys() < 1 => null,
             $this->tieBreaker !== null => $this->tieBreaker->attribute,
-            $attributes->sorts($key), $this->profile instanceof RanksByKey => $key,
+            $this->profile instanceof RanksByKey => $key,
+            $unsorted && $attributes->sorts($key) => $key,
             default => null,
         };
     }
