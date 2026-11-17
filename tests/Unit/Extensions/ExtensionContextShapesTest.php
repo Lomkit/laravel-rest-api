@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Unit\Extensions;
 
+use Lomkit\Rest\Extensions\Contexts\EngineConditionGroup;
 use Lomkit\Rest\Extensions\Contexts\EngineProfileContext;
 use Lomkit\Rest\Extensions\Contexts\EngineRestriction;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
@@ -37,15 +38,23 @@ final class ExtensionContextShapesTest extends TestCase
             'a gate declaration' => [GatesContext::class, ['resource']],
             'an index attribute declaration' => [IndexAttributesContext::class, ['resource', 'matchesStringLists']],
             'an engine profile provider' => [EngineProfileContext::class, ['resource', 'engine']],
-            'an engine restriction' => [EngineRestrictionContext::class, ['query', 'resource', 'user', 'matchesStringLists', 'rowsRestrictedInSql', 'comparesColumns', 'engine']],
+            'an engine restriction' => [EngineRestrictionContext::class, ['query', 'resource', 'user', 'matchesStringLists', 'rowsRestrictedInSql', 'comparesColumns', 'engine', 'filtersWithGroups']],
         ];
     }
 
     #[Test]
-    public function it_offers_only_where_clauses_and_match_nothing_to_an_engine_restriction(): void
+    public function it_offers_only_where_clauses_groups_and_match_nothing_to_an_engine_restriction(): void
     {
         $methods = array_map(static fn (ReflectionMethod $method): string => $method->getName(), (new ReflectionClass(EngineRestriction::class))->getMethods(ReflectionMethod::IS_PUBLIC));
 
-        $this->assertSame(['where', 'whereIn', 'whereNotIn', 'matchNothing'], array_values(array_diff($methods, ['__construct'])));
+        $this->assertSame(['where', 'whereIn', 'whereNotIn', 'whereAny', 'matchNothing'], array_values(array_diff($methods, ['__construct'])));
+    }
+
+    #[Test]
+    public function it_offers_only_conditions_and_sub_groups_to_an_engine_condition_group(): void
+    {
+        $methods = array_map(static fn (ReflectionMethod $method): string => $method->getName(), (new ReflectionClass(EngineConditionGroup::class))->getMethods(ReflectionMethod::IS_PUBLIC));
+
+        $this->assertSame(['compile', 'where', 'whereIn', 'whereNotIn', 'whereAll', 'whereAny'], $methods);
     }
 }
