@@ -68,8 +68,8 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
         config(['rest.extensions' => [ReadersExtension::class, CheapEngineRestriction::class, ReaderGroupEngineRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
 
-        $this->search('grouped-reader-vouchers', [])->assertOk();
-        $this->search('grouped-reader-vouchers', ['filters' => self::EITHER])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine'])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine', 'filters' => self::EITHER])->assertOk();
 
         $this->assertSame([
             '(price:<35 && team:=[`red`] && readers:=[`ann`]) && (number:=1 || (price:<5 && readers:=[`bob`] && readers:!=[`cid`]))',
@@ -85,8 +85,8 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
         config(['rest.extensions' => [ReadersExtension::class, CheapEngineRestriction::class, ReaderGroupEngineRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
 
-        $this->search('grouped-reader-vouchers', [])->assertOk();
-        $this->search('grouped-reader-vouchers', ['filters' => self::EITHER])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine'])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine', 'filters' => self::EITHER])->assertOk();
 
         $this->assertSame([
             '(price<35 AND team IN ["red"] AND readers IN ["ann"]) AND (number=1 OR (price<5 AND readers IN ["bob"] AND readers NOT IN ["cid"]))',
@@ -101,7 +101,7 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
         config(['scout.driver' => $driver, 'rest.extensions' => [OpenGroupEngineRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red']]));
 
-        $response = $this->search('listed-team-vouchers', []);
+        $response = $this->search('listed-team-vouchers', ['source' => 'engine']);
 
         $response->assertOk()->assertExactJson($this->page([5, 1, 2, 3], 4));
     }
@@ -114,7 +114,7 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
         config(['rest.extensions' => [ReadersExtension::class, CheapEngineRestriction::class, ReaderGroupEngineRestriction::class, EitherEngineRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
 
-        $this->search('grouped-reader-vouchers', [])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine'])->assertOk();
 
         $this->assertSame(['(price:<35 && team:=[`red`] && readers:=[`ann`]) && ((number:=5 || number:=[4] || (active:=true && price:>20)) && (number:=1 || (price:<5 && readers:=[`bob`] && readers:!=[`cid`])))'], $engine->filters);
     }
@@ -128,7 +128,7 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red']]));
         DB::enableQueryLog();
 
-        $this->search('listed-team-vouchers', ['filters' => $filters])->assertOk();
+        $this->search('listed-team-vouchers', ['source' => 'engine', 'filters' => $filters])->assertOk();
 
         $this->assertSame($sql, str_replace(['"', '`'], '', (string) (Arr::first(DB::getQueryLog(), fn (array $query): bool => str_contains((string) $query['query'], 'number'))['query'] ?? '')));
     }
@@ -150,11 +150,11 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
     {
         config(['scout.driver' => $driver, 'rest.extensions' => [EitherEngineRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red']]));
-        $grouped = $this->search('listed-team-vouchers', []);
+        $grouped = $this->search('listed-team-vouchers', ['source' => 'engine']);
         config(['rest.extensions' => [CheapEngineRestriction::class, EitherEngineRestriction::class]]);
 
-        $restricted = $this->search('listed-team-vouchers', []);
-        $widened = $this->search('listed-team-vouchers', ['filters' => [['field' => 'number', 'value' => 5], ['field' => 'number', 'value' => 4, 'type' => 'or'], ['field' => 'number', 'value' => 2, 'type' => 'or']]]);
+        $restricted = $this->search('listed-team-vouchers', ['source' => 'engine']);
+        $widened = $this->search('listed-team-vouchers', ['source' => 'engine', 'filters' => [['field' => 'number', 'value' => 5], ['field' => 'number', 'value' => 4, 'type' => 'or'], ['field' => 'number', 'value' => 2, 'type' => 'or']]]);
 
         $grouped->assertOk()->assertExactJson($this->page([5, 2], 2));
         $restricted->assertOk()->assertExactJson($this->page([2], 1));
@@ -169,7 +169,7 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
         config(['rest.extensions' => [EmptyGroupEngineRestriction::class]]);
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red', 'blue']]));
 
-        $list = $this->search('listed-team-vouchers', []);
+        $list = $this->search('listed-team-vouchers', ['source' => 'engine']);
         $text = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
         $list->assertOk()->assertExactJson($this->page([], 0));
@@ -186,7 +186,7 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
 
         $this->expectExceptionObject(InvalidEngineExtensionException::refusedEngineCondition('reader_group', ReaderGroupEngineRestriction::class, GroupedReaderVoucherResource::class, InvalidEngineQueryException::unmatchedStringList(GroupedReaderVoucherResource::class, 'readers', CollectionEngine::class)));
 
-        $this->search('grouped-reader-vouchers', []);
+        $this->search('grouped-reader-vouchers', ['source' => 'engine']);
     }
 
     /** @param list<class-string> $extensions */

@@ -12,7 +12,5 @@ interface ListingTextSearch extends EngineTextSearch
 
     public function listTieBreaker(): ?string;
 
-    public function databaseListsAllowed(): bool;
-
     public function list(TextTarget $target, ?Trashed $trashed = null): EngineQuery;
 }

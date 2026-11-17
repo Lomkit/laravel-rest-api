@@ -35,8 +35,8 @@ class TurbopufferGroupTest extends TurbopufferTestCase
         $this->actingAs(new GenericUser(['id' => 'ann']));
         $this->rows(['V-c'], 1);
 
-        $either = $this->search('grouped-reader-vouchers', ['filters' => [['field' => 'number', 'value' => 3], ['field' => 'number', 'value' => 4, 'type' => 'or']]]);
-        $nested = $this->search('grouped-reader-vouchers', ['filters' => [['field' => 'active', 'value' => true], ['nested' => [['field' => 'number', 'value' => 3], ['field' => 'price', 'operator' => '>', 'value' => 20, 'type' => 'or']]]]]);
+        $either = $this->search('grouped-reader-vouchers', ['source' => 'engine', 'filters' => [['field' => 'number', 'value' => 3], ['field' => 'number', 'value' => 4, 'type' => 'or']]]);
+        $nested = $this->search('grouped-reader-vouchers', ['source' => 'engine', 'filters' => [['field' => 'active', 'value' => true], ['nested' => [['field' => 'number', 'value' => 3], ['field' => 'price', 'operator' => '>', 'value' => 20, 'type' => 'or']]]]]);
 
         $either->assertOk()->assertJsonPath('data.*.id', [1]);
         $nested->assertOk()->assertJsonPath('data.*.id', [1]);
@@ -54,8 +54,8 @@ class TurbopufferGroupTest extends TurbopufferTestCase
         $this->actingAs(new GenericUser(['id' => 'ann']));
         $this->rows(['V-c'], 1);
 
-        $this->search('grouped-reader-vouchers', [])->assertOk();
-        $this->search('grouped-reader-vouchers', ['filters' => [['field' => 'number', 'value' => 3], ['field' => 'number', 'value' => 4, 'type' => 'or']]])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine'])->assertOk();
+        $this->search('grouped-reader-vouchers', ['source' => 'engine', 'filters' => [['field' => 'number', 'value' => 3], ['field' => 'number', 'value' => 4, 'type' => 'or']]])->assertOk();
 
         $flat = ['And', [['__soft_deleted', 'Eq', 0], ['price', 'Lt', 35], ['team', 'In', ['red']]]];
         $readers = ['readers', 'ContainsAny', ['ann']];

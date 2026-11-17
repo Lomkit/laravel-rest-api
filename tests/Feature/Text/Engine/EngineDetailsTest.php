@@ -36,7 +36,7 @@ class EngineDetailsTest extends EngineTestCase
     }
 
     #[Test]
-    public function it_describes_a_resource_that_serves_its_lists_through_the_engine(): void
+    public function it_describes_a_resource_that_serves_engine_lists_on_request(): void
     {
         $grammar = str_replace('"sorts":["price","number"],"max_sorts":null,"max_page_size":null,"window":null,"groups":true}', '"sorts":["price","number","code"],"max_sorts":null,"max_page_size":null,"window":null,"lists":true,"max_list_sorts":null,"groups":true}', self::GRAMMAR);
 

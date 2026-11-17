@@ -40,7 +40,7 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     public function sources(): array
     {
         return match (true) {
-            $this->text?->databaseLists() !== true => [],
+            $this->text?->servesLists() !== true => [],
             $this->streams => [ListSource::Database->value],
             default => array_column(ListSource::cases(), 'value'),
         };

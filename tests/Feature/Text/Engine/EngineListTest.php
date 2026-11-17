@@ -26,7 +26,7 @@ class EngineListTest extends EngineSearchTestCase
 {
     use ResetsExtensionStubs;
 
-    private const string REFUSED = 'field is refused: this resource serves its lists through its search engine, which does not run it.';
+    private const string REFUSED = 'field is refused: a list sent with source engine runs on the search engine, which does not run it.';
 
     #[\Override]
     protected function setUp(): void
@@ -45,7 +45,7 @@ class EngineListTest extends EngineSearchTestCase
     {
         config(['scout.driver' => $driver]);
 
-        $response = $this->search('listed-vouchers', []);
+        $response = $this->search('listed-vouchers', ['source' => 'engine']);
 
         $response->assertOk()->assertExactJson($this->page([5, 4, 1, 2, 3], 5));
     }
@@ -56,7 +56,7 @@ class EngineListTest extends EngineSearchTestCase
         $engine = new RecordingCollectionEngine;
         $this->useEngine($engine);
 
-        $response = $this->search('listed-vouchers', ['filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]], 'limit' => 2, 'page' => 2]);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', 'filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]], 'limit' => 2, 'page' => 2]);
 
         $response->assertOk()->assertExactJson($this->page([2, 3], 4, 2, 2));
         $this->assertSame([[2, 2]], $engine->pages);
@@ -71,7 +71,7 @@ class EngineListTest extends EngineSearchTestCase
         $engine = new RecordingCollectionEngine;
         $this->useEngine($engine);
 
-        $response = $this->search('listed-vouchers', ['sorts' => [['field' => 'price', 'direction' => 'desc']]]);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'price', 'direction' => 'desc']]]);
 
         $response->assertOk()->assertJsonPath('data.*.id', [5, 2, 4, 3, 1]);
         $this->assertSame([['column' => 'price', 'direction' => 'desc'], ['column' => 'code', 'direction' => 'desc']], $engine->searches[0]->orders);
@@ -87,7 +87,7 @@ class EngineListTest extends EngineSearchTestCase
     {
         config(['scout.driver' => $driver]);
 
-        $response = $this->search('listed-vouchers', $search);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', ...$search]);
 
         $response->assertOk()->assertExactJson($this->page($ids, $total, $perPage, $page));
     }
@@ -115,7 +115,7 @@ class EngineListTest extends EngineSearchTestCase
         config(['scout.driver' => 'database']);
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => $teams]));
 
-        $response = $this->search('listed-team-vouchers', []);
+        $response = $this->search('listed-team-vouchers', ['source' => 'engine']);
 
         $response->assertOk()->assertExactJson($this->page($ids, count($ids)));
     }
@@ -136,8 +136,8 @@ class EngineListTest extends EngineSearchTestCase
     {
         config(['scout.driver' => $driver, 'scout.soft_delete' => true]);
 
-        $with = $this->search('listed-vouchers', ['trashed' => 'with']);
-        $only = $this->search('listed-vouchers', ['trashed' => 'only']);
+        $with = $this->search('listed-vouchers', ['source' => 'engine', 'trashed' => 'with']);
+        $only = $this->search('listed-vouchers', ['source' => 'engine', 'trashed' => 'only']);
 
         $with->assertOk()->assertExactJson($this->page([6, 5, 4, 1, 2, 3], 6));
         $only->assertOk()->assertExactJson($this->page([6], 1));
@@ -148,7 +148,7 @@ class EngineListTest extends EngineSearchTestCase
     {
         config(['scout.driver' => 'database']);
 
-        $response = $this->search('listed-vouchers', [
+        $response = $this->search('listed-vouchers', ['source' => 'engine',
             'includes' => [['relation' => 'lines']],
             'aggregates' => [['relation' => 'lines', 'type' => 'count']],
         ]);
@@ -169,7 +169,7 @@ class EngineListTest extends EngineSearchTestCase
         $engine = new RecordingCollectionEngine;
         $this->useEngine($engine);
 
-        $response = $this->search('listed-vouchers', $search);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', ...$search]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [$key => ["The {$key} ".self::REFUSED]]);
         $this->assertSame([], $engine->searches);
@@ -227,7 +227,7 @@ class EngineListTest extends EngineSearchTestCase
 
         $this->expectExceptionObject(InvalidTextSearchException::unlistedEngine(ListedVoucherResource::class, ForeignEngine::class));
 
-        $this->search('listed-vouchers', []);
+        $this->search('listed-vouchers', ['source' => 'engine']);
     }
 
     #[Test]
@@ -235,11 +235,11 @@ class EngineListTest extends EngineSearchTestCase
     {
         $engine = new RecordingCollectionEngine;
         $this->useEngine($engine);
-        $search = Rest::search(ListedVoucherResource::class)->as(new GenericUser(['id' => 1]))->payload(['selects' => [['field' => 'id']]]);
+        $search = Rest::search(ListedVoucherResource::class)->as(new GenericUser(['id' => 1]));
 
-        $page = $search->page();
-        $rendered = $search->render();
-        $streamed = $search->lazy()->all();
+        $page = $search->payload(['source' => 'engine', 'selects' => [['field' => 'id']]])->page();
+        $rendered = $search->payload(['source' => 'engine', 'selects' => [['field' => 'id']]])->render();
+        $streamed = $search->payload(['selects' => [['field' => 'id']]])->lazy()->all();
 
         $this->assertSame([5, 4, 1, 2, 3], array_map(fn (Model $row): mixed => $row->getKey(), $page->items()));
         $this->assertSame([[50, 1], [50, 1]], $engine->pages);

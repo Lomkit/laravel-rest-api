@@ -32,7 +32,7 @@ trait ListsAnIndex
     #[Test]
     public function it_lists_every_row_without_text_in_key_order_with_the_engine_total(): void
     {
-        $response = $this->search('listed-vouchers', []);
+        $response = $this->search('listed-vouchers', ['source' => 'engine']);
 
         $response->assertOk()->assertExactJson($this->page([5, 4, 1, 2, 3], 5));
     }
@@ -45,7 +45,7 @@ trait ListsAnIndex
     #[DataProvider('listSearches')]
     public function it_filters_sorts_and_pages_a_list_on_the_engine(array $search, array $ids, int $total, int $perPage, int $page): void
     {
-        $response = $this->search('listed-vouchers', $search);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', ...$search]);
 
         $response->assertOk()->assertExactJson($this->page($ids, $total, $perPage, $page));
     }
@@ -67,7 +67,7 @@ trait ListsAnIndex
     {
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['blue']]));
 
-        $response = $this->search('listed-team-vouchers', []);
+        $response = $this->search('listed-team-vouchers', ['source' => 'engine']);
 
         $response->assertOk()->assertExactJson($this->page([4], 1));
     }
@@ -78,7 +78,7 @@ trait ListsAnIndex
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red']]));
         $filters = [['field' => 'number', 'value' => 4], ['field' => 'number', 'value' => 3, 'type' => 'or']];
 
-        $list = $this->search('listed-team-vouchers', ['filters' => $filters]);
+        $list = $this->search('listed-team-vouchers', ['source' => 'engine', 'filters' => $filters]);
         $text = $this->search('listed-team-vouchers', ['text' => ['value' => 'report'], 'filters' => $filters]);
 
         $list->assertOk()->assertExactJson($this->page([1], 1));
@@ -88,7 +88,7 @@ trait ListsAnIndex
     #[Test]
     public function it_lists_with_a_nested_group_of_filters(): void
     {
-        $response = $this->search('listed-vouchers', ['filters' => [['field' => 'active', 'value' => true], ['nested' => [['field' => 'number', 'value' => 3], ['field' => 'price', 'operator' => '>', 'value' => 20, 'type' => 'or']]]]]);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', 'filters' => [['field' => 'active', 'value' => true], ['nested' => [['field' => 'number', 'value' => 3], ['field' => 'price', 'operator' => '>', 'value' => 20, 'type' => 'or']]]]]);
 
         $response->assertOk()->assertExactJson($this->page([1, 2], 2));
     }
@@ -96,8 +96,8 @@ trait ListsAnIndex
     #[Test]
     public function it_orders_a_list_on_a_string_tie_breaker_alone_and_behind_the_requested_sort(): void
     {
-        $alone = $this->search('tied-vouchers', []);
-        $behind = $this->search('tied-vouchers', ['sorts' => [['field' => 'team']]]);
+        $alone = $this->search('tied-vouchers', ['source' => 'engine']);
+        $behind = $this->search('tied-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'team']]]);
 
         $alone->assertOk()->assertExactJson($this->page([5, 4, 3, 1, 2], 5));
         $behind->assertOk()->assertExactJson($this->page([4, 5, 3, 1, 2], 5));
@@ -108,10 +108,10 @@ trait ListsAnIndex
     {
         $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red']]));
         config(['rest.extensions' => [EitherEngineRestriction::class]]);
-        $grouped = $this->search('listed-team-vouchers', []);
+        $grouped = $this->search('listed-team-vouchers', ['source' => 'engine']);
         config(['rest.extensions' => [CheapEngineRestriction::class, EitherEngineRestriction::class]]);
 
-        $restricted = $this->search('listed-team-vouchers', ['filters' => [['field' => 'number', 'value' => 5], ['field' => 'number', 'value' => 4, 'type' => 'or'], ['field' => 'number', 'value' => 2, 'type' => 'or']]]);
+        $restricted = $this->search('listed-team-vouchers', ['source' => 'engine', 'filters' => [['field' => 'number', 'value' => 5], ['field' => 'number', 'value' => 4, 'type' => 'or'], ['field' => 'number', 'value' => 2, 'type' => 'or']]]);
 
         $grouped->assertOk()->assertExactJson($this->page([5, 2], 2));
         $restricted->assertOk()->assertExactJson($this->page([2], 1));

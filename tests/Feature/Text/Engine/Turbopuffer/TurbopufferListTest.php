@@ -42,7 +42,7 @@ class TurbopufferListTest extends TurbopufferTestCase
     {
         $this->rows(['V-a', 'V-b', 'V-c'], 4);
 
-        $response = $this->search('listed-vouchers', ['filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]], 'limit' => 2]);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', 'filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]], 'limit' => 2]);
 
         $response->assertOk()->assertExactJson($this->page([3, 2], 4, 2));
         $this->assertSame([
@@ -56,7 +56,7 @@ class TurbopufferListTest extends TurbopufferTestCase
     {
         $this->rows(['V-e', 'V-b'], 5);
 
-        $response = $this->search('listed-vouchers', ['sorts' => [['field' => 'price', 'direction' => 'desc']], 'limit' => 2]);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'price', 'direction' => 'desc']], 'limit' => 2]);
 
         $response->assertOk()->assertExactJson($this->page([5, 2], 5, 2));
         $this->assertSame(['price', 'desc'], $this->queries()[0]['rank_by']);
@@ -65,7 +65,7 @@ class TurbopufferListTest extends TurbopufferTestCase
     #[Test]
     public function it_refuses_a_second_sort_without_text_and_any_sort_with_text(): void
     {
-        $list = $this->search('listed-vouchers', ['sorts' => [['field' => 'price'], ['field' => 'number']]]);
+        $list = $this->search('listed-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'price'], ['field' => 'number']]]);
         $text = $this->search('listed-vouchers', ['text' => ['value' => 'report'], 'sorts' => [['field' => 'price']]]);
 
         $list->assertUnprocessable()->assertJsonPath('errors', ['search.sorts' => ['The search.sorts field must not have more than 1 items.']]);
@@ -79,7 +79,7 @@ class TurbopufferListTest extends TurbopufferTestCase
     {
         $this->rows(['V-d', 'V-a'], 2);
 
-        $response = $this->search('listed-vouchers', []);
+        $response = $this->search('listed-vouchers', ['source' => 'engine']);
 
         $response->assertOk()->assertExactJson($this->page([4, 3], 2));
         $this->assertSame(['And', [['__soft_deleted', 'Eq', 0], ['team', 'In', ['red']]]], $this->queries()[0]['filters']);
@@ -92,7 +92,7 @@ class TurbopufferListTest extends TurbopufferTestCase
         $received = $this->app->instance(ReceivedFields::class, new ReceivedFields);
         $this->rows(['V-d', 'V-a', 'V-b'], 3);
 
-        $response = $this->postJson('/api/listed-vouchers/actions/deactivate-vouchers', ['search' => ['filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]]]]);
+        $response = $this->postJson('/api/listed-vouchers/actions/deactivate-vouchers', ['search' => ['source' => 'engine', 'filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]]]]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [3, 2]]]], $received->calls());
@@ -107,7 +107,7 @@ class TurbopufferListTest extends TurbopufferTestCase
         $received = $this->app->instance(ReceivedFields::class, new ReceivedFields);
         $this->rows(['V-a', 'V-b'], 2);
 
-        $this->postJson('/api/listed-vouchers/actions/queued-deactivate-vouchers', ['search' => []])->assertOk();
+        $this->postJson('/api/listed-vouchers/actions/queued-deactivate-vouchers', ['search' => ['source' => 'engine']])->assertOk();
         Voucher::query()->whereKey(2)->update(['team' => 'blue']);
         $jobs = Queue::pushed(QueuedAction::class);
         $this->app->call([$jobs->sole(), 'handle']);
@@ -121,8 +121,8 @@ class TurbopufferListTest extends TurbopufferTestCase
     {
         $this->rows(['V-e', 'V-d'], 5);
 
-        $tied = $this->search('tied-vouchers', ['limit' => 2]);
-        $keyless = $this->search('keyless-listed-vouchers', ['limit' => 10]);
+        $tied = $this->search('tied-vouchers', ['source' => 'engine', 'limit' => 2]);
+        $keyless = $this->search('keyless-listed-vouchers', ['source' => 'engine', 'limit' => 10]);
 
         $tied->assertOk()->assertExactJson($this->page([5, 4], 5, 2));
         $keyless->assertOk()->assertJsonPath('data.*.id', [5, 4]);
@@ -134,7 +134,7 @@ class TurbopufferListTest extends TurbopufferTestCase
     {
         $this->rows(['V-e', 'V-b'], 5);
 
-        $this->search('tied-vouchers', ['sorts' => [['field' => 'price', 'direction' => 'desc']], 'limit' => 2])->assertOk();
+        $this->search('tied-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'price', 'direction' => 'desc']], 'limit' => 2])->assertOk();
 
         $this->assertSame(['price', 'desc'], $this->queries()[0]['rank_by']);
     }

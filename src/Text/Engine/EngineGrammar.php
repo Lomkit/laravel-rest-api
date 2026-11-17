@@ -22,7 +22,6 @@ final readonly class EngineGrammar implements JsonSerializable
         public ?int $listSortKeys = null,
         public bool $groups = false,
         public ?string $tieBreaker = null,
-        public bool $databaseLists = false,
     ) {}
 
     /** @return list<FilterOperator> */
@@ -57,14 +56,13 @@ final readonly class EngineGrammar implements JsonSerializable
             $this->listSortKeys,
             $this->groups,
             $this->tieBreaker,
-            $this->databaseLists,
         );
     }
 
     /** @internal */
-    public function listing(int $sortKeys, ?string $tieBreaker = null, bool $databaseLists = false): self
+    public function listing(int $sortKeys, ?string $tieBreaker = null): self
     {
-        return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, $sortKeys, $this->groups, $tieBreaker, $databaseLists);
+        return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, $sortKeys, $this->groups, $tieBreaker);
     }
 
     /** @internal */
@@ -79,13 +77,12 @@ final readonly class EngineGrammar implements JsonSerializable
         return new EngineSearchGrammar($this, $text, $listing && $this->servesLists());
     }
 
-    /** @return array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null, lists?: true, max_list_sorts?: int|null, tie_breaker?: string, database_lists?: true, groups?: true} */
+    /** @return array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null, lists?: true, max_list_sorts?: int|null, tie_breaker?: string, groups?: true} */
     #[\Override]
     public function jsonSerialize(): array
     {
         $lists = $this->listSortKeys === null ? [] : ['lists' => true, 'max_list_sorts' => self::bound($this->listSortKeys)];
         $tieBreaker = $this->tieBreaker === null ? [] : ['tie_breaker' => $this->tieBreaker];
-        $database = $this->databaseLists ? ['database_lists' => true] : [];
         $groups = $this->groups ? ['groups' => true] : [];
 
         return [
@@ -96,7 +93,6 @@ final readonly class EngineGrammar implements JsonSerializable
             'window' => $this->window,
             ...$lists,
             ...$tieBreaker,
-            ...$database,
             ...$groups,
         ];
     }

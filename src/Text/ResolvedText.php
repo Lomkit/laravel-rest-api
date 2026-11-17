@@ -138,11 +138,7 @@ final readonly class ResolvedText
 
     private static function listsOnEngine(TextSearch $strategy, RestRequest $request): bool
     {
-        if (! $strategy instanceof ListingTextSearch || ! $strategy->servingLists()) {
-            return false;
-        }
-
-        return ! $strategy->databaseListsAllowed() || $request->input('search.source') !== ListSource::Database->value;
+        return $strategy instanceof ListingTextSearch && $strategy->servingLists() && $request->input('search.source') === ListSource::Engine->value;
     }
 
     private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing, bool $streams): self

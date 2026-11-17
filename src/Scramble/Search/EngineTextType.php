@@ -26,7 +26,7 @@ final readonly class EngineTextType
 
         if (! $this->capabilities->trashed) {
             $type->setDescription($this->capabilities->engine?->servesLists() === true
-                ? 'Refused: the resource serves its lists through its search engine, whose index does not keep the trashed models'
+                ? 'Refused on the search engine, whose index does not keep the trashed models'
                 : 'Cannot be combined with a text search: the search index of the resource does not keep the trashed models');
         }
 

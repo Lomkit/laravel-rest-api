@@ -34,7 +34,7 @@ class EngineTieBreakerTest extends EngineSearchTestCase
     {
         config(['scout.driver' => $driver]);
 
-        $response = $this->search('tied-vouchers', []);
+        $response = $this->search('tied-vouchers', ['source' => 'engine']);
 
         $response->assertOk()->assertExactJson($this->page([5, 4, 3, 1, 2], 5));
     }
@@ -45,7 +45,7 @@ class EngineTieBreakerTest extends EngineSearchTestCase
     {
         config(['scout.driver' => $driver]);
 
-        $response = $this->search('tied-vouchers', ['sorts' => [['field' => 'team']]]);
+        $response = $this->search('tied-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'team']]]);
 
         $response->assertOk()->assertExactJson($this->page([4, 5, 3, 1, 2], 5));
     }
@@ -56,9 +56,9 @@ class EngineTieBreakerTest extends EngineSearchTestCase
         $engine = new RecordingCollectionEngine;
         $this->useEngine($engine);
 
-        $this->search('tied-vouchers', [])->assertOk();
-        $this->search('tied-vouchers', ['sorts' => [['field' => 'team'], ['field' => 'price', 'direction' => 'desc']]])->assertOk();
-        $this->search('tied-vouchers', ['sorts' => [['field' => 'title'], ['field' => 'team']]])->assertOk();
+        $this->search('tied-vouchers', ['source' => 'engine'])->assertOk();
+        $this->search('tied-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'team'], ['field' => 'price', 'direction' => 'desc']]])->assertOk();
+        $this->search('tied-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'title'], ['field' => 'team']]])->assertOk();
         $this->search('tied-vouchers', ['text' => ['value' => 'report'], 'sorts' => [['field' => 'team']]])->assertOk();
 
         $this->assertSame([
@@ -74,8 +74,8 @@ class EngineTieBreakerTest extends EngineSearchTestCase
     {
         $engine = $this->useTypesense();
 
-        $this->search('tied-vouchers', [])->assertOk();
-        $this->search('tied-vouchers', ['sorts' => [['field' => 'price', 'direction' => 'desc'], ['field' => 'number']]])->assertOk();
+        $this->search('tied-vouchers', ['source' => 'engine'])->assertOk();
+        $this->search('tied-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'price', 'direction' => 'desc'], ['field' => 'number']]])->assertOk();
 
         $this->assertSame(['title:desc', 'price:desc,number:asc,title:desc'], array_column($engine->parameters, 'sort_by'));
     }
@@ -85,7 +85,7 @@ class EngineTieBreakerTest extends EngineSearchTestCase
     {
         $engine = $this->useTypesense();
 
-        $response = $this->search('tied-vouchers', ['sorts' => [['field' => 'price'], ['field' => 'number'], ['field' => 'team']]]);
+        $response = $this->search('tied-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'price'], ['field' => 'number'], ['field' => 'team']]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', ['search.sorts' => ['The search.sorts field must not have more than 2 items.']]);
         $this->assertSame([], $engine->parameters);
@@ -97,7 +97,7 @@ class EngineTieBreakerTest extends EngineSearchTestCase
         $engine = new CapturingMeilisearchEngine(new SettingsClient(fn (): array => ['maxTotalHits' => 1000]));
         $this->useEngine($engine);
 
-        $response = $this->search('tied-vouchers', ['sorts' => [['field' => 'team']]]);
+        $response = $this->search('tied-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'team']]]);
 
         $response->assertOk()->assertExactJson($this->page([4, 5, 3, 1, 2], 5));
         $this->assertSame([['q' => '', 'filter' => '', 'sort' => ['team:asc', 'title:desc']]], $engine->requests);
@@ -111,7 +111,7 @@ class EngineTieBreakerTest extends EngineSearchTestCase
 
         $this->expectExceptionObject(InvalidTextSearchException::unsortedTieBreaker(TiedVoucherResource::class, 'title', FakeAlgolia4Engine::class));
 
-        $this->search('tied-vouchers', []);
+        $this->search('tied-vouchers', ['source' => 'engine']);
     }
 
     #[Test]
@@ -119,7 +119,7 @@ class EngineTieBreakerTest extends EngineSearchTestCase
     {
         $engine = $this->useTypesense();
 
-        $this->search('tied-vouchers', ['sorts' => [['field' => 'price'], ['field' => 'title', 'direction' => 'desc']]])->assertOk();
+        $this->search('tied-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'price'], ['field' => 'title', 'direction' => 'desc']]])->assertOk();
         $this->search('tied-vouchers', ['text' => ['value' => 'report'], 'sorts' => [['field' => 'price'], ['field' => 'number'], ['field' => 'team']]])->assertOk();
 
         $this->assertSame(['price:asc,title:desc', 'price:asc,number:asc,team:asc'], array_column($engine->parameters, 'sort_by'));
@@ -131,7 +131,7 @@ class EngineTieBreakerTest extends EngineSearchTestCase
     {
         config(['scout.driver' => $driver]);
 
-        $pages = array_map(fn (int $page): array => $this->search('tied-vouchers', ['sorts' => [['field' => 'team']], 'limit' => 2, 'page' => $page])->assertOk()->json('data.*.id'), [1, 2, 3]);
+        $pages = array_map(fn (int $page): array => $this->search('tied-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'team']], 'limit' => 2, 'page' => $page])->assertOk()->json('data.*.id'), [1, 2, 3]);
 
         $this->assertSame([[4, 5], [3, 1], [2]], $pages);
     }

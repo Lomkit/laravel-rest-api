@@ -80,13 +80,13 @@ final readonly class SearchSchema
     /** @param list<string> $keys */
     private function search(Resource $resource, string $name, array $keys, bool $paged, ?EngineGrammar $lists): Type
     {
-        $search = $this->object($resource, $keys, $paged, $lists);
+        $search = $this->object($resource, $keys, $paged, null);
 
-        if ($lists === null || ! $lists->databaseLists) {
+        if ($lists === null) {
             return $search;
         }
 
-        return (new DatabaseListSchema($this->components, $this->records))->oneOf($resource, $name, $search, $this->object($resource, $keys, $paged, null));
+        return (new ListSourceSchema($this->components, $this->records))->oneOf($resource, $name, $search, $this->object($resource, $keys, $paged, $lists));
     }
 
     /** @param list<string> $keys */

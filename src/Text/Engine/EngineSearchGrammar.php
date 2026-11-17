@@ -37,7 +37,7 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     #[\Override]
     public function sources(): array
     {
-        return $this->engine->databaseLists ? array_column(ListSource::cases(), 'value') : [];
+        return $this->engine->servesLists() ? array_column(ListSource::cases(), 'value') : [];
     }
 
     #[\Override]

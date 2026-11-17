@@ -30,7 +30,7 @@ class EngineListRequestTest extends EngineSearchTestCase
         $engine = new FilterCapturingTypesenseEngine;
         $this->useEngine($engine);
 
-        $response = $this->search('listed-vouchers', ['filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]], 'limit' => 2, 'page' => 2]);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', 'filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]], 'limit' => 2, 'page' => 2]);
 
         $response->assertOk();
         $this->assertSame(
@@ -46,7 +46,7 @@ class EngineListRequestTest extends EngineSearchTestCase
         $engine = new FilterCapturingTypesenseEngine;
         $this->useEngine($engine);
 
-        $this->search('listed-vouchers', ['sorts' => [['field' => 'price', 'direction' => 'desc'], ['field' => 'number']]])->assertOk();
+        $this->search('listed-vouchers', ['source' => 'engine', 'sorts' => [['field' => 'price', 'direction' => 'desc'], ['field' => 'number']]])->assertOk();
 
         $this->assertSame(['*', 'price:desc,number:asc'], [$engine->parameters[0]['q'], $engine->parameters[0]['sort_by']]);
     }
@@ -58,7 +58,7 @@ class EngineListRequestTest extends EngineSearchTestCase
         $engine = new CapturingMeilisearchEngine($settings);
         $this->useEngine($engine);
 
-        $response = $this->search('listed-vouchers', ['filters' => [['field' => 'number', 'operator' => 'in', 'value' => [1, 3]]]]);
+        $response = $this->search('listed-vouchers', ['source' => 'engine', 'filters' => [['field' => 'number', 'operator' => 'in', 'value' => [1, 3]]]]);
 
         $response->assertOk()->assertExactJson($this->page([1, 3], 2));
         $this->assertSame([['q' => '', 'filter' => 'number IN [1, 3]', 'sort' => ['code:desc']]], $engine->requests);

@@ -144,11 +144,6 @@ final class InvalidTextSearchException extends LogicException
         return new self("The ScoutEngine of the resource [{$resource}] declares tieBreaker('{$attribute}') without ->servesLists(): the tie-breaker orders the lists served through the engine, and a text search keeps its relevance order. Add ->servesLists(), or remove ->tieBreaker().");
     }
 
-    public static function unlistedDatabaseLists(string $resource): self
-    {
-        return new self("The ScoutEngine of the resource [{$resource}] declares ->allowsDatabaseLists() without ->servesLists(): its lists already run in SQL. Add ->servesLists(), or remove ->allowsDatabaseLists().");
-    }
-
     public static function unsortedTieBreaker(string $resource, string $attribute, string $engine): self
     {
         return new self("The ScoutEngine of the resource [{$resource}] declares tieBreaker('{$attribute}'), but the engine [{$engine}] takes no sort without text, so its lists follow the ranking of the index. Remove ->tieBreaker() and end the customRanking of the index on a unique attribute, such as [{$attribute}].");
@@ -176,7 +171,7 @@ final class InvalidTextSearchException extends LogicException
 
     public static function unlistedEngine(string $resource, string $engine): self
     {
-        return new self("The ScoutEngine of the resource [{$resource}] serves its lists with ->servesLists(), but the profile of the engine [{$engine}] does not implement Lomkit\\Rest\\Text\\Engine\\Profiles\\ListsWithoutText, so a list without text cannot run on it. Implement ListsWithoutText in the profile of the engine, or remove ->servesLists() from the text search of [{$resource}] to list its rows in SQL.");
+        return new self("The ScoutEngine of the resource [{$resource}] serves its lists on request with ->servesLists(), but the profile of the engine [{$engine}] does not implement Lomkit\\Rest\\Text\\Engine\\Profiles\\ListsWithoutText, so a list without text cannot run on it. Implement ListsWithoutText in the profile of the engine, or remove ->servesLists() from the text search of [{$resource}] to keep all its lists in SQL.");
     }
 
     public static function notOnEngine(string $resource): self
