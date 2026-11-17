@@ -124,7 +124,6 @@ class KeyedRowsTest extends KeyedRowsTestCase
         $this->assertSame([], $vouchers->modelKeys());
     }
 
-
     #[Test]
     #[DataProvider('paths')]
     public function it_loads_the_includes_and_aggregates_of_the_rows_of_the_engine_keys(bool $page): void
