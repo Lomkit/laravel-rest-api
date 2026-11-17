@@ -52,6 +52,24 @@ final class EngineReach
         return $profile === null || $profile instanceof AppliesRowRestrictions ? null : InvalidTextSearchException::unrestrictedEngine($resource::class, $name, $class, $profile->name())->getMessage();
     }
 
+    public function unusable(Resource $resource): ?string
+    {
+        try {
+            $target = TextTarget::of($resource);
+            $profile = $resource->text() instanceof ScoutEngine ? EngineProfiles::forTarget($target) : null;
+        } catch (Throwable) {
+            return null;
+        }
+
+        try {
+            $profile?->ensureUsableBy($target);
+        } catch (Throwable $exception) {
+            return $exception->getMessage();
+        }
+
+        return null;
+    }
+
     /** @return list<string> */
     public function restrictions(Resource $resource): array
     {

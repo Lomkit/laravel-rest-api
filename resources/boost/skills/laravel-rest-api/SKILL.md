@@ -630,7 +630,7 @@ public function text(): ?TextSearch
 - Engines: `collection`, `database`, `meilisearch`, `typesense`, `algolia`, `turbopuffer`, `null`, and subclasses of them; another engine class is refused unless an extension provides its profile (`ProvidesEngineProfiles`).
   - `collection`, `database`: every operator and sort, exact totals; the `database` engine reads only the scout key column of the rows that match, without the default eager loads of the model.
   - `meilisearch`: exact totals up to the index `pagination.maxTotalHits`; declare `filterableAttributes` (with the perimeter attributes) and `sortableAttributes` in the index settings.
-  - `typesense`: `query_by` required in `scout.typesense.model-settings.<class>.search-parameters` (or `typesenseSearchParameters()`); pages of at most 250; at most 3 sorts.
+  - `typesense`: `query_by` required in `scout.typesense.model-settings.<class>.search-parameters` (or `typesenseSearchParameters()`, which must not return `q`, `filter_by`, `sort_by`, `per_page`, `page` or `group_by`: the first search throws `InvalidTextSearchException`, and `rest:check` reports it under `rows`); pages of at most 250; at most 3 sorts.
   - `algolia`: no sorts (`sortable()` throws); `@relevance` alone is accepted. A list sends an empty query and no sort. No `or` and no `nested` filter (a `422`): Scout replaces the `filters` option.
   - `turbopuffer`: no sorts next to a text; pages within the first 10,000 results; the total counts the documents matching the filters, not the text. A resource that serves its lists can declare `sortable()`: a list takes one sort, which ranks the documents.
   - `collection` lists load every matching row to page them: keep them for tests and small tables.
