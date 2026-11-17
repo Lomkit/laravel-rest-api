@@ -15,6 +15,8 @@ use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SingleSortEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CapturingMeilisearchEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\DatabaseListedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\DatabaseListedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeAlgolia4Engine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTurbopufferEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
@@ -83,7 +85,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         $lists = json_decode($output->fetch(), true)['engine_lists'];
         Artisan::call('rest:check', ['controllers' => [OpenListedVoucherController::class]], $text = new BufferedOutput);
 
-        $this->assertSame(['resources' => [OpenListedVoucherResource::class], 'problems' => [], 'notes' => []], $lists);
+        $this->assertSame(['resources' => [OpenListedVoucherResource::class], 'problems' => [], 'notes' => [], 'database_lists' => []], $lists);
         $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine\n  ".OpenListedVoucherResource::class." ... lists through the search engine\n", $this->summary($text->fetch()));
     }
 
@@ -97,7 +99,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         [$exitCode, $lists] = $this->lists(PerimeterListedVoucherController::class);
         Artisan::call('rest:check', ['controllers' => [PerimeterListedVoucherController::class]], $text = new BufferedOutput);
 
-        $this->assertSame([0, ['resources' => [PerimeterListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], [$exitCode, $lists]);
+        $this->assertSame([0, ['resources' => [PerimeterListedVoucherResource::class], 'problems' => [], 'notes' => [$note], 'database_lists' => []]], [$exitCode, $lists]);
         $this->assertStringContainsString(
             "  engine lists ... 1 resource lists through the search engine\n"
             .'  ⇂ '.rtrim($note, '.')."\n"
@@ -116,7 +118,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         [$exitCode, $lists] = $this->lists(OpenListedVoucherController::class);
         Artisan::call('rest:check', ['controllers' => [OpenListedVoucherController::class]], $text = new BufferedOutput);
 
-        $this->assertSame([0, ['resources' => [OpenListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], [$exitCode, $lists]);
+        $this->assertSame([0, ['resources' => [OpenListedVoucherResource::class], 'problems' => [], 'notes' => [$note], 'database_lists' => []]], [$exitCode, $lists]);
         $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine\n  ⇂ ".rtrim($note, '.')."\n", $this->summary($text->fetch()));
     }
 
@@ -129,7 +131,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
 
         [$exitCode, $lists, $text] = $this->keyless();
 
-        $this->assertSame([0, ['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], [$exitCode, $lists]);
+        $this->assertSame([0, ['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [$note], 'database_lists' => []]], [$exitCode, $lists]);
         $this->assertStringContainsString(
             "  engine lists ... 1 resource lists through the search engine\n"
             .'  ⇂ '.rtrim($note, '.')."\n"
@@ -147,7 +149,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
 
         [$exitCode, $lists, $text] = $this->keyless();
 
-        $this->assertSame([0, ['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], [$exitCode, $lists]);
+        $this->assertSame([0, ['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [$note], 'database_lists' => []]], [$exitCode, $lists]);
         $this->assertStringContainsString("  engine lists ... 1 resource lists through the search engine\n  ⇂ ".rtrim($note, '.')."\n", $text);
     }
 
@@ -159,7 +161,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
 
         [$exitCode, $lists] = $this->lists(ListedVoucherController::class);
 
-        $this->assertSame([1, ['resources' => [], 'problems' => [InvalidTextSearchException::unlistedEngine(ListedVoucherResource::class, ForeignEngine::class)->getMessage()], 'notes' => [self::unappliedPerimeterQuery(ListedVoucherResource::class)]]], [$exitCode, $lists]);
+        $this->assertSame([1, ['resources' => [], 'problems' => [InvalidTextSearchException::unlistedEngine(ListedVoucherResource::class, ForeignEngine::class)->getMessage()], 'notes' => [self::unappliedPerimeterQuery(ListedVoucherResource::class)], 'database_lists' => []]], [$exitCode, $lists]);
     }
 
     #[Test]
@@ -168,7 +170,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         $this->useTypesense();
         $note = ListedVoucherResource::class.' serves its lists through its search engine ['.FakeTypesenseEngine::class.'] without ->tieBreaker(): rows with equal sort values can repeat or skip between pages. Declare ->tieBreaker() with a unique attribute that the index sorts, never [id], which the engine does not sort: every list then ends its order on it, descending, and the client keeps one sort less.';
 
-        $this->assertSame(['resources' => [ListedVoucherResource::class], 'problems' => [], 'notes' => [$note, self::unappliedPerimeterQuery(ListedVoucherResource::class)]], $this->lists(ListedVoucherController::class)[1]);
+        $this->assertSame(['resources' => [ListedVoucherResource::class], 'problems' => [], 'notes' => [$note, self::unappliedPerimeterQuery(ListedVoucherResource::class)], 'database_lists' => []], $this->lists(ListedVoucherController::class)[1]);
     }
 
     #[Test]
@@ -179,8 +181,8 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         $typesense = $this->lists(TiedVoucherController::class);
         config(['scout.driver' => 'collection']);
 
-        $this->assertSame(['resources' => [TiedVoucherResource::class], 'problems' => [], 'notes' => [self::unappliedPerimeterQuery(TiedVoucherResource::class)]], $typesense[1]);
-        $this->assertSame(['resources' => [TiedVoucherResource::class], 'problems' => [], 'notes' => [self::unappliedPerimeterQuery(TiedVoucherResource::class)]], $this->lists(TiedVoucherController::class)[1]);
+        $this->assertSame(['resources' => [TiedVoucherResource::class], 'problems' => [], 'notes' => [self::unappliedPerimeterQuery(TiedVoucherResource::class)], 'database_lists' => []], $typesense[1]);
+        $this->assertSame(['resources' => [TiedVoucherResource::class], 'problems' => [], 'notes' => [self::unappliedPerimeterQuery(TiedVoucherResource::class)], 'database_lists' => []], $this->lists(TiedVoucherController::class)[1]);
     }
 
     #[Test]
@@ -192,8 +194,8 @@ final class CheckEngineListTest extends ScaffoldingTestCase
 
         [$exitCode, $keyless] = $this->keyless();
 
-        $this->assertSame(['resources' => [ListedVoucherResource::class], 'problems' => [], 'notes' => [$note, self::unappliedPerimeterQuery(ListedVoucherResource::class)]], $this->lists(ListedVoucherController::class)[1]);
-        $this->assertSame([0, ['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => []]], [$exitCode, $keyless]);
+        $this->assertSame(['resources' => [ListedVoucherResource::class], 'problems' => [], 'notes' => [$note, self::unappliedPerimeterQuery(ListedVoucherResource::class)], 'database_lists' => []], $this->lists(ListedVoucherController::class)[1]);
+        $this->assertSame([0, ['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [], 'database_lists' => []]], [$exitCode, $keyless]);
     }
 
     #[Test]
@@ -206,7 +208,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
 
         $report = $this->report(TiedVoucherController::class);
 
-        $this->assertSame(['resources' => [TiedVoucherResource::class], 'problems' => [], 'notes' => [self::unappliedPerimeterQuery(TiedVoucherResource::class)]], $report['engine_lists']);
+        $this->assertSame(['resources' => [TiedVoucherResource::class], 'problems' => [], 'notes' => [self::unappliedPerimeterQuery(TiedVoucherResource::class)], 'database_lists' => []], $report['engine_lists']);
         $this->assertContains($problem, $report['rows']['problems']);
         $this->assertSame(1, count(array_keys($report['rows']['problems'], $problem, true)));
     }
@@ -220,7 +222,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
 
         [, $lists] = $this->keyless();
 
-        $this->assertSame(['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [$note]], $lists);
+        $this->assertSame(['resources' => [KeylessListedVoucherResource::class], 'problems' => [], 'notes' => [$note], 'database_lists' => []], $lists);
     }
 
     #[Test]
@@ -230,7 +232,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         Route::prefix('api')->group(fn () => Rest::resource('ordered-listed-vouchers', OrderedListedVoucherController::class)->middleware('auth:sanctum')->register());
         $note = OrderedListedVoucherResource::class.' overrides defaultOrderBy(), which does not apply to its lists: a list sent without a sort follows the tie-breaker or the key of its search engine, descending. Declare ScoutEngine::tieBreaker() with the attribute to order by.';
 
-        $this->assertSame([0, ['resources' => [OrderedListedVoucherResource::class], 'problems' => [], 'notes' => [$note]]], $this->lists(OrderedListedVoucherController::class));
+        $this->assertSame([0, ['resources' => [OrderedListedVoucherResource::class], 'problems' => [], 'notes' => [$note], 'database_lists' => []]], $this->lists(OrderedListedVoucherController::class));
     }
 
     #[Test]
@@ -241,7 +243,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
 
         $report = $this->report(IdSortedVoucherController::class);
 
-        $this->assertSame([[InvalidTextSearchException::reservedSortAttribute(IdSortedVoucherResource::class, 'id', FakeTypesenseEngine::class)->getMessage()], ['resources' => [], 'problems' => [], 'notes' => []]], [$report['rows']['problems'], $report['engine_lists']]);
+        $this->assertSame([[InvalidTextSearchException::reservedSortAttribute(IdSortedVoucherResource::class, 'id', FakeTypesenseEngine::class)->getMessage()], ['resources' => [], 'problems' => [], 'notes' => [], 'database_lists' => []]], [$report['rows']['problems'], $report['engine_lists']]);
     }
 
     #[Test]
@@ -263,6 +265,19 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         $report = json_decode($output->fetch(), true);
 
         return is_array($report) ? $report : [];
+    }
+
+    #[Test]
+    public function it_lists_the_resources_that_allow_database_lists(): void
+    {
+        config(['scout.driver' => 'collection']);
+        Route::prefix('api')->group(fn () => Rest::resource('database-listed-vouchers', DatabaseListedVoucherController::class)->middleware('auth:sanctum')->register());
+
+        [, $lists] = $this->lists(DatabaseListedVoucherController::class);
+        Artisan::call('rest:check', ['controllers' => [DatabaseListedVoucherController::class]], $text = new BufferedOutput);
+
+        $this->assertSame(['resources' => [DatabaseListedVoucherResource::class], 'problems' => [], 'notes' => [self::unappliedPerimeterQuery(DatabaseListedVoucherResource::class)], 'database_lists' => [DatabaseListedVoucherResource::class]], $lists);
+        $this->assertStringContainsString('  '.DatabaseListedVoucherResource::class."  lists through the search engine, or in SQL on request\n", $this->summary($text->fetch()));
     }
 
     /** @return array{int, mixed} */

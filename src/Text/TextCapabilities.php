@@ -46,7 +46,7 @@ final readonly class TextCapabilities implements JsonSerializable
         return array_map(fn (TextMode $mode): string => $mode->value, $this->modes);
     }
 
-    /** @return array{fields: list<string>, modes: list<string>, relevance: bool, trashed: bool, max_length: int, engine: array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null, lists?: true, max_list_sorts?: int|null, tie_breaker?: string, groups?: true}|null} */
+    /** @return array{fields: list<string>, modes: list<string>, relevance: bool, trashed: bool, max_length: int, engine: array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null, lists?: true, max_list_sorts?: int|null, tie_breaker?: string, database_lists?: true, groups?: true}|null} */
     #[\Override]
     public function jsonSerialize(): array
     {

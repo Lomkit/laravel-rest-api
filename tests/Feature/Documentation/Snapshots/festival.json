@@ -5911,6 +5911,10 @@
                                                 "type": "string",
                                                 "description": "With lists, when the resource declares one: the unique attribute that orders a list sent without a sort, descending, and ends the sorts of a list when the engine has a sort left for it"
                                             },
+                                            "database_lists": {
+                                                "type": "boolean",
+                                                "description": "With lists: present and true when a search without text may send source: database to run the SQL search of the resource"
+                                            },
                                             "groups": {
                                                 "type": "boolean",
                                                 "description": "Present and true when the engine accepts filters joined with or and nested groups of filters, within the depth and count limits of the filters"
@@ -9414,6 +9418,10 @@
                                             "tie_breaker": {
                                                 "type": "string",
                                                 "description": "With lists, when the resource declares one: the unique attribute that orders a list sent without a sort, descending, and ends the sorts of a list when the engine has a sort left for it"
+                                            },
+                                            "database_lists": {
+                                                "type": "boolean",
+                                                "description": "With lists: present and true when a search without text may send source: database to run the SQL search of the resource"
                                             },
                                             "groups": {
                                                 "type": "boolean",
@@ -14999,6 +15007,10 @@
                                             "tie_breaker": {
                                                 "type": "string",
                                                 "description": "With lists, when the resource declares one: the unique attribute that orders a list sent without a sort, descending, and ends the sorts of a list when the engine has a sort left for it"
+                                            },
+                                            "database_lists": {
+                                                "type": "boolean",
+                                                "description": "With lists: present and true when a search without text may send source: database to run the SQL search of the resource"
                                             },
                                             "groups": {
                                                 "type": "boolean",

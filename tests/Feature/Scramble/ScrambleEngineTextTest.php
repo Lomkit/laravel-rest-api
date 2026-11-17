@@ -9,6 +9,7 @@ use Laravel\Scout\ScoutServiceProvider;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\CappedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\DatabaseListedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Ledger;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -120,5 +121,29 @@ class ScrambleEngineTextTest extends ScrambleTestCase
         $this->assertSame(['priced-up-to', 'numbered-from'], array_keys((array) $schemas['ListedVoucherEngineInstruction']['discriminator']['mapping']));
         $this->assertSame(['type' => 'integer', 'description' => 'Present on a page of the search engine: the rows that the engine returned for the page and that the database read by key left out (a row deleted since indexing, a global scope, trashed). They are missing from data and still counted in total. 0 in the normal case; above 0, the index holds rows that the database no longer serves'], $schemas['ListedVoucherPaginated']['properties']['dropped']);
         $this->assertSame(['current_page', 'data', 'from', 'last_page', 'per_page', 'to', 'total', 'meta'], $schemas['ListedVoucherPaginated']['required']);
+    }
+    #[Test]
+    public function it_documents_the_engine_and_the_database_grammars_of_a_resource_that_allows_database_lists(): void
+    {
+        Route::prefix('api')->group(function (): void {
+            Rest::resource('listed-vouchers', ListedVoucherController::class);
+            Rest::resource('database-listed-vouchers', DatabaseListedVoucherController::class);
+        });
+        $schemas = app(Generator::class)()['components']['schemas'];
+
+        foreach (['DatabaseListedVoucherSearch', 'DatabaseListedVoucherActionSearch'] as $name) {
+            [$engine, $database] = $schemas[$name]['oneOf'];
+            $this->assertSame(['type' => 'string', 'enum' => ['engine']], $engine['properties']['source']);
+            $this->assertFalse($engine['properties']['scopes']);
+            $this->assertSame(['$ref' => '#/components/schemas/DatabaseListedVoucherEngineFilter'], $engine['properties']['filters']['items']);
+            $this->assertSame(['type' => 'string', 'enum' => ['database']], $database['properties']['source']);
+            $this->assertSame(['source'], $database['required']);
+            $this->assertFalse($database['properties']['text']);
+            $this->assertSame(['$ref' => '#/components/schemas/DatabaseListedVoucherFilter'], $database['properties']['filters']['items']);
+            $this->assertSame(['$ref' => '#/components/schemas/DatabaseListedVoucherScope'], $database['properties']['scopes']['items']);
+        }
+
+        $this->assertArrayNotHasKey('source', $schemas['ListedVoucherSearch']['properties']);
+        $this->assertArrayNotHasKey('oneOf', $schemas['ListedVoucherSearch']);
     }
 }

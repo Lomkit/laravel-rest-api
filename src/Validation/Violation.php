@@ -69,6 +69,11 @@ final readonly class Violation
         return new self($key, 'validation.prohibited');
     }
 
+    public static function textOnEngine(string $key): self
+    {
+        return new self($key, 'rest::validation.text_on_engine');
+    }
+
     public static function unnamedKey(string $container, string $key): self
     {
         return new self($container, 'rest::validation.unknown_key', ['key' => $key]);

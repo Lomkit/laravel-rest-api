@@ -19,11 +19,12 @@ final readonly class EngineIndex
         public ?string $resource = null,
         public bool $lists = false,
         public ?TieBreaker $tieBreaker = null,
+        public bool $databaseLists = false,
     ) {}
 
     public function capabilities(): TextCapabilities
     {
-        return new TextCapabilities([], [TextMode::Words], true, $this->model->softDeletes(), engine: $this->attributes->grammar($this->profile, $this->lists ? $this->listOrder() : null));
+        return new TextCapabilities([], [TextMode::Words], true, $this->model->softDeletes(), engine: $this->attributes->grammar($this->profile, $this->lists ? $this->listOrder() : null, $this->databaseLists));
     }
 
     public function searchedClass(): string

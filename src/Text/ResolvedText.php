@@ -41,7 +41,7 @@ final readonly class ResolvedText
         $terms = $query?->hasTerms() ? $query : null;
         $streams = $request instanceof PayloadSearchRequest && $request->streams();
 
-        return self::resolve($resource, $strategy, $terms, $terms === null && ! $streams && $strategy instanceof ListingTextSearch && $strategy->servingLists());
+        return self::resolve($resource, $strategy, $terms, $terms === null && ! $streams && self::listsOnEngine($strategy, $request));
     }
 
     /** @internal */
@@ -133,6 +133,15 @@ final readonly class ResolvedText
         }
 
         return $this->strategy->run($query, $this->target);
+    }
+
+    private static function listsOnEngine(TextSearch $strategy, RestRequest $request): bool
+    {
+        if (! $strategy instanceof ListingTextSearch || ! $strategy->servingLists()) {
+            return false;
+        }
+
+        return ! $strategy->databaseListsAllowed() || $request->input('search.source') !== ListSource::Database->value;
     }
 
     private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing): self

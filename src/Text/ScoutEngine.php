@@ -30,6 +30,7 @@ final readonly class ScoutEngine implements ListingTextSearch
         private bool $withoutPerimeter = false,
         private bool $lists = false,
         private ?string $tieBreaker = null,
+        private bool $databaseLists = false,
     ) {}
 
     public static function make(): self
@@ -40,13 +41,13 @@ final readonly class ScoutEngine implements ListingTextSearch
     /** @param array<mixed> $attributes */
     public function filterable(array $attributes): self
     {
-        return new self($attributes, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker);
+        return new self($attributes, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker, $this->databaseLists);
     }
 
     /** @param array<mixed> $attributes */
     public function sortable(array $attributes): self
     {
-        return new self($this->filterable, $attributes, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker);
+        return new self($this->filterable, $attributes, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker, $this->databaseLists);
     }
 
     /**
@@ -55,22 +56,27 @@ final readonly class ScoutEngine implements ListingTextSearch
      */
     public function perimeter(Closure $perimeter, array $attributes = []): self
     {
-        return new self($this->filterable, $this->sortable, $perimeter, $attributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker);
+        return new self($this->filterable, $this->sortable, $perimeter, $attributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker, $this->databaseLists);
     }
 
     public function withoutPerimeter(): self
     {
-        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, true, $this->lists, $this->tieBreaker);
+        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, true, $this->lists, $this->tieBreaker, $this->databaseLists);
     }
 
     public function servesLists(bool $serves = true): static
     {
-        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $serves, $this->tieBreaker);
+        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $serves, $this->tieBreaker, $this->databaseLists);
     }
 
     public function tieBreaker(string $attribute): self
     {
-        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $attribute);
+        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $attribute, $this->databaseLists);
+    }
+
+    public function allowsDatabaseLists(bool $allows = true): static
+    {
+        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker, $allows);
     }
 
     /** @internal */
@@ -85,6 +91,13 @@ final readonly class ScoutEngine implements ListingTextSearch
     public function listTieBreaker(): ?string
     {
         return $this->tieBreaker;
+    }
+
+    /** @internal */
+    #[\Override]
+    public function databaseListsAllowed(): bool
+    {
+        return $this->lists && $this->databaseLists;
     }
 
     /**
@@ -154,9 +167,13 @@ final readonly class ScoutEngine implements ListingTextSearch
             throw InvalidTextSearchException::unlistedEngine($target->resource, $profile->name());
         }
 
+        if ($this->databaseLists && ! $this->lists) {
+            throw InvalidTextSearchException::unlistedDatabaseLists($target->resource);
+        }
+
         $tieBreaker = $this->tieBreaker === null ? null : TieBreaker::declared($this->tieBreaker, $target->resource, $profile, $this->lists);
         $attributes = IndexAttributes::of($target, $profile, $this->filterable, $this->sortable, $this->perimeterAttributes, $this->lists);
 
-        return new EngineIndex($model, $profile, $attributes, $target->resource, $this->lists, $tieBreaker);
+        return new EngineIndex($model, $profile, $attributes, $target->resource, $this->lists, $tieBreaker, $this->databaseLists);
     }
 }

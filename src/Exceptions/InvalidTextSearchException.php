@@ -144,6 +144,11 @@ final class InvalidTextSearchException extends LogicException
         return new self("The ScoutEngine of the resource [{$resource}] declares tieBreaker('{$attribute}') without ->servesLists(): the tie-breaker orders the lists served through the engine, and a text search keeps its relevance order. Add ->servesLists(), or remove ->tieBreaker().");
     }
 
+    public static function unlistedDatabaseLists(string $resource): self
+    {
+        return new self("The ScoutEngine of the resource [{$resource}] declares ->allowsDatabaseLists() without ->servesLists(): its lists already run in SQL. Add ->servesLists(), or remove ->allowsDatabaseLists().");
+    }
+
     public static function unsortedTieBreaker(string $resource, string $attribute, string $engine): self
     {
         return new self("The ScoutEngine of the resource [{$resource}] declares tieBreaker('{$attribute}'), but the engine [{$engine}] takes no sort without text, so its lists follow the ranking of the index. Remove ->tieBreaker() and end the customRanking of the index on a unique attribute, such as [{$attribute}].");

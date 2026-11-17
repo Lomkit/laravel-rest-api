@@ -5,14 +5,17 @@ namespace Lomkit\Rest\Scramble\Search;
 use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Scramble\Schemas;
+use Lomkit\Rest\Scramble\Types\OneOf;
 use Lomkit\Rest\Scramble\Types\Nothing;
 use Lomkit\Rest\Text\Engine\EngineGrammar;
+use Lomkit\Rest\Text\ListSource;
 use Lomkit\Rest\Text\TextBackend;
 use Lomkit\Rest\Validation\Search\RowKeys;
 use Lomkit\Rest\Validation\Search\SearchShape;
@@ -78,6 +81,24 @@ final readonly class SearchSchema
 
     /** @param list<string> $keys */
     private function search(Resource $resource, array $keys, bool $paged, ?EngineGrammar $lists): Type
+    {
+        $search = $this->object($resource, $keys, $paged, $lists);
+
+        if ($lists === null || ! $lists->databaseLists) {
+            return $search;
+        }
+
+        $database = $this->object($resource, $keys, $paged, null);
+        $database->addProperty('text', new Nothing);
+        $database->addProperty('source', (new StringType)->enum([ListSource::Database->value]));
+        $database->setRequired(['source']);
+        $search->addProperty('source', (new StringType)->enum([ListSource::Engine->value]));
+
+        return new OneOf([$search, $database]);
+    }
+
+    /** @param list<string> $keys */
+    private function object(Resource $resource, array $keys, bool $paged, ?EngineGrammar $lists): ObjectType
     {
         $refused = array_fill_keys(array_intersect($lists === null ? ['text', 'trashed'] : ['text', 'trashed', 'scopes'], $keys), new Nothing);
         $search = Schemas::object(array_replace($refused, $this->properties($resource, $keys, true, $lists)));

@@ -32,6 +32,7 @@ final readonly class EngineListCheck
 
             if ($text instanceof ListingTextSearch && $text->servingLists()) {
                 $report = self::check($resource, $text, $report);
+                $report = $text->databaseListsAllowed() ? $report->withDatabaseLists($resource::class) : $report;
                 $report = self::overrides($resource, 'perimeterQuery') ? $report->withNote(self::unappliedPerimeterQuery($resource::class)) : $report;
                 $report = self::overrides($resource, 'defaultOrderBy') ? $report->withNote(EngineListNotes::unappliedDefaultOrder($resource::class)) : $report;
             }
