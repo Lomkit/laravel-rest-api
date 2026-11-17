@@ -6,29 +6,32 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Fields\ID;
 
+/** @internal */
 final readonly class ChunkedRows implements ActionRows
 {
     /** @param Builder<Model> $query */
     private function __construct(
         private Builder $query,
+        private ID $id,
         private ChunkSize $size,
         private ?int $count,
     ) {}
 
     /** @param Builder<Model> $query */
-    public static function of(Builder $query, ChunkSize $size, ?RowCap $cap): self
+    public static function of(Builder $query, ID $id, ChunkSize $size, ?RowCap $cap): self
     {
         $rows = $query->clone()->reorder();
 
         if ($cap === null) {
-            return new self($rows, $size, null);
+            return new self($rows, $id, $size, null);
         }
 
         $count = $rows->toBase()->getCountForPagination();
         $cap->check($count);
 
-        return new self($rows, $size, $count);
+        return new self($rows, $id, $size, $count);
     }
 
     #[\Override]
@@ -48,6 +51,12 @@ final readonly class ChunkedRows implements ActionRows
     public function count(): int
     {
         return $this->count ?? $this->query->toBase()->getCountForPagination();
+    }
+
+    #[\Override]
+    public function keyOf(Model $model): int|string|null
+    {
+        return $this->id->normalizedKey($model->getKey());
     }
 
     #[\Override]

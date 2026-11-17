@@ -11,13 +11,17 @@ use Lomkit\Rest\Actions\Rows\ChunkSize;
 use Lomkit\Rest\Actions\Rows\RowCap;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Query\EngineSearch;
+use Lomkit\Rest\Text\Engine\ScoutModel;
 
+/** @internal */
 final readonly class EngineTargets implements ActionRows
 {
     /** @param list<list<int|string>> $chunks */
     private function __construct(
         private EngineSearch $search,
+        private ScoutModel $scout,
         private array $chunks,
+        private ?CheckedKeys $checked = null,
     ) {}
 
     public static function of(OperateRequest $request, Action $action): ?self
@@ -38,7 +42,7 @@ final readonly class EngineTargets implements ActionRows
 
         $size = ChunkSize::of($action, $request->context()->limits());
 
-        return new self($engine, array_chunk($keys, $size->for(fn (): int => count($keys))));
+        return new self($engine, $engine->scout(), array_chunk($keys, $size->for(fn (): int => count($keys))));
     }
 
     /** @param Closure(Collection<int, Model>): int $each */
@@ -48,7 +52,7 @@ final readonly class EngineTargets implements ActionRows
         $impacted = 0;
 
         foreach ($this->chunks as $keys) {
-            $impacted += $each($this->search->restrictedRows($keys));
+            $impacted += $each($this->rows($keys));
         }
 
         return $impacted;
@@ -61,10 +65,27 @@ final readonly class EngineTargets implements ActionRows
     }
 
     #[\Override]
+    public function keyOf(Model $model): int|string
+    {
+        return $this->scout->keyOf($model);
+    }
+
+    #[\Override]
     public function only(CheckedKeys $keys): ActionRows
     {
         $chunks = array_map(fn (array $chunk): array => array_values(array_filter($chunk, $keys->has(...))), $this->chunks);
 
-        return new self($this->search, array_values(array_filter($chunks, fn (array $chunk): bool => $chunk !== [])));
+        return new self($this->search, $this->scout, array_values(array_filter($chunks, fn (array $chunk): bool => $chunk !== [])), $keys);
+    }
+
+    /**
+     * @param  list<int|string>  $keys
+     * @return Collection<int, Model>
+     */
+    private function rows(array $keys): Collection
+    {
+        $rows = $this->search->restrictedRows($keys);
+
+        return $this->checked === null ? $rows : $rows->filter($this->checked->covers(...))->values();
     }
 }

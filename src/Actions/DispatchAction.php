@@ -95,7 +95,7 @@ final readonly class DispatchAction
         $cap = RowCap::of($this->action->maxResources);
 
         if ($search->sorts === [] && $search->limit === null) {
-            return ChunkedRows::of($plan->query(), $this->size(), $cap);
+            return ChunkedRows::of($plan->query(), $this->id(), $this->size(), $cap);
         }
 
         return KeyChunks::read($plan->keys()->query(), $this->id(), $this->size(), $search->limit, $cap, $plan->query());

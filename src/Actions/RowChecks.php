@@ -18,6 +18,7 @@ use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\KeysGrammar;
 
+/** @internal */
 final readonly class RowChecks
 {
     /** @param Closure(Model): string $path */
@@ -57,16 +58,22 @@ final readonly class RowChecks
         }
 
         $denials = [];
+        $targets = [];
         $keys = [];
         $read = 0;
 
-        $rows->each(function (Collection $models) use (&$denials, &$keys, &$read): int {
+        $rows->each(function (Collection $models) use ($rows, &$denials, &$targets, &$keys, &$read): int {
             $read += $models->count();
             $this->cap?->check($read);
             array_push($denials, ...$this->denials($models));
 
             foreach ($models as $model) {
-                $key = CheckedKeys::normalize($this->id, $model->getKey());
+                $target = $rows->keyOf($model);
+                $key = $this->id->normalizedKey($model->getKey());
+
+                if ($target !== null) {
+                    $targets[$target] = true;
+                }
 
                 if ($key !== null) {
                     $keys[$key] = true;
@@ -80,7 +87,7 @@ final readonly class RowChecks
             throw new AuthorizationDenied($denials);
         }
 
-        return $rows->only(new CheckedKeys($this->id, $keys));
+        return $rows->only(new CheckedKeys($this->id, $targets, $keys));
     }
 
     /**
