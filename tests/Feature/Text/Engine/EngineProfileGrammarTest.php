@@ -53,7 +53,7 @@ class EngineProfileGrammarTest extends EngineSearchTestCase
      * @param  array<string, list<string>>  $errors
      */
     #[Test]
-    #[DataProvider('groupsOnAlgolia')]
+    #[DataProvider('refusedGroups')]
     public function it_refuses_or_and_nested_filters_on_an_engine_without_groups(array $search, array $errors): void
     {
         $this->useEngine(new FakeAlgolia4Engine(new SettingsClient(fn (): array => [])));
@@ -64,7 +64,7 @@ class EngineProfileGrammarTest extends EngineSearchTestCase
     }
 
     /** @return array<string, array{array<string, mixed>, array<string, list<string>>}> */
-    public static function groupsOnAlgolia(): array
+    public static function refusedGroups(): array
     {
         return [
             'an or filter' => [['filters' => [['field' => 'number', 'value' => 3], ['field' => 'number', 'value' => 1, 'type' => 'or']]], [

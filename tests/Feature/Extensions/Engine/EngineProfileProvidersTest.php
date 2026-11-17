@@ -13,11 +13,13 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RivalEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnappliedEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\UnsortedForeignEngineProfiles;
+use Lomkit\Rest\Tests\Feature\Text\Engine\EngineProfileGrammarTest;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignProfile;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -63,6 +65,22 @@ class EngineProfileProvidersTest extends EngineSearchTestCase
 
         $response->assertOk()->assertExactJson($this->page([3], 1, 10));
         $this->assertSame([[10, 1, null]], ForeignProfile::$pages);
+    }
+
+    /**
+     * @param  array<string, mixed>  $search
+     * @param  array<string, list<string>>  $errors
+     */
+    #[Test]
+    #[DataProviderExternal(EngineProfileGrammarTest::class, 'refusedGroups')]
+    public function it_refuses_or_and_nested_filters_on_a_provided_profile(array $search, array $errors): void
+    {
+        $this->useEngine(new ForeignEngine);
+        config(['rest.extensions' => [ForeignEngineProfiles::class]]);
+
+        $response = $this->search('vouchers', ['text' => ['value' => 'report'], ...$search]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', $errors);
     }
 
     #[Test]

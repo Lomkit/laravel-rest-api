@@ -14,7 +14,7 @@ final class InvalidEngineQueryException extends LogicException
 
     public static function ungroupedFilters(string $resource, string $engine): self
     {
-        return new self("The search of {$resource} groups its filters with or or nested, but the profile of the engine [{$engine}] does not implement Lomkit\\Rest\\Text\\Engine\\Profiles\\FiltersWithGroups. Combine the filters with and only, or implement FiltersWithGroups in the profile of the engine.");
+        return new self("The search of {$resource} groups its filters with or or nested, but the profile of the engine [{$engine}] does not accept or and nested filters: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Combine the filters with and only.");
     }
 
     public static function undeclaredAttribute(string $attribute): self
