@@ -10,6 +10,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilterCapturingAlgolia4Engine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilterCapturingTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListCapturingMeilisearchEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
@@ -94,5 +95,17 @@ class AndedStringListsTest extends EngineSearchTestCase
         $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
 
         $this->assertSame(['(readers:=[`group-a`]) && (readers:=[`ann`])'], $engine->filters);
+    }
+
+    #[Test]
+    public function it_keeps_the_narrower_list_on_an_engine_that_cannot_and_lists(): void
+    {
+        $engine = new FilterCapturingAlgolia4Engine(new SettingsClient(fn (): array => []));
+        $this->useEngine($engine);
+        ReadersExtension::$groups = ['ann', 'bob'];
+
+        $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'ri.bob']]])->assertOk();
+
+        $this->assertSame(["(readers:'bob')"], $engine->filters);
     }
 }

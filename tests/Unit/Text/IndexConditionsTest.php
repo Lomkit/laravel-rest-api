@@ -58,17 +58,28 @@ class IndexConditionsTest extends TestCase
     }
 
     #[Test]
-    public function it_keeps_the_narrower_list_of_a_list_attribute_in_any_order(): void
+    #[DataProvider('groupSupport')]
+    public function it_keeps_the_narrower_list_of_a_list_attribute_in_any_order(bool $groups): void
     {
-        $narrowed = self::conditions();
+        $narrowed = self::conditions($groups ? null : new PlainProfile);
         $narrowed->include('readers', ['ann', 'bob'], true);
         $narrowed->include('readers', ['ann'], true);
-        $widened = self::conditions();
+        $widened = self::conditions($groups ? null : new PlainProfile);
         $widened->include('readers', ['ann'], true);
         $widened->include('readers', ['bob', 'ann'], true);
 
         $this->assertSame(['readers' => ['ann']], $this->applied($narrowed)->whereIns);
         $this->assertSame(['readers' => ['ann']], $this->applied($widened)->whereIns);
+        $this->assertSame([null, null], [$narrowed->tree(null), $widened->tree(null)]);
+    }
+
+    /** @return array<string, array{bool}> */
+    public static function groupSupport(): array
+    {
+        return [
+            'an engine with groups' => [true],
+            'an engine without groups' => [false],
+        ];
     }
 
     /** @param list<list<string>> $lists */

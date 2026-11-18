@@ -17,6 +17,6 @@ final class GroupInstructionsExtension extends Extension implements DeclaresInst
     #[\Override]
     public function instructions(InstructionsContext $context): array
     {
-        return [EitherInstruction::class, ReaderGroupInstruction::class, EmptyGroupInstruction::class];
+        return [EitherInstruction::class, ReaderGroupInstruction::class, EmptyGroupInstruction::class, ChosenReadersInstruction::class];
     }
 }

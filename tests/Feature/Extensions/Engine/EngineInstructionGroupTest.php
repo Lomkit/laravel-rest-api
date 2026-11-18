@@ -18,6 +18,8 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EmptyGroupInstruction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GroupInstructionsExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupEngineRestriction;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CapturingMeilisearchEngine;
@@ -25,12 +27,16 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeAlgolia4Engine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilterCapturingTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\GroupedReaderVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListCapturingMeilisearchEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedTeamVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedUnsortedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedUnsortedVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterGroupReaderVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterGroupReaderVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
+use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -52,6 +58,8 @@ class EngineInstructionGroupTest extends EngineSearchTestCase
             Rest::resource('listed-team-vouchers', ListedTeamVoucherController::class)->register();
             Rest::resource('grouped-reader-vouchers', GroupedReaderVoucherController::class)->register();
             Rest::resource('listed-unsorted-vouchers', ListedUnsortedVoucherController::class)->register();
+            Rest::resource('reader-vouchers', ReaderVoucherController::class)->register();
+            Rest::resource('perimeter-group-reader-vouchers', PerimeterGroupReaderVoucherController::class)->register();
         });
         config(['scout.typesense.model-settings.'.ReaderVoucher::class.'.search-parameters.query_by' => 'title']);
     }
@@ -170,7 +178,8 @@ class EngineInstructionGroupTest extends EngineSearchTestCase
         config(['rest.extensions' => [...$extensions, GroupInstructionsExtension::class]]);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidEngineQueryException::ungroupedConditions(EmptyGroupInstruction::class, $resource, $engine));
+        $this->expectException(InvalidEngineQueryException::class);
+        $this->expectExceptionMessage('The instruction [gi.nothing] '.EmptyGroupInstruction::class.' of '.$resource.' groups engine conditions with whereAny(), but the engine ['.$engine.'] does not accept grouped conditions');
 
         $this->search($route, ['text' => ['value' => 'report'], 'instructions' => [['name' => 'gi.nothing']]]);
     }
@@ -188,8 +197,8 @@ class EngineInstructionGroupTest extends EngineSearchTestCase
     public function it_names_the_instruction_the_resource_and_the_engine_of_a_refused_group(): void
     {
         $this->assertSame(
-            'The instruction '.EmptyGroupInstruction::class.' of '.VoucherResource::class.' groups engine conditions with whereAny(), but the engine ['.ForeignEngine::class.'] does not accept grouped conditions: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Check $query->filtersWithGroups() before grouping, and use where(), whereIn() and whereNotIn() on this engine.',
-            InvalidEngineQueryException::ungroupedConditions(EmptyGroupInstruction::class, VoucherResource::class, ForeignEngine::class)->getMessage(),
+            'The instruction [nothing] '.EmptyGroupInstruction::class.' of '.VoucherResource::class.' groups engine conditions with whereAny(), but the engine ['.ForeignEngine::class.'] does not accept grouped conditions: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Check $query->filtersWithGroups() before grouping, and use where(), whereIn() and whereNotIn() on this engine.',
+            InvalidEngineQueryException::ungroupedConditions(new EmptyGroupInstruction, VoucherResource::class, ForeignEngine::class)->getMessage(),
         );
         $this->assertStringStartsWith('ScoutEngine::perimeter() of '.VoucherResource::class.' groups engine conditions with whereAny(),', InvalidEngineQueryException::ungroupedConditions(null, VoucherResource::class, ForeignEngine::class)->getMessage());
     }
@@ -235,5 +244,105 @@ class EngineInstructionGroupTest extends EngineSearchTestCase
             NullEngine::class => new NullEngine,
             default => new RecordingCollectionEngine,
         };
+    }
+
+    /** @param list<string> $readers */
+    #[Test]
+    #[DataProvider('chosenReaders')]
+    public function it_writes_a_group_of_values_that_the_client_sends_to_the_instruction(array $readers, string $typesense, string $meilisearch): void
+    {
+        config(['rest.extensions' => [ReadersExtension::class, GroupInstructionsExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+        $search = ['text' => ['value' => 'report'], 'instructions' => [['name' => 'gi.chosen-readers', 'fields' => [['name' => 'readers', 'value' => $readers]]]]];
+        $typesenseEngine = new FilterCapturingTypesenseEngine;
+        $meilisearchEngine = new ListCapturingMeilisearchEngine(new SettingsClient(fn (): array => ['maxTotalHits' => 1000]));
+
+        $this->useEngine($typesenseEngine);
+        $this->search('reader-vouchers', $search)->assertOk();
+        $this->useEngine($meilisearchEngine);
+        $this->search('reader-vouchers', $search)->assertOk();
+
+        $this->assertSame([$typesense], $typesenseEngine->filters);
+        $this->assertSame([$meilisearch], $meilisearchEngine->filters);
+    }
+
+    /** @return array<string, array{list<string>, string, string}> */
+    public static function chosenReaders(): array
+    {
+        return [
+            'two readers' => [['bob', 'cid'], '(readers:=[`ann`]) && (readers:=[`bob`, `cid`] || number:=1)', '(readers IN ["ann"]) AND (readers IN ["bob", "cid"] OR number=1)'],
+            'no reader, a false condition' => [[], '(readers:=[`ann`]) && (number:=1)', '(readers IN ["ann"]) AND (number=1)'],
+        ];
+    }
+
+    #[Test]
+    public function it_escapes_a_quote_that_the_client_sends_to_an_instruction_group_on_meilisearch(): void
+    {
+        $engine = new ListCapturingMeilisearchEngine(new SettingsClient(fn (): array => ['maxTotalHits' => 1000]));
+        $this->useEngine($engine);
+        config(['rest.extensions' => [ReadersExtension::class, GroupInstructionsExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+
+        $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'gi.chosen-readers', 'fields' => [['name' => 'readers', 'value' => ['b" OR readers IN ["cid']]]]]])->assertOk();
+
+        $this->assertSame(['(readers IN ["ann"]) AND (readers IN ["b\" OR readers IN [\"cid"] OR number=1)'], $engine->filters);
+    }
+
+    #[Test]
+    public function it_refuses_a_backtick_that_the_client_sends_to_an_instruction_group_on_typesense(): void
+    {
+        $engine = new FilterCapturingTypesenseEngine;
+        $this->useEngine($engine);
+        config(['rest.extensions' => [ReadersExtension::class, GroupInstructionsExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'gi.chosen-readers', 'fields' => [['name' => 'readers', 'value' => ['b` || number:=5 || readers:=[`c']]]]]]);
+            $this->fail('The backtick reached the filter.');
+        } catch (InvalidEngineQueryException $refusal) {
+            $this->assertEquals(InvalidEngineQueryException::nonLiteralValue('readers'), $refusal);
+        }
+
+        $this->assertSame([], $engine->filters);
+    }
+
+    #[Test]
+    public function it_orders_the_root_of_the_filter_as_groups_then_anded_lists_then_the_client_block(): void
+    {
+        $engine = new FilterCapturingTypesenseEngine;
+        $this->useEngine($engine);
+        config(['rest.extensions' => [ReadersExtension::class, ReaderGroupEngineRestriction::class, ReaderInstructionsExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+
+        $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'filters' => self::EITHER, 'instructions' => [['name' => 'ri.bob']]])->assertOk();
+
+        $this->assertSame(['(readers:=[`ann`]) && ((number:=1 || (price:<5 && readers:=[`bob`] && readers:!=[`cid`])) && readers:=[`bob`] && (number:=3 || number:=4))'], $engine->filters);
+    }
+
+    #[Test]
+    public function it_ands_a_perimeter_group_and_a_perimeter_list_with_an_extension_list(): void
+    {
+        $engine = new FilterCapturingTypesenseEngine;
+        $this->useEngine($engine);
+        config(['rest.extensions' => [ReadersExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+
+        $this->search('perimeter-group-reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
+
+        $this->assertSame(['(readers:=[`bob`]) && ((number:=1 || active:=false) && readers:=[`ann`])'], $engine->filters);
+    }
+
+    #[Test]
+    public function it_refuses_a_perimeter_group_on_an_engine_that_does_not_accept_groups(): void
+    {
+        $this->useEngine(new FakeAlgolia4Engine(new SettingsClient(fn (): array => [])));
+        config(['rest.extensions' => [ReadersExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidEngineQueryException::ungroupedConditions(null, PerimeterGroupReaderVoucherResource::class, FakeAlgolia4Engine::class));
+
+        $this->search('perimeter-group-reader-vouchers', ['text' => ['value' => 'report']]);
     }
 }
