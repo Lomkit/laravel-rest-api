@@ -11,7 +11,10 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\MultiSearchTypesenseEngine;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
-use Lomkit\Rest\Text\Engine\Profiles\TypesenseLongSearch;
+use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherResource;
+use Lomkit\Rest\Text\Engine\EngineQuery;
+use Lomkit\Rest\Text\ScoutEngine;
+use Lomkit\Rest\Text\TextQuery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -44,7 +47,23 @@ class TypesenseLongFilterTest extends EngineSearchTestCase
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([3], 1));
-        $this->assertSame([['search', self::parameters('readers:=[`ann`, `bob`]')]], $engine->requests);
+        $this->assertSame([['search', self::parameters(self::filter(['ann', 'bob']))]], $engine->requests);
+    }
+
+    #[Test]
+    public function it_keeps_a_search_of_exactly_the_threshold_on_the_search_endpoint_and_moves_one_character_more(): void
+    {
+        $engine = new MultiSearchTypesenseEngine;
+        $this->useEngine($engine);
+
+        foreach ([3500, 3501] as $length) {
+            ReadersExtension::$groups = self::readersOfLength($length);
+            $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
+        }
+
+        $this->assertSame(['search', 'multi_search'], array_column($engine->requests, 0));
+        $this->assertSame(3500, self::queryLength($engine->requests[0][1]));
+        $this->assertSame(3501, self::queryLength(self::parameters(self::filter(self::readersOfLength(3501)))));
     }
 
     #[Test]
@@ -57,50 +76,81 @@ class TypesenseLongFilterTest extends EngineSearchTestCase
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([3], 1));
-        $filter = 'readers:=['.implode(', ', array_map(fn (string $reader): string => "`{$reader}`", self::readers(300))).']';
-        $this->assertSame([['multi_search', ['searches' => [[...self::parameters($filter), 'collection' => (new ReaderVoucher)->searchableAs()]]]]], $engine->requests);
+        $this->assertSame([['multi_search', ['searches' => [[...self::parameters(self::filter(self::readers(300))), 'collection' => (new ReaderVoucher)->searchableAs()]]]]], $engine->requests);
     }
 
     #[Test]
-    public function it_throws_the_error_that_multi_search_answers_inside_its_result(): void
+    public function it_pages_a_long_search_and_reads_its_total_from_multi_search(): void
     {
-        $this->useEngine(new MultiSearchTypesenseEngine(['code' => 404, 'error' => 'Collection not found']));
+        $engine = new MultiSearchTypesenseEngine(['hits' => [['document' => ['id' => 'V-a', 'code' => 'V-a']]], 'found' => 11]);
+        $this->useEngine($engine);
+        ReadersExtension::$groups = self::readers(300);
+
+        $response = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'limit' => 10, 'page' => 2]);
+
+        $response->assertOk()->assertExactJson($this->page([3], 11, 10, 2));
+        $this->assertSame([['multi_search', ['searches' => [[...self::parameters(self::filter(self::readers(300)), 10, 2), 'collection' => (new ReaderVoucher)->searchableAs()]]]]], $engine->requests);
+    }
+
+    #[Test]
+    public function it_sends_the_same_parameters_to_multi_search_as_to_the_search_endpoint_without_the_null_ones(): void
+    {
+        $engine = new MultiSearchTypesenseEngine;
+        $this->useEngine($engine);
+
+        $this->engineQuery()->whereIn('readers', self::readers(300))->options(['exclude_fields' => null, 'drop_tokens_threshold' => 1])->page(50, 1);
+
+        $this->assertSame([['multi_search', ['searches' => [[...self::parameters(self::filter(self::readers(300))), 'drop_tokens_threshold' => 1, 'collection' => (new ReaderVoucher)->searchableAs()]]]]], $engine->requests);
+    }
+
+    #[Test]
+    public function it_leaves_a_vector_search_to_scout(): void
+    {
+        $engine = new MultiSearchTypesenseEngine;
+        $this->useEngine($engine);
+
+        $this->engineQuery()->whereIn('readers', self::readers(300))->options(['vector_query' => 'embedding:([], k: 10)'])->page(50, 1);
+
+        $this->assertSame([['search', [...self::parameters(self::filter(self::readers(300))), 'vector_query' => 'embedding:([], k: 10)']]], $engine->requests);
+    }
+
+    /** @param array<mixed> $answer */
+    #[Test]
+    #[DataProvider('refusedAnswers')]
+    public function it_throws_when_multi_search_answers_an_error_or_no_result(array $answer, string $message, int $code): void
+    {
+        $this->useEngine(new MultiSearchTypesenseEngine(answer: $answer));
         ReadersExtension::$groups = self::readers(300);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(EngineSearchException::typesenseMultiSearch((new ReaderVoucher)->searchableAs(), ['code' => 404, 'error' => 'Collection not found']));
-
-        $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
+        try {
+            $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
+            $this->fail('The answer of multi_search was not refused.');
+        } catch (EngineSearchException $refusal) {
+            $this->assertSame([str_replace('{collection}', (new ReaderVoucher)->searchableAs(), $message), $code], [$refusal->getMessage(), $refusal->getCode()]);
+        }
     }
 
-    #[Test]
-    public function it_names_the_collection_the_error_and_the_fix(): void
+    /** @return array<string, array{array<mixed>, string, int}> */
+    public static function refusedAnswers(): array
     {
-        $this->assertSame(
-            'Typesense refused the search of the collection [vouchers] that the package sent through /multi_search, since its query string passes the length that a GET search accepts: Collection not found (code 404). Check the filter and the collection schema, and give the API key the documents:search action on the collection.',
-            EngineSearchException::typesenseMultiSearch('vouchers', ['code' => 404, 'error' => 'Collection not found'])->getMessage(),
-        );
-        $this->assertSame(404, EngineSearchException::typesenseMultiSearch('vouchers', ['code' => 404, 'error' => 'Collection not found'])->getCode());
-        $this->assertStringContainsString(': no search result (code 500).', EngineSearchException::typesenseMultiSearch('vouchers', null)->getMessage());
-    }
+        $refused = 'Typesense refused the search of the collection [{collection}] that the package sent through /multi_search, since its query string passes the length that a GET search accepts: ';
 
-    /** @param array<string, mixed> $parameters */
-    #[Test]
-    #[DataProvider('queryStrings')]
-    public function it_measures_the_query_string_that_the_search_endpoint_receives(array $parameters, int $length): void
-    {
-        $this->assertSame($length, TypesenseLongSearch::queryString($parameters));
-        $this->assertSame(3500, TypesenseLongSearch::MAX_QUERY_STRING);
-    }
-
-    /** @return array<string, array{array<string, mixed>, int}> */
-    public static function queryStrings(): array
-    {
         return [
-            'booleans as words' => [['prefix' => true, 'use_cache' => false], 27],
-            'encoded characters' => [['filter_by' => 'readers:=[`a b`]'], 38],
-            'numbers' => [['per_page' => 50, 'page' => 1], 18],
+            'a missing collection' => [['results' => [['code' => 404, 'error' => 'Collection not found']]], $refused.'Collection not found (code 404). Check the filter and the collection schema.', 404],
+            'a key without the right' => [['results' => [['code' => 401, 'error' => 'Forbidden - a valid `x-typesense-api-key` header must be sent.']]], $refused.'Forbidden - a valid `x-typesense-api-key` header must be sent. (code 401). Give the API key the documents:search action on the collection.', 401],
+            'an error without a code' => [['results' => [['error' => 'Boom']]], $refused.'Boom (without a code). Check the filter and the collection schema.', 0],
+            'an answer without results' => [['message' => 'Not Found'], 'Typesense gave an unexpected answer to the search of the collection [{collection}] that the package sent through /multi_search: the answer holds no search result. Check the version of the Typesense server and of typesense/typesense-php.', 0],
+            'an empty list of results' => [['results' => []], 'Typesense gave an unexpected answer to the search of the collection [{collection}] that the package sent through /multi_search: the answer holds no search result. Check the version of the Typesense server and of typesense/typesense-php.', 0],
         ];
+    }
+
+    private function engineQuery(): EngineQuery
+    {
+        $text = $this->resource(ReaderVoucherResource::class)->text();
+        $this->assertInstanceOf(ScoutEngine::class, $text);
+
+        return $text->query(new TextQuery('report'), $this->target(ReaderVoucherResource::class));
     }
 
     /** @return list<string> */
@@ -109,15 +159,36 @@ class TypesenseLongFilterTest extends EngineSearchTestCase
         return ['ann', ...array_map(fn (int $index): string => sprintf('reader-%04d', $index), range(1, $count - 1))];
     }
 
+    /** @return list<string> */
+    private static function readersOfLength(int $length): array
+    {
+        $base = self::readers(100);
+        $padding = $length - self::queryLength(self::parameters(self::filter([...$base, 'r'])));
+
+        return [...$base, 'r'.str_repeat('a', $padding)];
+    }
+
+    /** @param list<string> $readers */
+    private static function filter(array $readers): string
+    {
+        return 'readers:=['.implode(', ', array_map(fn (string $reader): string => "`{$reader}`", $readers)).']';
+    }
+
+    /** @param array<mixed> $parameters */
+    private static function queryLength(array $parameters): int
+    {
+        return strlen(http_build_query(array_map(fn (mixed $value): mixed => is_bool($value) ? ($value ? 'true' : 'false') : $value, $parameters)));
+    }
+
     /** @return array<string, mixed> */
-    private static function parameters(string $filter): array
+    private static function parameters(string $filter, int $perPage = 50, int $page = 1): array
     {
         return [
             'q' => 'report',
             'query_by' => 'title',
             'filter_by' => $filter,
-            'per_page' => 50,
-            'page' => 1,
+            'per_page' => $perPage,
+            'page' => $page,
             'highlight_start_tag' => '<mark>',
             'highlight_end_tag' => '</mark>',
             'snippet_threshold' => 30,

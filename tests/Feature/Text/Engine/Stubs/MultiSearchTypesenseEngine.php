@@ -10,8 +10,11 @@ class MultiSearchTypesenseEngine extends FakeTypesenseEngine
     /** @var list<array{string, array<mixed>}> */
     public array $requests = [];
 
-    /** @param array<mixed> $result */
-    public function __construct(public array $result = ['hits' => [['document' => ['id' => 'V-a', 'code' => 'V-a']]], 'found' => 1])
+    /**
+     * @param  array<mixed>  $result
+     * @param  array<mixed>|null  $answer
+     */
+    public function __construct(public array $result = ['hits' => [['document' => ['id' => 'V-a', 'code' => 'V-a']]], 'found' => 1], public ?array $answer = null)
     {
         parent::__construct();
     }
@@ -47,6 +50,6 @@ class MultiSearchTypesenseEngine extends FakeTypesenseEngine
     {
         $this->requests[] = ['multi_search', $searches];
 
-        return ['results' => [$this->result]];
+        return $this->answer ?? ['results' => [$this->result]];
     }
 }

@@ -13,6 +13,7 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingHttpClient;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RequiresMethod;
 use PHPUnit\Framework\Attributes\Test;
@@ -49,32 +50,75 @@ class TypesenseMultiSearchRequestTest extends EngineSearchTestCase
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([3], 1));
-        $this->assertSame([['GET', '/collections/'.(new ReaderVoucher)->searchableAs().'/documents/search', http_build_query(self::searchParameters('readers:=[`ann`, `bob`]')), '']], $client->requests);
+        $this->assertSame([['GET', '/collections/'.(new ReaderVoucher)->searchableAs().'/documents/search', http_build_query(self::searchParameters(self::filter(['ann', 'bob']))), '']], $client->requests);
     }
 
     #[Test]
-    public function it_posts_a_long_search_to_multi_search_with_its_collection(): void
+    public function it_sends_a_query_string_of_exactly_3500_characters_as_a_get_and_one_more_to_multi_search(): void
     {
-        $client = $this->engineWith(['results' => [self::HITS]]);
-        $readers = ['ann', ...array_map(fn (int $index): string => sprintf('reader-%04d', $index), range(1, 299))];
-        ReadersExtension::$groups = $readers;
+        $get = $this->engineWith(self::HITS);
+        ReadersExtension::$groups = self::readersOfLength(3500);
+        $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
+        $post = $this->engineWith(['results' => [self::HITS]]);
+        ReadersExtension::$groups = self::readersOfLength(3501);
+        $this->search('reader-vouchers', ['text' => ['value' => 'report']])->assertOk();
 
-        $response = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
+        $this->assertSame(['GET', 3500], [$get->requests[0][0], strlen($get->requests[0][2])]);
+        $this->assertSame(['POST', '/multi_search', ''], array_slice($post->requests[0], 0, 3));
+    }
 
-        $response->assertOk()->assertExactJson($this->page([3], 1));
-        $filter = 'readers:=['.implode(', ', array_map(fn (string $reader): string => "`{$reader}`", $readers)).']';
-        $search = [...self::searchParameters($filter), 'prefix' => true, 'exhaustive_search' => false, 'use_cache' => false, 'prioritize_exact_match' => true, 'enable_overrides' => true, 'collection' => (new ReaderVoucher)->searchableAs()];
+    #[Test]
+    public function it_posts_a_long_search_to_multi_search_with_its_collection_page_and_total(): void
+    {
+        $client = $this->engineWith(['results' => [['hits' => self::HITS['hits'], 'found' => 11]]]);
+        ReadersExtension::$groups = self::readers(300);
+
+        $response = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'limit' => 10, 'page' => 2]);
+
+        $response->assertOk()->assertExactJson($this->page([3], 11, 10, 2));
+        $search = [...self::searchParameters(self::filter(self::readers(300)), 10, 2), 'prefix' => true, 'exhaustive_search' => false, 'use_cache' => false, 'prioritize_exact_match' => true, 'enable_overrides' => true, 'collection' => (new ReaderVoucher)->searchableAs()];
         $this->assertSame([['POST', '/multi_search', '', (string) json_encode(['searches' => [$search]])]], $client->requests);
     }
 
+    /** @param class-string $previous */
     #[Test]
-    public function it_throws_the_error_of_a_long_search_that_multi_search_answers_with_200(): void
+    #[DataProvider('typesenseErrors')]
+    public function it_keeps_the_typesense_exception_of_the_error_code_as_previous(int $code, string $previous): void
     {
-        $this->engineWith(['results' => [['code' => 400, 'error' => 'Could not find a filter field named `readers` in the schema.']]]);
-        ReadersExtension::$groups = ['ann', ...array_map(fn (int $index): string => sprintf('reader-%04d', $index), range(1, 299))];
+        $this->engineWith(['results' => [['code' => $code, 'error' => 'Refused by the server.']]]);
+        ReadersExtension::$groups = self::readers(300);
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(EngineSearchException::typesenseMultiSearch((new ReaderVoucher)->searchableAs(), ['code' => 400, 'error' => 'Could not find a filter field named `readers` in the schema.']));
+        try {
+            $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
+            $this->fail('The error inside the multi_search result was not thrown.');
+        } catch (EngineSearchException $refusal) {
+            $this->assertSame([$code, $previous, 'Refused by the server.'], [$refusal->getCode(), $refusal->getPrevious()::class, $refusal->getPrevious()?->getMessage()]);
+        }
+    }
+
+    /** @return array<string, array{int, string}> */
+    public static function typesenseErrors(): array
+    {
+        return [
+            'a malformed request' => [400, 'Typesense\Exceptions\RequestMalformed'],
+            'an unauthorized key' => [401, 'Typesense\Exceptions\RequestUnauthorized'],
+            'a missing collection' => [404, 'Typesense\Exceptions\ObjectNotFound'],
+            'a conflict' => [409, 'Typesense\Exceptions\ObjectAlreadyExists'],
+            'an unprocessable search' => [422, 'Typesense\Exceptions\ObjectUnprocessable'],
+            'an unavailable service' => [503, 'Typesense\Exceptions\ServiceUnavailable'],
+            'any other code' => [500, 'Typesense\Exceptions\ServerError'],
+        ];
+    }
+
+    #[Test]
+    public function it_refuses_a_multi_search_answer_without_results(): void
+    {
+        $this->engineWith(['message' => 'Not Found']);
+        ReadersExtension::$groups = self::readers(300);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(EngineSearchException::unexpectedMultiSearch((new ReaderVoucher)->searchableAs()));
 
         $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
     }
@@ -93,15 +137,36 @@ class TypesenseMultiSearchRequestTest extends EngineSearchTestCase
         return $client;
     }
 
+    /** @return list<string> */
+    private static function readers(int $count): array
+    {
+        return ['ann', ...array_map(fn (int $index): string => sprintf('reader-%04d', $index), range(1, $count - 1))];
+    }
+
+    /** @return list<string> */
+    private static function readersOfLength(int $length): array
+    {
+        $base = self::readers(100);
+        $padding = $length - strlen(http_build_query(self::searchParameters(self::filter([...$base, 'r']))));
+
+        return [...$base, 'r'.str_repeat('a', $padding)];
+    }
+
+    /** @param list<string> $readers */
+    private static function filter(array $readers): string
+    {
+        return 'readers:=['.implode(', ', array_map(fn (string $reader): string => "`{$reader}`", $readers)).']';
+    }
+
     /** @return array<string, mixed> */
-    private static function searchParameters(string $filter): array
+    private static function searchParameters(string $filter, int $perPage = 50, int $page = 1): array
     {
         return [
             'q' => 'report',
             'query_by' => 'title',
             'filter_by' => $filter,
-            'per_page' => 50,
-            'page' => 1,
+            'per_page' => $perPage,
+            'page' => $page,
             'highlight_start_tag' => '<mark>',
             'highlight_end_tag' => '</mark>',
             'snippet_threshold' => 30,
