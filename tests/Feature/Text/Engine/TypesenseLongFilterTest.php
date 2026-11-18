@@ -117,7 +117,7 @@ class TypesenseLongFilterTest extends EngineSearchTestCase
     /** @param array<mixed> $answer */
     #[Test]
     #[DataProvider('refusedAnswers')]
-    public function it_throws_when_multi_search_answers_an_error_or_no_result(array $answer, string $message, int $code): void
+    public function it_throws_when_multi_search_answers_no_result(array $answer, string $message, int $code): void
     {
         $this->useEngine(new MultiSearchTypesenseEngine(answer: $answer));
         ReadersExtension::$groups = self::readers(300);
@@ -134,12 +134,7 @@ class TypesenseLongFilterTest extends EngineSearchTestCase
     /** @return array<string, array{array<mixed>, string, int}> */
     public static function refusedAnswers(): array
     {
-        $refused = 'Typesense refused the search of the collection [{collection}] that the package sent through /multi_search, since its query string passes the length that a GET search accepts: ';
-
         return [
-            'a missing collection' => [['results' => [['code' => 404, 'error' => 'Collection not found']]], $refused.'Collection not found (code 404). Check the filter and the collection schema.', 404],
-            'a key without the right' => [['results' => [['code' => 401, 'error' => 'Forbidden - a valid `x-typesense-api-key` header must be sent.']]], $refused.'Forbidden - a valid `x-typesense-api-key` header must be sent. (code 401). Give the API key the documents:search action on the collection.', 401],
-            'an error without a code' => [['results' => [['error' => 'Boom']]], $refused.'Boom (without a code). Check the filter and the collection schema.', 0],
             'an answer without results' => [['message' => 'Not Found'], 'Typesense gave an unexpected answer to the search of the collection [{collection}] that the package sent through /multi_search: the answer holds no search result. Check the version of the Typesense server and of typesense/typesense-php.', 0],
             'an empty list of results' => [['results' => []], 'Typesense gave an unexpected answer to the search of the collection [{collection}] that the package sent through /multi_search: the answer holds no search result. Check the version of the Typesense server and of typesense/typesense-php.', 0],
         ];

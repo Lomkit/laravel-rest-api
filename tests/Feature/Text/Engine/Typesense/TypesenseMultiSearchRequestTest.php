@@ -80,12 +80,12 @@ class TypesenseMultiSearchRequestTest extends EngineSearchTestCase
         $this->assertSame([['POST', '/multi_search', '', (string) json_encode(['searches' => [$search]])]], $client->requests);
     }
 
-    /** @param class-string $previous */
+    /** @param array<mixed> $result */
     #[Test]
     #[DataProvider('typesenseErrors')]
-    public function it_keeps_the_typesense_exception_of_the_error_code_as_previous(int $code, string $previous): void
+    public function it_throws_the_error_of_a_long_search_with_the_typesense_exception_of_its_code(array $result, string $message, int $code, string $previous): void
     {
-        $this->engineWith(['results' => [['code' => $code, 'error' => 'Refused by the server.']]]);
+        $this->engineWith(['results' => [$result]]);
         ReadersExtension::$groups = self::readers(300);
         $this->withoutExceptionHandling();
 
@@ -93,21 +93,25 @@ class TypesenseMultiSearchRequestTest extends EngineSearchTestCase
             $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
             $this->fail('The error inside the multi_search result was not thrown.');
         } catch (EngineSearchException $refusal) {
-            $this->assertSame([$code, $previous, 'Refused by the server.'], [$refusal->getCode(), $refusal->getPrevious()::class, $refusal->getPrevious()?->getMessage()]);
+            $expected = 'Typesense refused the search of the collection ['.(new ReaderVoucher)->searchableAs().'] that the package sent through /multi_search, since its query string passes the length that a GET search accepts: '.$message;
+            $this->assertSame([$expected, $code, $previous], [$refusal->getMessage(), $refusal->getCode(), $refusal->getPrevious()::class]);
         }
     }
 
-    /** @return array<string, array{int, string}> */
+    /** @return array<string, array{array<mixed>, string, int, string}> */
     public static function typesenseErrors(): array
     {
+        $schema = 'Check the filter and the collection schema.';
+
         return [
-            'a malformed request' => [400, 'Typesense\Exceptions\RequestMalformed'],
-            'an unauthorized key' => [401, 'Typesense\Exceptions\RequestUnauthorized'],
-            'a missing collection' => [404, 'Typesense\Exceptions\ObjectNotFound'],
-            'a conflict' => [409, 'Typesense\Exceptions\ObjectAlreadyExists'],
-            'an unprocessable search' => [422, 'Typesense\Exceptions\ObjectUnprocessable'],
-            'an unavailable service' => [503, 'Typesense\Exceptions\ServiceUnavailable'],
-            'any other code' => [500, 'Typesense\Exceptions\ServerError'],
+            'a malformed request' => [['code' => 400, 'error' => 'Bad filter.'], "Bad filter. (code 400). {$schema}", 400, 'Typesense\Exceptions\RequestMalformed'],
+            'an unauthorized key' => [['code' => 401, 'error' => 'Forbidden.'], 'Forbidden. (code 401). Give the API key the documents:search action on the collection.', 401, 'Typesense\Exceptions\RequestUnauthorized'],
+            'a missing collection' => [['code' => 404, 'error' => 'Collection not found'], "Collection not found (code 404). {$schema}", 404, 'Typesense\Exceptions\ObjectNotFound'],
+            'a conflict' => [['code' => 409, 'error' => 'Conflict.'], "Conflict. (code 409). {$schema}", 409, 'Typesense\Exceptions\ObjectAlreadyExists'],
+            'an unprocessable search' => [['code' => 422, 'error' => 'Unprocessable.'], "Unprocessable. (code 422). {$schema}", 422, 'Typesense\Exceptions\ObjectUnprocessable'],
+            'an unavailable service' => [['code' => 503, 'error' => 'Unavailable.'], "Unavailable. (code 503). {$schema}", 503, 'Typesense\Exceptions\ServiceUnavailable'],
+            'any other code' => [['code' => 500, 'error' => 'Boom.'], "Boom. (code 500). {$schema}", 500, 'Typesense\Exceptions\TypesenseClientError'],
+            'an error without a code' => [['error' => 'Boom.'], "Boom. (without a code). {$schema}", 0, 'Typesense\Exceptions\TypesenseClientError'],
         ];
     }
 

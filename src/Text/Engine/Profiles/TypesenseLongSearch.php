@@ -7,6 +7,8 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\TypesenseEngine;
 use Lomkit\Rest\Exceptions\EngineSearchException;
 use Lomkit\Rest\Text\Engine\ScoutModel;
+use ReflectionMethod;
+use Throwable;
 
 /** @internal */
 final readonly class TypesenseLongSearch
@@ -50,6 +52,14 @@ final readonly class TypesenseLongSearch
             throw EngineSearchException::unexpectedMultiSearch($collection);
         }
 
-        return isset($result['error']) ? throw EngineSearchException::typesenseMultiSearch($collection, $result) : $result;
+        return isset($result['error']) ? throw EngineSearchException::typesenseMultiSearch($collection, $result, $this->clientError($result)) : $result;
+    }
+
+    /** @param array<mixed> $result */
+    private function clientError(array $result): ?Throwable
+    {
+        $error = (new ReflectionMethod($this->engine, 'marshalMultiSearchException'))->invoke($this->engine, $result);
+
+        return $error instanceof Throwable ? $error : null;
     }
 }
