@@ -10,8 +10,8 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
-use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CapturingMeilisearchEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilterCapturingTypesenseEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListCapturingMeilisearchEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
@@ -62,13 +62,13 @@ class AndedStringListsTest extends EngineSearchTestCase
     #[DataProvider('lists')]
     public function it_ands_the_lists_of_a_list_attribute_in_the_filter_of_meilisearch(?array $groups, array $instructions, string $typesense, string $meilisearch): void
     {
-        $engine = new CapturingMeilisearchEngine(new SettingsClient(fn (): array => ['maxTotalHits' => 1000]));
+        $engine = new ListCapturingMeilisearchEngine(new SettingsClient(fn (): array => ['maxTotalHits' => 1000]));
         $this->useEngine($engine);
         ReadersExtension::$groups = $groups;
 
         $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => array_map(fn (string $name): array => ['name' => $name], $instructions)])->assertOk();
 
-        $this->assertSame([$meilisearch], array_column($engine->requests, 'filter'));
+        $this->assertSame([$meilisearch], $engine->filters);
     }
 
     /** @return array<string, array{list<string>|null, list<string>, string, string}> */
