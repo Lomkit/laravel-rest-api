@@ -40,7 +40,7 @@ final readonly class AlgoliaProfile implements ListsWithoutText, MatchesStringLi
     #[\Override]
     public function ownedOptions(): array
     {
-        return ['query', 'filters', 'hitsPerPage', 'page', 'offset', 'length', 'enableRules'];
+        return ['query', 'filters', 'hitsPerPage', 'page', 'offset', 'length', 'enableRules', 'params'];
     }
 
     #[\Override]
