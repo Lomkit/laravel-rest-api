@@ -32,6 +32,14 @@ final readonly class EngineIndex
     }
 
     /** @internal */
+    public function engine(): object
+    {
+        $engine = $this->model->engine();
+
+        return is_object($engine) ? $engine : throw InvalidTextSearchException::engineNotAnObject($this->searchedClass(), $this->model->model()::class, get_debug_type($engine));
+    }
+
+    /** @internal */
     public function listOrder(): ListOrder
     {
         $profile = $this->profile;

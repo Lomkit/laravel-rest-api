@@ -59,6 +59,25 @@ class TurbopufferStringListTest extends TurbopufferTestCase
     }
 
     #[Test]
+    public function it_ands_two_lists_that_neither_holds_with_contains_any_under_and(): void
+    {
+        config(['rest.extensions' => [ReadersExtension::class, ReaderInstructionsExtension::class]]);
+        $this->rows(['V-a'], 1);
+
+        $response = $this->actingAs(new GenericUser(['id' => 'ann']))->search('reader-vouchers', [
+            'text' => ['value' => 'report'],
+            'instructions' => [['name' => 'ri.bob']],
+        ]);
+
+        $filters = ['And', [['And', [['readers', 'ContainsAny', ['ann']], ['And', [['readers', 'ContainsAny', ['bob']]]]]], self::UNTRASHED]];
+        $response->assertOk()->assertExactJson($this->page([3], 1));
+        $this->assertSame([
+            [...self::RANKED, 'filters' => $filters, 'limit' => 50],
+            [...self::COUNT, 'filters' => $filters],
+        ], $this->queries());
+    }
+
+    #[Test]
     public function it_sends_a_list_membership_as_contains_any_in_the_ranked_and_the_count_request(): void
     {
         $this->rows(['V-c', 'V-a'], 2);

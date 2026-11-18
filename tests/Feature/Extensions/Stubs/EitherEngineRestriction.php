@@ -2,10 +2,10 @@
 
 namespace Lomkit\Rest\Tests\Feature\Extensions\Stubs;
 
-use Lomkit\Rest\Extensions\Contexts\EngineConditionGroup;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Extension;
 use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
+use Lomkit\Rest\Text\Engine\EngineConditionGroup;
 
 final class EitherEngineRestriction extends Extension implements RestrictsEngineQueries
 {

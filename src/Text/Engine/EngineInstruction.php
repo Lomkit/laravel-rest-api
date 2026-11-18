@@ -25,6 +25,8 @@ final readonly class EngineInstruction
 
     public function apply(EngineQuery $query): void
     {
+        $query->instructedBy($this->instruction::class);
         $this->instruction->handleEngine($this->fields, $query);
+        $query->instructedBy(null);
     }
 }

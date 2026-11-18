@@ -35,7 +35,7 @@ final readonly class EngineBuilder
             $builder->options($options);
         }
 
-        $conditions->applyTo($builder, $this->index->profile);
+        $conditions->applyTo($builder);
 
         match ($this->trashed) {
             Trashed::With => $builder->withTrashed(),

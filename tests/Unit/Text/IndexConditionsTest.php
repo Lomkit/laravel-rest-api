@@ -8,7 +8,10 @@ use Laravel\Scout\Engines\NullEngine;
 use Lomkit\Rest\Exceptions\ConflictingListsException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTurbopufferEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainProfile;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherResource;
+use Lomkit\Rest\Text\Engine\Groups\FilterLeaf;
+use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\IndexConditions;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\Engine\Profiles\NullProfile;
@@ -24,7 +27,7 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_matches_nothing_once_asked(): void
     {
-        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions = self::conditions();
         $conditions->include('number', [1, 2]);
 
         $this->assertFalse($conditions->matchesNothing());
@@ -39,7 +42,7 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_still_intersects_the_lists_of_a_single_valued_attribute(): void
     {
-        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions = self::conditions();
         $conditions->include('number', [1, 2, 3]);
         $conditions->include('number', [3, 2, 4]);
         $conditions->exclude('team', ['blue']);
@@ -57,10 +60,10 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_keeps_the_narrower_list_of_a_list_attribute_in_any_order(): void
     {
-        $narrowed = new IndexConditions(ReaderVoucherResource::class);
+        $narrowed = self::conditions();
         $narrowed->include('readers', ['ann', 'bob'], true);
         $narrowed->include('readers', ['ann'], true);
-        $widened = new IndexConditions(ReaderVoucherResource::class);
+        $widened = self::conditions();
         $widened->include('readers', ['ann'], true);
         $widened->include('readers', ['bob', 'ann'], true);
 
@@ -71,12 +74,12 @@ class IndexConditionsTest extends TestCase
     /** @param list<list<string>> $lists */
     #[Test]
     #[DataProvider('overlappingLists')]
-    public function it_refuses_two_lists_of_a_list_attribute_that_neither_holds(array $lists): void
+    public function it_refuses_two_lists_of_a_list_attribute_that_neither_holds_on_an_engine_without_groups(array $lists): void
     {
-        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions = self::conditions(new PlainProfile);
         $conditions->include('readers', $lists[0], true);
 
-        $this->expectExceptionObject(ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', null, null));
+        $this->expectExceptionObject(ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', null, null, PlainProfile::NAME));
 
         $conditions->include('readers', $lists[1], true);
     }
@@ -90,10 +93,67 @@ class IndexConditionsTest extends TestCase
         ];
     }
 
+    /** @param list<list<string>> $lists */
+    #[Test]
+    #[DataProvider('overlappingLists')]
+    public function it_ands_two_lists_of_a_list_attribute_that_neither_holds_on_an_engine_with_groups(array $lists): void
+    {
+        $conditions = self::conditions();
+        $conditions->include('readers', $lists[0], true);
+        $conditions->include('readers', $lists[1], true);
+
+        $this->assertSame(['readers' => $lists[0]], $this->applied($conditions)->whereIns);
+        $this->assertEquals(new FilterTree(false, [new FilterLeaf('readers', FilterOperator::In, $lists[1], true)]), $conditions->tree(null));
+        $this->assertFalse($conditions->matchesNothing());
+    }
+
+    /**
+     * @param  list<list<string>>  $lists
+     * @param  list<string>  $native
+     * @param  list<list<string>>  $anded
+     */
+    #[Test]
+    #[DataProvider('andedLists')]
+    public function it_keeps_the_narrowest_lists_of_a_list_attribute_and_ands_the_others(array $lists, array $native, array $anded): void
+    {
+        $conditions = self::conditions();
+
+        foreach ($lists as $list) {
+            $conditions->include('readers', $list, true);
+        }
+
+        $this->assertSame(['readers' => $native], $this->applied($conditions)->whereIns);
+        $this->assertEquals(array_map(fn (array $list): FilterLeaf => new FilterLeaf('readers', FilterOperator::In, $list, true), $anded), $conditions->tree(null)?->members);
+    }
+
+    /** @return array<string, array{list<list<string>>, list<string>, list<list<string>>}> */
+    public static function andedLists(): array
+    {
+        return [
+            'a third list that narrows the first' => [[['ann', 'bob'], ['cid'], ['ann']], ['ann'], [['cid']]],
+            'a third list that narrows the second' => [[['ann'], ['bob', 'cid'], ['cid']], ['ann'], [['cid']]],
+            'a third list that holds one of them' => [[['ann'], ['bob'], ['bob', 'cid']], ['ann'], [['bob']]],
+            'a list repeated' => [[['ann'], ['bob'], ['bob']], ['ann'], [['bob']]],
+            'three lists that hold none of the others' => [[['ann'], ['bob'], ['cid']], ['ann'], [['bob'], ['cid']]],
+        ];
+    }
+
+    #[Test]
+    public function it_matches_nothing_once_an_anded_list_attribute_is_restricted_with_an_empty_list(): void
+    {
+        $conditions = self::conditions();
+        $conditions->include('readers', ['ann'], true);
+        $conditions->include('readers', ['bob'], true);
+        $conditions->include('readers', [], true);
+
+        $this->assertTrue($conditions->matchesNothing());
+        $this->assertNull($conditions->tree(null));
+    }
+
     #[Test]
     public function it_keeps_an_empty_list_attribute_matching_nothing(): void
     {
-        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions = self::conditions();
         $conditions->include('readers', ['ann'], true);
         $conditions->include('readers', [], true);
 
@@ -103,7 +163,7 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_adds_up_the_excluded_values_of_a_list_attribute(): void
     {
-        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions = self::conditions();
         $conditions->exclude('readers', ['ann']);
         $conditions->exclude('readers', ['bob', 'ann']);
 
@@ -113,13 +173,13 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_hands_the_list_conditions_to_a_profile_that_filters_lists_natively(): void
     {
-        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions = self::conditions(new TurbopufferProfile(new FakeTurbopufferEngine));
         $conditions->include('number', [1, 2]);
         $conditions->include('readers', ['ann'], true);
         $conditions->exclude('team', ['blue']);
         $conditions->exclude('labels', ['x', 'y'], true);
 
-        $builder = $this->applied($conditions, new TurbopufferProfile(new FakeTurbopufferEngine));
+        $builder = $this->applied($conditions);
 
         $this->assertSame(['number' => [1, 2]], $builder->whereIns);
         $this->assertSame(['team' => ['blue']], $builder->whereNotIns);
@@ -129,12 +189,12 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_sends_a_single_list_condition_as_the_only_native_filter_beside_the_options(): void
     {
-        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions = self::conditions(new TurbopufferProfile(new FakeTurbopufferEngine));
         $conditions->exclude('readers', ['ann'], true);
         $builder = new Builder(new class extends Model {}, '');
         $builder->options(['consistency' => ['level' => 'eventual']]);
 
-        $conditions->applyTo($builder, new TurbopufferProfile(new FakeTurbopufferEngine));
+        $conditions->applyTo($builder);
 
         $this->assertSame([[], []], [$builder->whereIns, $builder->whereNotIns]);
         $this->assertSame(['consistency' => ['level' => 'eventual'], 'filters' => ['readers', 'NotContainsAny', ['ann']]], $builder->options);
@@ -143,19 +203,24 @@ class IndexConditionsTest extends TestCase
     #[Test]
     public function it_sets_no_native_filter_without_a_list_condition(): void
     {
-        $conditions = new IndexConditions(ReaderVoucherResource::class);
+        $conditions = self::conditions(new TurbopufferProfile(new FakeTurbopufferEngine));
         $conditions->include('number', [1]);
 
-        $builder = $this->applied($conditions, new TurbopufferProfile(new FakeTurbopufferEngine));
+        $builder = $this->applied($conditions);
 
         $this->assertSame([['number' => [1]], []], [$builder->whereIns, $builder->options]);
     }
 
+    private static function conditions(?EngineProfile $profile = null): IndexConditions
+    {
+        return new IndexConditions(ReaderVoucherResource::class, $profile ?? new NullProfile(new NullEngine));
+    }
+
     /** @return Builder<Model> */
-    private function applied(IndexConditions $conditions, ?EngineProfile $profile = null): Builder
+    private function applied(IndexConditions $conditions): Builder
     {
         $builder = new Builder(new class extends Model {}, '');
-        $conditions->applyTo($builder, $profile ?? new NullProfile(new NullEngine));
+        $conditions->applyTo($builder);
 
         return $builder;
     }

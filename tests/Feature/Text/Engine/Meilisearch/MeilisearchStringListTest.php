@@ -6,7 +6,9 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GroupInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupEngineRestriction;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
@@ -93,5 +95,42 @@ class MeilisearchStringListTest extends MeilisearchTestCase
 
         $response->assertOk()->assertJsonPath('total', 2);
         $this->assertEqualsCanonicalizing([1, 3], $response->json('data.*.id'));
+    }
+
+    #[Test]
+    public function it_keeps_only_the_rows_that_share_a_value_with_each_of_two_lists(): void
+    {
+        ReadersExtension::$groups = ['ann'];
+        config(['rest.extensions' => [ReadersExtension::class, ReaderInstructionsExtension::class]]);
+
+        $both = $this->actingAs(new GenericUser(['id' => 'reader']))->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'ri.bob']]]);
+        $three = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'ri.bob-and-cid']]]);
+
+        $both->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.*.id', [3]);
+        $three->assertOk()->assertJsonPath('total', 0);
+    }
+
+    /** @param list<int> $ids */
+    #[Test]
+    #[DataProvider('restrictedGroups')]
+    public function it_never_returns_a_row_that_a_restriction_excludes_through_an_instruction_group(array $groups, array $filters, array $ids): void
+    {
+        ReadersExtension::$groups = $groups;
+        config(['rest.extensions' => [ReadersExtension::class, GroupInstructionsExtension::class]]);
+
+        $response = $this->actingAs(new GenericUser(['id' => 'reader']))->search('reader-vouchers', ['text' => ['value' => 'report'], 'filters' => $filters, 'instructions' => [['name' => 'gi.reader-group']]]);
+
+        $response->assertOk()->assertJsonPath('total', count($ids));
+        $this->assertEqualsCanonicalizing($ids, $response->json('data.*.id'));
+    }
+
+    /** @return array<string, array{list<string>, list<array<string, mixed>>, list<int>}> */
+    public static function restrictedGroups(): array
+    {
+        return [
+            'a restriction that keeps both rows of the group' => [['ann', 'bob'], [], [1, 3]],
+            'a restriction that keeps one row of the group' => [['ann'], [], [3]],
+            'a client or on the row that the restriction excludes' => [['ann'], [['field' => 'number', 'value' => 3], ['field' => 'number', 'value' => 1, 'type' => 'or']], [3]],
+        ];
     }
 }

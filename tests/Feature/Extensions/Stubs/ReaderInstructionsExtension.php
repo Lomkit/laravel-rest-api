@@ -24,6 +24,6 @@ final class ReaderInstructionsExtension extends Extension implements DeclaresIns
     #[\Override]
     public function instructions(InstructionsContext $context): array
     {
-        return [ReaderInstruction::class];
+        return [ReaderInstruction::class, CidReaderInstruction::class, BobAndCidReaderInstruction::class];
     }
 }

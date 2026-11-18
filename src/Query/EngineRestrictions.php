@@ -10,7 +10,6 @@ use Lomkit\Rest\Extensions\Kinds\RestrictsEngineQueries;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Text\Engine\Profiles\ComparesColumns;
-use Lomkit\Rest\Text\Engine\Profiles\FiltersWithGroups;
 use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 use Lomkit\Rest\Text\Engine\RestrictingExtension;
 
@@ -52,7 +51,7 @@ final readonly class EngineRestrictions
         $registry = $this->resource->context()->extensions();
         $lists = $query->profile() instanceof MatchesStringLists;
         $columns = $query->profile() instanceof ComparesColumns;
-        $groups = $query->profile() instanceof FiltersWithGroups;
+        $groups = $query->filtersWithGroups();
         $engine = $query->engine();
 
         foreach ($this->engine as $name => $extension) {

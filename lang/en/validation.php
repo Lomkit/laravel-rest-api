@@ -48,6 +48,6 @@ return [
     'engine_value' => 'The :attribute field holds a value the search engine cannot compare.',
     'engine_characters' => 'The :attribute field holds characters the search engine cannot match as they are.',
     'utf8' => 'The :attribute field must be valid UTF-8.',
-    'engine_list_conflict' => 'The :attribute field restricts the list [:list] with values that neither hold nor are held by the list that the search already keeps.',
+    'engine_list_conflict' => 'The :attribute field restricts the list [:list] with values that neither hold nor are held by the list that the search already keeps, and the search engine cannot require both lists.',
     'details_parts' => 'The :attribute field accepts these values, separated by commas: :values.',
 ];

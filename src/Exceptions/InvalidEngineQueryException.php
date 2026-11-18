@@ -22,6 +22,13 @@ final class InvalidEngineQueryException extends LogicException
         return new self("The search of {$resource} groups its filters with or or nested, but the profile of the engine [{$engine}] does not accept or and nested filters: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Combine the filters with and only.");
     }
 
+    public static function ungroupedConditions(?string $instruction, string $resource, string $engine): self
+    {
+        $source = $instruction === null ? "ScoutEngine::perimeter() of {$resource}" : "The instruction {$instruction} of {$resource}";
+
+        return new self("{$source} groups engine conditions with whereAny(), but the engine [{$engine}] does not accept grouped conditions: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Check \$query->filtersWithGroups() before grouping, and use where(), whereIn() and whereNotIn() on this engine.");
+    }
+
     public static function undeclaredAttribute(string $attribute): self
     {
         return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.");

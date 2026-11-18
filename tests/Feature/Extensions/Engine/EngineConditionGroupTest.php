@@ -4,11 +4,11 @@ namespace Lomkit\Rest\Tests\Feature\Extensions\Engine;
 
 use Closure;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
-use Lomkit\Rest\Extensions\Contexts\EngineConditionGroup;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineTestCase;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
+use Lomkit\Rest\Text\Engine\EngineConditionGroup;
 use Lomkit\Rest\Text\Engine\EngineIndex;
 use Lomkit\Rest\Text\Engine\Groups\FilterLeaf;
 use Lomkit\Rest\Text\Engine\Groups\FilterTree;
