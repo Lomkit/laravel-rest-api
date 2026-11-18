@@ -40,7 +40,7 @@ final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithout
     #[\Override]
     public function ownedOptions(): array
     {
-        return ['q', 'filter_by', 'sort_by', 'per_page', 'page', 'group_by'];
+        return ['q', 'filter_by', 'sort_by', 'per_page', 'page', 'group_by', 'filter_curated_hits', 'nl_query'];
     }
 
     #[\Override]
@@ -97,11 +97,10 @@ final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithout
             throw InvalidTextSearchException::missingQueryBy($target->resource, $target->model::class);
         }
 
-        $parameters = method_exists($target->model, 'typesenseSearchParameters') ? $target->model->typesenseSearchParameters() : null;
-        $owned = is_array($parameters) ? array_values(array_intersect($this->ownedOptions(), array_keys($parameters))) : [];
+        $owned = $this->ownedParameter($target->model);
 
-        if ($owned !== []) {
-            throw InvalidTextSearchException::ownedSearchParameter($target->resource, $target->model::class, $owned[0]);
+        if ($owned !== null) {
+            throw InvalidTextSearchException::ownedSearchParameter($target->resource, $target->model::class, $owned);
         }
     }
 
@@ -114,6 +113,13 @@ final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithout
     #[\Override]
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
+        $owned = $this->ownedParameter($builder->model);
+
+        if ($owned !== null) {
+            throw InvalidTextSearchException::changedSearchParameter($builder->model::class, $owned);
+        }
+
+        $builder->options([...$builder->options, 'filter_curated_hits' => true]);
         (new TypesenseLongSearch($this->engine))->route($builder, $model, $perPage, $page);
 
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
@@ -123,6 +129,14 @@ final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithout
     public function reachable(ScoutModel $model): int
     {
         return PHP_INT_MAX;
+    }
+
+    private function ownedParameter(Model $model): ?string
+    {
+        $parameters = method_exists($model, 'typesenseSearchParameters') ? $model->typesenseSearchParameters() : null;
+        $owned = is_array($parameters) ? array_values(array_intersect($this->ownedOptions(), array_keys($parameters))) : [];
+
+        return $owned[0] ?? null;
     }
 
     private function queryBy(Model $model): mixed

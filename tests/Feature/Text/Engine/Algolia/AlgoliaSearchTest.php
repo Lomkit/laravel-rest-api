@@ -27,6 +27,7 @@ class AlgoliaSearchTest extends AlgoliaTestCase
         $response->assertOk()->assertExactJson($this->page([3], 3, 2, 2));
         $this->assertSame([['POST', "/1/indexes/{$this->index}/query", [
             'query' => 'report',
+            'enableRules' => false,
             'filters' => "__soft_deleted:'0' AND price<40 AND (number:'1' OR number:'3' OR number:'4' OR number:'5')",
             'hitsPerPage' => 2,
             'page' => 1,
@@ -41,7 +42,7 @@ class AlgoliaSearchTest extends AlgoliaTestCase
         $response = $this->search('unsorted-vouchers', ['text' => ['value' => 'report'], 'trashed' => 'with']);
 
         $response->assertOk()->assertExactJson($this->page([5, 4, 1, 3, 6], 5));
-        $this->assertSame([['POST', "/1/indexes/{$this->index}/query", ['query' => 'report', 'filters' => '', 'hitsPerPage' => 50, 'page' => 0]]], $this->algolia->sent('POST', "/1/indexes/{$this->index}/query"));
+        $this->assertSame([['POST', "/1/indexes/{$this->index}/query", ['query' => 'report', 'enableRules' => false, 'filters' => '', 'hitsPerPage' => 50, 'page' => 0]]], $this->algolia->sent('POST', "/1/indexes/{$this->index}/query"));
     }
 
     /**
@@ -65,7 +66,7 @@ class AlgoliaSearchTest extends AlgoliaTestCase
         }
 
         $this->assertSame($ids === [] ? [] : [['handle', ['ids' => $ids]]], $received->calls());
-        $this->assertSame([['POST', "/1/indexes/{$this->index}/query", ['query' => 'report', 'filters' => "__soft_deleted:'0'", 'hitsPerPage' => 100, 'page' => 0]]], $this->algolia->sent('POST', "/1/indexes/{$this->index}/query"));
+        $this->assertSame([['POST', "/1/indexes/{$this->index}/query", ['query' => 'report', 'enableRules' => false, 'filters' => "__soft_deleted:'0'", 'hitsPerPage' => 100, 'page' => 0]]], $this->algolia->sent('POST', "/1/indexes/{$this->index}/query"));
         $this->assertCount(1, $this->algolia->sent('GET', "/1/indexes/{$this->index}/settings"));
     }
 

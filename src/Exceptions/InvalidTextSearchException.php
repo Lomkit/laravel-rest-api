@@ -154,6 +154,11 @@ final class InvalidTextSearchException extends LogicException
         return new self("The ScoutEngine of the resource [{$resource}] runs on Typesense, which needs the attributes to search. Set scout.typesense.model-settings.{$model}.search-parameters.query_by.");
     }
 
+    public static function changedSearchParameter(string $model, string $parameter): self
+    {
+        return new self("The model [{$model}] returned [{$parameter}] from typesenseSearchParameters() when a search ran, after the ScoutEngine checked it without that parameter. The package sends [{$parameter}] to Typesense itself: remove it from typesenseSearchParameters(), whatever the state of the model.");
+    }
+
     public static function ownedSearchParameter(string $resource, string $model, string $parameter): self
     {
         return new self("The model [{$model}] of the resource [{$resource}] returns [{$parameter}] from typesenseSearchParameters(), which would replace what the ScoutEngine sends to Typesense, such as the text, the page, the sorts, or the perimeter and the restrictions of the filter_by. Remove [{$parameter}] from typesenseSearchParameters(), and declare filters in filterable() or perimeter().");

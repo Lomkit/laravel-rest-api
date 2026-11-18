@@ -40,7 +40,7 @@ final readonly class AlgoliaProfile implements ListsWithoutText, MatchesStringLi
     #[\Override]
     public function ownedOptions(): array
     {
-        return ['query', 'filters', 'hitsPerPage', 'page', 'offset', 'length'];
+        return ['query', 'filters', 'hitsPerPage', 'page', 'offset', 'length', 'enableRules'];
     }
 
     #[\Override]
@@ -79,6 +79,8 @@ final readonly class AlgoliaProfile implements ListsWithoutText, MatchesStringLi
     #[\Override]
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
+        $builder->options([...$builder->options, 'enableRules' => false]);
+
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
     }
 

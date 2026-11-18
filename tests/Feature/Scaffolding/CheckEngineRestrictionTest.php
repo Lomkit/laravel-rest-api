@@ -19,6 +19,9 @@ use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\CheckedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\RouteBoundVoucherController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\RouteBoundVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CuratingVoucher;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CuratingVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CuratingVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilteringVoucher;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilteringVoucherController;
@@ -179,6 +182,18 @@ final class CheckEngineRestrictionTest extends ScaffoldingTestCase
             [InvalidTextSearchException::unresolvedEngine(RouteBoundVoucherResource::class, 'red', RedRowsExtension::class, new RuntimeException('text() needs the request route'))->getMessage()],
             json_decode($output->fetch(), true)['rows']['problems'],
         );
+    }
+
+    #[Test]
+    public function it_reports_a_typesense_model_that_turns_off_the_filter_of_curated_hits(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('curating-vouchers', CuratingVoucherController::class)->middleware('auth:sanctum')->register());
+        $this->app->make(EngineManager::class)->extend('typesense', fn (): FakeTypesenseEngine => new FakeTypesenseEngine);
+        config(['scout.driver' => 'typesense']);
+
+        $exitCode = Artisan::call('rest:check', ['controllers' => [CuratingVoucherController::class], '--json' => true], $output = new BufferedOutput);
+
+        $this->assertSame([1, [InvalidTextSearchException::ownedSearchParameter(CuratingVoucherResource::class, CuratingVoucher::class, 'filter_curated_hits')->getMessage()]], [$exitCode, json_decode($output->fetch(), true)['rows']['problems']]);
     }
 
     #[Test]

@@ -76,7 +76,7 @@ class TypesenseMultiSearchRequestTest extends EngineSearchTestCase
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'limit' => 10, 'page' => 2]);
 
         $response->assertOk()->assertExactJson($this->page([3], 11, 10, 2));
-        $search = [...self::searchParameters(self::filter(self::readers(300)), 10, 2), 'prefix' => true, 'exhaustive_search' => false, 'use_cache' => false, 'prioritize_exact_match' => true, 'enable_overrides' => true, 'collection' => (new ReaderVoucher)->searchableAs()];
+        $search = [...self::searchParameters(self::filter(self::readers(300)), 10, 2), 'prefix' => true, 'exhaustive_search' => false, 'use_cache' => false, 'prioritize_exact_match' => true, 'enable_overrides' => true, 'filter_curated_hits' => true, 'collection' => (new ReaderVoucher)->searchableAs()];
         $this->assertSame([['POST', '/multi_search', '', (string) json_encode(['searches' => [$search]])]], $client->requests);
     }
 
@@ -181,6 +181,7 @@ class TypesenseMultiSearchRequestTest extends EngineSearchTestCase
             'enable_overrides' => 'true',
             'highlight_affix_num_tokens' => 4,
             'prefix' => 'true',
+            'filter_curated_hits' => 'true',
         ];
     }
 }
