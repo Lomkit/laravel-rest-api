@@ -12,6 +12,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CuratingVoucher;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CuratingVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CuratingVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CurationSwitch;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilterCapturingAlgolia4Engine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilterCapturingTypesenseEngine;
@@ -104,11 +105,11 @@ class CuratedHitsTest extends EngineSearchTestCase
     public function it_refuses_a_typesense_model_whose_parameters_change_after_the_check(): void
     {
         $this->useEngine(new FilterCapturingTypesenseEngine);
-        CuratingVoucher::$curates = false;
+        CurationSwitch::$curates = false;
         $text = $this->resource(CuratingVoucherResource::class)->text();
         $this->assertInstanceOf(ScoutEngine::class, $text);
         $query = $text->query(new TextQuery('report'), $this->target(CuratingVoucherResource::class));
-        CuratingVoucher::$curates = true;
+        CurationSwitch::$curates = true;
 
         $this->expectExceptionObject(InvalidTextSearchException::changedSearchParameter(CuratingVoucher::class, 'filter_curated_hits'));
 

@@ -13,11 +13,9 @@ use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 #[UsePolicy(OpenLedgerPolicy::class)]
 class CuratingVoucher extends Voucher
 {
-    public static bool $curates = true;
-
     /** @return array<string, mixed> */
     public function typesenseSearchParameters(): array
     {
-        return self::$curates ? ['query_by' => 'title', 'filter_curated_hits' => false] : ['query_by' => 'title'];
+        return CurationSwitch::$curates ? ['query_by' => 'title', 'filter_curated_hits' => false] : ['query_by' => 'title'];
     }
 }
