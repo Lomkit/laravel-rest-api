@@ -3,11 +3,16 @@
 namespace Lomkit\Rest\Tests\Feature\Text\Engine\Typesense;
 
 use Illuminate\Auth\GenericUser;
+use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineOptionsInstructionsExtension;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedTeamVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingTypesenseEngine;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use Typesense\Client;
 
 #[Group('scout')]
 #[Group('typesense')]
@@ -98,21 +103,44 @@ class TypesenseCuratedHitsTest extends TypesenseTestCase
     #[Test]
     public function it_keeps_a_pinned_row_outside_the_perimeter_out_of_a_long_search_through_multi_search(): void
     {
+        $engine = new RecordingTypesenseEngine(new Client(config('scout.typesense.client-settings')), 1000, config('scout.typesense'));
+        $this->useEngine($engine);
         $excluded = array_map(fn (int $index): string => sprintf('X-%04d', $index), range(1, 300));
 
         $response = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'instructions' => [self::instruction(['pinned_hits' => 'V-d:1'], $excluded)]]);
 
         $response->assertOk()->assertJsonPath('total', 3);
         $this->assertEqualsCanonicalizing([1, 3, 5], $response->json('data.*.id'));
+        $this->assertSame(['multi_search'], $engine->endpoints);
     }
 
     #[Test]
     public function it_keeps_a_pinned_row_inside_the_perimeter_first(): void
     {
-        $response = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'instructions' => [self::instruction(['pinned_hits' => 'V-e:1'])]]);
+        $byPrice = [['field' => 'price', 'direction' => 'asc']];
 
-        $response->assertOk()->assertJsonPath('total', 3)->assertJsonPath('data.0.id', 5);
-        $this->assertEqualsCanonicalizing([1, 3, 5], $response->json('data.*.id'));
+        $sorted = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'sorts' => $byPrice]);
+        $pinned = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'sorts' => $byPrice, 'instructions' => [self::instruction(['pinned_hits' => 'V-e:1'])]]);
+
+        $sorted->assertOk()->assertJsonPath('data.*.id', [1, 3, 5]);
+        $pinned->assertOk()->assertJsonPath('total', 3)->assertJsonPath('data.*.id', [5, 1, 3]);
+    }
+
+    #[Test]
+    public function it_keeps_a_pinned_row_outside_the_perimeter_out_of_an_engine_list(): void
+    {
+        $response = $this->search('listed-team-vouchers', ['source' => 'engine', 'instructions' => [self::instruction(['pinned_hits' => 'V-d:1'])]]);
+
+        $response->assertOk()->assertJsonPath('total', 4);
+        $this->assertEqualsCanonicalizing([1, 2, 3, 5], $response->json('data.*.id'));
+    }
+
+    #[\Override]
+    protected function defineRoutes($router): void
+    {
+        parent::defineRoutes($router);
+
+        Route::prefix('api')->group(fn () => Rest::resource('listed-team-vouchers', ListedTeamVoucherController::class));
     }
 
     /**

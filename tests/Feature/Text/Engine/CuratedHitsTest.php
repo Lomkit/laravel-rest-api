@@ -85,6 +85,7 @@ class CuratedHitsTest extends EngineSearchTestCase
             'the curated hits of typesense' => [FakeTypesenseEngine::class, 'filter_curated_hits', false],
             'a natural language query of typesense' => [FakeTypesenseEngine::class, 'nl_query', true],
             'the rules of algolia' => [FilterCapturingAlgolia4Engine::class, 'enableRules', true],
+            'the parameter string of algolia' => [FilterCapturingAlgolia4Engine::class, 'params', 'enableRules=true'],
         ];
     }
 
