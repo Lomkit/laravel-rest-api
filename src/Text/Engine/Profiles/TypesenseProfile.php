@@ -114,6 +114,8 @@ final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithout
     #[\Override]
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
+        (new TypesenseLongSearch($this->engine))->route($builder, $model, $perPage, $page);
+
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
     }
 
