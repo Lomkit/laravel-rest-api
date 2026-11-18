@@ -18,7 +18,9 @@ final readonly class TypesenseLongSearch
     /** @param Builder<Model> $builder */
     public function route(Builder $builder, ScoutModel $model, int $perPage, int $page): void
     {
-        if (self::queryString($this->engine->buildSearchParameters($builder, $page, $perPage)) <= self::MAX_QUERY_STRING) {
+        $parameters = $this->engine->buildSearchParameters($builder, $page, $perPage);
+
+        if (isset($parameters['vector_query']) || self::queryString($parameters) <= self::MAX_QUERY_STRING) {
             return;
         }
 
@@ -28,7 +30,7 @@ final readonly class TypesenseLongSearch
     }
 
     /** @param array<mixed> $parameters */
-    public static function queryString(array $parameters): int
+    private static function queryString(array $parameters): int
     {
         return strlen(http_build_query(array_map(static fn (mixed $value): mixed => is_bool($value) ? ($value ? 'true' : 'false') : $value, $parameters)));
     }
@@ -39,12 +41,13 @@ final readonly class TypesenseLongSearch
      */
     private function search(string $collection, array $options): array
     {
+        $search = [...array_filter($options, static fn (mixed $value): bool => $value !== null), 'collection' => $collection];
         $multiSearch = $this->engine->__call('getMultiSearch', []);
-        $results = is_object($multiSearch) && method_exists($multiSearch, 'perform') ? $multiSearch->perform(['searches' => [[...$options, 'collection' => $collection]]]) : null;
+        $results = is_object($multiSearch) && method_exists($multiSearch, 'perform') ? $multiSearch->perform(['searches' => [$search]]) : null;
         $result = is_array($results) && is_array($results['results'] ?? null) ? ($results['results'][0] ?? null) : null;
 
         if (! is_array($result)) {
-            throw EngineSearchException::typesenseMultiSearch($collection, null);
+            throw EngineSearchException::unexpectedMultiSearch($collection);
         }
 
         return isset($result['error']) ? throw EngineSearchException::typesenseMultiSearch($collection, $result) : $result;
