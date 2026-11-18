@@ -27,7 +27,7 @@ final readonly class TypesenseLongSearch
         $builder->callback = fn (mixed $documents, mixed $query, array $options): array => $this->search($collection, $options);
     }
 
-    /** @param array<string, mixed> $parameters */
+    /** @param array<mixed> $parameters */
     public static function queryString(array $parameters): int
     {
         return strlen(http_build_query(array_map(static fn (mixed $value): mixed => is_bool($value) ? ($value ? 'true' : 'false') : $value, $parameters)));
@@ -43,10 +43,10 @@ final readonly class TypesenseLongSearch
         $results = is_object($multiSearch) && method_exists($multiSearch, 'perform') ? $multiSearch->perform(['searches' => [[...$options, 'collection' => $collection]]]) : null;
         $result = is_array($results) && is_array($results['results'] ?? null) ? ($results['results'][0] ?? null) : null;
 
-        if (! is_array($result) || isset($result['error'])) {
-            throw EngineSearchException::typesenseMultiSearch($collection, is_array($result) ? $result : null);
+        if (! is_array($result)) {
+            throw EngineSearchException::typesenseMultiSearch($collection, null);
         }
 
-        return $result;
+        return isset($result['error']) ? throw EngineSearchException::typesenseMultiSearch($collection, $result) : $result;
     }
 }
