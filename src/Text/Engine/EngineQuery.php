@@ -2,15 +2,15 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
+use Closure;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
-use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Text\Engine\Groups\FilterLeaf;
 use Lomkit\Rest\Text\Engine\Groups\FilterTree;
-use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\Engine\Profiles\FiltersWithGroups;
 use Lomkit\Rest\Text\TextQuery;
@@ -28,6 +28,8 @@ final class EngineQuery
 
     private ?RestrictedPage $restricted = null;
 
+    private ?Instruction $instruction = null;
+
     public function __construct(
         private readonly EngineIndex $index,
         private readonly ?TextQuery $text,
@@ -37,7 +39,7 @@ final class EngineQuery
             throw InvalidEngineQueryException::trashedUnavailable($index->model->model()::class);
         }
 
-        $this->conditions = new IndexConditions($index->searchedClass());
+        $this->conditions = new IndexConditions($index->searchedClass(), $index->profile);
         $this->sorts = new EngineSorts($index, $text === null);
     }
 
@@ -80,6 +82,17 @@ final class EngineQuery
         return $this;
     }
 
+    /** @param Closure(EngineConditionGroup): mixed $group */
+    public function whereAny(Closure $group): static
+    {
+        return $this->filtersWithGroups() ? $this->restrictGroup(EngineConditionGroup::compile($this->leaves(), true, $group)) : throw InvalidEngineQueryException::ungroupedConditions($this->instruction, $this->index->searchedClass(), $this->index->profile->name());
+    }
+
+    public function filtersWithGroups(): bool
+    {
+        return $this->index->profile instanceof FiltersWithGroups;
+    }
+
     public function orderBy(string $attribute, SortDirection|string $direction = SortDirection::Asc): static
     {
         $this->sorts->add($attribute, $direction);
@@ -90,7 +103,7 @@ final class EngineQuery
     /** @internal */
     public function whereGroups(FilterTree $tree): static
     {
-        if (! $this->index->profile instanceof FiltersWithGroups) {
+        if (! $this->filtersWithGroups()) {
             throw InvalidEngineQueryException::ungroupedFilters($this->index->searchedClass(), $this->index->profile->name());
         }
 
@@ -130,6 +143,12 @@ final class EngineQuery
     }
 
     /** @internal */
+    public function instructedBy(?Instruction $instruction): void
+    {
+        $this->instruction = $instruction;
+    }
+
+    /** @internal */
     public function leaves(): IndexLeaves
     {
         return new IndexLeaves($this->index);
@@ -146,25 +165,15 @@ final class EngineQuery
     /** @internal */
     public function restrictRows(ExtensionRestrictions $rows): bool
     {
-        if ($this->restricted !== null) {
-            throw InvalidEngineQueryException::repeatedRowRestriction($this->index->searchedClass(), $this->restricted->extensions());
-        }
+        $this->restricted = RestrictedPage::onto($this->index, $rows, $this->restricted);
 
-        if (! $this->index->profile instanceof AppliesRowRestrictions) {
-            return false;
-        }
-
-        $this->restricted = new RestrictedPage($this->index->profile, $rows, $this->index->searchedClass());
-
-        return true;
+        return $this->restricted !== null;
     }
 
     /** @internal */
     public function engine(): object
     {
-        $engine = $this->index->model->engine();
-
-        return is_object($engine) ? $engine : throw InvalidTextSearchException::engineNotAnObject($this->index->searchedClass(), $this->index->model->model()::class, get_debug_type($engine));
+        return $this->index->engine();
     }
 
     /** @internal */

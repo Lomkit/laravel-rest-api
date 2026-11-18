@@ -2,12 +2,12 @@
 
 namespace Lomkit\Rest\Tests\Unit\Extensions;
 
-use Lomkit\Rest\Extensions\Contexts\EngineConditionGroup;
 use Lomkit\Rest\Extensions\Contexts\EngineProfileContext;
 use Lomkit\Rest\Extensions\Contexts\EngineRestriction;
 use Lomkit\Rest\Extensions\Contexts\EngineRestrictionContext;
 use Lomkit\Rest\Extensions\Contexts\GatesContext;
 use Lomkit\Rest\Extensions\Contexts\IndexAttributesContext;
+use Lomkit\Rest\Text\Engine\EngineConditionGroup;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

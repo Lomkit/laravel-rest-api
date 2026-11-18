@@ -1,13 +1,12 @@
 <?php
 
-namespace Lomkit\Rest\Extensions\Contexts;
+namespace Lomkit\Rest\Text\Engine;
 
 use Closure;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Text\Engine\Groups\FilterLeaf;
 use Lomkit\Rest\Text\Engine\Groups\FilterTree;
-use Lomkit\Rest\Text\Engine\IndexLeaves;
 
 final class EngineConditionGroup
 {

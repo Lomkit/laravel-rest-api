@@ -15,6 +15,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AdaptiveReadersExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ListMatchingEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
@@ -25,6 +26,7 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeMeilisearchEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTurbopufferEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilterCapturingTypesenseEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
@@ -151,35 +153,46 @@ class StringListAttributesTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_names_the_two_extensions_whose_lists_neither_holds(): void
+    public function it_names_the_two_extensions_whose_lists_neither_holds_on_an_engine_that_cannot_and_them(): void
     {
-        $this->useEngine(new FakeTypesenseEngine);
+        $this->useEngine(new FakeAlgolia4Engine(new SettingsClient(fn (): array => [])));
         config(['rest.extensions' => [ReadersExtension::class, ReaderGroupsExtension::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
         $this->withoutExceptionHandling();
-        $exception = ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('groups', ReaderGroupsExtension::class), new RestrictingExtension('readers', ReadersExtension::class));
+        $exception = ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('groups', ReaderGroupsExtension::class), new RestrictingExtension('readers', ReadersExtension::class), FakeAlgolia4Engine::class);
 
-        $this->assertSame('The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [groups] extension '.ReaderGroupsExtension::class.' and the [readers] extension '.ReadersExtension::class.', and neither list holds the other. The engine matches one list per attribute: restrict [readers] with one list, or with lists that hold one another.', $exception->getMessage());
+        $this->assertSame('The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [groups] extension '.ReaderGroupsExtension::class.' and the [readers] extension '.ReadersExtension::class.', and neither list holds the other. The engine ['.FakeAlgolia4Engine::class.'] cannot AND two lists on one attribute: restrict [readers] with one list, or with lists that hold one another, or search on an engine that ANDs them (the built-in Typesense, Meilisearch and Turbopuffer profiles).', $exception->getMessage());
         $this->assertSame(
-            'The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [readers] extension '.ReadersExtension::class.' and ScoutEngine::perimeter() or an instruction, and neither list holds the other. The engine matches one list per attribute: restrict [readers] with one list, or with lists that hold one another.',
-            ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('readers', ReadersExtension::class), null)->getMessage(),
+            'The engine query of '.ReaderVoucherResource::class.' keeps the rows whose list attribute [readers] shares a value with each of two lists, set by the [readers] extension '.ReadersExtension::class.' and ScoutEngine::perimeter() or an instruction, and neither list holds the other. The engine ['.ForeignEngine::class.'] cannot AND two lists on one attribute: restrict [readers] with one list, or with lists that hold one another, or search on an engine that ANDs them (the built-in Typesense, Meilisearch and Turbopuffer profiles).',
+            ConflictingListsException::memberships(ReaderVoucherResource::class, 'readers', new RestrictingExtension('readers', ReadersExtension::class), null, ForeignEngine::class)->getMessage(),
         );
         $this->expectExceptionObject($exception);
 
         $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
     }
 
+    /** @param list<class-string> $extensions */
     #[Test]
-    public function it_answers_422_to_an_instruction_list_that_conflicts_with_an_extension(): void
+    #[DataProvider('unandedEngines')]
+    public function it_answers_422_to_an_instruction_list_that_conflicts_with_an_extension_on_an_engine_that_cannot_and_them(string $engine, array $extensions): void
     {
-        $this->useEngine(new FakeTypesenseEngine);
-        config(['rest.extensions' => [ReadersExtension::class, ReaderInstructionsExtension::class]]);
+        $this->useEngine($engine === ForeignEngine::class ? new ForeignEngine : new FakeAlgolia4Engine(new SettingsClient(fn (): array => [])));
+        config(['rest.extensions' => [...$extensions, ReadersExtension::class, ReaderInstructionsExtension::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
 
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'ri.bob']]]);
 
-        $message = 'The search.instructions.0 field restricts the list [readers] with values that neither hold nor are held by the list that the search already keeps.';
+        $message = 'The search.instructions.0 field restricts the list [readers] with values that neither hold nor are held by the list that the search already keeps, and the search engine cannot require both lists.';
         $response->assertStatus(422)->assertExactJson(['message' => $message, 'errors' => ['search.instructions.0' => [$message]]]);
+    }
+
+    /** @return array<string, array{class-string, list<class-string>}> */
+    public static function unandedEngines(): array
+    {
+        return [
+            'algolia' => [FakeAlgolia4Engine::class, []],
+            'a provided profile' => [ForeignEngine::class, [ListMatchingEngineProfiles::class]],
+        ];
     }
 
     /**

@@ -6,8 +6,8 @@ use Closure;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Text\Engine\EngineConditionGroup;
 use Lomkit\Rest\Text\Engine\EngineQuery;
-use Lomkit\Rest\Text\Engine\Profiles\FiltersWithGroups;
 use Lomkit\Rest\Text\Engine\RestrictingExtension;
 
 final readonly class EngineRestriction
@@ -39,10 +39,8 @@ final readonly class EngineRestriction
     /** @param Closure(EngineConditionGroup): mixed $group */
     public function whereAny(Closure $group): self
     {
-        $profile = $this->query->profile();
-
-        if (! $profile instanceof FiltersWithGroups) {
-            throw InvalidEngineExtensionException::ungroupedRestriction($this->extension->name, $this->extension->class, $this->resource, $profile->name());
+        if (! $this->query->filtersWithGroups()) {
+            throw InvalidEngineExtensionException::ungroupedRestriction($this->extension->name, $this->extension->class, $this->resource, $this->query->profile()->name());
         }
 
         return $this->apply(fn (): EngineQuery => $this->query->restrictGroup(EngineConditionGroup::compile($this->query->leaves(), true, $group)));

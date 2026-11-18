@@ -17,6 +17,15 @@ final readonly class RestrictedPage
         private string $resource,
     ) {}
 
+    public static function onto(EngineIndex $index, ExtensionRestrictions $rows, ?self $current): ?self
+    {
+        if ($current !== null) {
+            throw InvalidEngineQueryException::repeatedRowRestriction($index->searchedClass(), $current->extensions());
+        }
+
+        return $index->profile instanceof AppliesRowRestrictions ? new self($index->profile, $rows, $index->searchedClass()) : null;
+    }
+
     /** @param Builder<Model> $builder */
     public function read(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
