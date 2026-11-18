@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Exceptions;
 
 use Illuminate\Support\Arr;
 use LogicException;
+use Lomkit\Rest\Instructions\Instruction;
 
 final class InvalidEngineQueryException extends LogicException
 {
@@ -22,9 +23,9 @@ final class InvalidEngineQueryException extends LogicException
         return new self("The search of {$resource} groups its filters with or or nested, but the profile of the engine [{$engine}] does not accept or and nested filters: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Combine the filters with and only.");
     }
 
-    public static function ungroupedConditions(?string $instruction, string $resource, string $engine): self
+    public static function ungroupedConditions(?Instruction $instruction, string $resource, string $engine): self
     {
-        $source = $instruction === null ? "ScoutEngine::perimeter() of {$resource}" : "The instruction {$instruction} of {$resource}";
+        $source = $instruction === null ? "ScoutEngine::perimeter() of {$resource}" : "The instruction [{$instruction->publicUriKey()}] ".$instruction::class." of {$resource}";
 
         return new self("{$source} groups engine conditions with whereAny(), but the engine [{$engine}] does not accept grouped conditions: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Check \$query->filtersWithGroups() before grouping, and use where(), whereIn() and whereNotIn() on this engine.");
     }

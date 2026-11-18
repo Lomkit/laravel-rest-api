@@ -4,13 +4,14 @@ namespace Lomkit\Rest\Text\Engine;
 
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
 use Lomkit\Rest\Instructions\AppliesToEngine;
+use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Instructions\InstructionFields;
 use Lomkit\Rest\Search\InstructionNode;
 
 final readonly class EngineInstruction
 {
     private function __construct(
-        private AppliesToEngine $instruction,
+        private Instruction&AppliesToEngine $instruction,
         private InstructionFields $fields,
     ) {}
 
@@ -25,8 +26,12 @@ final readonly class EngineInstruction
 
     public function apply(EngineQuery $query): void
     {
-        $query->instructedBy($this->instruction::class);
-        $this->instruction->handleEngine($this->fields, $query);
-        $query->instructedBy(null);
+        $query->instructedBy($this->instruction);
+
+        try {
+            $this->instruction->handleEngine($this->fields, $query);
+        } finally {
+            $query->instructedBy(null);
+        }
     }
 }

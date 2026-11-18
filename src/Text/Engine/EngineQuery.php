@@ -6,6 +6,7 @@ use Closure;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Text\Engine\Groups\FilterLeaf;
@@ -27,7 +28,7 @@ final class EngineQuery
 
     private ?RestrictedPage $restricted = null;
 
-    private ?string $instruction = null;
+    private ?Instruction $instruction = null;
 
     public function __construct(
         private readonly EngineIndex $index,
@@ -82,7 +83,7 @@ final class EngineQuery
     }
 
     /** @param Closure(EngineConditionGroup): mixed $group */
-    public function whereAny(Closure $group): self
+    public function whereAny(Closure $group): static
     {
         return $this->filtersWithGroups() ? $this->restrictGroup(EngineConditionGroup::compile($this->leaves(), true, $group)) : throw InvalidEngineQueryException::ungroupedConditions($this->instruction, $this->index->searchedClass(), $this->index->profile->name());
     }
@@ -142,7 +143,7 @@ final class EngineQuery
     }
 
     /** @internal */
-    public function instructedBy(?string $instruction): void
+    public function instructedBy(?Instruction $instruction): void
     {
         $this->instruction = $instruction;
     }
