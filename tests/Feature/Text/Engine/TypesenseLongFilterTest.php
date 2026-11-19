@@ -100,7 +100,7 @@ class TypesenseLongFilterTest extends EngineSearchTestCase
 
         $this->engineQuery()->whereIn('readers', self::readers(300))->options(['exclude_fields' => null, 'drop_tokens_threshold' => 1])->page(50, 1);
 
-        $this->assertSame([['multi_search', ['searches' => [[...self::parameters(self::filter(self::readers(300))), 'drop_tokens_threshold' => 1, 'collection' => (new ReaderVoucher)->searchableAs()]]]]], $engine->requests);
+        $this->assertSame([['multi_search', ['searches' => [[...self::parameters(self::filter(self::readers(300)), options: ['drop_tokens_threshold' => 1]), 'collection' => (new ReaderVoucher)->searchableAs()]]]]], $engine->requests);
     }
 
     #[Test]
@@ -111,7 +111,7 @@ class TypesenseLongFilterTest extends EngineSearchTestCase
 
         $this->engineQuery()->whereIn('readers', self::readers(300))->options(['vector_query' => 'embedding:([], k: 10)'])->page(50, 1);
 
-        $this->assertSame([['search', [...self::parameters(self::filter(self::readers(300))), 'vector_query' => 'embedding:([], k: 10)']]], $engine->requests);
+        $this->assertSame([['search', self::parameters(self::filter(self::readers(300)), options: ['vector_query' => 'embedding:([], k: 10)'])]], $engine->requests);
     }
 
     /** @param array<mixed> $answer */
@@ -175,8 +175,11 @@ class TypesenseLongFilterTest extends EngineSearchTestCase
         return strlen(http_build_query(array_map(fn (mixed $value): mixed => is_bool($value) ? ($value ? 'true' : 'false') : $value, $parameters)));
     }
 
-    /** @return array<string, mixed> */
-    private static function parameters(string $filter, int $perPage = 50, int $page = 1): array
+    /**
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    private static function parameters(string $filter, int $perPage = 50, int $page = 1, array $options = []): array
     {
         return [
             'q' => 'report',
@@ -194,6 +197,8 @@ class TypesenseLongFilterTest extends EngineSearchTestCase
             'enable_overrides' => true,
             'highlight_affix_num_tokens' => 4,
             'prefix' => true,
+            ...$options,
+            'filter_curated_hits' => true,
         ];
     }
 }

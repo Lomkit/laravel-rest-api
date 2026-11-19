@@ -85,7 +85,7 @@ final class InvalidEngineQueryException extends LogicException
 
     public static function ownedOption(string $key): self
     {
-        return new self("The engine query option [{$key}] is set by the package from the search.");
+        return new self("The engine query option [{$key}] is owned by the package, which sends or refuses it to keep the search and every hit inside the filter of the engine.");
     }
 
     public static function conflictingOption(string $key): self

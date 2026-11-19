@@ -30,6 +30,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SqlForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampRoutes;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampsRequests;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CurationSwitch;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainProfile;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use PHPUnit\Framework\Attributes\After;
@@ -72,5 +73,6 @@ trait ResetsExtensionStubs
         FirstResponses::reset();
         SecondResponses::reset();
         PlainProfile::reset();
+        CurationSwitch::$curates = true;
     }
 }

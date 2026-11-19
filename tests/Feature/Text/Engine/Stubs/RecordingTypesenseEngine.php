@@ -11,11 +11,15 @@ class RecordingTypesenseEngine extends TypesenseEngine
     /** @var list<array{int, int}> */
     public array $pages = [];
 
+    /** @var list<string> */
+    public array $endpoints = [];
+
     /** @param Builder<Model> $builder */
     #[\Override]
     public function paginate(Builder $builder, $perPage, $page)
     {
         $this->pages[] = [(int) $perPage, (int) $page];
+        $this->endpoints[] = $builder->callback === null ? 'search' : 'multi_search';
 
         return parent::paginate($builder, $perPage, $page);
     }

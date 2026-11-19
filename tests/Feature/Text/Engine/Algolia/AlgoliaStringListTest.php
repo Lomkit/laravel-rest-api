@@ -58,7 +58,7 @@ class AlgoliaStringListTest extends AlgoliaTestCase
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report']]);
 
         $response->assertOk()->assertExactJson($this->page([3], 1));
-        $this->assertSame([['POST', "/1/indexes/{$this->index}/query", ['query' => 'report', 'filters' => $filters, 'hitsPerPage' => 50, 'page' => 0]]], $this->algolia->sent('POST', "/1/indexes/{$this->index}/query"));
+        $this->assertSame([['POST', "/1/indexes/{$this->index}/query", ['query' => 'report', 'enableRules' => false, 'filters' => $filters, 'hitsPerPage' => 50, 'page' => 0]]], $this->algolia->sent('POST', "/1/indexes/{$this->index}/query"));
     }
 
     /** @return array<string, array{list<string>|null, bool, string}> */

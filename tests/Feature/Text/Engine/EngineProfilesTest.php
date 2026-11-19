@@ -62,9 +62,9 @@ class EngineProfilesTest extends EngineTestCase
             'collection' => [CollectionEngine::class, CollectionProfile::class, PHP_INT_MAX, [], true, null, null],
             'database' => [DatabaseEngine::class, DatabaseProfile::class, PHP_INT_MAX, [], true, null, null],
             'meilisearch' => [FakeMeilisearchEngine::class, MeilisearchProfile::class, PHP_INT_MAX, ['filter', 'sort', 'page', 'hitsPerPage', 'limit', 'offset', 'q', 'attributesToRetrieve'], true, null, null],
-            'typesense' => [FakeTypesenseEngine::class, TypesenseProfile::class, 3, ['q', 'filter_by', 'sort_by', 'per_page', 'page', 'group_by'], true, 250, null],
-            'algolia 3' => [FakeAlgolia3Engine::class, AlgoliaProfile::class, 0, ['query', 'filters', 'hitsPerPage', 'page', 'offset', 'length'], true, null, null],
-            'algolia 4' => [FakeAlgolia4Engine::class, AlgoliaProfile::class, 0, ['query', 'filters', 'hitsPerPage', 'page', 'offset', 'length'], true, null, null],
+            'typesense' => [FakeTypesenseEngine::class, TypesenseProfile::class, 3, ['q', 'filter_by', 'sort_by', 'per_page', 'page', 'group_by', 'filter_curated_hits', 'nl_query'], true, 250, null],
+            'algolia 3' => [FakeAlgolia3Engine::class, AlgoliaProfile::class, 0, ['query', 'filters', 'hitsPerPage', 'page', 'offset', 'length', 'enableRules', 'params'], true, null, null],
+            'algolia 4' => [FakeAlgolia4Engine::class, AlgoliaProfile::class, 0, ['query', 'filters', 'hitsPerPage', 'page', 'offset', 'length', 'enableRules', 'params'], true, null, null],
             'turbopuffer' => [FakeTurbopufferEngine::class, TurbopufferProfile::class, 0, ['rank_by', 'filters', 'top_k', 'include_attributes'], false, null, 10000],
             'null' => [NullEngine::class, NullProfile::class, PHP_INT_MAX, [], true, null, null],
         ];

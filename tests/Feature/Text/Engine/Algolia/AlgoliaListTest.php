@@ -30,6 +30,7 @@ class AlgoliaListTest extends AlgoliaTestCase
         $response->assertOk()->assertExactJson($this->page([3, 2], 5, 2, 2));
         $this->assertSame([['POST', "/1/indexes/{$this->index}/query", [
             'query' => '',
+            'enableRules' => false,
             'filters' => "__soft_deleted:'0' AND price<40",
             'hitsPerPage' => 2,
             'page' => 1,
