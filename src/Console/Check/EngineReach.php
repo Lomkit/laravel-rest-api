@@ -82,7 +82,7 @@ final class EngineReach
         try {
             $text->capabilities($target);
         } catch (LogicException $exception) {
-            return $exception->getMessage();
+            return "{$target->resource}: {$exception->getMessage()}";
         }
 
         return null;

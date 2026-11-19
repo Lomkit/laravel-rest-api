@@ -12,6 +12,7 @@ use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DeclaredIndexExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstIndexExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ThrowingIndexExtension;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\IndexedTeamVoucherController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\IndexedTeamVoucherResource;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\PerimeterTeamVoucherController;
@@ -55,7 +56,7 @@ final class CheckIndexAttributeConflictTest extends ScaffoldingTestCase
     public function it_reports_a_perimeter_attribute_that_an_extension_declares_with_another_type(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('perimeter-team-vouchers', PerimeterTeamVoucherController::class)->middleware('auth:sanctum')->register());
-        $problem = InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, PerimeterTeamVoucherResource::class, 'team', ResourceIndexList::Perimeter)->getMessage();
+        $problem = PerimeterTeamVoucherResource::class.': '.InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, PerimeterTeamVoucherResource::class, 'team', ResourceIndexList::Perimeter)->getMessage();
 
         $exitCode = Artisan::call('rest:check', ['controllers' => [PerimeterTeamVoucherController::class], '--json' => true], $output = new BufferedOutput);
 
@@ -66,11 +67,22 @@ final class CheckIndexAttributeConflictTest extends ScaffoldingTestCase
     public function it_reports_an_index_attribute_that_an_extension_declares_with_another_type(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('indexed-team-vouchers', IndexedTeamVoucherController::class)->middleware('auth:sanctum')->register());
-        $problem = InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, IndexedTeamVoucherResource::class, 'team', ResourceIndexList::IndexAttributes)->getMessage();
+        $problem = IndexedTeamVoucherResource::class.': '.InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, IndexedTeamVoucherResource::class, 'team', ResourceIndexList::IndexAttributes)->getMessage();
 
         $exitCode = Artisan::call('rest:check', ['controllers' => [IndexedTeamVoucherController::class], '--json' => true], $output = new BufferedOutput);
 
         $this->assertSame([1, [$problem]], [$exitCode, json_decode($output->fetch(), true)['rows']['problems']]);
         $this->assertStringContainsString('which the indexAttributes() list of its ScoutEngine already declares', $problem);
+    }
+
+    #[Test]
+    public function it_reports_an_extension_whose_index_attributes_throw_and_names_the_resource(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('indexed-team-vouchers', IndexedTeamVoucherController::class)->middleware('auth:sanctum')->register());
+        config(['rest.extensions' => [ThrowingIndexExtension::class]]);
+
+        $exitCode = Artisan::call('rest:check', ['controllers' => [IndexedTeamVoucherController::class], '--json' => true], $output = new BufferedOutput);
+
+        $this->assertSame([1, [IndexedTeamVoucherResource::class.': The tenant directory is not configured.']], [$exitCode, json_decode($output->fetch(), true)['rows']['problems']]);
     }
 }

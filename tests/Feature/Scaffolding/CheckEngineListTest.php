@@ -202,7 +202,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
         $this->app?->make(EngineManager::class)->extend('algolia', fn (): FakeAlgolia4Engine => new FakeAlgolia4Engine(new SettingsClient(fn (): array => [])));
         config(['scout.driver' => 'algolia']);
         Route::prefix('api')->group(fn () => Rest::resource('tied-vouchers', TiedVoucherController::class)->middleware('auth:sanctum')->register());
-        $problem = InvalidTextSearchException::unsortedTieBreaker(TiedVoucherResource::class, 'title', FakeAlgolia4Engine::class)->getMessage();
+        $problem = TiedVoucherResource::class.': '.InvalidTextSearchException::unsortedTieBreaker(TiedVoucherResource::class, 'title', FakeAlgolia4Engine::class)->getMessage();
 
         $report = $this->report(TiedVoucherController::class);
 
@@ -241,7 +241,7 @@ final class CheckEngineListTest extends ScaffoldingTestCase
 
         $report = $this->report(IdSortedVoucherController::class);
 
-        $this->assertSame([[InvalidTextSearchException::reservedSortAttribute(IdSortedVoucherResource::class, 'id', FakeTypesenseEngine::class)->getMessage()], ['resources' => [], 'problems' => [], 'notes' => []]], [$report['rows']['problems'], $report['engine_lists']]);
+        $this->assertSame([[IdSortedVoucherResource::class.': '.InvalidTextSearchException::reservedSortAttribute(IdSortedVoucherResource::class, 'id', FakeTypesenseEngine::class)->getMessage()], ['resources' => [], 'problems' => [], 'notes' => []]], [$report['rows']['problems'], $report['engine_lists']]);
     }
 
     #[Test]
