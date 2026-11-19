@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Exceptions;
 
 use LogicException;
+use Lomkit\Rest\Text\Engine\StringListAttribute;
 use Throwable;
 
 final class InvalidTextSearchException extends LogicException
@@ -83,8 +84,9 @@ final class InvalidTextSearchException extends LogicException
     public static function notAnAttribute(string $resource, string $declaration, int $index, mixed $attribute): self
     {
         $type = get_debug_type($attribute);
+        $list = $attribute instanceof StringListAttribute ? '; declare a list of strings in indexAttributes() only' : '';
 
-        return new self("The ScoutEngine of the resource [{$resource}] declares in {$declaration} a value of type [{$type}] at position {$index}. Declare a field, or the name of a field of the resource; declare a list of strings, such as StringListAttribute::make('readers'), in indexAttributes() only.");
+        return new self("The ScoutEngine of the resource [{$resource}] declares in {$declaration} a value of type [{$type}] at position {$index}. Declare a field, or the name of a field of the resource{$list}.");
     }
 
     public static function notAnAttributeName(string $resource, int $index, mixed $attribute): self

@@ -28,7 +28,9 @@ final class InvalidEngineQueryException extends LogicException
 
     public static function ungroupedConditions(Instruction|RestrictingExtension|null $source, string $resource, string $engine): self
     {
-        return new self(self::source($source, $resource)." groups engine conditions with whereAny(), but the engine [{$engine}] does not accept grouped conditions: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Check \$query->filtersWithGroups() before grouping, and use where(), whereIn() and whereNotIn() on this engine.");
+        $check = $source instanceof RestrictingExtension ? '$context->filtersWithGroups' : '$query->filtersWithGroups()';
+
+        return new self(self::source($source, $resource)." groups engine conditions with whereAny(), but the engine [{$engine}] does not accept grouped conditions: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Check {$check} before grouping, and use where(), whereIn() and whereNotIn() on this engine.");
     }
 
     public static function undeclaredAttribute(string $attribute): self

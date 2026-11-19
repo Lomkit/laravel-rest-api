@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 
 use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
+use Laravel\Scout\Engines\NullEngine;
 use Lomkit\Rest\Exceptions\InvalidEngineExtensionException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
@@ -13,11 +14,13 @@ use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DeclaredIndexExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstIndexExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\NamePrefixesRestriction;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Text\Engine\ResourceIndexList;
+use Lomkit\Rest\Text\Engine\RestrictingExtension;
 use Lomkit\Rest\Text\Engine\StringListAttribute;
 use Lomkit\Rest\Text\ScoutEngine;
 use Lomkit\Rest\Text\TextQuery;
@@ -183,7 +186,11 @@ class ResourceIndexAttributesTest extends ScoutEngineDeclarationTestCase
         $bounded = ScoutEngine::make()->perimeter(fn (EngineQuery $query): EngineQuery => $query->whereIn('name_prefixes', ['re']))->indexAttributes([StringListAttribute::make('name_prefixes')]);
 
         $this->assertNotNull($this->capabilities($declared)->engine);
-        $this->expectExceptionObject(InvalidEngineQueryException::unmatchedStringList(null, VoucherResource::class, 'name_prefixes', $driver === 'collection' ? CollectionEngine::class : DatabaseEngine::class));
+        $this->expectExceptionObject(InvalidEngineQueryException::unmatchedStringList(null, VoucherResource::class, 'name_prefixes', match ($driver) {
+            'collection' => CollectionEngine::class,
+            'database' => DatabaseEngine::class,
+            default => NullEngine::class,
+        }));
 
         $this->engineQuery($bounded);
     }
@@ -194,6 +201,7 @@ class ResourceIndexAttributesTest extends ScoutEngineDeclarationTestCase
         return [
             'collection' => ['collection'],
             'database' => ['database'],
+            'null' => ['null'],
         ];
     }
 
@@ -205,7 +213,8 @@ class ResourceIndexAttributesTest extends ScoutEngineDeclarationTestCase
         $engine = $declaration === 'filterable()' ? $this->open([$list]) : ScoutEngine::make()->perimeter(fn (): null => null, [$list]);
         $expected = InvalidTextSearchException::notAnAttribute(VoucherResource::class, $declaration, 0, $list);
 
-        $this->assertSame('The ScoutEngine of the resource ['.VoucherResource::class."] declares in {$declaration} a value of type [".StringListAttribute::class."] at position 0. Declare a field, or the name of a field of the resource; declare a list of strings, such as StringListAttribute::make('readers'), in indexAttributes() only.", $expected->getMessage());
+        $this->assertSame('The ScoutEngine of the resource ['.VoucherResource::class."] declares in {$declaration} a value of type [".StringListAttribute::class.'] at position 0. Declare a field, or the name of a field of the resource; declare a list of strings in indexAttributes() only.', $expected->getMessage());
+        $this->assertStringEndsWith('at position 0. Declare a field, or the name of a field of the resource.', InvalidTextSearchException::notAnAttribute(VoucherResource::class, $declaration, 0, 42)->getMessage());
         $this->expectExceptionObject($expected);
 
         $this->capabilities($engine);
@@ -241,6 +250,7 @@ class ResourceIndexAttributesTest extends ScoutEngineDeclarationTestCase
     #[Test]
     public function it_names_the_source_of_an_unmatched_list(): void
     {
+        $this->assertStringContainsString('extension '.NamePrefixesRestriction::class.' of '.VoucherResource::class.' groups engine conditions with whereAny(), but the engine ['.CollectionEngine::class.'] does not accept grouped conditions: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Check $context->filtersWithGroups before grouping,', InvalidEngineQueryException::ungroupedConditions(new RestrictingExtension('prefixes', NamePrefixesRestriction::class), VoucherResource::class, CollectionEngine::class)->getMessage());
         $this->assertSame(
             'ScoutEngine::perimeter() of '.VoucherResource::class.' compares the list attribute [name_prefixes], but the engine ['.CollectionEngine::class.'] cannot compare a list of strings: only an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists does, such as the built-in Typesense, Meilisearch, Turbopuffer and Algolia profiles. Index the model on such an engine, or compare an attribute that holds a single value on this one.',
             InvalidEngineQueryException::unmatchedStringList(null, VoucherResource::class, 'name_prefixes', CollectionEngine::class)->getMessage(),

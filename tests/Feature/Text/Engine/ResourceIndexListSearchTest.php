@@ -3,13 +3,18 @@
 namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 
 use Illuminate\Support\Facades\Route;
+use Laravel\Scout\Engines\CollectionEngine;
+use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\NamePrefixesRestriction;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilterCapturingAlgolia4Engine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FilterCapturingTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListCapturingMeilisearchEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListPerimeterPrefixedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\NamePrefixes;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterPrefixedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PrefixedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PrefixedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -85,7 +90,7 @@ class ResourceIndexListSearchTest extends EngineSearchTestCase
 
         $response = $this->search('list-perimeter-prefixed-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'other-name-prefixes']]]);
 
-        $message = 'The search.instructions.0 field restricts the list [name_prefixes] with values that neither hold nor are held by the list that the search already keeps, and the search engine cannot require both lists.';
+        $message = 'The search.instructions.0 field restricts a list with values that neither hold nor are held by the list that the search already keeps, and the search engine cannot require both lists.';
         $response->assertStatus(422)->assertExactJson(['message' => $message, 'errors' => ['search.instructions.0' => [$message]]]);
     }
 
@@ -127,6 +132,41 @@ class ResourceIndexListSearchTest extends EngineSearchTestCase
             'a filter' => ['filters'],
             'a sort' => ['sorts'],
         ];
+    }
+
+    #[Test]
+    public function it_sends_the_list_of_an_instruction_in_an_engine_list(): void
+    {
+        $engine = new FilterCapturingTypesenseEngine;
+        $this->useEngine($engine);
+
+        $this->search('prefixed-vouchers', ['source' => 'engine', 'instructions' => [['name' => 'name-prefixes']]])->assertOk();
+
+        $this->assertSame(['name_prefixes:=[`re`, `rep`]'], $engine->filters);
+    }
+
+    #[Test]
+    public function it_sends_the_list_of_an_extension_restriction(): void
+    {
+        $engine = new FilterCapturingTypesenseEngine;
+        $this->useEngine($engine);
+        config(['rest.extensions' => [NamePrefixesRestriction::class]]);
+
+        $this->search('prefixed-vouchers', ['text' => ['value' => 'report']])->assertOk();
+        $this->search('prefixed-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'name-prefixes']]])->assertOk();
+
+        $this->assertSame(['name_prefixes:=[`re`, `bu`]', '(name_prefixes:=[`re`, `bu`]) && (name_prefixes:=[`re`, `rep`])'], $engine->filters);
+    }
+
+    #[Test]
+    public function it_names_the_instruction_that_compares_a_list_on_an_engine_without_lists(): void
+    {
+        config(['scout.driver' => 'collection']);
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(InvalidEngineQueryException::unmatchedStringList(new NamePrefixes, PrefixedVoucherResource::class, 'name_prefixes', CollectionEngine::class));
+
+        $this->search('prefixed-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'name-prefixes']]]);
     }
 
     #[Test]
