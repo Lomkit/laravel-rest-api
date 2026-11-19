@@ -187,7 +187,7 @@ class StringListAttributesTest extends EngineSearchTestCase
 
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'ri.bob']]]);
 
-        $message = 'The search.instructions.0 field restricts the list [readers] with values that neither hold nor are held by the list that the search already keeps, and the search engine cannot require both lists.';
+        $message = 'The search.instructions.0 field restricts a list with values that neither hold nor are held by the list that the search already keeps, and the search engine cannot require both lists.';
         $response->assertStatus(422)->assertExactJson(['message' => $message, 'errors' => ['search.instructions.0' => [$message]]]);
     }
 
