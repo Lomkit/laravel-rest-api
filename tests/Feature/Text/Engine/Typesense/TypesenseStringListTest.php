@@ -129,4 +129,14 @@ class TypesenseStringListTest extends TypesenseTestCase
             'a client or on the row that the restriction excludes' => [['ann'], [['field' => 'number', 'value' => 3], ['field' => 'number', 'value' => 1, 'type' => 'or']], [3]],
         ];
     }
+
+    #[Test]
+    public function it_runs_a_search_whose_filter_passes_the_query_string_limit_through_multi_search(): void
+    {
+        ReadersExtension::$groups = ['ann', ...array_map(fn (int $index): string => sprintf('reader-%04d', $index), range(1, 299))];
+
+        $response = $this->actingAs(new GenericUser(['id' => 'reader']))->search('reader-vouchers', ['text' => ['value' => 'report']]);
+
+        $response->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.*.id', [3]);
+    }
 }
