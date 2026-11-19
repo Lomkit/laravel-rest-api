@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Exceptions;
 use Illuminate\Support\Arr;
 use LogicException;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Text\Engine\RestrictingExtension;
 
 final class InvalidEngineQueryException extends LogicException
 {
@@ -13,9 +14,11 @@ final class InvalidEngineQueryException extends LogicException
         return new self('A condition reached an EngineConditionGroup after the closure of its whereAny() or whereAll() returned, so it would be dropped. Add every condition of a group inside its closure.');
     }
 
-    public static function unmatchedStringList(string $resource, string $attribute, string $engine): self
+    public static function unmatchedStringList(Instruction|RestrictingExtension|null $source, string $resource, string $attribute, string $engine): self
     {
-        return new self("The engine query of {$resource} compares the list attribute [{$attribute}], but the engine [{$engine}] compares single values only. Compare lists of strings on an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists, and check \$context->matchesStringLists before comparing the list.");
+        $check = $source instanceof RestrictingExtension ? ' Check $context->matchesStringLists before comparing the list.' : '';
+
+        return new self(self::source($source, $resource)." compares the list attribute [{$attribute}], but the engine [{$engine}] cannot compare a list of strings: only an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists does, such as the built-in Typesense, Meilisearch, Turbopuffer and Algolia profiles. Index the model on such an engine, or compare an attribute that holds a single value on this one.{$check}");
     }
 
     public static function ungroupedFilters(string $resource, string $engine): self
@@ -23,16 +26,14 @@ final class InvalidEngineQueryException extends LogicException
         return new self("The search of {$resource} groups its filters with or or nested, but the profile of the engine [{$engine}] does not accept or and nested filters: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Combine the filters with and only.");
     }
 
-    public static function ungroupedConditions(?Instruction $instruction, string $resource, string $engine): self
+    public static function ungroupedConditions(Instruction|RestrictingExtension|null $source, string $resource, string $engine): self
     {
-        $source = $instruction === null ? "ScoutEngine::perimeter() of {$resource}" : "The instruction [{$instruction->publicUriKey()}] ".$instruction::class." of {$resource}";
-
-        return new self("{$source} groups engine conditions with whereAny(), but the engine [{$engine}] does not accept grouped conditions: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Check \$query->filtersWithGroups() before grouping, and use where(), whereIn() and whereNotIn() on this engine.");
+        return new self(self::source($source, $resource)." groups engine conditions with whereAny(), but the engine [{$engine}] does not accept grouped conditions: only the built-in Typesense, Meilisearch, Turbopuffer, database, collection and null profiles do. Check \$query->filtersWithGroups() before grouping, and use where(), whereIn() and whereNotIn() on this engine.");
     }
 
     public static function undeclaredAttribute(string $attribute): self
     {
-        return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.");
+        return new self("The engine query has no attribute [{$attribute}]. Declare it with ScoutEngine::filterable() for clients, with ScoutEngine::indexAttributes() for the server only, or in indexAttributes() of an extension that implements DeclaresIndexAttributes.");
     }
 
     public static function unappliedRowRestriction(string $resource, string $profile, string $engine): self
@@ -111,5 +112,14 @@ final class InvalidEngineQueryException extends LogicException
     public static function beyondWindow(int $window): self
     {
         return new self("The search engine does not paginate beyond the first {$window} results.");
+    }
+
+    private static function source(Instruction|RestrictingExtension|null $source, string $resource): string
+    {
+        return match (true) {
+            $source instanceof Instruction => "The instruction [{$source->publicUriKey()}] ".$source::class." of {$resource}",
+            $source instanceof RestrictingExtension => "The [{$source->name}] extension {$source->class} of {$resource}",
+            default => "ScoutEngine::perimeter() of {$resource}",
+        };
     }
 }

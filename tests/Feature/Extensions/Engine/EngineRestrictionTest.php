@@ -397,7 +397,7 @@ class EngineRestrictionTest extends EngineSearchTestCase
         $exception = InvalidEngineExtensionException::refusedEngineCondition('owner', OwnerEngineRestriction::class, VoucherResource::class, InvalidEngineQueryException::undeclaredAttribute('owner'));
 
         $this->assertSame(
-            'The [owner] extension '.OwnerEngineRestriction::class.' restricts the engine search of '.VoucherResource::class.' with a condition that the engine query refuses: The engine query has no attribute [owner]. Declare it with ScoutEngine::filterable(), among the attributes of ScoutEngine::perimeter(), or in indexAttributes() of an extension that implements DeclaresIndexAttributes.',
+            'The [owner] extension '.OwnerEngineRestriction::class.' restricts the engine search of '.VoucherResource::class.' with a condition that the engine query refuses: The engine query has no attribute [owner]. Declare it with ScoutEngine::filterable() for clients, with ScoutEngine::indexAttributes() for the server only, or in indexAttributes() of an extension that implements DeclaresIndexAttributes.',
             $exception->getMessage(),
         );
         $this->assertSame([true, false], [$exception->concerns(OwnerEngineRestriction::class), $exception->concerns('owner')]);

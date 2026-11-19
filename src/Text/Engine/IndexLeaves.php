@@ -4,13 +4,17 @@ namespace Lomkit\Rest\Text\Engine;
 
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Text\Engine\Groups\FilterLeaf;
 use Lomkit\Rest\Text\Engine\Profiles\MatchesStringLists;
 
 /** @internal */
 final readonly class IndexLeaves
 {
-    public function __construct(private EngineIndex $index) {}
+    public function __construct(
+        private EngineIndex $index,
+        private Instruction|RestrictingExtension|null $source = null,
+    ) {}
 
     public function compare(string $attribute, FilterOperator|string $operator, mixed $value): FilterLeaf
     {
@@ -33,7 +37,7 @@ final readonly class IndexLeaves
         $declared = $this->index->attributes->declared($attribute);
 
         if ($declared->list && ! $this->index->profile instanceof MatchesStringLists) {
-            throw InvalidEngineQueryException::unmatchedStringList($this->index->searchedClass(), $attribute, $this->index->profile->name());
+            throw InvalidEngineQueryException::unmatchedStringList($this->source, $this->index->searchedClass(), $attribute, $this->index->profile->name());
         }
 
         return $declared;

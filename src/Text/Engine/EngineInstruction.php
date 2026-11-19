@@ -26,12 +26,12 @@ final readonly class EngineInstruction
 
     public function apply(EngineQuery $query): void
     {
-        $query->instructedBy($this->instruction);
+        $query->conditionedBy($this->instruction);
 
         try {
             $this->instruction->handleEngine($this->fields, $query);
         } finally {
-            $query->instructedBy(null);
+            $query->conditionedBy(null);
         }
     }
 }

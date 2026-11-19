@@ -28,7 +28,7 @@ final class InvalidFieldExtensionException extends ExtensionException
 
     public static function hidesPerimeterAttribute(string $name, string $class, string $resource, string $field): self
     {
-        return self::about($class, 'The '.self::extension($name, $class)." hides [{$field}], an attribute that ScoutEngine::perimeter() of {$resource} reads for every user. Keep it visible: clients cannot filter or sort on a perimeter attribute anyway.");
+        return self::about($class, 'The '.self::extension($name, $class)." hides [{$field}], a server-only index attribute that ScoutEngine::perimeter() or ScoutEngine::indexAttributes() of {$resource} declares and reads for every user. Keep it visible: clients cannot filter or sort on a server-only index attribute anyway.");
     }
 
     public static function readsNarrowedFields(string $name, string $class, string $resource): self

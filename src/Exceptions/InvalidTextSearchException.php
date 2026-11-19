@@ -84,7 +84,7 @@ final class InvalidTextSearchException extends LogicException
     {
         $type = get_debug_type($attribute);
 
-        return new self("The ScoutEngine of the resource [{$resource}] declares in {$declaration} a value of type [{$type}] at position {$index}. Declare a field, or the name of a field of the resource.");
+        return new self("The ScoutEngine of the resource [{$resource}] declares in {$declaration} a value of type [{$type}] at position {$index}. Declare a field, or the name of a field of the resource; declare a list of strings, such as StringListAttribute::make('readers'), in indexAttributes() only.");
     }
 
     public static function notAnAttributeName(string $resource, int $index, mixed $attribute): self

@@ -12,6 +12,8 @@ use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\DeclaredIndexExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FirstIndexExtension;
+use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\IndexedTeamVoucherController;
+use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\IndexedTeamVoucherResource;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\PerimeterTeamVoucherController;
 use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\PerimeterTeamVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Ledger;
@@ -58,5 +60,17 @@ final class CheckIndexAttributeConflictTest extends ScaffoldingTestCase
         $exitCode = Artisan::call('rest:check', ['controllers' => [PerimeterTeamVoucherController::class], '--json' => true], $output = new BufferedOutput);
 
         $this->assertSame([1, [$problem]], [$exitCode, json_decode($output->fetch(), true)['rows']['problems']]);
+    }
+
+    #[Test]
+    public function it_reports_an_index_attribute_that_an_extension_declares_with_another_type(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('indexed-team-vouchers', IndexedTeamVoucherController::class)->middleware('auth:sanctum')->register());
+        $problem = InvalidEngineExtensionException::indexAttributeTakenByResource('first', FirstIndexExtension::class, IndexedTeamVoucherResource::class, 'team', ResourceIndexList::IndexAttributes)->getMessage();
+
+        $exitCode = Artisan::call('rest:check', ['controllers' => [IndexedTeamVoucherController::class], '--json' => true], $output = new BufferedOutput);
+
+        $this->assertSame([1, [$problem]], [$exitCode, json_decode($output->fetch(), true)['rows']['problems']]);
+        $this->assertStringContainsString('which the indexAttributes() list of its ScoutEngine already declares', $problem);
     }
 }

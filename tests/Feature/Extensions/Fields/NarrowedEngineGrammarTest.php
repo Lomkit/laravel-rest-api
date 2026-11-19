@@ -13,6 +13,9 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\FieldVoucherController;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\PriceEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterPrefixedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PerimeterPrefixedVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\TeamListVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\TeamVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -100,7 +103,7 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
     {
         $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('team'));
 
-        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' hides [team], an attribute that ScoutEngine::perimeter() of '.TeamVoucherResource::class.' reads for every user. Keep it visible: clients cannot filter or sort on a perimeter attribute anyway.'));
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' hides [team], a server-only index attribute that ScoutEngine::perimeter() or ScoutEngine::indexAttributes() of '.TeamVoucherResource::class.' declares and reads for every user. Keep it visible: clients cannot filter or sort on a server-only index attribute anyway.'));
 
         $this->withoutExceptionHandling()->search('team-vouchers', ['text' => ['value' => 'report']]);
     }
@@ -123,6 +126,30 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
             'sort' => true,
             'create' => false,
             'update' => false,
+        ]);
+    }
+
+    #[Test]
+    public function it_refuses_to_hide_a_field_that_index_attributes_declare(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('perimeter-prefixed-vouchers', PerimeterPrefixedVoucherController::class)->register());
+        $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('team'));
+
+        $this->expectExceptionObject(new InvalidFieldExtensionException('The [mask] extension '.MaskingFields::class.' hides [team], a server-only index attribute that ScoutEngine::perimeter() or ScoutEngine::indexAttributes() of '.PerimeterPrefixedVoucherResource::class.' declares and reads for every user. Keep it visible: clients cannot filter or sort on a server-only index attribute anyway.'));
+
+        $this->withoutExceptionHandling()->search('perimeter-prefixed-vouchers', ['text' => ['value' => 'report']]);
+    }
+
+    #[Test]
+    public function it_hides_a_field_whose_name_only_a_list_of_index_attributes_shares(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('team-list-vouchers', TeamListVoucherController::class)->register());
+        $this->narrow(static fn (FieldsContext $context): mixed => $context->hide('team'));
+
+        $response = $this->search('team-list-vouchers', ['text' => ['value' => 'inactive']]);
+
+        $response->assertOk()->assertJsonPath('data', [
+            ['id' => 5, 'code' => 'V-e', 'number' => 5, 'title' => 'Report inactive', 'price' => 40, 'active' => false],
         ]);
     }
 
