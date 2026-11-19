@@ -17,23 +17,26 @@ final readonly class DeclaredAttributes
      * @param  array<mixed>  $declared
      * @return array<string, IndexAttribute>
      */
-    public static function of(TextTarget $target, EngineProfile $profile, array $declared, string $declaration, bool $restricted = false): array
+    public static function of(TextTarget $target, EngineProfile $profile, array $declared, string $declaration, bool $restricted = false, bool $lists = false): array
     {
         $attributes = [];
         $declarer = IndexDeclarer::resource($target->resource);
 
         foreach (array_values($declared) as $index => $attribute) {
-            $field = match (true) {
+            $entry = match (true) {
+                $lists && $attribute instanceof StringListAttribute => $attribute,
                 $attribute instanceof Field => $attribute->boundTo($target->model),
                 is_string($attribute) => $target->declared->find($attribute) ?? throw InvalidTextSearchException::unknownAttribute($target->resource, $attribute),
                 default => throw InvalidTextSearchException::notAnAttribute($target->resource, $declaration, $index, $attribute),
             };
 
-            if (isset($attributes[$field->name])) {
-                throw InvalidTextSearchException::duplicateAttribute($target->resource, $field->name);
+            if (isset($attributes[$entry->name])) {
+                throw InvalidTextSearchException::duplicateAttribute($target->resource, $entry->name);
             }
 
-            $attributes[$field->name] = IndexAttributeRules::field($restricted && ! $field->isInputOnly() ? (clone $field)->selectable() : $field, $profile, $declarer);
+            $attributes[$entry->name] = $entry instanceof StringListAttribute
+                ? IndexAttributeRules::stringList($entry, $target->model, $profile, $declarer)
+                : IndexAttributeRules::field($restricted && ! $entry->isInputOnly() ? (clone $entry)->selectable() : $entry, $profile, $declarer);
         }
 
         return $attributes;

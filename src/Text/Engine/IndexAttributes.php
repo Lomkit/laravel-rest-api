@@ -12,13 +12,13 @@ final readonly class IndexAttributes
 {
     /**
      * @param  array<string, IndexAttribute>  $filterable
-     * @param  array<string, IndexAttribute>  $perimeter
+     * @param  array<string, IndexAttribute>  $server
      * @param  list<string>  $sortable
      * @param  array<string, IndexAttribute>  $owned
      */
     private function __construct(
         private array $filterable,
-        private array $perimeter,
+        private array $server,
         private array $sortable,
         private array $owned,
     ) {}
@@ -27,26 +27,28 @@ final readonly class IndexAttributes
      * @param  array<mixed>  $filterable
      * @param  array<mixed>  $sortable
      * @param  array<mixed>  $perimeter
+     * @param  array<mixed>  $indexAttributes
      */
-    public static function of(TextTarget $target, EngineProfile $profile, array $filterable, array $sortable, array $perimeter, bool $lists = false): self
+    public static function of(TextTarget $target, EngineProfile $profile, array $filterable, array $sortable, array $perimeter, bool $lists = false, array $indexAttributes = []): self
     {
         $client = DeclaredAttributes::of($target, $profile, $filterable, 'filterable()');
-        $restricted = DeclaredAttributes::of($target, $profile, $perimeter, 'perimeter()', true);
+        $bounding = DeclaredAttributes::of($target, $profile, $perimeter, 'perimeter()', true);
+        $indexed = DeclaredAttributes::of($target, $profile, $indexAttributes, 'indexAttributes()', true, true);
 
-        foreach (array_keys($restricted) as $name) {
-            if (isset($client[$name])) {
+        foreach ([...array_keys($bounding), ...array_keys($indexed)] as $name) {
+            if (isset($client[$name]) || (isset($bounding[$name]) && isset($indexed[$name]))) {
                 throw InvalidTextSearchException::duplicateAttribute($target->resource, $name);
             }
         }
 
         $sorts = DeclaredAttributes::sorts($target, $profile, $client, $sortable, $lists);
 
-        return new self($client, $restricted, $sorts, ExtensionAttributes::of($target, $profile, $client, $restricted));
+        return new self($client, $bounding + $indexed, $sorts, ExtensionAttributes::of($target, $profile, $client, $bounding, $indexed));
     }
 
     public function find(string $name): ?IndexAttribute
     {
-        return $this->filterable[$name] ?? $this->perimeter[$name] ?? $this->owned[$name] ?? null;
+        return $this->filterable[$name] ?? $this->server[$name] ?? $this->owned[$name] ?? null;
     }
 
     public function declared(string $name): IndexAttribute

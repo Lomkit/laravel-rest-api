@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Console\Check;
 
+use LogicException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 use Lomkit\Rest\Http\Resource;
@@ -80,8 +81,8 @@ final class EngineReach
 
         try {
             $text->capabilities($target);
-        } catch (InvalidTextSearchException $exception) {
-            return $exception->getMessage();
+        } catch (LogicException $exception) {
+            return "{$target->resource}: {$exception->getMessage()}";
         }
 
         return null;

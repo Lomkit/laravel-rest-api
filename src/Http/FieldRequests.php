@@ -77,7 +77,7 @@ final class FieldRequests
             throw InvalidFieldExtensionException::hidesSearchable($extension, $class, $resource, $field->name);
         }
 
-        if ($text instanceof ScoutEngine && in_array($field->name, $text->perimeterNames(), true)) {
+        if ($text instanceof ScoutEngine && in_array($field->name, $text->serverNames(), true)) {
             throw InvalidFieldExtensionException::hidesPerimeterAttribute($extension, $class, $resource, $field->name);
         }
     }

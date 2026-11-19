@@ -36,6 +36,7 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\SettingsClient;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
+use Lomkit\Rest\Text\Engine\RestrictingExtension;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -184,7 +185,7 @@ class EngineRestrictionGroupTest extends EngineSearchTestCase
         $this->actingAs(new GenericUser(['id' => 'ann']));
         $this->withoutExceptionHandling();
 
-        $this->expectExceptionObject(InvalidEngineExtensionException::refusedEngineCondition('reader_group', ReaderGroupEngineRestriction::class, GroupedReaderVoucherResource::class, InvalidEngineQueryException::unmatchedStringList(GroupedReaderVoucherResource::class, 'readers', CollectionEngine::class)));
+        $this->expectExceptionObject(InvalidEngineExtensionException::refusedEngineCondition('reader_group', ReaderGroupEngineRestriction::class, GroupedReaderVoucherResource::class, InvalidEngineQueryException::unmatchedStringList(new RestrictingExtension('reader_group', ReaderGroupEngineRestriction::class), GroupedReaderVoucherResource::class, 'readers', CollectionEngine::class)));
 
         $this->search('grouped-reader-vouchers', ['source' => 'engine']);
     }

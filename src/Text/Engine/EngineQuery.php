@@ -28,7 +28,7 @@ final class EngineQuery
 
     private ?RestrictedPage $restricted = null;
 
-    private ?Instruction $instruction = null;
+    private Instruction|RestrictingExtension|null $source = null;
 
     public function __construct(
         private readonly EngineIndex $index,
@@ -85,7 +85,7 @@ final class EngineQuery
     /** @param Closure(EngineConditionGroup): mixed $group */
     public function whereAny(Closure $group): static
     {
-        return $this->filtersWithGroups() ? $this->restrictGroup(EngineConditionGroup::compile($this->leaves(), true, $group)) : throw InvalidEngineQueryException::ungroupedConditions($this->instruction, $this->index->searchedClass(), $this->index->profile->name());
+        return $this->filtersWithGroups() ? $this->restrictGroup(EngineConditionGroup::compile($this->leaves(), true, $group)) : throw InvalidEngineQueryException::ungroupedConditions($this->source, $this->index->searchedClass(), $this->index->profile->name());
     }
 
     public function filtersWithGroups(): bool
@@ -143,15 +143,15 @@ final class EngineQuery
     }
 
     /** @internal */
-    public function instructedBy(?Instruction $instruction): void
+    public function conditionedBy(Instruction|RestrictingExtension|null $source): void
     {
-        $this->instruction = $instruction;
+        $this->source = $source;
     }
 
     /** @internal */
     public function leaves(): IndexLeaves
     {
-        return new IndexLeaves($this->index);
+        return new IndexLeaves($this->index, $this->source);
     }
 
     /** @internal */

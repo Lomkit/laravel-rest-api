@@ -12,6 +12,7 @@ use Lomkit\Rest\Text\Engine\IndexAttributes;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfiles;
 use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\Engine\ScoutModel;
+use Lomkit\Rest\Text\Engine\StringListAttribute;
 use Lomkit\Rest\Text\Engine\TieBreaker;
 
 final readonly class ScoutEngine implements ListingTextSearch
@@ -21,12 +22,14 @@ final readonly class ScoutEngine implements ListingTextSearch
      * @param  array<mixed>  $sortable
      * @param  (Closure(EngineQuery): mixed)|null  $perimeter
      * @param  array<mixed>  $perimeterAttributes
+     * @param  array<mixed>  $indexAttributes
      */
     private function __construct(
         private array $filterable = [],
         private array $sortable = [],
         private ?Closure $perimeter = null,
         private array $perimeterAttributes = [],
+        private array $indexAttributes = [],
         private bool $withoutPerimeter = false,
         private bool $lists = false,
         private ?string $tieBreaker = null,
@@ -40,37 +43,43 @@ final readonly class ScoutEngine implements ListingTextSearch
     /** @param array<mixed> $attributes */
     public function filterable(array $attributes): self
     {
-        return new self($attributes, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker);
+        return $this->with(filterable: $attributes);
     }
 
     /** @param array<mixed> $attributes */
     public function sortable(array $attributes): self
     {
-        return new self($this->filterable, $attributes, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker);
+        return $this->with(sortable: $attributes);
     }
 
     /**
      * @param  Closure(EngineQuery): mixed  $perimeter
-     * @param  array<mixed>  $attributes
+     * @param  array<mixed>  $attributes  Deprecated, to be removed in 4.0: declare these attributes with indexAttributes().
      */
     public function perimeter(Closure $perimeter, array $attributes = []): self
     {
-        return new self($this->filterable, $this->sortable, $perimeter, $attributes, $this->withoutPerimeter, $this->lists, $this->tieBreaker);
+        return $this->with(perimeter: $perimeter, perimeterAttributes: $attributes);
+    }
+
+    /** @param array<mixed> $attributes */
+    public function indexAttributes(array $attributes): self
+    {
+        return $this->with(indexAttributes: $attributes);
     }
 
     public function withoutPerimeter(): self
     {
-        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, true, $this->lists, $this->tieBreaker);
+        return $this->with(withoutPerimeter: true);
     }
 
     public function servesLists(bool $serves = true): static
     {
-        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $serves, $this->tieBreaker);
+        return $this->with(lists: $serves);
     }
 
     public function tieBreaker(string $attribute): self
     {
-        return new self($this->filterable, $this->sortable, $this->perimeter, $this->perimeterAttributes, $this->withoutPerimeter, $this->lists, $attribute);
+        return $this->with(tieBreaker: $attribute);
     }
 
     /** @internal */
@@ -92,13 +101,14 @@ final readonly class ScoutEngine implements ListingTextSearch
      *
      * @return list<string>
      */
-    public function perimeterNames(): array
+    public function serverNames(): array
     {
         $names = array_map(static fn (mixed $attribute): ?string => match (true) {
+            $attribute instanceof StringListAttribute => null,
             $attribute instanceof Field => $attribute->name,
             is_string($attribute) => $attribute,
             default => null,
-        }, $this->perimeterAttributes);
+        }, [...array_values($this->perimeterAttributes), ...array_values($this->indexAttributes)]);
 
         return array_values(array_filter($names, is_string(...)));
     }
@@ -124,6 +134,27 @@ final readonly class ScoutEngine implements ListingTextSearch
         }
 
         return $this->bounded(new EngineQuery($this->index($target), null, $trashed));
+    }
+
+    /**
+     * @param  array<mixed>|null  $filterable
+     * @param  array<mixed>|null  $sortable
+     * @param  (Closure(EngineQuery): mixed)|null  $perimeter
+     * @param  array<mixed>|null  $perimeterAttributes
+     * @param  array<mixed>|null  $indexAttributes
+     */
+    private function with(?array $filterable = null, ?array $sortable = null, ?Closure $perimeter = null, ?array $perimeterAttributes = null, ?array $indexAttributes = null, ?bool $withoutPerimeter = null, ?bool $lists = null, ?string $tieBreaker = null): self
+    {
+        return new self(
+            filterable: $filterable ?? $this->filterable,
+            sortable: $sortable ?? $this->sortable,
+            perimeter: $perimeter ?? $this->perimeter,
+            perimeterAttributes: $perimeterAttributes ?? $this->perimeterAttributes,
+            indexAttributes: $indexAttributes ?? $this->indexAttributes,
+            withoutPerimeter: $withoutPerimeter ?? $this->withoutPerimeter,
+            lists: $lists ?? $this->lists,
+            tieBreaker: $tieBreaker ?? $this->tieBreaker,
+        );
     }
 
     private function bounded(EngineQuery $query): EngineQuery
@@ -155,7 +186,7 @@ final readonly class ScoutEngine implements ListingTextSearch
         }
 
         $tieBreaker = $this->tieBreaker === null ? null : TieBreaker::declared($this->tieBreaker, $target->resource, $profile, $this->lists);
-        $attributes = IndexAttributes::of($target, $profile, $this->filterable, $this->sortable, $this->perimeterAttributes, $this->lists);
+        $attributes = IndexAttributes::of($target, $profile, $this->filterable, $this->sortable, $this->perimeterAttributes, $this->lists, $this->indexAttributes);
 
         return new EngineIndex($model, $profile, $attributes, $target->resource, $this->lists, $tieBreaker);
     }

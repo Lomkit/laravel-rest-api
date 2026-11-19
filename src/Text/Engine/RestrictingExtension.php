@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
+/** @internal */
 final readonly class RestrictingExtension
 {
     /** @param class-string $class */

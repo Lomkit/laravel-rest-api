@@ -55,10 +55,14 @@ final readonly class EngineRestriction
 
     private function apply(Closure $condition): self
     {
+        $this->query->conditionedBy($this->extension);
+
         try {
             $condition();
         } catch (InvalidEngineQueryException $reason) {
             throw InvalidEngineExtensionException::refusedEngineCondition($this->extension->name, $this->extension->class, $this->resource, $reason);
+        } finally {
+            $this->query->conditionedBy(null);
         }
 
         return $this;

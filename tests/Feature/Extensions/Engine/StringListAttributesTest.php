@@ -17,6 +17,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\AdaptiveReadersExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\EngineLog;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ListMatchingEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupsExtension;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstruction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
@@ -99,7 +100,7 @@ class StringListAttributesTest extends EngineSearchTestCase
             }
         }
 
-        $expected = InvalidEngineQueryException::unmatchedStringList(ReaderVoucherResource::class, 'readers', $engine)->getMessage();
+        $expected = InvalidEngineQueryException::unmatchedStringList(null, ReaderVoucherResource::class, 'readers', $engine)->getMessage();
         $this->assertSame([$expected, $expected], $refusals);
     }
 
@@ -127,8 +128,12 @@ class StringListAttributesTest extends EngineSearchTestCase
     public function it_names_the_list_the_engine_and_where_lists_match(): void
     {
         $this->assertSame(
-            'The engine query of '.ReaderVoucherResource::class.' compares the list attribute [readers], but the engine ['.CollectionEngine::class.'] compares single values only. Compare lists of strings on an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists, and check $context->matchesStringLists before comparing the list.',
-            InvalidEngineQueryException::unmatchedStringList(ReaderVoucherResource::class, 'readers', CollectionEngine::class)->getMessage(),
+            'The [readers] extension '.ReadersExtension::class.' of '.ReaderVoucherResource::class.' compares the list attribute [readers], but the engine ['.CollectionEngine::class.'] cannot compare a list of strings: only an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists does, such as the built-in Typesense, Meilisearch, Turbopuffer and Algolia profiles. Index the model on such an engine, or compare an attribute that holds a single value on this one. Check $context->matchesStringLists before comparing the list.',
+            InvalidEngineQueryException::unmatchedStringList(new RestrictingExtension('readers', ReadersExtension::class), ReaderVoucherResource::class, 'readers', CollectionEngine::class)->getMessage(),
+        );
+        $this->assertSame(
+            'The instruction [bob] '.ReaderInstruction::class.' of '.ReaderVoucherResource::class.' compares the list attribute [readers], but the engine ['.CollectionEngine::class.'] cannot compare a list of strings: only an engine whose profile implements Lomkit\\Rest\\Text\\Engine\\Profiles\\MatchesStringLists does, such as the built-in Typesense, Meilisearch, Turbopuffer and Algolia profiles. Index the model on such an engine, or compare an attribute that holds a single value on this one.',
+            InvalidEngineQueryException::unmatchedStringList(new ReaderInstruction, ReaderVoucherResource::class, 'readers', CollectionEngine::class)->getMessage(),
         );
     }
 
@@ -182,7 +187,7 @@ class StringListAttributesTest extends EngineSearchTestCase
 
         $response = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'ri.bob']]]);
 
-        $message = 'The search.instructions.0 field restricts the list [readers] with values that neither hold nor are held by the list that the search already keeps, and the search engine cannot require both lists.';
+        $message = 'The search.instructions.0 field restricts a list with values that neither hold nor are held by the list that the search already keeps, and the search engine cannot require both lists.';
         $response->assertStatus(422)->assertExactJson(['message' => $message, 'errors' => ['search.instructions.0' => [$message]]]);
     }
 

@@ -10,6 +10,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\GroupInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderGroupEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\IndexedReaderVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -49,7 +50,10 @@ class MeilisearchStringListTest extends MeilisearchTestCase
     {
         parent::defineRoutes($router);
 
-        Route::prefix('api')->group(fn () => Rest::resource('reader-vouchers', ReaderVoucherController::class)->withSoftDeletes());
+        Route::prefix('api')->group(function (): void {
+            Rest::resource('reader-vouchers', ReaderVoucherController::class)->withSoftDeletes();
+            Rest::resource('indexed-reader-vouchers', IndexedReaderVoucherController::class)->withSoftDeletes();
+        });
     }
 
     /**
@@ -92,6 +96,17 @@ class MeilisearchStringListTest extends MeilisearchTestCase
         config(['rest.extensions' => [ReadersExtension::class, ReaderGroupEngineRestriction::class]]);
 
         $response = $this->actingAs(new GenericUser(['id' => 'reader']))->search('reader-vouchers', ['text' => ['value' => 'report']]);
+
+        $response->assertOk()->assertJsonPath('total', 2);
+        $this->assertEqualsCanonicalizing([1, 3], $response->json('data.*.id'));
+    }
+
+    #[Test]
+    public function it_keeps_only_the_rows_that_hold_a_value_of_an_instruction_list_of_index_attributes(): void
+    {
+        config(['rest.extensions' => []]);
+
+        $response = $this->search('indexed-reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'bob']]]);
 
         $response->assertOk()->assertJsonPath('total', 2);
         $this->assertEqualsCanonicalizing([1, 3], $response->json('data.*.id'));

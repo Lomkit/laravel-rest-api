@@ -10,6 +10,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\CappedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PrefixedVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Ledger;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -156,6 +157,18 @@ class ScrambleEngineTextTest extends ScrambleTestCase
             'the search' => ['Search'],
             'the action search' => ['ActionSearch'],
         ];
+    }
+
+    #[Test]
+    public function it_leaves_the_index_attributes_of_the_server_out_of_the_document(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('prefixed-vouchers', PrefixedVoucherController::class));
+        $document = app(Generator::class)();
+        $schemas = $document['components']['schemas'];
+
+        $this->assertSame(['number', 'price', 'active', 'code'], array_keys((array) $schemas['PrefixedVoucherEngineFieldFilter']['discriminator']['mapping']));
+        $this->assertSame(['@relevance'], $schemas['PrefixedVoucherEngineSort']['properties']['field']['enum']);
+        $this->assertStringNotContainsString('name_prefixes', (string) json_encode($document));
     }
 
     #[Test]
