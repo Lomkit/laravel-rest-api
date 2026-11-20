@@ -2,9 +2,8 @@
 
 namespace Lomkit\Rest\Actions;
 
-use Illuminate\Validation\ValidationException;
 use Lomkit\Rest\Actions\Rows\RowCap;
-use Lomkit\Rest\Support\Translation;
+use Lomkit\Rest\Text\Engine\EngineKeyWalk;
 use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 
@@ -20,15 +19,14 @@ final readonly class EngineTargetKeys
     /** @return list<int|string> */
     public function resolve(): array
     {
-        $paging = $this->query->paging();
-        $perPage = $paging->pageSize($this->chunkCount);
-        $first = $this->query->page($perPage, 1);
+        $walk = EngineKeyWalk::of($this->query, $this->chunkCount, new ActionWalkRefusals);
+        $first = $walk->first();
 
-        return $paging->exactTotal() ? $this->counted($first, $perPage) : $this->uncounted($first, $perPage);
+        return $this->query->paging()->exactTotal() ? $this->counted($walk, $first) : $this->uncounted($walk, $first);
     }
 
     /** @return list<int|string> */
-    private function counted(EnginePage $first, int $perPage): array
+    private function counted(EngineKeyWalk $walk, EnginePage $first): array
     {
         $count = min($first->total, $this->limit ?? $first->total);
 
@@ -38,64 +36,27 @@ final readonly class EngineTargetKeys
             $this->ensureReachable($first->total);
         }
 
-        return self::distinct($this->collect($first, $perPage, $count), $count);
+        return $walk->distinct($walk->collect($first, $count), $count);
     }
 
     /** @return list<int|string> */
-    private function uncounted(EnginePage $first, int $perPage): array
+    private function uncounted(EngineKeyWalk $walk, EnginePage $first): array
     {
-        $keys = $this->collect($first, $perPage, $this->cap?->limit($this->limit) ?? $this->limit ?? PHP_INT_MAX);
+        $keys = $walk->collect($first, $this->cap?->limit($this->limit) ?? $this->limit ?? PHP_INT_MAX);
 
         $this->cap?->check(count($keys));
 
-        return self::distinct($keys, count($keys));
+        return $walk->distinct($keys, count($keys));
     }
 
     private function ensureReachable(int $total): void
     {
+        $refusals = new ActionWalkRefusals;
         $reachable = $this->query->reachable()
-            ?? throw self::refusal('rest::actions.engine_unreported');
+            ?? throw $refusals->unreported();
 
         if ($total >= $reachable) {
-            throw self::refusal('rest::actions.engine_window', ['max' => (string) $reachable]);
+            throw $refusals->beyondWindow($reachable);
         }
-    }
-
-    /** @return list<int|string> */
-    private function collect(EnginePage $first, int $perPage, int $wanted): array
-    {
-        $keys = $first->keys;
-        $last = $first;
-        $window = $this->query->paging()->window();
-
-        for ($page = 2; count($keys) < $wanted && count($last->keys) === $perPage; $page++) {
-            if ($window !== null && $perPage * $page > $window) {
-                throw self::refusal('rest::actions.engine_window', ['max' => (string) $window]);
-            }
-
-            $last = $this->query->page($perPage, $page);
-            $keys = [...$keys, ...$last->keys];
-        }
-
-        return array_slice($keys, 0, $wanted);
-    }
-
-    /**
-     * @param  list<int|string>  $keys
-     * @return list<int|string>
-     */
-    private static function distinct(array $keys, int $count): array
-    {
-        if (count($keys) !== $count || count(array_unique($keys)) !== $count) {
-            throw self::refusal('rest::actions.engine_results_changed');
-        }
-
-        return $keys;
-    }
-
-    /** @param array<string, string> $replace */
-    private static function refusal(string $key, array $replace = []): ValidationException
-    {
-        return ValidationException::withMessages(['search' => [Translation::line($key, $replace)]]);
     }
 }

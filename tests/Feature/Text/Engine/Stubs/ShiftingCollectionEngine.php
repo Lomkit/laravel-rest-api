@@ -10,7 +10,7 @@ class ShiftingCollectionEngine extends CollectionEngine
 {
     private ?Model $first = null;
 
-    public function __construct(private readonly bool $repeats)
+    public function __construct(private readonly bool $repeats, private readonly bool $shrinks = false)
     {
         parent::__construct();
     }
@@ -32,6 +32,6 @@ class ShiftingCollectionEngine extends CollectionEngine
 
         $shifted = array_slice($models, 1);
 
-        return ['results' => $this->repeats ? [$this->first, ...$shifted] : $shifted, 'total' => $result['total']];
+        return ['results' => $this->repeats ? [$this->first, ...$shifted] : $shifted, 'total' => $this->shrinks ? $result['total'] - 1 : $result['total']];
     }
 }

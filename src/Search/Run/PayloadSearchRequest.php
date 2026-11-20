@@ -46,12 +46,6 @@ final class PayloadSearchRequest extends SearchRequest
         return SearchRun::of($resource, $this->payload());
     }
 
-    /** @internal */
-    public function streams(): bool
-    {
-        return ! $this->paged;
-    }
-
     #[\Override]
     public function context(): RestContext
     {

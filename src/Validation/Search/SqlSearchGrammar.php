@@ -33,17 +33,12 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     public function __construct(
         private ?TextCapabilities $text,
         private bool $ranks,
-        private bool $streams = false,
     ) {}
 
     #[\Override]
     public function sources(): array
     {
-        return match (true) {
-            $this->text?->servesLists() !== true => [],
-            $this->streams => [ListSource::Database->value],
-            default => array_column(ListSource::cases(), 'value'),
-        };
+        return $this->text?->servesLists() === true ? array_column(ListSource::cases(), 'value') : [];
     }
 
     #[\Override]

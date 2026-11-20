@@ -13,9 +13,16 @@ final class SearchRunException extends LogicException
 
     public static function engineWindow(string $resource, ?int $window): self
     {
-        $results = $window === null ? 'its results page by page' : "at most its first {$window} results";
+        if ($window === null) {
+            return new self("The search of the resource [{$resource}] runs on a search engine that does not report how many results it can return. lazy() reads every row: give lazy() a max, or read the pages with page().");
+        }
 
-        return new self("The text search of the resource [{$resource}] runs on a search engine, which returns {$results}. lazy() reads every row: search without text, or read the pages with page().");
+        return new self("The search of the resource [{$resource}] runs on a search engine, which returns at most its first {$window} results, and the search can match more. Give lazy() a max of at most {$window}, narrow the search, or read the pages with page().");
+    }
+
+    public static function engineResultsChanged(string $resource): self
+    {
+        return new self("The search engine results of the resource [{$resource}] changed while lazy() read their keys. Call lazy() again, and set scout.after_commit to true so that the index changes once the database transactions commit.");
     }
 
     public static function invalidChunk(int $chunk): self
