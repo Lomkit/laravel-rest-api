@@ -32,8 +32,8 @@ class EngineTotalsDeclarationTest extends ScoutEngineDeclarationTestCase
     {
         $capabilities = $this->capabilities($this->open(['number', 'price', 'active', 'code'])->groupable(['active', 'number'])->measurable(['price']));
 
-        $this->assertSame('{"groups":["active","number"],"measures":{"price":["sum","avg","min","max"]}}', json_encode($capabilities->engine?->totals));
-        $this->assertSame('{"groups":["active"],"measures":{}}', json_encode($capabilities->engine?->without(['number', 'price'], [])->totals));
+        $this->assertSame('{"groups":["active","number"],"measures":{"price":["sum","avg","min","max"]},"lists_only":false}', json_encode($capabilities->engine?->totals));
+        $this->assertSame('{"groups":["active"],"measures":{},"lists_only":false}', json_encode($capabilities->engine?->without(['number', 'price'], [])->totals));
     }
 
     #[Test]
@@ -49,7 +49,7 @@ class EngineTotalsDeclarationTest extends ScoutEngineDeclarationTestCase
             ->servesLists()
             ->tieBreaker('code');
 
-        $this->assertSame('{"groups":["active"],"measures":{"price":["sum","avg","min","max"]}}', json_encode($this->capabilities($engine)->engine?->totals));
+        $this->assertSame('{"groups":["active"],"measures":{"price":["sum","avg","min","max"]},"lists_only":false}', json_encode($this->capabilities($engine)->engine?->totals));
     }
 
     /** @param Closure(ScoutEngine): ScoutEngine $declare */

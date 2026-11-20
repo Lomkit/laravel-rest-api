@@ -55,7 +55,7 @@ final readonly class TotalsAttributes
             }
         }
 
-        return new TotalsGrammar($groups, $measures, $scales);
+        return new TotalsGrammar($groups, $measures, $scales, $profile->maxGroupValues(), $profile->countsText());
     }
 
     /**

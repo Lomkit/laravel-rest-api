@@ -127,7 +127,7 @@ final readonly class TotalsParser
     private function groups(array $entries, TotalsVocabulary $vocabulary, ValidationContext $context): array
     {
         $fields = new OneOf(array_keys($vocabulary->groups));
-        $max = $context->limits->sizes->groups;
+        $max = min($context->limits->sizes->groups, $vocabulary->limit ?? PHP_INT_MAX);
         $groups = [];
 
         foreach ($entries as $entry) {

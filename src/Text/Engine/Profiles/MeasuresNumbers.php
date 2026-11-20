@@ -26,4 +26,18 @@ trait MeasuresNumbers
     {
         return false;
     }
+
+    /** @internal */
+    #[\Override]
+    public function maxGroupValues(): ?int
+    {
+        return null;
+    }
+
+    /** @internal */
+    #[\Override]
+    public function countsText(): bool
+    {
+        return true;
+    }
 }

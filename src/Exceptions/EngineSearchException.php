@@ -43,6 +43,16 @@ final class EngineSearchException extends RuntimeException
         return new self("The index holds the attribute [{$attribute}] that the resource [{$resource}] measures as [{$type}], which is not a number. Index it as a number field, or remove it from ScoutEngine::measurable().");
     }
 
+    public static function distinctFacets(string $resource, string $engine): self
+    {
+        return new self("The index of the resource [{$resource}] on [{$engine}] keeps one hit per distinct value, and the engine does not count its facets consistently with its hits then, so the package refuses the totals. Turn distinct off in the index settings, or ask without totals.");
+    }
+
+    public static function missingCount(string $resource, string $engine): self
+    {
+        return new self("The search engine [{$engine}] answered the totals of the resource [{$resource}] without a count of the matched rows, so the package refuses to show them. Check the version of the engine and of its client.");
+    }
+
     public static function unreadSchema(string $resource, string $engine, ?Throwable $previous = null): self
     {
         return new self("The package could not read the schema of the index of the resource [{$resource}] on [{$engine}], which tells whether its totals can be counted exactly. Give the API key the collections:get action, or ask without totals.", 0, $previous);

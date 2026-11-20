@@ -8,11 +8,15 @@ use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\Groups\TurbopufferFilter;
+use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
+use Lomkit\Rest\Text\Engine\Totals\EngineTotals;
+use Lomkit\Rest\Text\Engine\Totals\TurbopufferTotals;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class TurbopufferProfile implements FiltersStringLists, FiltersWithGroups, ListsWithoutText, MatchesStringLists, RanksByKey
+final readonly class TurbopufferProfile implements ComputesTotals, FiltersStringLists, FiltersWithGroups, ListsWithoutText, MatchesStringLists, RanksByKey
 {
+    use MeasuresNumbers;
     use PlainLiterals;
 
     public function __construct(private TurbopufferEngine $engine) {}
@@ -87,6 +91,33 @@ final readonly class TurbopufferProfile implements FiltersStringLists, FiltersWi
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page)->cappedAt($this->window());
+    }
+
+    /** @internal */
+    #[\Override]
+    public function countsText(): bool
+    {
+        return false;
+    }
+
+    /** @internal */
+    #[\Override]
+    public function totalsOptions(): array
+    {
+        return ['aggregate_by', 'group_by', 'consistency'];
+    }
+
+    /** @internal */
+    #[\Override]
+    public function ensureTotalsUsableBy(TextTarget $target): void {}
+
+    /** @internal */
+    #[\Override]
+    public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
+    {
+        $result = $this->page($builder, $model, $perPage, $page);
+
+        return $totals === null ? $result : $result->withTotals((new TurbopufferTotals($this->engine, $totals))->of($builder));
     }
 
     #[\Override]

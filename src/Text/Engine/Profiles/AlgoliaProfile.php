@@ -6,14 +6,22 @@ use ArrayAccess;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\Algolia4Engine;
 use Laravel\Scout\Engines\AlgoliaEngine;
+use Lomkit\Rest\Exceptions\EngineSearchException;
 use Lomkit\Rest\Fields\Field;
+use Lomkit\Rest\Fields\Number;
+use Lomkit\Rest\Search\Totals\MeasureType;
 use Lomkit\Rest\Text\Engine\EnginePage;
+use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
+use Lomkit\Rest\Text\Engine\Totals\AlgoliaFacets;
+use Lomkit\Rest\Text\Engine\Totals\AlgoliaIndexSettings;
+use Lomkit\Rest\Text\Engine\Totals\EngineTotals;
 use Lomkit\Rest\Text\TextTarget;
 use Throwable;
 
-final readonly class AlgoliaProfile implements ListsWithoutText, MatchesStringLists
+final readonly class AlgoliaProfile implements ComputesTotals, ListsWithoutText, MatchesStringLists
 {
+    use MeasuresNumbers;
     use PlainLiterals;
 
     /** @param AlgoliaEngine<object> $engine */
@@ -82,6 +90,58 @@ final readonly class AlgoliaProfile implements ListsWithoutText, MatchesStringLi
         $builder->options([...$builder->options, 'enableRules' => false]);
 
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
+    }
+
+    /** @internal */
+    #[\Override]
+    public function measureTypes(Field $attribute): array
+    {
+        return $attribute instanceof Number ? [MeasureType::Sum, MeasureType::Min, MeasureType::Max] : [];
+    }
+
+    /** @internal */
+    #[\Override]
+    public function maxGroupValues(): int
+    {
+        return AlgoliaFacets::MAX_VALUES;
+    }
+
+    /** @internal */
+    #[\Override]
+    public function totalsOptions(): array
+    {
+        return ['facets', 'maxValuesPerFacet', 'facetingAfterDistinct', 'sortFacetValuesBy', 'facetFilters', 'distinct'];
+    }
+
+    /** @internal */
+    #[\Override]
+    public function ensureTotalsUsableBy(TextTarget $target): void {}
+
+    /** @internal */
+    #[\Override]
+    public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
+    {
+        if ($totals === null) {
+            return $this->page($builder, $model, $perPage, $page);
+        }
+
+        $facets = new AlgoliaFacets($totals, $this->indexSettings($model, $totals));
+        $builder->options([...$builder->options, 'enableRules' => false, ...$facets->options()]);
+        $raw = $this->engine->paginate($builder, $perPage, $page);
+        $result = EngineHits::of($this->engine, $raw, $model);
+
+        return $result->withTotals($facets->read(is_array($raw) ? $raw : [], $result->total));
+    }
+
+    private function indexSettings(ScoutModel $model, EngineTotals $totals): AlgoliaIndexSettings
+    {
+        try {
+            $settings = $this->settings($model->indexName());
+        } catch (Throwable $error) {
+            throw EngineSearchException::unreadFaceting($totals->resource, $totals->engine, $error);
+        }
+
+        return AlgoliaIndexSettings::of($settings, $totals);
     }
 
     #[\Override]

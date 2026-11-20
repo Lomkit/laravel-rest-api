@@ -167,7 +167,7 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     #[\Override]
     public function totals(ValidationContext $context): TotalsVocabulary
     {
-        return EngineTotalsVocabulary::of($this->engine);
+        return EngineTotalsVocabulary::of($this->engine, $this->listing);
     }
 
     #[\Override]
