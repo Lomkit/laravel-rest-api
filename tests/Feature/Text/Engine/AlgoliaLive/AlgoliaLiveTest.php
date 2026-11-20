@@ -15,6 +15,7 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnsortedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\PerimeterTotalledVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\PerimeterTotalledVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
@@ -127,7 +128,7 @@ class AlgoliaLiveTest extends AlgoliaLiveTestCase
         $response->assertOk()->assertJsonPath('total', $rows->count());
         $this->assertSame([
             'exact' => true,
-            'all' => ['count' => 4, 'sum_number' => 11, 'sum_price' => 78.75, 'min_price' => 1.5, 'max_price' => 40],
+            'all' => ['count' => 4, 'sum_number' => 11, 'sum_price' => 78.75, 'min_price' => 1.5, 'max_price' => 40.0],
             'groups' => [
                 ['field' => 'active', 'buckets' => [['value' => true, 'count' => 3], ['value' => false, 'count' => 1]], 'other' => ['count' => 0], 'truncated' => false],
                 ['field' => 'number', 'buckets' => [['value' => 1, 'count' => 1], ['value' => 2, 'count' => 1]], 'other' => ['count' => 2], 'truncated' => true],
@@ -146,6 +147,32 @@ class AlgoliaLiveTest extends AlgoliaLiveTestCase
             'all' => ['count' => 3, 'sum_price' => 48.75],
             'groups' => [['field' => 'active', 'buckets' => [['value' => true, 'count' => 2]], 'other' => ['count' => 1], 'truncated' => true]],
         ], $response->json('totals'));
+    }
+
+    #[Test]
+    public function it_refuses_a_measured_attribute_indexed_as_a_string(): void
+    {
+        $objects = array_map(static fn (ReaderVoucher $voucher): array => [...$voucher->toSearchableArray(), 'price' => number_format((float) $voucher->price, 2, '.', ''), 'objectID' => $voucher->getScoutKey(), '__soft_deleted' => 0], ReaderVoucher::query()->orderBy('id')->get()->all());
+        $this->client->saveObjects($this->index, $objects, true);
+
+        $this->expectExceptionObject(EngineSearchException::unmeasurableFacet(TotalledVoucherResource::class, 'price', 'string'));
+
+        $this->withoutExceptionHandling()->search('totalled-vouchers', ['source' => 'engine', 'totals' => ['measures' => [['type' => 'sum', 'field' => 'price']]]]);
+    }
+
+    #[Test]
+    public function it_counts_rows_without_a_value_when_no_matched_row_has_one(): void
+    {
+        $objects = array_map(static fn (ReaderVoucher $voucher): array => [...array_diff_key($voucher->toSearchableArray(), ['team' => true]), 'objectID' => $voucher->getScoutKey(), '__soft_deleted' => 0], ReaderVoucher::query()->whereIn('code', ['V-a', 'V-c'])->get()->all());
+        $this->client->saveObjects($this->index, $objects, true);
+
+        $response = $this->search('totalled-vouchers', ['source' => 'engine', 'filters' => [['field' => 'code', 'operator' => 'in', 'value' => ['V-a', 'V-c']]], 'totals' => ['measures' => [['type' => 'sum', 'field' => 'number']], 'groups' => [['field' => 'team']]]]);
+
+        $response->assertOk()->assertJsonPath('total', 2)->assertJsonPath('totals', [
+            'exact' => true,
+            'all' => ['count' => 2, 'sum_number' => 4],
+            'groups' => [['field' => 'team', 'buckets' => [], 'other' => ['count' => 2], 'truncated' => false]],
+        ]);
     }
 
     #[Test]

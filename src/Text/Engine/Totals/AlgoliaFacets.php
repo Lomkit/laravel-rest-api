@@ -10,7 +10,10 @@ final readonly class AlgoliaFacets
 {
     public const int MAX_VALUES = 1000;
 
-    public function __construct(private EngineTotals $totals) {}
+    public function __construct(
+        private EngineTotals $totals,
+        private AlgoliaIndexSettings $settings,
+    ) {}
 
     /** @return array<string, mixed> */
     public function options(): array
@@ -36,11 +39,12 @@ final readonly class AlgoliaFacets
 
         $distribution = is_array($raw['facets'] ?? null) ? $raw['facets'] : [];
         $stats = is_array($raw['facets_stats'] ?? null) ? $raw['facets_stats'] : [];
+        $measured = $this->totals->node->measuredNames();
         $facets = [];
 
         foreach ($this->totals->attributes() as $attribute) {
-            if (! is_array($distribution[$attribute] ?? null) && ! is_array($stats[$attribute] ?? null)) {
-                continue;
+            if (! $this->settings->facets($attribute)) {
+                throw EngineSearchException::missingFacet($this->totals->resource, $attribute, $this->totals->engine);
             }
 
             $counts = [];
@@ -51,7 +55,13 @@ final readonly class AlgoliaFacets
                 }
             }
 
-            $facets[$attribute] = new FacetValues($counts, is_array($stats[$attribute] ?? null) ? $stats[$attribute] : []);
+            $numbers = is_array($stats[$attribute] ?? null) ? $stats[$attribute] : [];
+
+            if ($found > 0 && $counts !== [] && in_array($attribute, $measured, true) && ! is_numeric($numbers['sum'] ?? null)) {
+                throw EngineSearchException::unmeasurableFacet($this->totals->resource, $attribute, 'string');
+            }
+
+            $facets[$attribute] = new FacetValues($counts, $numbers);
         }
 
         return (new FacetTotals($this->totals))->of($facets, $found);
