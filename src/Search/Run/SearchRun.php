@@ -8,9 +8,9 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\EngineSearch;
 use Lomkit\Rest\Query\SearchSource;
 use Lomkit\Rest\Query\SqlSearch;
+use Lomkit\Rest\Search\Plan\ChunkedRows;
 use Lomkit\Rest\Search\Plan\Columns\StrictColumns;
 use Lomkit\Rest\Search\Plan\IncludeOverflow;
-use Lomkit\Rest\Search\Plan\PlannedRows;
 use Lomkit\Rest\Search\SearchContext;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Text\ResolvedText;
@@ -51,13 +51,13 @@ final readonly class SearchRun
 
         $rows = $text->usesEngine()
             ? (new EngineSearch($this->resource, $text, $this->search))->chunks($chunk, $max)
-            : (new SqlSearch($this->resource, $text, $this->search))->chunks($chunk, $max);
+            : ChunkedRows::planned((new SqlSearch($this->resource, $text, $this->search))->chunks($chunk, $max));
 
         return LazyCollection::make(fn (): Generator => self::rendered($rows));
     }
 
     /** @return Generator<int, array<string, mixed>> */
-    private static function rendered(PlannedRows $rows): Generator
+    private static function rendered(ChunkedRows $rows): Generator
     {
         foreach ($rows->chunks() as $chunk) {
             $models = $chunk->all();

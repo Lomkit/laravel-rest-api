@@ -12,11 +12,11 @@ use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Pagination\EnginePaginator;
+use Lomkit\Rest\Search\Plan\ChunkedRows;
 use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
 use Lomkit\Rest\Search\Plan\KeyedRows;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\PlannedPage;
-use Lomkit\Rest\Search\Plan\PlannedRows;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Search\SearchNode;
@@ -54,13 +54,14 @@ final readonly class EngineSearch implements SearchSource
         ], max(0, $dropped), $result->capped));
     }
 
-    public function chunks(int $chunk, ?int $max): PlannedRows
+    /** @internal */
+    public function chunks(int $chunk, ?int $max): ChunkedRows
     {
         $keys = (new LazyEngineKeys($this->query(), $this->resource::class, $max))->read();
         $scout = $this->scout();
         $plan = $this->plan(EngineKeys::trusted($scout, []), ColumnSelection::of($this->resource), true);
 
-        return new PlannedRows($plan, function () use ($keys, $chunk, $scout): Generator {
+        return new ChunkedRows($plan, function () use ($keys, $chunk, $scout): Generator {
             foreach (array_chunk($keys, max(1, $chunk)) as $chunked) {
                 yield $this->load($this->plan(EngineKeys::trusted($scout, $chunked), ColumnSelection::of($this->resource), true));
             }
