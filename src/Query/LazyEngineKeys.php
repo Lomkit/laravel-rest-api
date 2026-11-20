@@ -27,13 +27,11 @@ final readonly class LazyEngineKeys implements EngineWalkRefusals
             throw SearchRunException::engineWindow($this->resource, null);
         }
 
-        $walk = EngineKeyWalk::of($this->query, PHP_INT_MAX, $this);
+        $walk = EngineKeyWalk::whole($this->query, $this);
         $first = $walk->first();
 
         if (! $this->query->paging()->exactTotal()) {
-            $keys = $walk->collect($first, $this->max ?? PHP_INT_MAX);
-
-            return $walk->distinct($keys, count($keys));
+            return $this->uncounted($walk, $walk->collect($first, $this->max ?? PHP_INT_MAX), $reachable);
         }
 
         $count = min($first->total, $this->max ?? $first->total);
@@ -52,6 +50,19 @@ final readonly class LazyEngineKeys implements EngineWalkRefusals
     public function changed(): SearchRunException
     {
         return SearchRunException::engineResultsChanged($this->resource);
+    }
+
+    /**
+     * @param  list<int|string>  $keys
+     * @return list<int|string>
+     */
+    private function uncounted(EngineKeyWalk $walk, array $keys, ?int $reachable): array
+    {
+        if ($reachable !== null && count($keys) >= $reachable && ($this->max === null || $this->max > $reachable)) {
+            throw $this->beyondWindow($reachable);
+        }
+
+        return $walk->distinct($keys, count($keys));
     }
 
     private function ensureWithin(int $total, int $count, ?int $reachable): void

@@ -42,7 +42,7 @@ final readonly class WalkedProfile implements ListsWithoutText
     #[\Override]
     public function exactTotal(): bool
     {
-        return $this->profile->exactTotal();
+        return WalkedEngineProfiles::$exactTotal ?? $this->profile->exactTotal();
     }
 
     #[\Override]

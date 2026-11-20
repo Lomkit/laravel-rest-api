@@ -2,18 +2,33 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
+use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
+
 /** @internal */
 final readonly class EngineKeyWalk
 {
+    public const int UNBOUNDED_PAGE_SIZE = 1000;
+
     private function __construct(
         private EngineQuery $query,
         private int $perPage,
         private EngineWalkRefusals $refusals,
+        private bool $steadyTotal,
     ) {}
 
     public static function of(EngineQuery $query, int $pageSize, EngineWalkRefusals $refusals): self
     {
-        return new self($query, $query->paging()->pageSize($pageSize), $refusals);
+        return new self($query, $query->paging()->pageSize($pageSize), $refusals, false);
+    }
+
+    public static function whole(EngineQuery $query, EngineWalkRefusals $refusals): self
+    {
+        $profile = $query->profile();
+        $pageSize = $profile instanceof AppliesRowRestrictions
+            ? PHP_INT_MAX
+            : min($profile->maxPageSize() ?? self::UNBOUNDED_PAGE_SIZE, $profile->window() ?? PHP_INT_MAX);
+
+        return new self($query, $query->paging()->pageSize($pageSize), $refusals, $profile->exactTotal());
     }
 
     public function first(): EnginePage
@@ -34,6 +49,11 @@ final readonly class EngineKeyWalk
             }
 
             $last = $this->query->page($this->perPage, $page);
+
+            if ($this->steadyTotal && $last->total !== $first->total) {
+                throw $this->refusals->changed();
+            }
+
             array_push($keys, ...$last->keys);
         }
 

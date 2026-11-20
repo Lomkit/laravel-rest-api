@@ -19,6 +19,8 @@ final class WalkedEngineProfiles extends Extension implements ProvidesEngineProf
 
     public static ?int $reachable = PHP_INT_MAX;
 
+    public static ?bool $exactTotal = null;
+
     /** @var list<array{int, int}> */
     public static array $pages = [];
 
@@ -27,6 +29,7 @@ final class WalkedEngineProfiles extends Extension implements ProvidesEngineProf
         self::$pageSize = 2;
         self::$window = null;
         self::$reachable = PHP_INT_MAX;
+        self::$exactTotal = null;
         self::$pages = [];
     }
 

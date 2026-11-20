@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\SearchRunException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedRowsExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\BudgetEngineRestriction;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherResource;
@@ -204,7 +205,7 @@ class LazyEngineSearchTest extends EngineSearchTestCase
             ->lazy();
 
         $this->assertSame([5, 4, 1, 3], $rows->pluck('id')->all());
-        $this->assertSame([[10000, 1]], $engine->pages);
+        $this->assertSame([[1000, 1]], $engine->pages);
     }
 
     #[Test]
@@ -219,6 +220,38 @@ class LazyEngineSearchTest extends EngineSearchTestCase
             ->as(null)
             ->payload(self::REPORT)
             ->lazy();
+    }
+
+    #[Test]
+    public function it_reads_an_engine_search_with_its_instructions_and_trashed_rows(): void
+    {
+        config(['scout.driver' => 'collection', 'scout.soft_delete' => true]);
+        $search = [...self::REPORT, 'trashed' => 'with', 'instructions' => [['name' => 'priced-up-to', 'fields' => [['name' => 'max', 'value' => 10]]]]];
+        $data = $this->search('vouchers', $search)->assertOk()->json('data');
+
+        $rows = Rest::search(VoucherResource::class)
+            ->as(null)
+            ->payload($search)
+            ->lazy(chunk: 2);
+
+        $this->assertSame([6, 1, 3], $rows->pluck('id')->all());
+        $this->assertSame(json_encode($data), json_encode($rows->all()));
+    }
+
+    #[Test]
+    #[DataProvider('drivers')]
+    public function it_reads_an_engine_search_through_the_row_restrictions_of_a_profile_that_applies_them(string $driver): void
+    {
+        config(['scout.driver' => $driver, 'rest.extensions' => [RedRowsExtension::class]]);
+        $data = $this->search('vouchers', self::REPORT)->assertOk()->json('data');
+
+        $rows = Rest::search(VoucherResource::class)
+            ->as(null)
+            ->payload(self::REPORT)
+            ->lazy(chunk: 2);
+
+        $this->assertSame([5, 1, 3], $rows->pluck('id')->all());
+        $this->assertSame(json_encode($data), json_encode($rows->all()));
     }
 
     #[Test]

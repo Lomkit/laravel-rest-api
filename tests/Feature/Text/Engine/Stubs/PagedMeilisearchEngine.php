@@ -8,10 +8,14 @@ use Laravel\Scout\Engines\CollectionEngine;
 
 class PagedMeilisearchEngine extends FakeMeilisearchEngine
 {
+    /** @var list<array{int, int}> */
+    public array $pages = [];
+
     /** @param Builder<Model> $builder */
     #[\Override]
     public function paginate(Builder $builder, $perPage, $page)
     {
+        $this->pages[] = [(int) $perPage, (int) $page];
         $result = (new CollectionEngine)->paginate($builder, $perPage, $page);
 
         return [
