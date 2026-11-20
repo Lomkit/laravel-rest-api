@@ -11,6 +11,26 @@ class FacetingTypesenseEngine extends MultiSearchTypesenseEngine
 {
     public ?string $refusal = null;
 
+    public TypesenseSchemas $schemas;
+
+    /**
+     * @param  array<mixed>  $result
+     * @param  array<mixed>|null  $answer
+     */
+    public function __construct(array $result = ['hits' => [], 'found' => 0], ?array $answer = null)
+    {
+        parent::__construct($result, $answer);
+
+        $this->schemas = new TypesenseSchemas;
+    }
+
+    /** @param array<mixed> $parameters */
+    #[\Override]
+    public function __call($method, $parameters)
+    {
+        return $method === 'getCollections' ? $this->schemas : parent::__call($method, $parameters);
+    }
+
     /**
      * @param  Builder<Model>  $builder
      * @param  array<mixed>  $options

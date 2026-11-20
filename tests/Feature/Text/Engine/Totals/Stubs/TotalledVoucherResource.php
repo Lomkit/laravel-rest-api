@@ -8,6 +8,8 @@ use Lomkit\Rest\Text\TextSearch;
 
 class TotalledVoucherResource extends VoucherResource
 {
+    public static string $model = CentsVoucher::class;
+
     #[\Override]
     public function text(): ?TextSearch
     {

@@ -38,13 +38,25 @@ final class EngineSearchException extends RuntimeException
         return new self("The search engine [{$engine}] returned no facet for the attribute [{$attribute}] that the resource [{$resource}] groups or measures. Make the attribute facetable in the index settings (facet: true on Typesense, a filterable attribute on Meilisearch), then index the rows again.", 0, $previous);
     }
 
+    public static function unmeasurableFacet(string $resource, string $attribute, string $type): self
+    {
+        return new self("The index holds the attribute [{$attribute}] that the resource [{$resource}] measures as [{$type}], which is not a number. Index it as a number field, or remove it from ScoutEngine::measurable().");
+    }
+
+    public static function unreadSchema(string $resource, string $engine, ?Throwable $previous = null): self
+    {
+        return new self("The package could not read the schema of the index of the resource [{$resource}] on [{$engine}], which tells whether its totals can be counted exactly. Give the API key the collections:get action, or ask without totals.", 0, $previous);
+    }
+
     public static function cappedFacetValues(string $resource, string $attribute, int $max): self
     {
         return new self("The search engine returns at most {$max} values of the attribute [{$attribute}] for the resource [{$resource}], and the index does not sort them by count, so the package cannot tell the most frequent values. Raise the faceting maxValuesPerFacet of the index above the values of the attribute, or sort its facet values by count with a limit below {$max}.");
     }
 
-    public static function unreadFaceting(string $resource, string $engine, Throwable $previous): self
+    public static function unreadFaceting(string $resource, string $engine, ?Throwable $previous = null): self
     {
-        return new self("The package could not read the faceting settings of the index of the resource [{$resource}] on [{$engine}], which tell whether its totals are complete: {$previous->getMessage()} Give the API key the settings.get action, or ask without totals.", 0, $previous);
+        $reason = $previous === null ? 'the index answered no positive maxValuesPerFacet.' : $previous->getMessage();
+
+        return new self("The package could not read the faceting settings of the index of the resource [{$resource}] on [{$engine}], which tell whether its totals are complete: {$reason} Give the API key the settings.get action, or ask without totals.", 0, $previous);
     }
 }

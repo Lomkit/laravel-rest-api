@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Text\Engine\Typesense;
 use Illuminate\Http\Client\Factory;
 use Laravel\Scout\Engines\TypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\CentsVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\NumberedVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ScopedVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
@@ -23,6 +24,7 @@ abstract class TypesenseTestCase extends EngineSearchTestCase
             ['name' => 'title', 'type' => 'string', 'sort' => true],
             ['name' => 'price', 'type' => 'float', 'facet' => true],
             ['name' => 'active', 'type' => 'bool', 'facet' => true],
+            ['name' => 'tags', 'type' => 'string[]', 'facet' => true, 'optional' => true],
             ['name' => '__soft_deleted', 'type' => 'int32'],
         ]],
         'search-parameters' => ['query_by' => 'title'],
@@ -43,7 +45,7 @@ abstract class TypesenseTestCase extends EngineSearchTestCase
             'scout.typesense' => [
                 'client-settings' => ['api_key' => self::env('TYPESENSE_API_KEY'), 'nodes' => [$node], 'connection_timeout_seconds' => 5, 'num_retries' => 0],
                 'max_total_results' => 1000,
-                'model-settings' => [Voucher::class => self::SCHEMA, NumberedVoucher::class => self::SCHEMA, ScopedVoucher::class => self::SCHEMA],
+                'model-settings' => [Voucher::class => self::SCHEMA, NumberedVoucher::class => self::SCHEMA, ScopedVoucher::class => self::SCHEMA, CentsVoucher::class => self::SCHEMA],
                 'import_action' => 'upsert',
             ],
             'scout.queue' => false,

@@ -9,10 +9,21 @@ use Lomkit\Rest\Search\Totals\MeasureType;
 /** @internal */
 trait MeasuresNumbers
 {
-    /** @return list<MeasureType> */
+    /**
+     * @internal
+     *
+     * @return list<MeasureType>
+     */
     #[\Override]
     public function measureTypes(Field $attribute): array
     {
         return $attribute instanceof Number ? MeasureType::cases() : [];
+    }
+
+    /** @internal */
+    #[\Override]
+    public function approximatesDecimals(): bool
+    {
+        return false;
     }
 }

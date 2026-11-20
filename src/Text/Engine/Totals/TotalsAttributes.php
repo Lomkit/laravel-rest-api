@@ -13,6 +13,7 @@ use Lomkit\Rest\Search\Totals\MeasureType;
 use Lomkit\Rest\Text\Engine\IndexAttribute;
 use Lomkit\Rest\Text\Engine\Profiles\ComputesTotals;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
+use Lomkit\Rest\Text\Engine\Profiles\ReservesSortAttributes;
 use Lomkit\Rest\Text\TextTarget;
 
 /** @internal */
@@ -39,6 +40,7 @@ final readonly class TotalsAttributes
 
         $groups = [];
         $measures = [];
+        $scales = [];
 
         foreach (self::names($target, $filterable, $groupable, 'groupable') as $name) {
             $groups[] = self::group($target, $profile, $filterable[$name]->field);
@@ -46,9 +48,14 @@ final readonly class TotalsAttributes
 
         foreach (self::names($target, $filterable, $measurable, 'measurable') as $name) {
             $measures[$name] = self::measure($target, $profile, $filterable[$name]->field);
+            $scale = DecimalScale::of($target, $profile, $filterable[$name]->field);
+
+            if ($scale !== null) {
+                $scales[$name] = $scale;
+            }
         }
 
-        return new TotalsGrammar($groups, $measures);
+        return new TotalsGrammar($groups, $measures, $scales);
     }
 
     /**
@@ -81,7 +88,7 @@ final readonly class TotalsAttributes
 
     private static function group(TextTarget $target, ComputesTotals $profile, Field $field): string
     {
-        if (! $field instanceof Enum && ! $field instanceof Boolean && ! $field instanceof Text && ! $field instanceof Integer && ! $field instanceof ID) {
+        if (! $field instanceof Enum && ! $field instanceof Boolean && ! $field instanceof Text && ! $field instanceof Integer && ! $field instanceof ID || ($profile instanceof ReservesSortAttributes && in_array($field->name, $profile->reservedSorts(), true))) {
             throw InvalidTextSearchException::ungroupableAttributeType($target->resource, $field->name, $field->type(), $profile->name());
         }
 

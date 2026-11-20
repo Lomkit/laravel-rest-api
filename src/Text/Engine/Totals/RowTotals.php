@@ -23,7 +23,7 @@ final readonly class RowTotals
         $measures = [];
 
         foreach ($this->totals->node->measures as $measure) {
-            $measures[$measure->key()] = self::measure($measure, self::numbers($rows, $measure->field->name));
+            $measures[$measure->key()] = $this->totals->rounded($measure->field->name, self::measure($measure, self::numbers($rows, $measure->field->name)));
         }
 
         return new SearchTotals(

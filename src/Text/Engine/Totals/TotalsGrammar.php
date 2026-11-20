@@ -11,10 +11,12 @@ final readonly class TotalsGrammar implements JsonSerializable
     /**
      * @param  list<string>  $groups
      * @param  array<string, list<MeasureType>>  $measures
+     * @param  array<string, int>  $scales
      */
     public function __construct(
         public array $groups = [],
         public array $measures = [],
+        public array $scales = [],
     ) {}
 
     public function declares(): bool
@@ -25,7 +27,7 @@ final readonly class TotalsGrammar implements JsonSerializable
     /** @param list<string> $names */
     public function without(array $names): self
     {
-        return new self(array_values(array_diff($this->groups, $names)), array_diff_key($this->measures, array_flip($names)));
+        return new self(array_values(array_diff($this->groups, $names)), array_diff_key($this->measures, array_flip($names)), array_diff_key($this->scales, array_flip($names)));
     }
 
     /** @return array{groups: list<string>, measures: object} */

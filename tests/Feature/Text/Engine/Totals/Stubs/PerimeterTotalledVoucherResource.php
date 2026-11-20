@@ -9,6 +9,8 @@ use Lomkit\Rest\Text\TextSearch;
 
 class PerimeterTotalledVoucherResource extends VoucherResource
 {
+    public static string $model = CentsVoucher::class;
+
     #[\Override]
     public function text(): ?TextSearch
     {

@@ -16,6 +16,10 @@ final readonly class FacetTotals
     /** @param array<string, FacetValues> $facets */
     public function of(array $facets, int $found): SearchTotals
     {
+        if ($found === 0) {
+            return $this->totals->empty();
+        }
+
         foreach ($this->totals->attributes() as $attribute) {
             if (! isset($facets[$attribute])) {
                 throw EngineSearchException::missingFacet($this->totals->resource, $attribute, $this->totals->engine);
@@ -25,7 +29,7 @@ final readonly class FacetTotals
         $stats = [];
 
         foreach ($this->totals->node->measures as $measure) {
-            $stats[$measure->key()] = $facets[$measure->field->name]->stats[$measure->type->value] ?? null;
+            $stats[$measure->key()] = $this->totals->rounded($measure->field->name, $facets[$measure->field->name]->stats[$measure->type->value] ?? null);
         }
 
         return new SearchTotals(

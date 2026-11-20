@@ -67,6 +67,16 @@ final readonly class IndexAttributes
         return $this->totals?->declares() === true;
     }
 
+    /**
+     * @internal
+     *
+     * @return array<string, int>
+     */
+    public function totalsScales(): array
+    {
+        return $this->totals->scales ?? [];
+    }
+
     public function sorts(string $name): bool
     {
         return in_array($name, $this->sortable, true);

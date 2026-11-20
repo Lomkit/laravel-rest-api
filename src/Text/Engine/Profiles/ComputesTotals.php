@@ -18,6 +18,8 @@ interface ComputesTotals extends EngineProfile
     /** @return list<MeasureType> */
     public function measureTypes(Field $attribute): array;
 
+    public function approximatesDecimals(): bool;
+
     /** @return list<string> */
     public function totalsOptions(): array;
 

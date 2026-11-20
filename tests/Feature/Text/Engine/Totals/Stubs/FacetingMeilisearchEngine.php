@@ -31,7 +31,7 @@ class FacetingMeilisearchEngine extends PagedMeilisearchEngine
         $this->options[] = $builder->options;
 
         if ($this->refusal !== null) {
-            throw new RuntimeException($this->refusal);
+            throw new MeilisearchApiError($this->refusal, 'invalid_search_facets');
         }
 
         return [...parent::paginate($builder, $perPage, $page), ...$this->result];

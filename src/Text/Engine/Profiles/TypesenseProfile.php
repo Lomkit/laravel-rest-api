@@ -16,6 +16,7 @@ use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\Engine\Totals\EngineTotals;
 use Lomkit\Rest\Text\Engine\Totals\TypesenseFacets;
+use Lomkit\Rest\Text\Engine\Totals\TypesenseFacetSchema;
 use Lomkit\Rest\Text\TextTarget;
 use Throwable;
 
@@ -124,12 +125,21 @@ final readonly class TypesenseProfile implements ComputesTotals, FiltersWithGrou
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
     }
 
+    /** @internal */
+    #[\Override]
+    public function approximatesDecimals(): bool
+    {
+        return true;
+    }
+
+    /** @internal */
     #[\Override]
     public function totalsOptions(): array
     {
         return ['facet_by', 'max_facet_values', 'facet_query', 'facet_strategy', 'facet_sample_percent', 'facet_sample_threshold', 'facet_return_parent', 'search_cutoff_ms', 'pinned_hits', 'hidden_hits'];
     }
 
+    /** @internal */
     #[\Override]
     public function ensureTotalsUsableBy(TextTarget $target): void
     {
@@ -140,10 +150,16 @@ final readonly class TypesenseProfile implements ComputesTotals, FiltersWithGrou
         }
     }
 
+    /** @internal */
     #[\Override]
     public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
     {
         $facets = $totals === null ? null : new TypesenseFacets($totals);
+
+        if ($totals !== null) {
+            (new TypesenseFacetSchema($totals))->ensure($this->engine, $builder->index ?? $model->indexName());
+        }
+
         $this->prepare($builder, $model, $perPage, $page, [...$this->ownedOptions(), ...$this->totalsOptions()], $facets?->options() ?? []);
 
         try {

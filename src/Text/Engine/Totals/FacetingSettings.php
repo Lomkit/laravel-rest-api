@@ -11,10 +11,13 @@ final readonly class FacetingSettings
         private array $sorts,
     ) {}
 
-    /** @param array<mixed> $faceting */
-    public static function of(array $faceting): self
+    /** @param array<mixed>|null $faceting */
+    public static function of(?array $faceting): ?self
     {
-        $max = $faceting['maxValuesPerFacet'] ?? null;
+        if ($faceting === null || ! is_int($faceting['maxValuesPerFacet'] ?? null) || $faceting['maxValuesPerFacet'] < 1) {
+            return null;
+        }
+
         $sorts = [];
 
         foreach (is_array($faceting['sortFacetValuesBy'] ?? null) ? $faceting['sortFacetValuesBy'] : [] as $attribute => $sort) {
@@ -23,7 +26,7 @@ final readonly class FacetingSettings
             }
         }
 
-        return new self(is_int($max) && $max > 0 ? $max : 100, $sorts);
+        return new self($faceting['maxValuesPerFacet'], $sorts);
     }
 
     public function sortedByCount(string $attribute): bool

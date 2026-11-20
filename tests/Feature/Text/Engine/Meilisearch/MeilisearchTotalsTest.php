@@ -3,12 +3,15 @@
 namespace Lomkit\Rest\Tests\Feature\Text\Engine\Meilisearch;
 
 use Illuminate\Support\Facades\Route;
+use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Lomkit\Rest\Exceptions\EngineSearchException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\CentsVoucher;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\PerimeterTotalledVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\PerimeterTotalledVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
+use Meilisearch\Client;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -79,6 +82,46 @@ class MeilisearchTotalsTest extends MeilisearchTestCase
         $this->expectExceptionObject(EngineSearchException::cappedFacetValues(PerimeterTotalledVoucherResource::class, 'number', 2));
 
         $this->withoutExceptionHandling()->search('perimeter-totalled-vouchers', ['source' => 'engine', 'totals' => ['groups' => [['field' => 'number', 'limit' => 1]]]]);
+    }
+
+    #[Test]
+    public function it_bounds_decimal_values_exactly(): void
+    {
+        foreach ([1 => 19.99, 2 => 0.10, 3 => 1234.56, 5 => 19.99] as $id => $price) {
+            CentsVoucher::query()->whereKey($id)->update(['price' => $price]);
+        }
+
+        CentsVoucher::query()->get()->searchable();
+        $this->settle();
+
+        $response = $this->search('perimeter-totalled-vouchers', ['source' => 'engine', 'totals' => ['measures' => [['type' => 'min', 'field' => 'price'], ['type' => 'max', 'field' => 'price']]]]);
+
+        $response->assertOk()->assertJsonPath('totals.all', ['count' => 4, 'min_price' => 0.1, 'max_price' => 1234.56]);
+    }
+
+    #[Test]
+    public function it_returns_empty_totals_without_a_hit(): void
+    {
+        $response = $this->search('perimeter-totalled-vouchers', ['source' => 'engine', 'filters' => [['field' => 'number', 'value' => 99]], 'totals' => ['measures' => [['type' => 'max', 'field' => 'price']], 'groups' => [['field' => 'active']]]]);
+
+        $response->assertOk()->assertJsonPath('total', 0)->assertJsonPath('totals', ['exact' => true, 'all' => ['count' => 0, 'max_price' => null], 'groups' => [['field' => 'active', 'buckets' => [], 'other' => ['count' => 0], 'truncated' => false]]]);
+    }
+
+    #[Test]
+    public function it_refuses_unreadable_faceting_settings(): void
+    {
+        $key = $this->indexes->key($this->index, ['search']);
+        config(['scout.meilisearch.key' => $key]);
+        $this->app->forgetInstance(Client::class);
+        $this->app->make(EngineManager::class)->forgetEngines();
+        $this->beforeApplicationDestroyed(fn () => $this->indexes->forget($key));
+
+        try {
+            $this->withoutExceptionHandling()->search('perimeter-totalled-vouchers', ['source' => 'engine', 'totals' => ['groups' => [['field' => 'active']]]]);
+            $this->fail('The search passed.');
+        } catch (EngineSearchException $exception) {
+            $this->assertStringStartsWith('The package could not read the faceting settings of the index of the resource ['.PerimeterTotalledVoucherResource::class.']', $exception->getMessage());
+        }
     }
 
     #[Test]

@@ -6,10 +6,12 @@ use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\EngineSearchException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\CentsVoucher;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\FacetingTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherResource;
-use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TypesenseSchemas;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
@@ -37,7 +39,7 @@ class TypesenseTotalsTest extends EngineSearchTestCase
         Route::prefix('api')->group(static function (): void {
             Rest::resource('totalled-vouchers', TotalledVoucherController::class)->register();
         });
-        config(['scout.typesense.model-settings.'.Voucher::class.'.search-parameters.query_by' => 'title']);
+        config(['scout.typesense.model-settings.'.CentsVoucher::class.'.search-parameters.query_by' => 'title']);
     }
 
     #[Test]
@@ -145,6 +147,59 @@ class TypesenseTotalsTest extends EngineSearchTestCase
             $this->assertInstanceOf(RuntimeException::class, $exception->getPrevious());
             $this->assertSame($engine->refusal, $exception->getPrevious()->getMessage());
         }
+    }
+
+    /** @param list<array<string, mixed>>|null $fields */
+    #[Test]
+    #[DataProvider('schemas')]
+    public function it_reads_the_collection_schema_before_it_trusts_the_facets(?array $fields, string $expected): void
+    {
+        $engine = $this->engine();
+        $engine->schemas = new TypesenseSchemas($fields);
+
+        try {
+            $this->withoutExceptionHandling()->search('totalled-vouchers', ['text' => ['value' => 'report'], 'totals' => ['measures' => [['type' => 'sum', 'field' => 'price']], 'groups' => [['field' => 'team', 'limit' => 1]]]]);
+            $this->fail('The search passed.');
+        } catch (EngineSearchException $exception) {
+            $this->assertSame($expected, $exception->getMessage());
+        }
+
+        $this->assertSame([], $engine->requests);
+    }
+
+    /** @return array<string, array{list<array<string, mixed>>|null, string}> */
+    public static function schemas(): array
+    {
+        $fields = static fn (array $team, array $price): array => [['name' => 'team', ...$team], ['name' => 'price', ...$price]];
+
+        return [
+            'a grouped list of strings' => [$fields(['type' => 'string[]', 'facet' => true], ['type' => 'float', 'facet' => true]), EngineSearchException::multiValuedFacet(TotalledVoucherResource::class, 'team')->getMessage()],
+            'a grouped attribute without facet' => [$fields(['type' => 'string', 'facet' => false], ['type' => 'float', 'facet' => true]), EngineSearchException::missingFacet(TotalledVoucherResource::class, 'team', FacetingTypesenseEngine::class)->getMessage()],
+            'a grouped attribute that the schema leaves out' => [[['name' => 'price', 'type' => 'float', 'facet' => true]], EngineSearchException::missingFacet(TotalledVoucherResource::class, 'team', FacetingTypesenseEngine::class)->getMessage()],
+            'a measured string' => [$fields(['type' => 'string', 'facet' => true], ['type' => 'string', 'facet' => true]), EngineSearchException::unmeasurableFacet(TotalledVoucherResource::class, 'price', 'string')->getMessage()],
+            'an unreadable schema' => [null, EngineSearchException::unreadSchema(TotalledVoucherResource::class, FacetingTypesenseEngine::class)->getMessage()],
+        ];
+    }
+
+    #[Test]
+    public function it_matches_a_regular_expression_field_of_the_schema(): void
+    {
+        $engine = $this->engine();
+        $engine->schemas = new TypesenseSchemas([['name' => '.*', 'type' => 'auto', 'facet' => false], ['name' => 'te.*', 'type' => 'string', 'facet' => true]]);
+
+        $this->search('totalled-vouchers', ['text' => ['value' => 'report'], 'totals' => ['groups' => [['field' => 'team']]]])->assertOk();
+
+        $this->assertCount(1, $engine->schemas->read);
+    }
+
+    #[Test]
+    public function it_reads_no_facet_from_an_answer_without_a_hit(): void
+    {
+        $this->engine(['hits' => [], 'found' => 0, 'facet_counts' => []]);
+
+        $response = $this->search('totalled-vouchers', ['text' => ['value' => 'report'], 'totals' => ['measures' => [['type' => 'sum', 'field' => 'price']], 'groups' => [['field' => 'team']]]]);
+
+        $response->assertOk()->assertJsonPath('totals', ['exact' => true, 'all' => ['count' => 0, 'sum_price' => 0], 'groups' => [['field' => 'team', 'buckets' => [], 'other' => ['count' => 0], 'truncated' => false]]]);
     }
 
     #[Test]

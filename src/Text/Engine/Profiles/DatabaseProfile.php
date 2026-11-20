@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\DatabaseEngine;
+use Lomkit\Rest\Exceptions\TotalsComputationException;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Query\Totals\SqlTotals;
 use Lomkit\Rest\Text\Engine\EnginePage;
@@ -99,15 +100,18 @@ final readonly class DatabaseProfile implements AppliesRowRestrictions, Compares
         return $this->read($builder, $model, $perPage, $page, $rows);
     }
 
+    /** @internal */
     #[\Override]
     public function totalsOptions(): array
     {
         return [];
     }
 
+    /** @internal */
     #[\Override]
     public function ensureTotalsUsableBy(TextTarget $target): void {}
 
+    /** @internal */
     #[\Override]
     public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
     {
@@ -120,7 +124,11 @@ final readonly class DatabaseProfile implements AppliesRowRestrictions, Compares
             return $result;
         }
 
-        return $result->withTotals($query instanceof EloquentBuilder ? (new SqlTotals($totals->node))->of($query) : $totals->empty());
+        if (! $query instanceof EloquentBuilder) {
+            throw TotalsComputationException::uncapturedQuery($totals->resource, $totals->engine);
+        }
+
+        return $result->withTotals((new SqlTotals($totals->node))->of($query));
     }
 
     #[\Override]

@@ -23,15 +23,13 @@ final readonly class MeilisearchFacets
 
     public function refusal(Throwable $error): ?EngineSearchException
     {
-        $message = $error->getMessage();
-
-        foreach ($this->totals->attributes() as $attribute) {
-            if (str_contains($message, 'facet') && str_contains($message, "`{$attribute}`")) {
-                return EngineSearchException::missingFacet($this->totals->resource, $attribute, $this->totals->engine, $error);
-            }
+        if ((get_object_vars($error)['errorCode'] ?? null) !== 'invalid_search_facets') {
+            return null;
         }
 
-        return null;
+        $named = array_values(array_filter($this->totals->attributes(), static fn (string $attribute): bool => str_contains($error->getMessage(), "`{$attribute}`")));
+
+        return EngineSearchException::missingFacet($this->totals->resource, $named[0] ?? $this->totals->attributes()[0] ?? '', $this->totals->engine, $error);
     }
 
     /** @param array<mixed> $raw */

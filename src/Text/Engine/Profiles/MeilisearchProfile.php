@@ -100,21 +100,32 @@ final readonly class MeilisearchProfile implements ComputesTotals, FiltersWithGr
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
     }
 
+    /** @internal */
     #[\Override]
     public function measureTypes(Field $attribute): array
     {
         return $attribute instanceof Number ? [MeasureType::Min, MeasureType::Max] : [];
     }
 
+    /** @internal */
+    #[\Override]
+    public function approximatesDecimals(): bool
+    {
+        return false;
+    }
+
+    /** @internal */
     #[\Override]
     public function totalsOptions(): array
     {
-        return ['facets'];
+        return ['facets', 'distinct'];
     }
 
+    /** @internal */
     #[\Override]
     public function ensureTotalsUsableBy(TextTarget $target): void {}
 
+    /** @internal */
     #[\Override]
     public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
     {
@@ -122,7 +133,7 @@ final readonly class MeilisearchProfile implements ComputesTotals, FiltersWithGr
             return $this->page($builder, $model, $perPage, $page);
         }
 
-        $facets = new MeilisearchFacets($totals, $totals->node->groups === [] ? FacetingSettings::of([]) : $this->faceting($model, $totals));
+        $facets = new MeilisearchFacets($totals, $totals->node->groups === [] ? new FacetingSettings(1, []) : $this->faceting($model, $totals));
         $builder->options([...$builder->options, ...$facets->options()]);
 
         try {
@@ -145,7 +156,7 @@ final readonly class MeilisearchProfile implements ComputesTotals, FiltersWithGr
             throw EngineSearchException::unreadFaceting($totals->resource, $totals->engine, $error);
         }
 
-        return FacetingSettings::of(is_array($faceting) ? $faceting : []);
+        return FacetingSettings::of(is_array($faceting) ? $faceting : null) ?? throw EngineSearchException::unreadFaceting($totals->resource, $totals->engine);
     }
 
     #[\Override]

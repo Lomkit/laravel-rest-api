@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Text\Engine;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
+use Lomkit\Rest\Exceptions\TotalsComputationException;
 use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Search\Totals\TotalsNode;
 use Lomkit\Rest\Text\Engine\Profiles\ComputesTotals;
@@ -35,7 +36,7 @@ final readonly class EngineRead
             throw InvalidTextSearchException::untotalledEngine($this->index->searchedClass(), $this->index->profile->name());
         }
 
-        return new self($this->index, $this->restricted, new EngineTotals($node, $this->index->searchedClass(), $this->index->profile->name()));
+        return new self($this->index, $this->restricted, new EngineTotals($node, $this->index->searchedClass(), $this->index->profile->name(), $this->index->attributes->totalsScales()));
     }
 
     public function empty(): EnginePage
@@ -55,6 +56,10 @@ final readonly class EngineRead
 
         if ($profile instanceof ComputesTotals && $this->index->attributes->declaresTotals()) {
             return $profile->totalsPage($builder, $model, $perPage, $page, $this->totals);
+        }
+
+        if ($this->totals !== null) {
+            throw TotalsComputationException::untotalledProfile($this->index->searchedClass(), $profile::class);
         }
 
         return $profile->page($builder, $model, $perPage, $page);

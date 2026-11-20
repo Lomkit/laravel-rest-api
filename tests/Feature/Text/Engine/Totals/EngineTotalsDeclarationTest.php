@@ -11,7 +11,9 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\SqlForeignEngineProfiles;
 use Lomkit\Rest\Tests\Feature\Text\Engine\ScoutEngineDeclarationTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\FakeTypesenseEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ForeignEngine;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\CentsVoucher;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\FacetingVoucher;
+use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Text\ScoutEngine;
@@ -71,6 +73,31 @@ class EngineTotalsDeclarationTest extends ScoutEngineDeclarationTestCase
             'a measured text' => [static fn (ScoutEngine $engine): ScoutEngine => $engine->measurable(['code']), InvalidTextSearchException::unmeasurableAttributeType(VoucherResource::class, 'code', 'text', 'Laravel\Scout\Engines\CollectionEngine')],
             'a repeated group' => [static fn (ScoutEngine $engine): ScoutEngine => $engine->groupable(['active', 'active']), InvalidTextSearchException::duplicateAttribute(VoucherResource::class, 'active')],
         ];
+    }
+
+    #[Test]
+    public function it_needs_a_decimal_cast_to_measure_a_number_on_an_engine_that_stores_decimals_with_limited_precision(): void
+    {
+        $this->useEngine(new FakeTypesenseEngine);
+        config(['scout.typesense.model-settings.'.Voucher::class.'.search-parameters.query_by' => 'title', 'scout.typesense.model-settings.'.CentsVoucher::class.'.search-parameters.query_by' => 'title']);
+        $declared = $this->resource(VoucherResource::class)->definition()->fields();
+        $cents = $this->open(['price', 'number'])->measurable(['price', 'number'])->capabilities(new TextTarget(VoucherResource::class, FieldSet::of([]), new CentsVoucher, $declared));
+
+        $this->assertSame(['price' => 2], $cents->engine?->totals?->scales);
+        $this->expectExceptionObject(InvalidTextSearchException::unscaledMeasure(VoucherResource::class, 'price', Voucher::class, FakeTypesenseEngine::class));
+
+        $this->capabilities($this->open(['price'])->measurable(['price']));
+    }
+
+    #[Test]
+    public function it_refuses_to_group_the_document_id_on_typesense(): void
+    {
+        $this->useEngine(new FakeTypesenseEngine);
+        config(['scout.typesense.model-settings.'.Voucher::class.'.search-parameters.query_by' => 'title']);
+
+        $this->expectExceptionObject(InvalidTextSearchException::ungroupableAttributeType(VoucherResource::class, 'id', 'id', FakeTypesenseEngine::class));
+
+        $this->capabilities($this->open(['id', 'active'])->groupable(['id']));
     }
 
     #[Test]

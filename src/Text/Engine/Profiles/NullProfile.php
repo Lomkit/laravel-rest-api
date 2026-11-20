@@ -91,15 +91,18 @@ final readonly class NullProfile implements AppliesRowRestrictions, ComputesTota
         return EnginePage::empty();
     }
 
+    /** @internal */
     #[\Override]
     public function totalsOptions(): array
     {
         return [];
     }
 
+    /** @internal */
     #[\Override]
     public function ensureTotalsUsableBy(TextTarget $target): void {}
 
+    /** @internal */
     #[\Override]
     public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
     {

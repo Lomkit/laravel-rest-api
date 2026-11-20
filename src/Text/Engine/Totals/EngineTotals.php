@@ -9,11 +9,20 @@ use Lomkit\Rest\Search\Totals\TotalsNode;
 /** @internal */
 final readonly class EngineTotals
 {
+    /** @param array<string, int> $scales */
     public function __construct(
         public TotalsNode $node,
         public string $resource,
         public string $engine,
+        public array $scales = [],
     ) {}
+
+    public function rounded(string $attribute, mixed $value): mixed
+    {
+        $scale = $this->scales[$attribute] ?? null;
+
+        return $scale === null || ! is_numeric($value) ? $value : round((float) $value, $scale);
+    }
 
     /** @return list<string> */
     public function attributes(): array

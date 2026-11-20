@@ -96,6 +96,16 @@ class MeilisearchTotalsTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_refuses_faceting_settings_without_a_value_cap(): void
+    {
+        $this->engine(['sortFacetValuesBy' => ['*' => 'count']]);
+
+        $this->expectExceptionObject(EngineSearchException::unreadFaceting(TotalledVoucherResource::class, FacetingMeilisearchEngine::class));
+
+        $this->withoutExceptionHandling()->search('totalled-vouchers', ['source' => 'engine', 'totals' => ['groups' => [['field' => 'team']]]]);
+    }
+
+    #[Test]
     public function it_names_an_attribute_that_the_index_does_not_facet(): void
     {
         $engine = $this->engine();

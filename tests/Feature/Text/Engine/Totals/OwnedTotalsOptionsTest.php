@@ -38,13 +38,14 @@ class OwnedTotalsOptionsTest extends EngineTestCase
         return [
             ...array_combine(array_map(static fn (string $option): string => "typesense {$option}", $typesense), array_map(static fn (string $option): array => ['typesense', $option], $typesense)),
             'meilisearch facets' => ['meilisearch', 'facets'],
+            'meilisearch distinct' => ['meilisearch', 'distinct'],
         ];
     }
 
     /** @param class-string<VoucherResource> $resource */
     private function engineQuery(string $resource): EngineQuery
     {
-        config(['scout.typesense.model-settings.Lomkit\Rest\Tests\Fixtures\Ledger\Voucher.search-parameters.query_by' => 'title']);
+        config(['scout.typesense.model-settings.Lomkit\Rest\Tests\Fixtures\Ledger\Voucher.search-parameters.query_by' => 'title', 'scout.typesense.model-settings.Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\CentsVoucher.search-parameters.query_by' => 'title']);
         $text = $this->resource($resource)->text();
         $this->assertInstanceOf(ScoutEngine::class, $text);
 
