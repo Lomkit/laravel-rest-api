@@ -69,6 +69,15 @@ class TextQueryTest extends TestCase
     }
 
     #[Test]
+    public function it_tells_a_text_without_terms_from_a_blank_text(): void
+    {
+        $this->assertSame(
+            ['*' => true, ' % ' => true, '_' => true, '-' => true, '' => false, " \t\n " => false, 'lamp' => false, '*2*' => false],
+            array_map(fn (string $value): bool => (new TextQuery($value))->termless(), ['*' => '*', ' % ' => ' % ', '_' => '_', '-' => '-', '' => '', " \t\n " => " \t\n ", 'lamp' => 'lamp', '*2*' => '*2*']),
+        );
+    }
+
+    #[Test]
     public function it_keeps_the_words_that_hold_a_letter_or_a_digit(): void
     {
         $query = new TextQuery("  50%  off - o'brien  ** ");

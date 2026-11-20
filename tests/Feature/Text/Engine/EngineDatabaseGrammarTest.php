@@ -40,7 +40,7 @@ class EngineDatabaseGrammarTest extends EngineSearchTestCase
         $absent = $this->search('vouchers', $search);
 
         $blank->assertOk()->assertExactJson($this->sqlPage([3, 1], 2));
-        $punctuation->assertOk()->assertExactJson($this->sqlPage([3, 1], 2));
+        $punctuation->assertOk()->assertExactJson($this->sqlPage([], 0));
         $absent->assertOk()->assertExactJson($this->sqlPage([3, 1], 2));
         $this->assertSame([], $this->engine->searches);
     }

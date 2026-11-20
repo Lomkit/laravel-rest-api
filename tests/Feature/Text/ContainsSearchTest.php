@@ -95,8 +95,8 @@ class ContainsSearchTest extends TextSearchTestCase
 
     /** @param array<string, mixed> $text */
     #[Test]
-    #[DataProvider('textsWithoutTerms')]
-    public function it_returns_the_normal_list_for_a_text_without_terms(array $text): void
+    #[DataProvider('blankTexts')]
+    public function it_returns_the_normal_list_for_a_blank_text(array $text): void
     {
         $response = $this->search('contains-posts', ['text' => $text]);
 
@@ -104,16 +104,13 @@ class ContainsSearchTest extends TextSearchTestCase
     }
 
     /** @return array<string, array{array<string, mixed>}> */
-    public static function textsWithoutTerms(): array
+    public static function blankTexts(): array
     {
         return [
             'an empty value' => [['value' => '']],
             'a value made of spaces' => [['value' => '   ']],
             'a null value' => [['value' => null]],
             'no value' => [[]],
-            'punctuation' => [['value' => '!!! ...']],
-            'a wildcard' => [['value' => '%']],
-            'an underscore in a phrase' => [['value' => '_', 'mode' => 'phrase']],
         ];
     }
 
