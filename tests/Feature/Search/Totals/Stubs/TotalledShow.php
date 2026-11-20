@@ -44,6 +44,6 @@ class TotalledShow extends Show
     #[Scope]
     protected function withHeadliners(Builder $query): void
     {
-        $query->union(self::query()->select('shows.*')->where('level', 3));
+        $query->unionAll(self::query()->select('shows.*')->where('level', 3));
     }
 }
