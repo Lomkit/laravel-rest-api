@@ -29,4 +29,21 @@ class TotalledShow extends Show
     {
         $query->join('comments', 'comments.show_id', '=', 'shows.id');
     }
+
+    /** @param Builder<self> $query */
+    #[Scope]
+    protected function distinctlyCommented(Builder $query): void
+    {
+        $query
+            ->select('shows.*')
+            ->distinct()
+            ->join('comments', 'comments.show_id', '=', 'shows.id');
+    }
+
+    /** @param Builder<self> $query */
+    #[Scope]
+    protected function withHeadliners(Builder $query): void
+    {
+        $query->union(self::query()->select('shows.*')->where('level', 3));
+    }
 }

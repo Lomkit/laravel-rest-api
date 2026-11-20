@@ -6,7 +6,6 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Search\GateAbility;
 use Lomkit\Rest\Search\SearchNode;
-use Lomkit\Rest\Search\Totals\TotalsNode;
 use Lomkit\Rest\Text\TextQuery;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
@@ -93,7 +92,7 @@ final readonly class SearchBodyParser
         return new self($context, $lists, 0, null, null, null);
     }
 
-    public function node(?TextQuery $text, ?Trashed $trashed, ?TotalsNode $totals = null): SearchNode
+    public function node(?TextQuery $text, ?Trashed $trashed): SearchNode
     {
         $context = $this->context;
         $keys = RowKeys::of($context, $this->lists['includes'] ?? [], $this->lists['aggregates'] ?? []);
@@ -114,7 +113,6 @@ final readonly class SearchBodyParser
             gates: $this->gates,
             limit: $this->limit,
             page: $this->page,
-            totals: $totals,
         );
     }
 

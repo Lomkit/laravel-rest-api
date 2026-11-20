@@ -12,6 +12,6 @@ class ScopedShowResource extends ShowResource
     #[\Override]
     public function scopes(): array
     {
-        return [Scope::make('commentedTwice'), Scope::make('commented')];
+        return [Scope::make('commentedTwice'), Scope::make('commented'), Scope::make('distinctlyCommented'), Scope::make('withHeadliners')];
     }
 }

@@ -33,6 +33,10 @@ final readonly class MeasureNode
             return (float) $raw;
         }
 
-        return is_int($raw) ? $raw : (int) round((float) $raw);
+        if (is_int($raw) || (is_string($raw) && preg_match('/^-?\d+$/', $raw) === 1)) {
+            return (int) $raw;
+        }
+
+        return (int) round((float) $raw);
     }
 }

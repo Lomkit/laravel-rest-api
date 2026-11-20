@@ -26,33 +26,56 @@ final readonly class TotalsRows
     {
         $model = $query->getModel();
         $base = CountedQueries::withoutAdditions($query)->toBase();
-        $qualified = [];
+
+        if ($base->unions !== null && $base->unions !== []) {
+            return self::union($base, $names);
+        }
+
+        if ($base->groups !== null || $base->havings !== null) {
+            return self::grouped($base, $model, $names);
+        }
+
+        $rows = $base
+            ->cloneWithout(['columns', 'orders', 'limit', 'offset'])
+            ->cloneWithoutBindings(['select', 'order']);
+        $rows->distinct = false;
+        $columns = [];
 
         foreach ($names as $name) {
-            $qualified[$name] = $model->qualifyColumn($name);
+            $columns[$name] = $model->qualifyColumn($name);
         }
 
-        if ($base->groups === null && $base->havings === null && $base->distinct === false && ($base->joins ?? []) === []) {
-            return new self(self::unselected($base), $qualified);
+        return new self($rows, $columns);
+    }
+
+    /** @param list<string> $names */
+    private static function union(QueryBuilder $base, array $names): self
+    {
+        $rows = $base
+            ->cloneWithout(['unionOrders', 'unionLimit', 'unionOffset'])
+            ->cloneWithoutBindings(['unionOrder']);
+
+        return new self($base->newQuery()->fromSub($rows, self::TABLE), array_combine($names, array_map(static fn (string $name): string => self::TABLE.'.'.$name, $names)));
+    }
+
+    /** @param list<string> $names */
+    private static function grouped(QueryBuilder $base, Model $model, array $names): self
+    {
+        $rows = $base
+            ->cloneWithout(['orders', 'limit', 'offset'])
+            ->cloneWithoutBindings(['order']);
+
+        if ($rows->columns === null && ($rows->joins ?? []) !== []) {
+            $rows->select($model->getTable().'.*');
         }
 
-        $grouped = $base->groups !== null || $base->havings !== null;
-        $rows = $grouped ? $base->cloneWithout(['orders', 'limit', 'offset'])->cloneWithoutBindings(['order']) : self::unselected($base);
-        $rows->addSelect($model->getQualifiedKeyName().' as rest_key');
         $columns = [];
 
         foreach ($names as $index => $name) {
-            $rows->addSelect("{$qualified[$name]} as rest_column_{$index}");
+            $rows->addSelect($model->qualifyColumn($name)." as rest_column_{$index}");
             $columns[$name] = self::TABLE.".rest_column_{$index}";
         }
 
         return new self($base->newQuery()->fromSub($rows, self::TABLE), $columns);
-    }
-
-    private static function unselected(QueryBuilder $base): QueryBuilder
-    {
-        return $base
-            ->cloneWithout(['columns', 'orders', 'limit', 'offset'])
-            ->cloneWithoutBindings(['select', 'order']);
     }
 }
