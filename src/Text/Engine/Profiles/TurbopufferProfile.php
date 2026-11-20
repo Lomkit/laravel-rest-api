@@ -93,21 +93,25 @@ final readonly class TurbopufferProfile implements ComputesTotals, FiltersString
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page)->cappedAt($this->window());
     }
 
+    /** @internal */
     #[\Override]
     public function countsText(): bool
     {
         return false;
     }
 
+    /** @internal */
     #[\Override]
     public function totalsOptions(): array
     {
         return ['aggregate_by', 'group_by', 'consistency'];
     }
 
+    /** @internal */
     #[\Override]
     public function ensureTotalsUsableBy(TextTarget $target): void {}
 
+    /** @internal */
     #[\Override]
     public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
     {

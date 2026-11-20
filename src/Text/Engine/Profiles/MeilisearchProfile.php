@@ -121,12 +121,14 @@ final readonly class MeilisearchProfile implements ComputesTotals, FiltersWithGr
         return null;
     }
 
+    /** @internal */
     #[\Override]
     public function countsText(): bool
     {
         return true;
     }
 
+    /** @internal */
     #[\Override]
     public function totalsOptions(): array
     {

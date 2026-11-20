@@ -90,27 +90,32 @@ final readonly class AlgoliaProfile implements ComputesTotals, ListsWithoutText,
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
     }
 
+    /** @internal */
     #[\Override]
     public function measureTypes(Field $attribute): array
     {
         return $attribute instanceof Number ? [MeasureType::Sum, MeasureType::Min, MeasureType::Max] : [];
     }
 
+    /** @internal */
     #[\Override]
     public function maxGroupValues(): int
     {
         return AlgoliaFacets::MAX_VALUES;
     }
 
+    /** @internal */
     #[\Override]
     public function totalsOptions(): array
     {
         return ['facets', 'maxValuesPerFacet', 'facetingAfterDistinct', 'sortFacetValuesBy', 'facetFilters'];
     }
 
+    /** @internal */
     #[\Override]
     public function ensureTotalsUsableBy(TextTarget $target): void {}
 
+    /** @internal */
     #[\Override]
     public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
     {

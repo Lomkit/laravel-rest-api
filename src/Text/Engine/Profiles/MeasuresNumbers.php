@@ -14,6 +14,7 @@ trait MeasuresNumbers
      *
      * @return list<MeasureType>
      */
+    /** @internal */
     #[\Override]
     public function measureTypes(Field $attribute): array
     {
@@ -34,6 +35,7 @@ trait MeasuresNumbers
         return null;
     }
 
+    /** @internal */
     #[\Override]
     public function countsText(): bool
     {
