@@ -32,13 +32,14 @@ final readonly class TotalsGrammar implements JsonSerializable
         return new self(array_values(array_diff($this->groups, $names)), array_diff_key($this->measures, array_flip($names)), array_diff_key($this->scales, array_flip($names)), $this->maxValues, $this->text);
     }
 
-    /** @return array{groups: list<string>, measures: object} */
+    /** @return array{groups: list<string>, measures: object, lists_only: bool} */
     #[\Override]
     public function jsonSerialize(): array
     {
         return [
             'groups' => $this->groups,
             'measures' => (object) array_map(static fn (array $types): array => array_map(static fn (MeasureType $type): string => $type->value, $types), $this->measures),
+            'lists_only' => ! $this->text,
         ];
     }
 }

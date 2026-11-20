@@ -14,7 +14,6 @@ trait MeasuresNumbers
      *
      * @return list<MeasureType>
      */
-    /** @internal */
     #[\Override]
     public function measureTypes(Field $attribute): array
     {

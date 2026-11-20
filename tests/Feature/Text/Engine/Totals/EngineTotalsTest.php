@@ -120,7 +120,7 @@ class EngineTotalsTest extends EngineSearchTestCase
             'search.totals.groups.0.field' => ['The selected search.totals.groups.0.field is invalid.'],
             'search.totals.groups.1.field' => ['The selected search.totals.groups.1.field is invalid.'],
         ]);
-        $this->assertSame(['groups' => ['active'], 'measures' => ['price' => ['sum', 'avg', 'min', 'max']]], $details);
+        $this->assertSame(['groups' => ['active'], 'measures' => ['price' => ['sum', 'avg', 'min', 'max']], 'lists_only' => false], $details);
     }
 
     #[Test]
@@ -183,7 +183,7 @@ class EngineTotalsTest extends EngineSearchTestCase
         $totals = $this->getJson('/api/totalled-vouchers?with=text')->assertOk()->json('data.text.engine.totals');
         $plain = $this->getJson('/api/vouchers?with=text')->assertOk()->json('data.text.engine');
 
-        $this->assertSame(['groups' => ['team', 'active', 'number'], 'measures' => ['price' => ['sum', 'avg', 'min', 'max'], 'number' => ['sum', 'avg', 'min', 'max']]], $totals);
+        $this->assertSame(['groups' => ['team', 'active', 'number'], 'measures' => ['price' => ['sum', 'avg', 'min', 'max'], 'number' => ['sum', 'avg', 'min', 'max']], 'lists_only' => false], $totals);
         $this->assertArrayNotHasKey('totals', $plain);
     }
 }
