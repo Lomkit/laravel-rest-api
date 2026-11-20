@@ -3,11 +3,14 @@
 namespace Lomkit\Rest\Exceptions;
 
 use LogicException;
+use Lomkit\Rest\Exceptions\Concerns\RefusesEngineTotals;
 use Lomkit\Rest\Text\Engine\StringListAttribute;
 use Throwable;
 
 final class InvalidTextSearchException extends LogicException
 {
+    use RefusesEngineTotals;
+
     public static function noSearchableField(string $resource): self
     {
         return new self("The resource [{$resource}] declares a text search but no searchable field. Declare the text fields to search with ->searchable().");

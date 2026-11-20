@@ -4,15 +4,15 @@ namespace Lomkit\Rest\Text;
 
 use Closure;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
-use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Text\Engine\EngineIndex;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Text\Engine\IndexAttributes;
+use Lomkit\Rest\Text\Engine\PerimeterDeclaration;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfiles;
 use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\Engine\ScoutModel;
-use Lomkit\Rest\Text\Engine\StringListAttribute;
+use Lomkit\Rest\Text\Engine\ServerAttributeNames;
 use Lomkit\Rest\Text\Engine\TieBreaker;
 
 final readonly class ScoutEngine implements ListingTextSearch
@@ -23,6 +23,8 @@ final readonly class ScoutEngine implements ListingTextSearch
      * @param  (Closure(EngineQuery): mixed)|null  $perimeter
      * @param  array<mixed>  $perimeterAttributes
      * @param  array<mixed>  $indexAttributes
+     * @param  array<mixed>  $groupable
+     * @param  array<mixed>  $measurable
      */
     private function __construct(
         private array $filterable = [],
@@ -33,6 +35,8 @@ final readonly class ScoutEngine implements ListingTextSearch
         private bool $withoutPerimeter = false,
         private bool $lists = false,
         private ?string $tieBreaker = null,
+        private array $groupable = [],
+        private array $measurable = [],
     ) {}
 
     public static function make(): self
@@ -82,6 +86,18 @@ final readonly class ScoutEngine implements ListingTextSearch
         return $this->with(tieBreaker: $attribute);
     }
 
+    /** @param array<mixed> $attributes */
+    public function groupable(array $attributes): self
+    {
+        return $this->with(groupable: $attributes);
+    }
+
+    /** @param array<mixed> $attributes */
+    public function measurable(array $attributes): self
+    {
+        return $this->with(measurable: $attributes);
+    }
+
     /** @internal */
     #[\Override]
     public function servingLists(): bool
@@ -103,14 +119,7 @@ final readonly class ScoutEngine implements ListingTextSearch
      */
     public function serverNames(): array
     {
-        $names = array_map(static fn (mixed $attribute): ?string => match (true) {
-            $attribute instanceof StringListAttribute => null,
-            $attribute instanceof Field => $attribute->name,
-            is_string($attribute) => $attribute,
-            default => null,
-        }, [...array_values($this->perimeterAttributes), ...array_values($this->indexAttributes)]);
-
-        return array_values(array_filter($names, is_string(...)));
+        return ServerAttributeNames::of([...array_values($this->perimeterAttributes), ...array_values($this->indexAttributes)]);
     }
 
     #[\Override]
@@ -142,8 +151,10 @@ final readonly class ScoutEngine implements ListingTextSearch
      * @param  (Closure(EngineQuery): mixed)|null  $perimeter
      * @param  array<mixed>|null  $perimeterAttributes
      * @param  array<mixed>|null  $indexAttributes
+     * @param  array<mixed>|null  $groupable
+     * @param  array<mixed>|null  $measurable
      */
-    private function with(?array $filterable = null, ?array $sortable = null, ?Closure $perimeter = null, ?array $perimeterAttributes = null, ?array $indexAttributes = null, ?bool $withoutPerimeter = null, ?bool $lists = null, ?string $tieBreaker = null): self
+    private function with(?array $filterable = null, ?array $sortable = null, ?Closure $perimeter = null, ?array $perimeterAttributes = null, ?array $indexAttributes = null, ?bool $withoutPerimeter = null, ?bool $lists = null, ?string $tieBreaker = null, ?array $groupable = null, ?array $measurable = null): self
     {
         return new self(
             filterable: $filterable ?? $this->filterable,
@@ -154,6 +165,8 @@ final readonly class ScoutEngine implements ListingTextSearch
             withoutPerimeter: $withoutPerimeter ?? $this->withoutPerimeter,
             lists: $lists ?? $this->lists,
             tieBreaker: $tieBreaker ?? $this->tieBreaker,
+            groupable: $groupable ?? $this->groupable,
+            measurable: $measurable ?? $this->measurable,
         );
     }
 
@@ -168,17 +181,10 @@ final readonly class ScoutEngine implements ListingTextSearch
 
     private function index(TextTarget $target): EngineIndex
     {
-        if ($this->perimeter === null && ! $this->withoutPerimeter) {
-            throw InvalidTextSearchException::missingPerimeter($target->resource);
-        }
-
-        if ($this->perimeter !== null && $this->withoutPerimeter) {
-            throw InvalidTextSearchException::conflictingPerimeter($target->resource);
-        }
+        PerimeterDeclaration::ensure($this->perimeter, $this->withoutPerimeter, $target->resource);
 
         $model = ScoutModel::tryFrom($target->model) ?? throw InvalidTextSearchException::unsearchableModel($target->resource, $target->model::class);
         $profile = EngineProfiles::forTarget($target);
-
         $profile->ensureUsableBy($target);
 
         if ($this->lists && ! $profile instanceof ListsWithoutText) {
@@ -186,7 +192,7 @@ final readonly class ScoutEngine implements ListingTextSearch
         }
 
         $tieBreaker = $this->tieBreaker === null ? null : TieBreaker::declared($this->tieBreaker, $target->resource, $profile, $this->lists);
-        $attributes = IndexAttributes::of($target, $profile, $this->filterable, $this->sortable, $this->perimeterAttributes, $this->lists, $this->indexAttributes);
+        $attributes = IndexAttributes::of($target, $profile, $this->filterable, $this->sortable, $this->perimeterAttributes, $this->lists, $this->indexAttributes, [$this->groupable, $this->measurable]);
 
         return new EngineIndex($model, $profile, $attributes, $target->resource, $this->lists, $tieBreaker);
     }

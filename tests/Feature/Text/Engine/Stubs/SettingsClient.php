@@ -24,6 +24,11 @@ class SettingsClient
         return $this->index($name);
     }
 
+    public function getFaceting(): mixed
+    {
+        return ($this->settings)();
+    }
+
     public function getPagination(): mixed
     {
         return ($this->settings)();

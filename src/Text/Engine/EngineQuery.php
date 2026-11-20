@@ -9,6 +9,7 @@ use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Search\Totals\TotalsNode;
 use Lomkit\Rest\Text\Engine\Groups\FilterLeaf;
 use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
@@ -26,7 +27,7 @@ final class EngineQuery
     /** @var array<string, mixed> */
     private array $options = [];
 
-    private ?RestrictedPage $restricted = null;
+    private EngineRead $read;
 
     private Instruction|RestrictingExtension|null $source = null;
 
@@ -41,6 +42,7 @@ final class EngineQuery
 
         $this->conditions = new IndexConditions($index->searchedClass(), $index->profile);
         $this->sorts = new EngineSorts($index, $text === null);
+        $this->read = new EngineRead($index);
     }
 
     public function where(string $attribute, FilterOperator|string $operator, mixed $value): static
@@ -115,7 +117,7 @@ final class EngineQuery
     /** @param array<mixed> $options */
     public function options(array $options): static
     {
-        $this->options = EngineOptions::merge($this->options, $options, $this->index->profile->ownedOptions());
+        $this->options = EngineOptions::merge($this->options, $options, $this->index->ownedOptions());
 
         return $this;
     }
@@ -125,13 +127,18 @@ final class EngineQuery
         $this->paging()->ensure($perPage, $page);
 
         if ($this->conditions->matchesNothing()) {
-            return EnginePage::empty();
+            return $this->read->empty();
         }
 
-        $builder = (new EngineBuilder($this->index, $this->text, $this->trashed))->build($this->conditions, $this->sorts->all(), $this->options, $this->conditions->tree($this->tree));
+        return $this->read->page((new EngineBuilder($this->index, $this->text, $this->trashed))->build($this->conditions, $this->sorts->all(), $this->options, $this->conditions->tree($this->tree)), $perPage, $page);
+    }
 
-        return $this->restricted?->read($builder, $this->index->model, $perPage, $page)
-            ?? $this->index->profile->page($builder, $this->index->model, $perPage, $page);
+    /** @internal */
+    public function totals(TotalsNode $node): static
+    {
+        $this->read = $this->read->totaling($node);
+
+        return $this;
     }
 
     /** @internal */
@@ -165,9 +172,7 @@ final class EngineQuery
     /** @internal */
     public function restrictRows(ExtensionRestrictions $rows): bool
     {
-        $this->restricted = RestrictedPage::onto($this->index, $rows, $this->restricted);
-
-        return $this->restricted !== null;
+        return ($this->read = $this->read->restrictedBy($rows))->restricts();
     }
 
     /** @internal */
@@ -184,11 +189,7 @@ final class EngineQuery
 
     public function reachable(): ?int
     {
-        if ($this->conditions->excludesEverything()) {
-            return PHP_INT_MAX;
-        }
-
-        return $this->index->profile->reachable($this->index->model);
+        return $this->conditions->excludesEverything() ? PHP_INT_MAX : $this->index->profile->reachable($this->index->model);
     }
 
     public function paging(): EnginePaging

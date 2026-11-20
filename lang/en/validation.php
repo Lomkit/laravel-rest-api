@@ -23,6 +23,8 @@ return [
     'empty_totals' => 'The :attribute field must ask for measures or groups.',
     'capped_totals' => 'The :attribute field is prohibited: this resource caps the count of its rows.',
     'custom_page_totals' => 'The :attribute field is prohibited: this resource counts its pages itself.',
+    'engine_totals' => 'The :attribute field is refused: the search engine of this resource computes no totals.',
+    'engine_measure' => 'The :attribute field holds a measure that the search engine of this resource does not compute on this field.',
     'several_types' => 'The :attribute field is prohibited: this relation has several types. Set it for each type, under types.',
     'held_record' => 'The :attribute field is prohibited: this relation already holds a record. Detach it first.',
     'attached_record' => 'The :attribute field holds a record that is already attached. Use update or sync to change its pivot.',

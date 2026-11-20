@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Text\Engine;
 
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Text\Engine\Profiles\ComputesTotals;
 use Lomkit\Rest\Text\Engine\Profiles\EngineProfile;
 use Lomkit\Rest\Text\Engine\Profiles\ListsWithoutText;
 use Lomkit\Rest\Text\TextCapabilities;
@@ -29,6 +30,18 @@ final readonly class EngineIndex
     public function searchedClass(): string
     {
         return $this->resource ?? $this->model->model()::class;
+    }
+
+    /**
+     * @internal
+     *
+     * @return list<string>
+     */
+    public function ownedOptions(): array
+    {
+        $profile = $this->profile;
+
+        return $profile instanceof ComputesTotals && $this->attributes->declaresTotals() ? [...$profile->ownedOptions(), ...$profile->totalsOptions()] : $profile->ownedOptions();
     }
 
     /** @internal */

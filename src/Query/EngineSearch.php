@@ -43,7 +43,7 @@ final readonly class EngineSearch implements SearchSource
             ->limits()
             ->defaultLimit;
         $page = $this->search->page ?? 1;
-        $result = $query->page($perPage, $page);
+        $result = ($this->search->totals === null ? $query : $query->totals($this->search->totals))->page($perPage, $page);
         $plan = $this->plan(EngineKeys::trusted($this->scout(), $result->keys), ColumnSelection::of($this->resource), true);
         $rows = $result->keys === [] ? new Collection : $this->load($plan);
         $dropped = count(array_flip($result->keys)) - $rows->count();
@@ -51,7 +51,7 @@ final readonly class EngineSearch implements SearchSource
         return new PlannedPage($plan, new EnginePaginator($rows, $result->total, $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
             'pageName' => 'page',
-        ], max(0, $dropped), $result->capped));
+        ], max(0, $dropped), $result->capped), $result->totals);
     }
 
     /** @internal */

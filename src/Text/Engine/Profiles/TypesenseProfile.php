@@ -12,11 +12,17 @@ use Lomkit\Rest\Text\Engine\EngineLiteral;
 use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\Groups\TypesenseFilter;
+use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
+use Lomkit\Rest\Text\Engine\Totals\EngineTotals;
+use Lomkit\Rest\Text\Engine\Totals\TypesenseFacets;
 use Lomkit\Rest\Text\TextTarget;
+use Throwable;
 
-final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithoutText, MatchesStringLists, ReservesSortAttributes
+final readonly class TypesenseProfile implements ComputesTotals, FiltersWithGroups, ListsWithoutText, MatchesStringLists, ReservesSortAttributes
 {
+    use MeasuresNumbers;
+
     public function __construct(private TypesenseEngine $engine) {}
 
     #[\Override]
@@ -91,13 +97,13 @@ final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithout
     #[\Override]
     public function ensureUsableBy(TextTarget $target): void
     {
-        $queryBy = $this->queryBy($target->model);
+        $queryBy = TypesenseModelParameters::queryBy($target->model);
 
         if (! is_string($queryBy) || trim($queryBy) === '') {
             throw InvalidTextSearchException::missingQueryBy($target->resource, $target->model::class);
         }
 
-        $owned = $this->ownedParameter($target->model);
+        $owned = TypesenseModelParameters::owned($target->model, $this->ownedOptions());
 
         if ($owned !== null) {
             throw InvalidTextSearchException::ownedSearchParameter($target->resource, $target->model::class, $owned);
@@ -113,16 +119,42 @@ final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithout
     #[\Override]
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
-        $owned = $this->ownedParameter($builder->model);
-
-        if ($owned !== null) {
-            throw InvalidTextSearchException::changedSearchParameter($builder->model::class, $owned);
-        }
-
-        $builder->options([...$builder->options, 'filter_curated_hits' => true]);
-        (new TypesenseLongSearch($this->engine))->route($builder, $model, $perPage, $page);
+        $this->prepare($builder, $model, $perPage, $page, $this->ownedOptions(), []);
 
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
+    }
+
+    #[\Override]
+    public function totalsOptions(): array
+    {
+        return ['facet_by', 'max_facet_values', 'facet_query', 'facet_strategy', 'facet_sample_percent', 'facet_sample_threshold', 'facet_return_parent', 'search_cutoff_ms', 'pinned_hits', 'hidden_hits'];
+    }
+
+    #[\Override]
+    public function ensureTotalsUsableBy(TextTarget $target): void
+    {
+        $owned = TypesenseModelParameters::owned($target->model, $this->totalsOptions());
+
+        if ($owned !== null) {
+            throw InvalidTextSearchException::ownedSearchParameter($target->resource, $target->model::class, $owned);
+        }
+    }
+
+    #[\Override]
+    public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
+    {
+        $facets = $totals === null ? null : new TypesenseFacets($totals);
+        $this->prepare($builder, $model, $perPage, $page, [...$this->ownedOptions(), ...$this->totalsOptions()], $facets?->options() ?? []);
+
+        try {
+            $raw = $this->engine->paginate($builder, $perPage, $page);
+        } catch (Throwable $error) {
+            throw $facets?->refusal($error) ?? $error;
+        }
+
+        $result = EngineHits::of($this->engine, $raw, $model);
+
+        return $facets === null ? $result : $result->withTotals($facets->read(is_array($raw) ? $raw : [], $result->total));
     }
 
     #[\Override]
@@ -131,22 +163,20 @@ final readonly class TypesenseProfile implements FiltersWithGroups, ListsWithout
         return PHP_INT_MAX;
     }
 
-    private function ownedParameter(Model $model): ?string
+    /**
+     * @param  Builder<Model>  $builder
+     * @param  list<string>  $owned
+     * @param  array<string, int|string>  $options
+     */
+    private function prepare(Builder $builder, ScoutModel $model, int $perPage, int $page, array $owned, array $options): void
     {
-        $parameters = method_exists($model, 'typesenseSearchParameters') ? $model->typesenseSearchParameters() : null;
-        $owned = is_array($parameters) ? array_values(array_intersect($this->ownedOptions(), array_keys($parameters))) : [];
+        $changed = TypesenseModelParameters::owned($builder->model, $owned);
 
-        return $owned[0] ?? null;
-    }
-
-    private function queryBy(Model $model): mixed
-    {
-        $parameters = method_exists($model, 'typesenseSearchParameters') ? $model->typesenseSearchParameters() : null;
-
-        if (is_array($parameters) && isset($parameters['query_by'])) {
-            return $parameters['query_by'];
+        if ($changed !== null) {
+            throw InvalidTextSearchException::changedSearchParameter($builder->model::class, $changed);
         }
 
-        return config('scout.typesense.model-settings.'.$model::class.'.search-parameters.query_by');
+        $builder->options([...$builder->options, 'filter_curated_hits' => true, ...$options]);
+        (new TypesenseLongSearch($this->engine))->route($builder, $model, $perPage, $page);
     }
 }

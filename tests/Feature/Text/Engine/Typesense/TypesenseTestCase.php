@@ -18,11 +18,11 @@ abstract class TypesenseTestCase extends EngineSearchTestCase
     private const array SCHEMA = [
         'collection-schema' => ['fields' => [
             ['name' => 'code', 'type' => 'string', 'sort' => true],
-            ['name' => 'number', 'type' => 'int32'],
-            ['name' => 'team', 'type' => 'string', 'sort' => true],
+            ['name' => 'number', 'type' => 'int32', 'facet' => true],
+            ['name' => 'team', 'type' => 'string', 'sort' => true, 'facet' => true],
             ['name' => 'title', 'type' => 'string', 'sort' => true],
-            ['name' => 'price', 'type' => 'float'],
-            ['name' => 'active', 'type' => 'bool'],
+            ['name' => 'price', 'type' => 'float', 'facet' => true],
+            ['name' => 'active', 'type' => 'bool', 'facet' => true],
             ['name' => '__soft_deleted', 'type' => 'int32'],
         ]],
         'search-parameters' => ['query_by' => 'title'],

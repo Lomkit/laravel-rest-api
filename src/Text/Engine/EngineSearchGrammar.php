@@ -13,6 +13,7 @@ use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\RelevanceSort;
 use Lomkit\Rest\Search\SortNode;
+use Lomkit\Rest\Text\Engine\Totals\EngineTotalsVocabulary;
 use Lomkit\Rest\Text\ListSource;
 use Lomkit\Rest\Text\TextBackend;
 use Lomkit\Rest\Text\TextCapabilities;
@@ -166,7 +167,7 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     #[\Override]
     public function totals(ValidationContext $context): TotalsVocabulary
     {
-        return TotalsVocabulary::refused(TotalsVocabulary::PROHIBITED);
+        return EngineTotalsVocabulary::of($this->engine);
     }
 
     #[\Override]
