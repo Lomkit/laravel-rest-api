@@ -10,6 +10,8 @@ final readonly class EngineTotalsVocabulary
 {
     public const string UNTOTALLED = 'rest::validation.engine_totals';
 
+    public const string UNCOMPUTED = 'rest::validation.engine_measure';
+
     public static function of(EngineGrammar $engine): TotalsVocabulary
     {
         $totals = $engine->totals;
@@ -33,6 +35,6 @@ final readonly class EngineTotalsVocabulary
             $measures[$name] = $engine->filters[$name]->field;
         }
 
-        return TotalsVocabulary::of($groups, $measures, $totals->measures);
+        return TotalsVocabulary::of($groups, $measures, $totals->measures, self::UNCOMPUTED);
     }
 }

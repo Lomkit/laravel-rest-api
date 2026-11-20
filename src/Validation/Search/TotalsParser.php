@@ -17,8 +17,6 @@ final readonly class TotalsParser
 {
     private const string EMPTY = 'rest::validation.empty_totals';
 
-    private const string UNCOMPUTED = 'rest::validation.engine_measure';
-
     private const array KEYS = ['measures' => true, 'groups' => true];
 
     private const array MEASURE_KEYS = ['type' => true, 'field' => true];
@@ -103,7 +101,7 @@ final readonly class TotalsParser
             }
 
             if (! $vocabulary->measures($measured->name, $parsed)) {
-                $context->rules->reject(new Violation($type->path, self::UNCOMPUTED));
+                $context->rules->reject(new Violation($type->path, $vocabulary->uncomputed));
 
                 continue;
             }
