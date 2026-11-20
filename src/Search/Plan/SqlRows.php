@@ -11,6 +11,7 @@ use Lomkit\Rest\Query\Clauses\AggregateSortClause;
 use Lomkit\Rest\Query\Clauses\Clause;
 use Lomkit\Rest\Query\Clauses\FilterGroupClause;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
+use Lomkit\Rest\Query\Clauses\NoRowsClause;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Query\Clauses\RelationSortClause;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
@@ -59,6 +60,10 @@ final readonly class SqlRows implements RowSource
     {
         if ($search->text === null || $this->text === null) {
             return null;
+        }
+
+        if ($this->text->matchesNothing()) {
+            return new NoRowsClause;
         }
 
         if ($this->text->usesEngine()) {

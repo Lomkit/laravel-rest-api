@@ -33,6 +33,11 @@ final readonly class TextQuery
         return $this->terms() !== [];
     }
 
+    public function termless(): bool
+    {
+        return ! $this->hasTerms() && $this->phrase() !== '';
+    }
+
     /** @return list<string> */
     public function words(): array
     {

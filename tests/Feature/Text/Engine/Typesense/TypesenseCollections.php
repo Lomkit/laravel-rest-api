@@ -27,6 +27,17 @@ final readonly class TypesenseCollections
         }
     }
 
+    public function exists(string $name): bool
+    {
+        $response = $this->request()->get("collections/{$name}");
+
+        if ($response->status() !== 404) {
+            $response->throw();
+        }
+
+        return $response->successful();
+    }
+
     /** @param list<array<string, mixed>> $items */
     public function curate(string $collection, string $set, array $items): void
     {
