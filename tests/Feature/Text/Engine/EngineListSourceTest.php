@@ -244,22 +244,18 @@ class EngineListSourceTest extends EngineSearchTestCase
     }
 
     #[Test]
-    public function it_streams_a_programmatic_search_in_sql_and_refuses_the_engine_source_of_a_stream(): void
+    public function it_streams_a_programmatic_search_from_the_source_it_names(): void
     {
         $search = Rest::search(ListedVoucherResource::class)->as(new GenericUser(['id' => 1]));
 
-        $streamed = $search->payload(['source' => 'database', 'scopes' => self::CHEAP])->lazy()->all();
-
-        $this->assertSame([3, 1], array_column($streamed, 'id'));
-
-        try {
-            $search->payload(['source' => 'engine'])->lazy()->all();
-            $this->fail('The stream ran with the engine source.');
-        } catch (ValidationException $exception) {
-            $this->assertSame(['search.source' => ['The selected search.source is invalid.']], $exception->errors());
-        }
-
+        $sql = $search->payload(['source' => 'database', 'scopes' => self::CHEAP])->lazy()->all();
         $this->assertSame([], $this->engine->searches);
+        $engine = $search->payload(['source' => 'engine', 'filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]]])->lazy()->all();
+
+        $this->assertSame([3, 1], array_column($sql, 'id'));
+        $this->assertSame([4, 1, 2, 3], array_column($engine, 'id'));
+        $this->assertCount(1, $this->engine->searches);
+        $this->assertSame([['field' => 'price', 'operator' => '<', 'value' => 40]], $this->engine->searches[0]->wheres);
     }
 
     /** @param array<string, mixed> $search */

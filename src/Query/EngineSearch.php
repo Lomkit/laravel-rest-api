@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Query;
 
+use Generator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
@@ -15,6 +16,7 @@ use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
 use Lomkit\Rest\Search\Plan\KeyedRows;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\PlannedPage;
+use Lomkit\Rest\Search\Plan\PlannedRows;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Search\SearchNode;
@@ -50,6 +52,19 @@ final readonly class EngineSearch implements SearchSource
             'path' => Paginator::resolveCurrentPath(),
             'pageName' => 'page',
         ], max(0, $dropped), $result->capped));
+    }
+
+    public function chunks(int $chunk, ?int $max): PlannedRows
+    {
+        $keys = (new LazyEngineKeys($this->query(), $this->resource::class, $max))->read();
+        $scout = $this->scout();
+        $plan = $this->plan(EngineKeys::trusted($scout, []), ColumnSelection::of($this->resource), true);
+
+        return new PlannedRows($plan, function () use ($keys, $chunk, $scout): Generator {
+            foreach (array_chunk($keys, max(1, $chunk)) as $chunked) {
+                yield $this->load($this->plan(EngineKeys::trusted($scout, $chunked), ColumnSelection::of($this->resource), true));
+            }
+        });
     }
 
     public function query(): EngineQuery

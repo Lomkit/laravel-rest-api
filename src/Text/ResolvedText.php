@@ -11,7 +11,6 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
 use Lomkit\Rest\Query\Clauses\TextClause;
 use Lomkit\Rest\Query\Trashed;
-use Lomkit\Rest\Search\Run\PayloadSearchRequest;
 use Lomkit\Rest\Text\Engine\EngineGrammar;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Validation\Search\SearchGrammar;
@@ -27,7 +26,6 @@ final readonly class ResolvedText
         private ?QueryTextSearch $strategy = null,
         private ?EngineTextSearch $engine = null,
         private bool $listing = false,
-        private bool $streams = false,
     ) {}
 
     public static function of(Resource $resource, RestRequest $request): self
@@ -40,12 +38,11 @@ final readonly class ResolvedText
 
         $query = TextQuery::fromSearch($request->input('search.text'));
         $terms = $query?->hasTerms() ? $query : null;
-        $streams = $request instanceof PayloadSearchRequest && $request->streams();
 
         $lists = $strategy instanceof ListingTextSearch && $strategy->servingLists();
-        $listing = $terms === null && ! $streams && $lists && $request->input('search.source') === ListSource::Engine->value;
+        $listing = $terms === null && $lists && $request->input('search.source') === ListSource::Engine->value;
 
-        return self::resolve($resource, $strategy, $terms, $listing, $streams, $lists);
+        return self::resolve($resource, $strategy, $terms, $listing, $lists);
     }
 
     /** @internal */
@@ -59,7 +56,7 @@ final readonly class ResolvedText
 
         $narrowed = $engine->without($narrowing->unfilterableNames(), $narrowing->unsortableNames());
 
-        return new self($this->backend, $this->query, $this->target, $this->capabilities->withEngine($narrowed), $this->strategy, $this->engine, $this->listing, $this->streams);
+        return new self($this->backend, $this->query, $this->target, $this->capabilities->withEngine($narrowed), $this->strategy, $this->engine, $this->listing);
     }
 
     public function usesEngine(): bool
@@ -82,7 +79,7 @@ final readonly class ResolvedText
         $engine = $this->engineGrammar();
 
         if ($engine === null || $this->capabilities === null) {
-            return new SqlSearchGrammar($this->capabilities, $this->ranks(), $this->streams);
+            return new SqlSearchGrammar($this->capabilities, $this->ranks());
         }
 
         return $engine->searchGrammar($this->capabilities, $this->listing);
@@ -139,13 +136,13 @@ final readonly class ResolvedText
         return $this->strategy->run($query, $this->target);
     }
 
-    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing, bool $streams, bool $lists): self
+    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing, bool $lists): self
     {
         $target = TextTarget::of($resource);
 
         return match (true) {
             $strategy instanceof QueryTextSearch => new self(TextBackend::Query, $query, $target, $strategy->capabilities($target), strategy: $strategy),
-            $strategy instanceof EngineTextSearch => new self(TextBackend::Engine, $query, $target, self::engineCapabilities($resource, $strategy, $target, $lists), engine: $strategy, listing: $listing, streams: $streams),
+            $strategy instanceof EngineTextSearch => new self(TextBackend::Engine, $query, $target, self::engineCapabilities($resource, $strategy, $target, $lists), engine: $strategy, listing: $listing),
             default => throw InvalidTextSearchException::unsupportedStrategy($resource::class, $strategy::class),
         };
     }

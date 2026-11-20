@@ -32,6 +32,7 @@ use Lomkit\Rest\Tests\Feature\Extensions\Stubs\StampsRequests;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\WriteLog;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\CurationSwitch;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainProfile;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\WalkedEngineProfiles;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
@@ -73,6 +74,7 @@ trait ResetsExtensionStubs
         FirstResponses::reset();
         SecondResponses::reset();
         PlainProfile::reset();
+        WalkedEngineProfiles::reset();
         CurationSwitch::$curates = true;
     }
 }
