@@ -51,7 +51,7 @@ class TypesenseTotalsTest extends TypesenseTestCase
         $this->assertSame([4, 11, 2.75, 78.75, 19.6875, 1.5, 40.0], [$rows->count(), (int) $rows->sum('number'), $rows->avg('number'), $rows->sum('price'), $rows->avg('price'), $rows->min('price'), $rows->max('price')]);
         $this->assertSame([
             'exact' => true,
-            'all' => ['count' => 4, 'sum_number' => 11, 'avg_number' => 2.75, 'sum_price' => 78.75, 'avg_price' => 19.69, 'min_price' => 1.5, 'max_price' => 40],
+            'all' => ['count' => 4, 'sum_number' => 11, 'avg_number' => 2.75, 'sum_price' => 78.75, 'avg_price' => 19.69, 'min_price' => 1.5, 'max_price' => 40.0],
             'groups' => [
                 ['field' => 'active', 'buckets' => [['value' => true, 'count' => 3], ['value' => false, 'count' => 1]], 'other' => ['count' => 0], 'truncated' => false],
                 ['field' => 'number', 'buckets' => [['value' => 1, 'count' => 1], ['value' => 2, 'count' => 1]], 'other' => ['count' => 2], 'truncated' => true],
@@ -109,7 +109,7 @@ class TypesenseTotalsTest extends TypesenseTestCase
     {
         $response = $this->search('perimeter-totalled-vouchers', ['source' => 'engine', 'filters' => [['field' => 'number', 'value' => 99]], 'totals' => ['measures' => [['type' => 'sum', 'field' => 'price']], 'groups' => [['field' => 'active']]]]);
 
-        $response->assertOk()->assertJsonPath('total', 0)->assertJsonPath('totals', ['exact' => true, 'all' => ['count' => 0, 'sum_price' => 0], 'groups' => [['field' => 'active', 'buckets' => [], 'other' => ['count' => 0], 'truncated' => false]]]);
+        $response->assertOk()->assertJsonPath('total', 0)->assertJsonPath('totals', ['exact' => true, 'all' => ['count' => 0, 'sum_price' => 0.0], 'groups' => [['field' => 'active', 'buckets' => [], 'other' => ['count' => 0], 'truncated' => false]]]);
     }
 
     #[Test]

@@ -42,7 +42,7 @@ class MeilisearchTotalsTest extends MeilisearchTestCase
         $this->assertSame([4, 1.5, 40.0, 1, 5], [$rows->count(), $rows->min('price'), $rows->max('price'), $rows->min('number'), $rows->max('number')]);
         $this->assertSame([
             'exact' => true,
-            'all' => ['count' => 4, 'min_price' => 1.5, 'max_price' => 40, 'min_number' => 1, 'max_number' => 5],
+            'all' => ['count' => 4, 'min_price' => 1.5, 'max_price' => 40.0, 'min_number' => 1, 'max_number' => 5],
             'groups' => [
                 ['field' => 'active', 'buckets' => [['value' => true, 'count' => 3], ['value' => false, 'count' => 1]], 'other' => ['count' => 0], 'truncated' => false],
                 ['field' => 'number', 'buckets' => [['value' => 1, 'count' => 1], ['value' => 2, 'count' => 1]], 'other' => ['count' => 2], 'truncated' => true],
@@ -58,7 +58,7 @@ class MeilisearchTotalsTest extends MeilisearchTestCase
         $response->assertOk()->assertJsonPath('total', 3);
         $this->assertSame([
             'exact' => true,
-            'all' => ['count' => 3, 'max_price' => 40],
+            'all' => ['count' => 3, 'max_price' => 40.0],
             'groups' => [['field' => 'active', 'buckets' => [['value' => true, 'count' => 2]], 'other' => ['count' => 1], 'truncated' => true]],
         ], $response->json('totals'));
     }

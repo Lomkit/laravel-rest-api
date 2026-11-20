@@ -199,7 +199,7 @@ class TypesenseTotalsTest extends EngineSearchTestCase
 
         $response = $this->search('totalled-vouchers', ['text' => ['value' => 'report'], 'totals' => ['measures' => [['type' => 'sum', 'field' => 'price']], 'groups' => [['field' => 'team']]]]);
 
-        $response->assertOk()->assertJsonPath('totals', ['exact' => true, 'all' => ['count' => 0, 'sum_price' => 0], 'groups' => [['field' => 'team', 'buckets' => [], 'other' => ['count' => 0], 'truncated' => false]]]);
+        $response->assertOk()->assertJsonPath('totals', ['exact' => true, 'all' => ['count' => 0, 'sum_price' => 0.0], 'groups' => [['field' => 'team', 'buckets' => [], 'other' => ['count' => 0], 'truncated' => false]]]);
     }
 
     #[Test]
@@ -209,7 +209,7 @@ class TypesenseTotalsTest extends EngineSearchTestCase
 
         $response = $this->search('totalled-vouchers', ['source' => 'engine', 'text' => ['value' => '***'], 'totals' => ['measures' => [['type' => 'sum', 'field' => 'price']], 'groups' => [['field' => 'team']]]]);
 
-        $response->assertOk()->assertJsonPath('totals', ['exact' => true, 'all' => ['count' => 0, 'sum_price' => 0], 'groups' => [['field' => 'team', 'buckets' => [], 'other' => ['count' => 0], 'truncated' => false]]]);
+        $response->assertOk()->assertJsonPath('totals', ['exact' => true, 'all' => ['count' => 0, 'sum_price' => 0.0], 'groups' => [['field' => 'team', 'buckets' => [], 'other' => ['count' => 0], 'truncated' => false]]]);
         $this->assertSame([], $engine->requests);
     }
 
