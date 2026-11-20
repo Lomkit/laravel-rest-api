@@ -22,6 +22,19 @@ class PublishedLinesTest extends PackageTestCase
     public function it_reads_the_lines_under_the_rest_namespace(): void
     {
         $this->assertSame('The record was changed by another request.', __('rest::errors.version_conflict'));
-        $this->assertSame('L\'élément a été modifié par une autre requête.', __('rest::errors.version_conflict', locale: 'fr'));
+    }
+
+    #[Test]
+    public function it_reads_the_english_line_for_a_locale_without_lines(): void
+    {
+        $this->assertSame('The record was changed by another request.', __('rest::errors.version_conflict', locale: 'fr'));
+    }
+
+    #[Test]
+    public function it_reads_the_key_for_a_locale_without_lines_when_the_fallback_locale_is_not_english(): void
+    {
+        $this->app->make('translator')->setFallback('fr');
+
+        $this->assertSame('rest::validation.utf8', __('rest::validation.utf8', locale: 'fr'));
     }
 }

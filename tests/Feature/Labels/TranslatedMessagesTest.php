@@ -27,6 +27,10 @@ class TranslatedMessagesTest extends PackageTestCase
         $this->app->make('translator')->addJsonPath(__DIR__.'/lang');
         $this->app->setLocale('fr');
         $this->app->make('translator')->addLines(['validation.integer' => 'Le champ :attribute doit être un entier.'], 'fr');
+        $this->app->make('translator')->addLines([
+            'validation.not_writable' => 'La clé :key du champ :attribute n\'est pas modifiable par l\'opération :operation.',
+            'validation.unknown_relation' => 'Le champ :attribute n\'est pas une relation valide ou permise pour cette ressource.',
+        ], 'fr', 'rest');
         Rest::resource('labelled-products', LabelledProductController::class)->register();
     }
 
@@ -41,7 +45,7 @@ class TranslatedMessagesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_translates_the_not_writable_text_with_the_package_line(): void
+    public function it_translates_the_not_writable_text_with_the_line_of_the_application(): void
     {
         $response = $this->postJson('/labelled-products/mutate', ['mutate' => [
             ['operation' => 'create', 'attributes' => ['id' => 3, 'name' => 'Floor lamp', 'price' => 10]],
@@ -53,7 +57,7 @@ class TranslatedMessagesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_translates_the_relation_text_with_the_package_line(): void
+    public function it_translates_the_relation_text_with_the_line_of_the_application(): void
     {
         $response = $this->postJson('/api/products/search', ['search' => ['includes' => [['relation' => 'suppliers']]]]);
 
