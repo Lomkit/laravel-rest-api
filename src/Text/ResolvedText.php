@@ -26,7 +26,7 @@ final readonly class ResolvedText
         private ?QueryTextSearch $strategy = null,
         private ?EngineTextSearch $engine = null,
         private bool $listing = false,
-        private bool $nothing = false,
+        private bool $matchesNothing = false,
     ) {}
 
     public static function of(Resource $resource, RestRequest $request): self
@@ -57,13 +57,12 @@ final readonly class ResolvedText
 
         $narrowed = $engine->without($narrowing->unfilterableNames(), $narrowing->unsortableNames());
 
-        return new self($this->backend, $this->query, $this->target, $this->capabilities->withEngine($narrowed), $this->strategy, $this->engine, $this->listing, $this->nothing);
+        return new self($this->backend, $this->query, $this->target, $this->capabilities->withEngine($narrowed), $this->strategy, $this->engine, $this->listing, $this->matchesNothing);
     }
 
-    /** @internal */
     public function matchesNothing(): bool
     {
-        return $this->nothing;
+        return $this->matchesNothing;
     }
 
     public function usesEngine(): bool
@@ -127,7 +126,7 @@ final readonly class ResolvedText
 
         $list = $this->listing && $this->engine instanceof ListingTextSearch ? $this->engine->list($this->target, $trashed) : null;
 
-        return $this->nothing ? $list?->matchNothing() : $list;
+        return $this->matchesNothing ? $list?->matchNothing() : $list;
     }
 
     /**
@@ -145,13 +144,13 @@ final readonly class ResolvedText
         return $this->strategy->run($query, $this->target);
     }
 
-    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing, bool $lists, bool $nothing): self
+    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query, bool $listing, bool $lists, bool $matchesNothing): self
     {
         $target = TextTarget::of($resource);
 
         return match (true) {
-            $strategy instanceof QueryTextSearch => new self(TextBackend::Query, $query, $target, $strategy->capabilities($target), strategy: $strategy, nothing: $nothing),
-            $strategy instanceof EngineTextSearch => new self(TextBackend::Engine, $query, $target, self::engineCapabilities($resource, $strategy, $target, $lists), engine: $strategy, listing: $listing, nothing: $nothing),
+            $strategy instanceof QueryTextSearch => new self(TextBackend::Query, $query, $target, $strategy->capabilities($target), strategy: $strategy, matchesNothing: $matchesNothing),
+            $strategy instanceof EngineTextSearch => new self(TextBackend::Engine, $query, $target, self::engineCapabilities($resource, $strategy, $target, $lists), engine: $strategy, listing: $listing, matchesNothing: $matchesNothing),
             default => throw InvalidTextSearchException::unsupportedStrategy($resource::class, $strategy::class),
         };
     }
