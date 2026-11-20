@@ -10,11 +10,13 @@ use Lomkit\Rest\Exceptions\EngineSearchException;
 use Lomkit\Rest\Exceptions\SearchRunException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReaderInstructionsExtension;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\ReadersExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnsortedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\PerimeterTotalledVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\PerimeterTotalledVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
@@ -182,5 +184,91 @@ class AlgoliaLiveTest extends AlgoliaLiveTestCase
         $this->expectExceptionObject(EngineSearchException::missingFacet(PerimeterTotalledVoucherResource::class, 'active', Algolia4Engine::class));
 
         $this->withoutExceptionHandling()->search('perimeter-totalled-vouchers', ['source' => 'engine', 'totals' => ['groups' => [['field' => 'active']]]]);
+    }
+
+    #[Test]
+    public function it_keeps_the_most_frequent_values_of_a_truncated_group(): void
+    {
+        $this->vouchers([[7, 'V-g', 'green', 3.0], [8, 'V-h', 'green', 3.0], [9, 'V-i', 'green', 3.0], [10, 'V-j', 'gold', 3.0], [11, 'V-k', 'gold', 3.0]]);
+
+        $response = $this->search('totalled-vouchers', ['source' => 'engine', 'totals' => ['groups' => [['field' => 'team', 'limit' => 2]]]]);
+
+        $response->assertOk()->assertJsonPath('total', 10)->assertJsonPath('totals', [
+            'exact' => true,
+            'all' => ['count' => 10],
+            'groups' => [['field' => 'team', 'buckets' => [['value' => 'red', 'count' => 4], ['value' => 'green', 'count' => 3]], 'other' => ['count' => 3], 'truncated' => true]],
+        ]);
+        $this->assertSame($response->json('total'), array_sum(array_column($response->json('totals.groups.0.buckets'), 'count')) + $response->json('totals.groups.0.other.count'));
+    }
+
+    #[Test]
+    public function it_keeps_one_of_the_values_tied_at_the_limit_of_a_group(): void
+    {
+        $this->vouchers([[7, 'V-g', 'green', 3.0], [8, 'V-h', 'green', 3.0], [9, 'V-i', 'gold', 3.0], [10, 'V-j', 'gold', 3.0]]);
+
+        $response = $this->search('totalled-vouchers', ['source' => 'engine', 'totals' => ['groups' => [['field' => 'team', 'limit' => 2]]]]);
+
+        $response->assertOk()->assertJsonPath('total', 9)->assertJsonPath('totals.all', ['count' => 9])->assertJsonCount(2, 'totals.groups.0.buckets');
+        $response->assertJsonPath('totals.groups.0.buckets.0', ['value' => 'red', 'count' => 4])->assertJsonPath('totals.groups.0.buckets.1.count', 2);
+        $response->assertJsonPath('totals.groups.0.other', ['count' => 3])->assertJsonPath('totals.groups.0.truncated', true);
+        $this->assertContains($response->json('totals.groups.0.buckets.1.value'), ['green', 'gold']);
+    }
+
+    #[Test]
+    public function it_refuses_the_totals_of_an_index_that_keeps_one_hit_per_distinct_value(): void
+    {
+        $this->configure(['distinct' => true, 'attributeForDistinct' => 'team']);
+
+        $response = $this->search('totalled-vouchers', ['source' => 'engine']);
+
+        $response->assertOk();
+        $this->assertEqualsCanonicalizing(['red', 'blue'], array_column($response->json('data'), 'team'));
+        $this->expectExceptionObject(EngineSearchException::distinctFacets(TotalledVoucherResource::class, Algolia4Engine::class));
+
+        $this->withoutExceptionHandling()->search('totalled-vouchers', ['source' => 'engine', 'totals' => ['groups' => [['field' => 'team']]]]);
+    }
+
+    #[Test]
+    public function it_answers_422_to_an_instruction_list_that_conflicts_with_the_restriction(): void
+    {
+        config(['rest.extensions' => [ReadersExtension::class, ReaderInstructionsExtension::class]]);
+        $this->actingAs(new GenericUser(['id' => 'ann']));
+
+        $response = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'ri.bob']]]);
+
+        $message = 'The search.instructions.0 field restricts a list with values that neither hold nor are held by the list that the search already keeps, and the search engine cannot require both lists.';
+        $response->assertStatus(422)->assertExactJson(['message' => $message, 'errors' => ['search.instructions.0' => [$message]]]);
+    }
+
+    #[Test]
+    public function it_measures_decimal_prices_exactly_as_sql_does(): void
+    {
+        $codes = ['V-g', 'V-h', 'V-i', 'V-j', 'V-k'];
+        $this->vouchers([[7, 'V-g', 'green', 19.99], [8, 'V-h', 'green', 0.10], [9, 'V-i', 'green', 1234.56], [10, 'V-j', 'green', 0.10], [11, 'V-k', 'green', 0.10]]);
+
+        $response = $this->search('totalled-vouchers', ['source' => 'engine', 'filters' => [['field' => 'code', 'operator' => 'in', 'value' => $codes]], 'totals' => ['measures' => [['type' => 'sum', 'field' => 'price'], ['type' => 'min', 'field' => 'price'], ['type' => 'max', 'field' => 'price']]]]);
+        $sql = DB::table('vouchers')->whereIn('code', $codes)->selectRaw('sum(price) as total, min(price) as low, max(price) as high')->first();
+
+        $this->assertNotNull($sql);
+        $response->assertOk()->assertJsonPath('totals.all', ['count' => 5, 'sum_price' => 1254.85, 'min_price' => 0.1, 'max_price' => 1234.56]);
+        $this->assertSame(['count' => 5, 'sum_price' => round((float) $sql->total, 2), 'min_price' => round((float) $sql->low, 2), 'max_price' => round((float) $sql->high, 2)], $response->json('totals.all'));
+    }
+
+    #[Test]
+    public function it_narrows_the_perimeter_with_the_value_of_an_engine_instruction(): void
+    {
+        $all = $this->search('perimeter-totalled-vouchers', ['source' => 'engine']);
+        $narrowed = $this->search('perimeter-totalled-vouchers', ['source' => 'engine', 'instructions' => [['name' => 'numbered-from', 'fields' => [['name' => 'min', 'value' => 4]]]]]);
+
+        $all->assertOk()->assertJsonPath('total', 4);
+        $this->assertEqualsCanonicalizing([1, 2, 3, 5], array_column($all->json('data'), 'id'));
+        $narrowed->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.id', 5);
+    }
+
+    /** @param list<array{int, string, string, float}> $rows */
+    private function vouchers(array $rows): void
+    {
+        DB::table('vouchers')->insert(array_map(static fn (array $row): array => ['id' => $row[0], 'code' => $row[1], 'number' => $row[0], 'team' => $row[2], 'title' => "Voucher {$row[1]}", 'price' => $row[3], 'active' => true], $rows));
+        $this->index(ReaderVoucher::query()->whereIn('id', array_column($rows, 0))->orderBy('id')->get()->all());
     }
 }
