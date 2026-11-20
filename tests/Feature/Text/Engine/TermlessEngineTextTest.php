@@ -120,6 +120,23 @@ class TermlessEngineTextTest extends EngineSearchTestCase
         $this->assertSame([], $engine->searches);
     }
 
+    #[Test]
+    public function it_streams_nothing_from_an_engine_list_without_terms(): void
+    {
+        $engine = new RecordingCollectionEngine;
+        $this->useEngine($engine);
+        $search = Rest::search(ListedVoucherResource::class)->as(new GenericUser(['id' => 1]));
+
+        $termless = $search->payload(['source' => 'engine', 'text' => ['value' => '*'], 'selects' => [['field' => 'id']]])->lazy()->all();
+
+        $this->assertSame([[], []], [$termless, $engine->searches]);
+
+        $blank = $search->payload(['source' => 'engine', 'text' => ['value' => ' '], 'selects' => [['field' => 'id']]])->lazy()->all();
+
+        $this->assertSame([5, 4, 1, 2, 3], array_column($blank, 'id'));
+        $this->assertNotSame([], $engine->searches);
+    }
+
     /** @param array<string, mixed> $search */
     #[Test]
     #[DataProvider('actionSearches')]
