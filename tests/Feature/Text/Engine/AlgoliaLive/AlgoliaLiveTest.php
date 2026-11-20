@@ -15,7 +15,6 @@ use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnsortedVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\PerimeterTotalledVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\PerimeterTotalledVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherController;
-use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ReaderVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
@@ -150,14 +149,14 @@ class AlgoliaLiveTest extends AlgoliaLiveTestCase
     }
 
     #[Test]
-    public function it_refuses_a_measured_attribute_indexed_as_a_string(): void
+    public function it_measures_a_decimal_indexed_as_a_numeric_string_exactly(): void
     {
         $objects = array_map(static fn (ReaderVoucher $voucher): array => [...$voucher->toSearchableArray(), 'price' => number_format((float) $voucher->price, 2, '.', ''), 'objectID' => $voucher->getScoutKey(), '__soft_deleted' => 0], ReaderVoucher::query()->orderBy('id')->get()->all());
         $this->client->saveObjects($this->index, $objects, true);
 
-        $this->expectExceptionObject(EngineSearchException::unmeasurableFacet(TotalledVoucherResource::class, 'price', 'string'));
+        $response = $this->search('totalled-vouchers', ['source' => 'engine', 'totals' => ['measures' => [['type' => 'sum', 'field' => 'price'], ['type' => 'max', 'field' => 'price']]]]);
 
-        $this->withoutExceptionHandling()->search('totalled-vouchers', ['source' => 'engine', 'totals' => ['measures' => [['type' => 'sum', 'field' => 'price']]]]);
+        $response->assertOk()->assertJsonPath('totals.all', ['count' => 5, 'sum_price' => 90.75, 'max_price' => 40.0]);
     }
 
     #[Test]
