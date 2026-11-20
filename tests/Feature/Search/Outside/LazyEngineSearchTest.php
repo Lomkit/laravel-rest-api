@@ -245,7 +245,7 @@ class LazyEngineSearchTest extends EngineSearchTestCase
     /** @return list<list<string>> */
     private function loadedKeys(): array
     {
-        $loads = array_filter(DB::getQueryLog(), fn (array $query): bool => str_contains($query['query'], '"vouchers"."code" in'));
+        $loads = array_filter(DB::getQueryLog(), fn (array $query): bool => str_contains(str_replace(['"', '`'], '', $query['query']), 'vouchers.code in'));
 
         return array_values(array_map(fn (array $query): array => $query['bindings'], $loads));
     }
