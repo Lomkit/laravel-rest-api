@@ -40,24 +40,31 @@ class ShowResource extends Resource
             ID::make('id'),
             Text::make('title')
                 ->searchable()
+                ->groupable()
                 ->rules('max:80')
                 ->creationRules('required')
                 ->examples('Opening night', 'Closing night'),
             Text::make('summary')
                 ->nullable()
+                ->groupable()
                 ->rules('min:8'),
             Number::make('price')
                 ->nullable()
+                ->measurable()
                 ->meta(['unit' => 'EUR'])
                 ->examples(12.5),
-            Integer::make('seats')->rules('min:0'),
-            Boolean::make('featured'),
+            Integer::make('seats')
+                ->rules('min:0')
+                ->groupable()
+                ->measurable(),
+            Boolean::make('featured')->groupable(),
             Date::make('starts_on')->creationRules('required'),
             DateTime::make('starts_at')->nullable(),
             Enum::make('status')
                 ->creationRules('required')
-                ->offered([ShowStatus::Planned, ShowStatus::OnSale]),
-            Enum::make('level'),
+                ->offered([ShowStatus::Planned, ShowStatus::OnSale])
+                ->groupable(),
+            Enum::make('level')->groupable(),
             Json::make('settings')->nullable(),
             Text::make('secret')
                 ->writeOnly()

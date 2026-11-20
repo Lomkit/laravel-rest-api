@@ -119,6 +119,7 @@ final readonly class SearchSchema
             'instructions' => self::capped((new InputSchema($this->components))->instruction($resource), $sizes->instructions),
             'limit' => (new IntegerType)->enum($resource->definition()->declaredLimits()->allowed),
             'page' => self::page($resource),
+            'totals' => (new TotalsSchema($this->components, $this->records))->database($resource),
             default => null,
         };
     }
@@ -130,7 +131,7 @@ final readonly class SearchSchema
 
         return match ($key) {
             'filters' => $schema->filters($resource, $engine),
-            'scopes' => null,
+            'scopes', 'totals' => null,
             'sorts' => self::capped($schema->sort($resource, $engine), min($sizes->sorts, max(1, $engine->sortKeys, $engine->listSortKeys ?? 0))),
             'instructions' => self::capped((new InputSchema($this->components))->instruction($resource, TextBackend::Engine), $sizes->instructions),
             default => $this->property($resource, $key, true),

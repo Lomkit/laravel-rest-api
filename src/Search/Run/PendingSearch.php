@@ -11,6 +11,7 @@ use Illuminate\Support\LazyCollection;
 use Lomkit\Rest\Authorization\ActingUser;
 use Lomkit\Rest\Exceptions\SearchRunException;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Validation\Search\SearchShape;
 
 final readonly class PendingSearch
 {
@@ -43,6 +44,10 @@ final readonly class PendingSearch
     /** @return LengthAwarePaginator<int, Model> */
     public function page(?int $page = null): LengthAwarePaginator
     {
+        if (is_array($this->search) && array_key_exists(SearchShape::TOTALS, $this->search)) {
+            throw SearchRunException::totalsOnPage($this->resource);
+        }
+
         return $this->run($page)
             ->page()
             ->rows;

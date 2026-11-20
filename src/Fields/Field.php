@@ -16,6 +16,7 @@ use Lomkit\Rest\Fields\Concerns\ConfiguresMessages;
 use Lomkit\Rest\Fields\Concerns\ConfiguresReading;
 use Lomkit\Rest\Fields\Concerns\ConfiguresRules;
 use Lomkit\Rest\Fields\Concerns\ConfiguresSearching;
+use Lomkit\Rest\Fields\Concerns\ConfiguresTotals;
 use Lomkit\Rest\Fields\Concerns\ConfiguresWriting;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
@@ -27,6 +28,7 @@ abstract class Field
     use ConfiguresReading;
     use ConfiguresRules;
     use ConfiguresSearching;
+    use ConfiguresTotals;
     use ConfiguresWriting;
     use HasMeta;
 

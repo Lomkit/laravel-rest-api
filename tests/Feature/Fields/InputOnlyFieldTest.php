@@ -182,7 +182,7 @@ class InputOnlyFieldTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame(
-            '{"name":"delivery_address","label":null,"type":"text","nullable":false,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["string","max:120"],"create":[],"update":[]},"meta":{}}',
+            '{"name":"delivery_address","label":null,"type":"text","nullable":false,"select":false,"sort":false,"group":false,"measures":[],"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["string","max:120"],"create":[],"update":[]},"meta":{}}',
             json_encode(json_decode((string) $response->getContent())->data->fields[13]),
         );
     }

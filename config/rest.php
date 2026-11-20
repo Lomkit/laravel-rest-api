@@ -154,6 +154,9 @@ return [
     | "groups" is the most parts of a partition metric and the most
     | splits of a trend in a response, at least 1. A metric sets its own
     | with limit(). The other groups fold into "other".
+    | "measures" is the most measures in the "totals" of one search, and
+    | "totals_groups" the most groups in them. A group of the totals
+    | returns at most "groups" values: the others fold into "other".
     |
     | "depths" is how many levels nest: "nested" filter groups, includes,
     | and relations in a mutation. A text search run by a search engine
@@ -200,6 +203,8 @@ return [
             'jobs' => 100,
             'rows' => 10000,
             'groups' => 100,
+            'measures' => 20,
+            'totals_groups' => 3,
         ],
 
         'depths' => [

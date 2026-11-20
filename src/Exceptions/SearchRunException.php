@@ -25,6 +25,11 @@ final class SearchRunException extends LogicException
         return new self("The search engine results of the resource [{$resource}] changed while lazy() read their keys. Call lazy() again, and set scout.after_commit to true so that the index changes once the database transactions commit.");
     }
 
+    public static function totalsOnPage(string $resource): self
+    {
+        return new self("The search of the resource [{$resource}] asks for totals, which page() cannot return: a paginator holds the rows only. Call render(), which returns the totals at the root of the page, or send the search without totals.");
+    }
+
     public static function invalidChunk(int $chunk): self
     {
         return new self("The chunk of lazy() must be at least 1, [{$chunk}] given.");

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Pagination;
 
 use Illuminate\Pagination\LengthAwarePaginator as BaseLengthAwarePaginator;
+use Lomkit\Rest\Search\Totals\SearchTotals;
 
 /** @extends BaseLengthAwarePaginator<int, array<string, mixed>> */
 class LengthAwarePaginator extends BaseLengthAwarePaginator
@@ -21,6 +22,7 @@ class LengthAwarePaginator extends BaseLengthAwarePaginator
         private readonly array $meta = [],
         private readonly ?bool $totalCapped = null,
         private readonly ?int $dropped = null,
+        private readonly ?SearchTotals $totals = null,
     ) {
         parent::__construct($items, $total, $perPage, $currentPage, $options);
     }
@@ -45,6 +47,7 @@ class LengthAwarePaginator extends BaseLengthAwarePaginator
             'total' => $this->total(),
             ...($this->totalCapped === null ? [] : ['total_capped' => $this->totalCapped]),
             ...($this->dropped === null ? [] : ['dropped' => $this->dropped]),
+            ...($this->totals === null ? [] : ['totals' => $this->totals->jsonSerialize()]),
             'meta' => (object) $this->meta(),
         ];
     }

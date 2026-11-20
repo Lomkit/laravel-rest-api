@@ -8,11 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Pagination\CappedPaginator;
 use Lomkit\Rest\Pagination\EnginePaginator;
 use Lomkit\Rest\Pagination\LengthAwarePaginator as RestLengthAwarePaginator;
+use Lomkit\Rest\Search\Totals\SearchTotals;
 
 final readonly class PageEnvelope implements Envelope
 {
     /** @param LengthAwarePaginator<int, Model> $page */
-    public function __construct(private LengthAwarePaginator $page) {}
+    public function __construct(
+        private LengthAwarePaginator $page,
+        private ?SearchTotals $totals = null,
+    ) {}
 
     #[\Override]
     public function wrap(Closure $row, array $meta): array
@@ -26,6 +30,7 @@ final readonly class PageEnvelope implements Envelope
             $meta,
             $this->page instanceof CappedPaginator || $this->page instanceof EnginePaginator ? $this->page->totalCapped : null,
             $this->page instanceof EnginePaginator ? $this->page->dropped : null,
+            $this->totals,
         );
 
         return $page->toArray();

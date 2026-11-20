@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Response;
 use Lomkit\Rest\Search\Plan\IncludeOverflow;
 use Lomkit\Rest\Search\Plan\QueryPlan;
+use Lomkit\Rest\Search\Totals\SearchTotals;
 
 final readonly class SearchedPage
 {
@@ -19,6 +20,7 @@ final readonly class SearchedPage
         public LengthAwarePaginator $rows,
         public IncludeOverflow $overflow,
         public array $meta,
+        public ?SearchTotals $totals = null,
     ) {}
 
     public function response(): Response
@@ -27,6 +29,7 @@ final readonly class SearchedPage
             ->plan($this->plan)
             ->responsable($this->rows)
             ->overflow($this->overflow)
-            ->meta($this->meta);
+            ->meta($this->meta)
+            ->totals($this->totals);
     }
 }

@@ -39,16 +39,7 @@ final readonly class FieldSet implements Countable, IteratorAggregate
     public static function forInputs(array $fields, string $owner): self
     {
         $set = self::of($fields, $owner);
-
-        foreach ($set->fields as $field) {
-            if ($field->getRules()->hasWriteRules()) {
-                throw InvalidFieldException::writeRulesOnInput($owner, $field->name);
-            }
-
-            if (is_numeric($field->name)) {
-                throw InvalidFieldException::numericInputName($owner, $field->name);
-            }
-        }
+        DeclaredFieldRules::inputs($set, $owner);
 
         return $set;
     }
@@ -57,20 +48,7 @@ final readonly class FieldSet implements Countable, IteratorAggregate
     public static function forPivot(array $fields, string $owner): self
     {
         $set = self::of($fields, $owner);
-
-        foreach ($set->fields as $field) {
-            if ($field->isVirtual()) {
-                throw $field->isInputOnly() ? InvalidFieldException::inputOnlyPivotField($owner, $field->name) : InvalidFieldException::virtualPivotField($owner, $field->name);
-            }
-
-            if ($field->fillsThroughCallback()) {
-                throw InvalidFieldException::filledPivotField($owner, $field->name);
-            }
-
-            if ($field->resolvesThroughCallback()) {
-                throw InvalidFieldException::resolvedPivotField($owner, $field->name);
-            }
-        }
+        DeclaredFieldRules::pivot($set, $owner);
 
         return $set;
     }
@@ -78,6 +56,12 @@ final readonly class FieldSet implements Countable, IteratorAggregate
     public function bindTo(Model $model): self
     {
         return new self(array_map(fn (Field $field): Field => $field->boundTo($model), $this->fields));
+    }
+
+    /** @return array<string, Field> */
+    public function keyed(): array
+    {
+        return array_combine($this->names(), $this->fields);
     }
 
     /** @return list<string> */
@@ -119,6 +103,16 @@ final readonly class FieldSet implements Countable, IteratorAggregate
     public function filterable(): self
     {
         return $this->where(fn (Field $field): bool => $field->isFilterable());
+    }
+
+    public function groupable(): self
+    {
+        return $this->where(fn (Field $field): bool => $field->isGroupable());
+    }
+
+    public function measurable(): self
+    {
+        return $this->where(fn (Field $field): bool => $field->isMeasurable());
     }
 
     public function writableOn(WriteOperation $operation): self

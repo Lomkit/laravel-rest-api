@@ -11,6 +11,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\ResourceDefinition;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Metrics\Metric;
+use Lomkit\Rest\Query\Totals\SqlTotalsAccess;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 
@@ -41,7 +42,7 @@ final readonly class ResourceDetails
             'actions' => fn (): array => array_values(array_map($this->action(...), $this->definition->actions())),
             'metrics' => fn (): array => array_values(array_map($this->metric(...), $this->definition->metrics())),
             'instructions' => fn (): array => array_values(array_map(fn (Instruction $instruction): array => $instruction->toDetails($this->selection), $this->definition->instructions())),
-            'fields' => fn (): array => FieldDetails::forFields($this->definition->fields(), $this->selection->parts('fields')),
+            'fields' => fn (): array => FieldDetails::forFields($this->definition->fields(), $this->selection->parts('fields'), SqlTotalsAccess::allows($this->resource)),
             'limits' => fn (): array => $this->definition->limits()->allowed,
             'scopes' => fn (): array => array_map(fn (Scope $scope): array => $scope->toDetails($this->selection), $this->definition->scopes()),
             'relations' => fn (): array => array_values(array_map(fn (Relation $relation): array => $relation->toDetails($this->selection), $this->definition->relations())),

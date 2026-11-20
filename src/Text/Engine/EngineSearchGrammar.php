@@ -23,6 +23,7 @@ use Lomkit\Rest\Validation\Limits;
 use Lomkit\Rest\Validation\Search\SearchGrammar;
 use Lomkit\Rest\Validation\Search\SqlSearchGrammar;
 use Lomkit\Rest\Validation\Search\TextParser;
+use Lomkit\Rest\Validation\Search\TotalsVocabulary;
 use Lomkit\Rest\Validation\ValidationContext;
 
 /** @internal */
@@ -160,6 +161,12 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     public function trashed(Resource $resource): bool
     {
         return $this->text->trashed;
+    }
+
+    #[\Override]
+    public function totals(ValidationContext $context): TotalsVocabulary
+    {
+        return TotalsVocabulary::refused(TotalsVocabulary::PROHIBITED);
     }
 
     #[\Override]

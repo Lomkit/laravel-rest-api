@@ -6,6 +6,7 @@ use Lomkit\Rest\Exceptions\InvalidFieldExtensionException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\NarrowedFields;
+use Lomkit\Rest\Fields\TotalsDeclaration;
 use Lomkit\Rest\Mutations\RowVersion;
 use ReflectionClass;
 
@@ -74,6 +75,7 @@ final class ResourceFields
     private function declare(): FieldSet
     {
         $fields = FieldSet::of($this->resource->fields(), $this->resource::class.'::fields()');
+        TotalsDeclaration::ensure($fields);
         $config = $this->resource->context()->config();
 
         if ($fields->has($config->gatesKey)) {

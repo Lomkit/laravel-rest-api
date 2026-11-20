@@ -8,6 +8,7 @@ use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
+use Lomkit\Rest\Query\Totals\SqlTotalsAccess;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Rules\AllowedValues;
 use Lomkit\Rest\Rules\OneOf;
@@ -86,7 +87,7 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     #[\Override]
     public function sortFields(ValidationContext $context, int $count): SortPaths
     {
-        $fields = $this->resourceSorts($context);
+        $fields = SqlSortFields::of($context, $this, $this->ranks);
 
         $aggregates = array_filter($context->aggregates, static fn (AggregateNode $aggregate): bool => $aggregate->sortable);
 
@@ -125,22 +126,6 @@ final readonly class SqlSearchGrammar implements SearchGrammar
         $fields = $resource->definition()->fields();
 
         return new FieldSort($fields->get($name), $direction);
-    }
-
-    private function resourceSorts(ValidationContext $context): OneOf
-    {
-        $resource = $context->resource;
-        $names = fn (): array => $resource
-            ->definition()
-            ->fields()
-            ->sortable()
-            ->names();
-
-        if (! $this->ranks) {
-            return $context->vocabulary->of($resource, $this, 'sorts', $names);
-        }
-
-        return $context->vocabulary->of($resource, $this, 'sorts+relevance', fn (): array => [...$names(), RelevanceClause::FIELD]);
     }
 
     #[\Override]
@@ -183,6 +168,12 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     public function trashed(Resource $resource): bool
     {
         return Trashed::supportedBy($resource::modelClass());
+    }
+
+    #[\Override]
+    public function totals(ValidationContext $context): TotalsVocabulary
+    {
+        return SqlTotalsAccess::vocabulary($context->resource);
     }
 
     #[\Override]
