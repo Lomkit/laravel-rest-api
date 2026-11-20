@@ -78,6 +78,20 @@ class TextQueryTest extends TestCase
     }
 
     #[Test]
+    public function it_reads_unicode_spaces_as_blank_and_invisible_marks_as_termless(): void
+    {
+        $this->assertSame(
+            ['no-break space' => false, 'ideographic space' => false, 'zero width space' => true, 'byte order mark' => true],
+            array_map(fn (string $value): bool => (new TextQuery($value))->termless(), [
+                'no-break space' => "\u{00A0}\u{00A0}",
+                'ideographic space' => "\u{3000}",
+                'zero width space' => "\u{200B}",
+                'byte order mark' => "\u{FEFF}",
+            ]),
+        );
+    }
+
+    #[Test]
     public function it_keeps_the_words_that_hold_a_letter_or_a_digit(): void
     {
         $query = new TextQuery("  50%  off - o'brien  ** ");

@@ -194,4 +194,46 @@ class TermlessEngineTextTest extends EngineSearchTestCase
 
         $response->assertOk()->assertExactJson($this->sqlPage([], 0));
     }
+
+    /** @param array<string, mixed> $search */
+    #[Test]
+    #[DataProvider('narrowedSearches')]
+    public function it_matches_nothing_for_a_text_without_terms_next_to_a_scope_or_trashed_rows(array $search): void
+    {
+        $response = $this->search('vouchers', ['text' => ['value' => '*'], ...$search]);
+
+        $response->assertOk()->assertExactJson($this->sqlPage([], 0));
+    }
+
+    /** @return array<string, array{array<string, mixed>}> */
+    public static function narrowedSearches(): array
+    {
+        return [
+            'a scope' => [['scopes' => [['name' => 'cheap']]]],
+            'trashed rows' => [['trashed' => 'with']],
+        ];
+    }
+
+    /** @param array<string, mixed> $search */
+    #[Test]
+    #[DataProvider('resolvedTexts')]
+    public function it_tells_through_the_request_context_that_a_text_without_terms_matches_nothing(array $search, bool $matchesNothing): void
+    {
+        $context = $this->context(['search' => $search]);
+
+        $text = $context->text($this->resource(ListedVoucherResource::class, $context));
+
+        $this->assertSame([$matchesNothing, null, null], [$text->matchesNothing(), $text->query, $text->clause()]);
+    }
+
+    /** @return array<string, array{array<string, mixed>, bool}> */
+    public static function resolvedTexts(): array
+    {
+        return [
+            'a text without terms' => [['text' => ['value' => '*']], true],
+            'a text without terms in an engine list' => [['source' => 'engine', 'text' => ['value' => '%']], true],
+            'a blank text' => [['text' => ['value' => ' ']], false],
+            'no text' => [[], false],
+        ];
+    }
 }
