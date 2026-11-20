@@ -13697,6 +13697,7 @@
                     }
                 },
                 "additionalProperties": false,
+                "minProperties": 1,
                 "title": "ShowSearchTotals"
             },
             "ShowSelect": {

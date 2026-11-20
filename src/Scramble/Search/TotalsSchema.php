@@ -13,6 +13,8 @@ use Lomkit\Rest\Query\Totals\SqlTotalsAccess;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Scramble\Schemas;
+use Lomkit\Rest\Scramble\Types\NonEmptyObject;
+use Lomkit\Rest\Scramble\Types\Nothing;
 use Lomkit\Rest\Search\Totals\MeasureType;
 
 /** @internal */
@@ -44,10 +46,18 @@ final readonly class TotalsSchema
             return null;
         }
 
-        return $this->components->schema($this->records->name($resource).$suffix, $resource::class, fn (): Type => Schemas::closed(array_filter([
-            'measures' => $this->measures($resource, $measures),
-            'groups' => $this->groups($resource, $groups),
-        ]), [], $description));
+        return $this->components->schema($this->records->name($resource).$suffix, $resource::class, function () use ($resource, $groups, $measures, $description): Type {
+            $totals = new NonEmptyObject;
+
+            foreach (array_filter(['measures' => $this->measures($resource, $measures), 'groups' => $this->groups($resource, $groups)]) as $name => $list) {
+                $totals->addProperty($name, $list);
+            }
+
+            $totals->setDescription($description);
+            $totals->additionalProperties(new Nothing);
+
+            return $totals;
+        });
     }
 
     /** @param list<string> $measures */

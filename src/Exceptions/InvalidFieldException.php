@@ -120,6 +120,11 @@ final class InvalidFieldException extends LogicException
         return new self("The field [{$name}] declares {$method}() and {$conflict}: {$reason}. Remove one of them.");
     }
 
+    public static function totalsOutsideResource(string $owner, string $name): self
+    {
+        return new self("{$owner} declares groupable() or measurable() on the field [{$name}]. Only the fields of a resource group or measure the totals of a search: remove them.");
+    }
+
     public static function unknownField(string $name): self
     {
         return new self("Unknown field [{$name}].");

@@ -54,6 +54,7 @@ class Response implements Responsable
         return $this;
     }
 
+    /** @internal */
     public function totals(?SearchTotals $totals): static
     {
         $this->totals = $totals;

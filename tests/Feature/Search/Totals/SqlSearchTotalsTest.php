@@ -68,7 +68,7 @@ class SqlSearchTotalsTest extends SearchTotalsTestCase
     {
         $response = $this->search(['totals' => ['groups' => [['field' => 'summary', 'limit' => 2], ['field' => 'summary'], ['field' => 'title', 'limit' => 3]]]]);
 
-        $response->assertUnprocessable()->assertJsonPath('errors', ['search.totals.groups.1.field' => ['The search.totals.groups.1.field field has a duplicate value.']]);
+        $response->assertUnprocessable()->assertJsonPath('errors', ['search.totals.groups.1' => ['The search.totals.groups.1 field has a duplicate value.']]);
 
         $limited = $this->search(['totals' => ['groups' => [['field' => 'summary', 'limit' => 1]]]]);
         $kept = $this->search(['totals' => ['groups' => [['field' => 'summary', 'limit' => 2]]]]);

@@ -25,6 +25,7 @@ enum SearchShape
         'limit' => true,
     ];
 
+    /** @internal */
     public const string TOTALS = 'totals';
 
     private const array SET_KEYS = [

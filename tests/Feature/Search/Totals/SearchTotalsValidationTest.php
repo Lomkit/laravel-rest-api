@@ -57,7 +57,7 @@ class SearchTotalsValidationTest extends SearchTotalsTestCase
             'count as a measure type' => [['measures' => [['type' => 'count', 'field' => 'seats']]], ['search.totals.measures.0.type' => ['The selected search.totals.measures.0.type is invalid.']]],
             'a measure without a field' => [['measures' => [['type' => 'sum']]], ['search.totals.measures.0.field' => ['The search.totals.measures.0.field field is required.']]],
             'a repeated measure' => [['measures' => [['type' => 'sum', 'field' => 'seats'], ['type' => 'max', 'field' => 'seats'], ['type' => 'sum', 'field' => 'seats']]], ['search.totals.measures.2' => ['The search.totals.measures.2 field has a duplicate value.']]],
-            'a repeated group' => [['groups' => [['field' => 'status'], ['field' => 'status', 'limit' => 2]]], ['search.totals.groups.1.field' => ['The search.totals.groups.1.field field has a duplicate value.']]],
+            'a repeated group' => [['groups' => [['field' => 'status'], ['field' => 'status', 'limit' => 2]]], ['search.totals.groups.1' => ['The search.totals.groups.1 field has a duplicate value.']]],
             'too many groups' => [['groups' => [['field' => 'status'], ['field' => 'level'], ['field' => 'featured'], ['field' => 'seats']]], ['search.totals.groups' => ['The search.totals.groups field must not have more than 3 items.']]],
             'a limit of zero' => [['groups' => [['field' => 'status', 'limit' => 0]]], ['search.totals.groups.0.limit' => ['The search.totals.groups.0.limit field must be at least 1.']]],
             'a limit above the groups size' => [['groups' => [['field' => 'status', 'limit' => 101]]], ['search.totals.groups.0.limit' => ['The search.totals.groups.0.limit field must not be greater than 100.']]],
@@ -157,8 +157,8 @@ class SearchTotalsValidationTest extends SearchTotalsTestCase
         $response = $this->search(['totals' => ['groups' => [['field' => 'name']]], 'includes' => [['relation' => 'shows', 'totals' => ['groups' => [['field' => 'status']]]]]], 'stages');
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'search.totals' => ['The search.totals field is prohibited.'],
             'search.includes.0.totals' => ['The search.includes.0.totals field is prohibited.'],
+            'search.totals' => ['The search.totals field is prohibited.'],
         ]);
     }
 

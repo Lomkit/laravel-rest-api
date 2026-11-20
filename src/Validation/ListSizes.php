@@ -40,7 +40,9 @@ final readonly class ListSizes
         public int $jobs,
         public int $rows,
         public int $groups,
+        /** @internal */
         public int $measures,
+        /** @internal */
         public int $totalsGroups,
     ) {}
 

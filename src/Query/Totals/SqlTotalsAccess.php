@@ -23,7 +23,7 @@ final readonly class SqlTotalsAccess
 
         $fields = $resource->definition()->fields();
 
-        return TotalsVocabulary::of(TotalsVocabulary::named($fields->groupable()), TotalsVocabulary::named($fields->measurable()));
+        return TotalsVocabulary::of($fields->groupable()->keyed(), $fields->measurable()->keyed());
     }
 
     public static function documented(Resource $resource): bool

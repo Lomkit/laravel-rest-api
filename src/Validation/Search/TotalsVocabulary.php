@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Validation\Search;
 
 use Lomkit\Rest\Fields\Field;
-use Lomkit\Rest\Fields\FieldSet;
 
 /** @internal */
 final readonly class TotalsVocabulary
@@ -32,17 +31,5 @@ final readonly class TotalsVocabulary
     public static function of(array $groups, array $measures): self
     {
         return new self($groups, $measures, null);
-    }
-
-    /** @return array<string, Field> */
-    public static function named(FieldSet $fields): array
-    {
-        $named = [];
-
-        foreach ($fields as $field) {
-            $named[$field->name] = $field;
-        }
-
-        return $named;
     }
 }

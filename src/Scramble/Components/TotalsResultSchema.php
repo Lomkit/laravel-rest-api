@@ -53,22 +53,7 @@ final readonly class TotalsResultSchema
 
         $fields = $resource->definition()->declaredFields();
 
-        return [self::named($fields->groupable()), self::named($fields->measurable())];
-    }
-
-    /**
-     * @param  iterable<Field>  $fields
-     * @return array<string, Field>
-     */
-    private static function named(iterable $fields): array
-    {
-        $named = [];
-
-        foreach ($fields as $field) {
-            $named[$field->name] = $field;
-        }
-
-        return $named;
+        return [$fields->groupable()->keyed(), $fields->measurable()->keyed()];
     }
 
     /** @param array<string, Field> $measures */

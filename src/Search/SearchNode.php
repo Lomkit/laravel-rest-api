@@ -37,4 +37,10 @@ final readonly class SearchNode
     {
         return new self(null, null, new FilterGroup, [], null, [], [], [], [], null, null, null);
     }
+
+    /** @internal */
+    public function withTotals(?TotalsNode $totals): self
+    {
+        return new self($this->text, $this->trashed, $this->filters, $this->sorts, $this->selects, $this->aggregates, $this->includes, $this->scopes, $this->instructions, $this->gates, $this->limit, $this->page, $totals);
+    }
 }

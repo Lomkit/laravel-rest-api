@@ -69,11 +69,6 @@ final readonly class Violation
         return new self($key, 'validation.prohibited');
     }
 
-    public static function emptyTotals(string $key): self
-    {
-        return new self($key, 'rest::validation.empty_totals');
-    }
-
     public static function sourceWithText(string $key): self
     {
         return new self($key, 'rest::validation.source_with_text');

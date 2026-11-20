@@ -34,7 +34,9 @@ final readonly class SearchParser
             (new SourceParser)->parse($search->at('source'), $text, $context);
         }
 
-        return $body->node($text, $this->trashed($search->at('trashed'), $context), $totals ? (new TotalsParser)->parse($search->at(SearchShape::TOTALS), $context) : null);
+        $node = $body->node($text, $this->trashed($search->at('trashed'), $context));
+
+        return $totals ? $node->withTotals((new TotalsParser)->parse($search->at(SearchShape::TOTALS), $context)) : $node;
     }
 
     private function text(Cursor $text, ValidationContext $context): ?TextQuery

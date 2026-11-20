@@ -15,6 +15,8 @@ use Lomkit\Rest\Validation\Violation;
 /** @internal */
 final readonly class TotalsParser
 {
+    private const string EMPTY = 'rest::validation.empty_totals';
+
     private const array KEYS = ['measures' => true, 'groups' => true];
 
     private const array MEASURE_KEYS = ['type' => true, 'field' => true];
@@ -53,7 +55,7 @@ final readonly class TotalsParser
         $groups = $totals->at('groups');
 
         if (! $context->reader->filled($measures) && ! $context->reader->filled($groups)) {
-            $context->rules->reject(Violation::emptyTotals($totals->path));
+            $context->rules->reject(new Violation($totals->path, self::EMPTY));
 
             return null;
         }
@@ -145,7 +147,7 @@ final readonly class TotalsParser
             }
 
             if (isset($groups[$grouped->name])) {
-                $context->rules->reject(Violation::repeated($field->path));
+                $context->rules->reject(Violation::repeated($entry->path));
 
                 continue;
             }

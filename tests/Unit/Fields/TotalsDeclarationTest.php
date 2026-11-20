@@ -59,6 +59,27 @@ class TotalsDeclarationTest extends TestCase
     }
 
     #[Test]
+    public function it_refuses_totals_on_pivot_and_input_fields(): void
+    {
+        $this->assertSame(
+            [InvalidFieldException::totalsOutsideResource('pivotFields()', 'position')->getMessage(), InvalidFieldException::totalsOutsideResource('fields()', 'amount')->getMessage()],
+            [self::refusal(static fn (): FieldSet => FieldSet::forPivot([Integer::make('position')->groupable()], 'pivotFields()')), self::refusal(static fn (): FieldSet => FieldSet::forInputs([Number::make('amount')->measurable()], 'fields()'))],
+        );
+    }
+
+    /** @param \Closure(): FieldSet $declare */
+    private static function refusal(\Closure $declare): string
+    {
+        try {
+            $declare();
+        } catch (InvalidFieldException $exception) {
+            return $exception->getMessage();
+        }
+
+        return 'accepted';
+    }
+
+    #[Test]
     #[DataProvider('refusals')]
     public function it_refuses_a_field_whose_totals_would_not_read_its_column(Field $field, InvalidFieldException $expected): void
     {

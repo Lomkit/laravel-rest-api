@@ -58,6 +58,12 @@ final readonly class FieldSet implements Countable, IteratorAggregate
         return new self(array_map(fn (Field $field): Field => $field->boundTo($model), $this->fields));
     }
 
+    /** @return array<string, Field> */
+    public function keyed(): array
+    {
+        return array_combine($this->names(), $this->fields);
+    }
+
     /** @return list<string> */
     public function names(): array
     {
