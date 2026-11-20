@@ -25,6 +25,7 @@ return [
     'custom_page_totals' => 'The :attribute field is prohibited: this resource counts its pages itself.',
     'engine_totals' => 'The :attribute field is refused: the search engine of this resource computes no totals.',
     'engine_measure' => 'The :attribute field holds a measure that the search engine of this resource does not compute on this field.',
+    'engine_text_totals' => 'The :attribute field is refused: the search engine of this resource computes totals for a list without text only.',
     'several_types' => 'The :attribute field is prohibited: this relation has several types. Set it for each type, under types.',
     'held_record' => 'The :attribute field is prohibited: this relation already holds a record. Detach it first.',
     'attached_record' => 'The :attribute field holds a record that is already attached. Use update or sync to change its pivot.',

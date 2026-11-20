@@ -20,6 +20,10 @@ interface ComputesTotals extends EngineProfile
 
     public function approximatesDecimals(): bool;
 
+    public function maxGroupValues(): ?int;
+
+    public function countsText(): bool;
+
     /** @return list<string> */
     public function totalsOptions(): array;
 

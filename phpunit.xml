@@ -23,6 +23,7 @@
       <group>meilisearch</group>
       <group>typesense</group>
       <group>algolia</group>
+      <group>algolia-live</group>
     </exclude>
   </groups>
   <php>

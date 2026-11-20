@@ -15,7 +15,6 @@ class TotalledVoucherResource extends VoucherResource
     {
         return ScoutEngine::make()
             ->filterable(['number', 'price', 'active', 'code', 'team'])
-            ->sortable(['price', 'number'])
             ->groupable(['team', 'active', 'number'])
             ->measurable(['price', 'number'])
             ->withoutPerimeter()

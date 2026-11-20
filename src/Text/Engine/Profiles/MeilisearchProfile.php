@@ -116,6 +116,18 @@ final readonly class MeilisearchProfile implements ComputesTotals, FiltersWithGr
 
     /** @internal */
     #[\Override]
+    public function maxGroupValues(): ?int
+    {
+        return null;
+    }
+
+    #[\Override]
+    public function countsText(): bool
+    {
+        return true;
+    }
+
+    #[\Override]
     public function totalsOptions(): array
     {
         return ['facets', 'distinct'];

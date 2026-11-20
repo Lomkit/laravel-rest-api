@@ -12,7 +12,9 @@ final readonly class EngineTotalsVocabulary
 
     public const string UNCOMPUTED = 'rest::validation.engine_measure';
 
-    public static function of(EngineGrammar $engine): TotalsVocabulary
+    public const string UNTOTALLED_TEXT = 'rest::validation.engine_text_totals';
+
+    public static function of(EngineGrammar $engine, bool $listing): TotalsVocabulary
     {
         $totals = $engine->totals;
 
@@ -22,6 +24,10 @@ final readonly class EngineTotalsVocabulary
 
         if (! $totals->declares()) {
             return TotalsVocabulary::refused(TotalsVocabulary::PROHIBITED);
+        }
+
+        if (! $listing && ! $totals->text) {
+            return TotalsVocabulary::refused(self::UNTOTALLED_TEXT);
         }
 
         $groups = [];
@@ -35,6 +41,6 @@ final readonly class EngineTotalsVocabulary
             $measures[$name] = $engine->filters[$name]->field;
         }
 
-        return TotalsVocabulary::of($groups, $measures, $totals->measures, self::UNCOMPUTED);
+        return TotalsVocabulary::of($groups, $measures, $totals->measures, self::UNCOMPUTED, $totals->maxValues === null ? null : $totals->maxValues - 1);
     }
 }

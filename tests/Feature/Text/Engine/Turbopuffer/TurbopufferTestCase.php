@@ -94,6 +94,15 @@ abstract class TurbopufferTestCase extends EngineSearchTestCase
         return $queries;
     }
 
+    /**
+     * @param  array<string, mixed>  $query
+     * @return array<string, mixed>|null
+     */
+    protected function aggregated(array $query): ?array
+    {
+        return null;
+    }
+
     private function respond(Request $request): PromiseInterface
     {
         if (! str_ends_with($request->url(), '/query')) {
@@ -101,7 +110,7 @@ abstract class TurbopufferTestCase extends EngineSearchTestCase
         }
 
         if (isset($request->data()['aggregate_by'])) {
-            return Http::response(['aggregations' => ['count' => $this->count], ...self::USAGE]);
+            return Http::response([...$this->aggregated($request->data()) ?? ['aggregations' => ['count' => $this->count]], ...self::USAGE]);
         }
 
         $limit = $request->data()['limit'] ?? 10;
