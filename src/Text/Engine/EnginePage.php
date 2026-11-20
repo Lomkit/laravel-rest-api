@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
+use Lomkit\Rest\Search\Totals\SearchTotals;
+
 final readonly class EnginePage
 {
     /** @param list<int|string> $keys */
@@ -9,6 +11,8 @@ final readonly class EnginePage
         public array $keys,
         public int $total,
         public ?bool $capped = null,
+        /** @internal */
+        public ?SearchTotals $totals = null,
     ) {}
 
     public static function empty(): self
@@ -19,6 +23,12 @@ final readonly class EnginePage
     /** @internal */
     public function cappedAt(?int $maximum): self
     {
-        return new self($this->keys, $this->total, $maximum === null ? null : $this->total >= $maximum);
+        return new self($this->keys, $this->total, $maximum === null ? null : $this->total >= $maximum, $this->totals);
+    }
+
+    /** @internal */
+    public function withTotals(?SearchTotals $totals): self
+    {
+        return new self($this->keys, $this->total, $this->capped, $totals);
     }
 }

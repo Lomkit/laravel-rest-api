@@ -16,6 +16,7 @@ use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Types\NonEmptyObject;
 use Lomkit\Rest\Scramble\Types\Nothing;
 use Lomkit\Rest\Search\Totals\MeasureType;
+use Lomkit\Rest\Text\Engine\EngineGrammar;
 
 /** @internal */
 final readonly class TotalsSchema
@@ -36,20 +37,34 @@ final readonly class TotalsSchema
         return $this->request($resource, 'SearchTotals', $fields->groupable()->names(), $fields->measurable()->names(), 'The totals of every row that the search matches, returned under totals at the root of the page: count always, the measures and the groups asked for. Send measures, groups or both.');
     }
 
+    public function engine(Resource $resource, EngineGrammar $engine): ?Reference
+    {
+        $totals = $engine->totals;
+
+        if ($totals === null) {
+            return null;
+        }
+
+        $types = array_values(array_unique(array_map(static fn (MeasureType $type): string => $type->value, array_merge([], ...array_values($totals->measures)))));
+
+        return $this->request($resource, 'EngineSearchTotals', $totals->groups, array_keys($totals->measures), 'The totals of every row that the search engine matches, returned under totals at the root of the page: count always, the measures and the groups asked for. Send measures, groups or both.', $types);
+    }
+
     /**
      * @param  list<string>  $groups
      * @param  list<string>  $measures
+     * @param  list<string>|null  $types
      */
-    public function request(Resource $resource, string $suffix, array $groups, array $measures, string $description): ?Reference
+    public function request(Resource $resource, string $suffix, array $groups, array $measures, string $description, ?array $types = null): ?Reference
     {
         if ($groups === [] && $measures === []) {
             return null;
         }
 
-        return $this->components->schema($this->records->name($resource).$suffix, $resource::class, function () use ($resource, $groups, $measures, $description): Type {
+        return $this->components->schema($this->records->name($resource).$suffix, $resource::class, function () use ($resource, $groups, $measures, $description, $types): Type {
             $totals = new NonEmptyObject;
 
-            foreach (array_filter(['measures' => $this->measures($resource, $measures), 'groups' => $this->groups($resource, $groups)]) as $name => $list) {
+            foreach (array_filter(['measures' => $this->measures($resource, $measures, $types ?? MeasureType::values()), 'groups' => $this->groups($resource, $groups)]) as $name => $list) {
                 $totals->addProperty($name, $list);
             }
 
@@ -60,15 +75,18 @@ final readonly class TotalsSchema
         });
     }
 
-    /** @param list<string> $measures */
-    private function measures(Resource $resource, array $measures): ?ArrayType
+    /**
+     * @param  list<string>  $measures
+     * @param  list<string>  $types
+     */
+    private function measures(Resource $resource, array $measures, array $types): ?ArrayType
     {
         if ($measures === []) {
             return null;
         }
 
         $measure = Schemas::closed([
-            'type' => (new StringType)->enum(MeasureType::values()),
+            'type' => (new StringType)->enum($types),
             'field' => (new StringType)->enum($measures),
         ], ['type', 'field'], 'A measure over every matched row, returned in totals.all under <type>_<field>. sum ignores null values and is 0 without rows; avg, min and max ignore null values and are null without rows.');
 

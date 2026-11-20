@@ -23,6 +23,8 @@ return [
     'empty_totals' => 'Le champ :attribute doit demander des mesures ou des groupes.',
     'capped_totals' => 'Le champ :attribute est interdit : cette ressource plafonne le décompte de ses lignes.',
     'custom_page_totals' => 'Le champ :attribute est interdit : cette ressource compte ses pages elle-même.',
+    'engine_totals' => 'Le champ :attribute est refusé : le moteur de recherche de cette ressource ne calcule pas de totaux.',
+    'engine_measure' => 'Le champ :attribute demande une mesure que le moteur de recherche de cette ressource ne calcule pas sur ce champ.',
     'several_types' => 'Le champ :attribute est interdit : cette relation a plusieurs types. Indiquez-le pour chaque type, sous types.',
     'held_record' => 'Le champ :attribute est interdit : cette relation contient déjà un élément. Détachez-le d\'abord.',
     'attached_record' => 'Le champ :attribute contient un élément déjà attaché. Utilisez update ou sync pour modifier son pivot.',

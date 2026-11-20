@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Text\Engine;
 
 use JsonSerializable;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Text\Engine\Totals\TotalsGrammar;
 use Lomkit\Rest\Text\TextCapabilities;
 use Lomkit\Rest\Validation\Search\SearchGrammar;
 
@@ -22,6 +23,7 @@ final readonly class EngineGrammar implements JsonSerializable
         public ?int $listSortKeys = null,
         public bool $groups = false,
         public ?string $tieBreaker = null,
+        public ?TotalsGrammar $totals = null,
     ) {}
 
     /** @return list<FilterOperator> */
@@ -56,19 +58,20 @@ final readonly class EngineGrammar implements JsonSerializable
             $this->listSortKeys,
             $this->groups,
             $this->tieBreaker,
+            $this->totals?->without($unfilterable),
         );
     }
 
     /** @internal */
     public function listing(int $sortKeys, ?string $tieBreaker = null): self
     {
-        return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, $sortKeys, $this->groups, $tieBreaker);
+        return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, $sortKeys, $this->groups, $tieBreaker, $this->totals);
     }
 
     /** @internal */
     public function unlisted(): self
     {
-        return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, groups: $this->groups);
+        return new self($this->filters, $this->sorts, $this->sortKeys, $this->maxPageSize, $this->window, groups: $this->groups, totals: $this->totals);
     }
 
     /** @internal */
@@ -83,13 +86,14 @@ final readonly class EngineGrammar implements JsonSerializable
         return new EngineSearchGrammar($this, $text, $listing && $this->servesLists());
     }
 
-    /** @return array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null, lists?: true, max_list_sorts?: int|null, tie_breaker?: string, groups?: true} */
+    /** @return array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null, lists?: true, max_list_sorts?: int|null, tie_breaker?: string, groups?: true, totals?: TotalsGrammar} */
     #[\Override]
     public function jsonSerialize(): array
     {
         $lists = $this->listSortKeys === null ? [] : ['lists' => true, 'max_list_sorts' => self::bound($this->listSortKeys)];
         $tieBreaker = $this->tieBreaker === null ? [] : ['tie_breaker' => $this->tieBreaker];
         $groups = $this->groups ? ['groups' => true] : [];
+        $totals = $this->totals?->declares() === true ? ['totals' => $this->totals] : [];
 
         return [
             'filters' => array_values($this->filters),
@@ -100,6 +104,7 @@ final readonly class EngineGrammar implements JsonSerializable
             ...$lists,
             ...$tieBreaker,
             ...$groups,
+            ...$totals,
         ];
     }
 

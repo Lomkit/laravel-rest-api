@@ -2,20 +2,25 @@
 
 namespace Lomkit\Rest\Text\Engine\Profiles;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\DatabaseEngine;
+use Lomkit\Rest\Exceptions\TotalsComputationException;
 use Lomkit\Rest\Fields\Field;
+use Lomkit\Rest\Query\Totals\SqlTotals;
 use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\Groups\EloquentFilter;
 use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
+use Lomkit\Rest\Text\Engine\Totals\EngineTotals;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class DatabaseProfile implements AppliesRowRestrictions, ComparesColumns, FiltersWithGroups, ListsWithoutText, RanksByKey
+final readonly class DatabaseProfile implements AppliesRowRestrictions, ComparesColumns, ComputesTotals, FiltersWithGroups, ListsWithoutText, RanksByKey
 {
+    use MeasuresNumbers;
     use PlainLiterals;
 
     public function __construct(private DatabaseEngine $engine) {}
@@ -95,24 +100,62 @@ final readonly class DatabaseProfile implements AppliesRowRestrictions, Compares
         return $this->read($builder, $model, $perPage, $page, $rows);
     }
 
+    /** @internal */
+    #[\Override]
+    public function totalsOptions(): array
+    {
+        return [];
+    }
+
+    /** @internal */
+    #[\Override]
+    public function ensureTotalsUsableBy(TextTarget $target): void {}
+
+    /** @internal */
+    #[\Override]
+    public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
+    {
+        $query = null;
+        $result = $this->read($builder, $model, $perPage, $page, $rows, static function (EloquentBuilder $read) use (&$query): void {
+            $query = $read;
+        });
+
+        if ($totals === null) {
+            return $result;
+        }
+
+        if (! $query instanceof EloquentBuilder) {
+            throw TotalsComputationException::uncapturedQuery($totals->resource, $totals->engine);
+        }
+
+        return $result->withTotals((new SqlTotals($totals->node))->of($query));
+    }
+
     #[\Override]
     public function reachable(ScoutModel $model): int
     {
         return PHP_INT_MAX;
     }
 
-    /** @param Builder<Model> $builder */
-    private function read(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows): EnginePage
+    /**
+     * @param  Builder<Model>  $builder
+     * @param  (Closure(EloquentBuilder<Model>): void)|null  $capture
+     */
+    private function read(Builder $builder, ScoutModel $model, int $perPage, int $page, ?RowRestriction $rows, ?Closure $capture = null): EnginePage
     {
         $groups = $builder->queryCallback;
 
-        $builder->query(function (EloquentBuilder $query) use ($model, $rows, $groups): EloquentBuilder {
+        $builder->query(function (EloquentBuilder $query) use ($model, $rows, $groups, $capture): EloquentBuilder {
             if ($groups !== null) {
                 $groups($query);
             }
 
             $query->select($model->keyColumn())->setEagerLoads([]);
             $rows?->apply($query);
+
+            if ($capture !== null) {
+                $capture($query);
+            }
 
             return $query;
         });

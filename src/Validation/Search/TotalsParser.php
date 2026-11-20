@@ -100,6 +100,12 @@ final readonly class TotalsParser
                 continue;
             }
 
+            if (! $vocabulary->measures($measured->name, $parsed)) {
+                $context->rules->reject(new Violation($type->path, $vocabulary->uncomputed));
+
+                continue;
+            }
+
             $measure = new MeasureNode($parsed, $measured);
 
             if (isset($measures[$measure->key()])) {

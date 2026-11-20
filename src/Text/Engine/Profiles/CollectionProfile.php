@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Text\Engine\Profiles;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\CollectionEngine;
 use Lomkit\Rest\Fields\Field;
@@ -9,10 +11,14 @@ use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
+use Lomkit\Rest\Text\Engine\Totals\EngineTotals;
+use Lomkit\Rest\Text\Engine\Totals\RowTotals;
 use Lomkit\Rest\Text\TextTarget;
+use ReflectionMethod;
 
-final readonly class CollectionProfile implements AppliesRowRestrictions, ComparesColumns, FiltersWithGroups, ListsWithoutText, RanksByKey
+final readonly class CollectionProfile implements AppliesRowRestrictions, ComparesColumns, ComputesTotals, FiltersWithGroups, ListsWithoutText, RanksByKey
 {
+    use MeasuresNumbers;
     use PlainLiterals;
 
     public function __construct(private CollectionEngine $engine) {}
@@ -92,6 +98,33 @@ final readonly class CollectionProfile implements AppliesRowRestrictions, Compar
         CollectionCallback::restrict($builder, $rows);
 
         return EngineHits::page($this->engine, $builder, $model, $perPage, $page);
+    }
+
+    /** @internal */
+    #[\Override]
+    public function totalsOptions(): array
+    {
+        return [];
+    }
+
+    /** @internal */
+    #[\Override]
+    public function ensureTotalsUsableBy(TextTarget $target): void {}
+
+    /** @internal */
+    #[\Override]
+    public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
+    {
+        $result = $rows === null ? $this->page($builder, $model, $perPage, $page) : $this->restrictedPage($builder, $model, $perPage, $page, $rows);
+
+        if ($totals === null) {
+            return $result;
+        }
+
+        $models = (new ReflectionMethod($this->engine, 'searchModels'))->invoke($this->engine, $builder);
+        $matched = $models instanceof Collection ? array_values(array_filter($models->all(), static fn (mixed $row): bool => $row instanceof Model)) : [];
+
+        return $result->withTotals((new RowTotals($totals))->of($matched));
     }
 
     #[\Override]

@@ -9,10 +9,12 @@ use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\Groups\FilterTree;
 use Lomkit\Rest\Text\Engine\RowRestriction;
 use Lomkit\Rest\Text\Engine\ScoutModel;
+use Lomkit\Rest\Text\Engine\Totals\EngineTotals;
 use Lomkit\Rest\Text\TextTarget;
 
-final readonly class NullProfile implements AppliesRowRestrictions, FiltersWithGroups, ListsWithoutText, RanksByKey
+final readonly class NullProfile implements AppliesRowRestrictions, ComputesTotals, FiltersWithGroups, ListsWithoutText, RanksByKey
 {
+    use MeasuresNumbers;
     use PlainLiterals;
 
     public function __construct(private NullEngine $engine) {}
@@ -87,6 +89,26 @@ final readonly class NullProfile implements AppliesRowRestrictions, FiltersWithG
     public function restrictedPage(Builder $builder, ScoutModel $model, int $perPage, int $page, RowRestriction $rows): EnginePage
     {
         return EnginePage::empty();
+    }
+
+    /** @internal */
+    #[\Override]
+    public function totalsOptions(): array
+    {
+        return [];
+    }
+
+    /** @internal */
+    #[\Override]
+    public function ensureTotalsUsableBy(TextTarget $target): void {}
+
+    /** @internal */
+    #[\Override]
+    public function totalsPage(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals, ?RowRestriction $rows = null): EnginePage
+    {
+        $result = $rows === null ? $this->page($builder, $model, $perPage, $page) : $this->restrictedPage($builder, $model, $perPage, $page, $rows);
+
+        return $result->withTotals($totals?->empty());
     }
 
     #[\Override]

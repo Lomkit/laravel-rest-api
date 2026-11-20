@@ -47,13 +47,24 @@ final readonly class TotalsResultSchema
     /** @return array{array<string, Field>, array<string, Field>} */
     private static function fields(Resource $resource): array
     {
-        if (! SqlTotalsAccess::documented($resource)) {
-            return [[], []];
+        $fields = $resource->definition()->declaredFields();
+        $sql = SqlTotalsAccess::documented($resource);
+        [$groups, $measures] = $sql ? [$fields->groupable()->keyed(), $fields->measurable()->keyed()] : [[], []];
+        $engine = $resource->context()->text($resource)->capabilities?->engine;
+
+        if ($engine === null) {
+            return [$groups, $measures];
         }
 
-        $fields = $resource->definition()->declaredFields();
+        foreach ($engine->totals->groups ?? [] as $name) {
+            $groups[$name] ??= $engine->filters[$name]->field;
+        }
 
-        return [$fields->groupable()->keyed(), $fields->measurable()->keyed()];
+        foreach (array_keys($engine->totals->measures ?? []) as $name) {
+            $measures[$name] ??= $engine->filters[$name]->field;
+        }
+
+        return [$groups, $measures];
     }
 
     /** @param array<string, Field> $measures */
