@@ -27,10 +27,12 @@ class TypesenseListTest extends TypesenseTestCase
     {
         $this->collections->drop($this->collection);
 
-        $listed = $this->search('listed-vouchers', ['source' => 'engine']);
         $termless = $this->search('listed-vouchers', ['source' => 'engine', 'text' => ['value' => '*']]);
+        $existsAfterTermless = $this->collections->exists($this->collection);
+        $listed = $this->search('listed-vouchers', ['source' => 'engine']);
 
-        $listed->assertServerError();
         $termless->assertOk()->assertExactJson($this->page([], 0));
+        $listed->assertOk()->assertExactJson($this->page([], 0));
+        $this->assertSame([false, true], [$existsAfterTermless, $this->collections->exists($this->collection)]);
     }
 }
