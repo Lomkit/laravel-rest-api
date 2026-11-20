@@ -45,13 +45,17 @@ jobs:
             database: 'sqlite'
             dependencies: 'highest'
             scout: 'absent'
-          # The engine tests against real Meilisearch and Typesense servers, and Algolia through recorded responses
+          # The engine tests against real Meilisearch and Typesense servers, Algolia through recorded responses,
+          # and a live Algolia application when the repository holds its secrets (not on pull requests from forks)
           - php-version: '8.5'
             database: 'sqlite'
             dependencies: 'highest'
             scout: 'engines'
 
     name: PHP ${{ matrix.php-version }} - ${{ matrix.database }} - ${{ matrix.dependencies }} - scout ${{ matrix.scout }}
+
+    env:
+      ALGOLIA_LIVE: ${{ secrets.ALGOLIA_APP_ID != '' && secrets.ALGOLIA_SECRET != '' }}
 
     services:
       # An empty image skips the service, so each job only starts the services it uses
@@ -195,6 +199,22 @@ jobs:
           TYPESENSE_PORT: ${{ job.services.typesense.ports['8108'] }}
           TYPESENSE_PROTOCOL: http
           TYPESENSE_API_KEY: lrapi-ci-api-key
+
+      - name: Run the live Algolia tests
+        if: matrix.scout == 'engines' && env.ALGOLIA_LIVE == 'true'
+        run: vendor/bin/phpunit --group algolia-live --fail-on-skipped --fail-on-empty-test-suite
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+          ALGOLIA_SECRET: ${{ secrets.ALGOLIA_SECRET }}
+
+      - name: Delete the live Algolia indexes left by interrupted runs
+        if: always() && matrix.scout == 'engines' && env.ALGOLIA_LIVE == 'true'
+        run: php .github/scripts/delete-stale-algolia-indexes.php
+        env:
+          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+          ALGOLIA_SECRET: ${{ secrets.ALGOLIA_SECRET }}
 
   coverage:
 
