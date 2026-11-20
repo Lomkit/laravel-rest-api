@@ -13,6 +13,7 @@ use Lomkit\Rest\Http\Serialization\GateReach;
 use Lomkit\Rest\Http\Serialization\PageEnvelope;
 use Lomkit\Rest\Http\Serialization\PlainEnvelope;
 use Lomkit\Rest\Http\Serialization\RowSerializer;
+use Lomkit\Rest\Http\Serialization\TotalsJson;
 use Lomkit\Rest\Search\Plan\Columns\StrictColumns;
 use Lomkit\Rest\Search\Plan\IncludeOverflow;
 use Lomkit\Rest\Search\Plan\QueryPlan;
@@ -73,7 +74,7 @@ class Response implements Responsable
     #[\Override]
     public function toResponse(mixed $request): JsonResponse
     {
-        return new JsonResponse($this->body());
+        return TotalsJson::response($this->body());
     }
 
     /** @return array<array-key, mixed> */

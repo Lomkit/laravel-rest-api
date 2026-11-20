@@ -35,7 +35,7 @@ class SqlSearchTotalsTest extends SearchTotalsTestCase
         $this->assertSame(5, $response->json('total'));
         $this->assertSame([
             'exact' => true,
-            'all' => ['count' => 5, 'sum_seats' => 750, 'avg_seats' => 150, 'min_seats' => 50, 'max_seats' => 300, 'sum_price' => 43, 'avg_price' => 10.75, 'min_price' => 5, 'max_price' => 20.25],
+            'all' => ['count' => 5, 'sum_seats' => 750, 'avg_seats' => 150.0, 'min_seats' => 50, 'max_seats' => 300, 'sum_price' => 43.0, 'avg_price' => 10.75, 'min_price' => 5.0, 'max_price' => 20.25],
             'groups' => [
                 ['field' => 'status', 'buckets' => [['value' => 'on_sale', 'count' => 3], ['value' => 'planned', 'count' => 1], ['value' => 'sold_out', 'count' => 1]], 'other' => ['count' => 0], 'truncated' => false],
                 ['field' => 'level', 'buckets' => [['value' => 1, 'count' => 3], ['value' => 2, 'count' => 1], ['value' => 3, 'count' => 1]], 'other' => ['count' => 0], 'truncated' => false],
@@ -88,7 +88,7 @@ class SqlSearchTotalsTest extends SearchTotalsTestCase
         $response->assertOk()->assertJsonPath('total', 0);
         $this->assertSame([
             'exact' => true,
-            'all' => ['count' => 0, 'sum_seats' => 0, 'avg_seats' => null, 'min_seats' => null, 'max_seats' => null, 'sum_price' => 0, 'avg_price' => null, 'min_price' => null, 'max_price' => null],
+            'all' => ['count' => 0, 'sum_seats' => 0, 'avg_seats' => null, 'min_seats' => null, 'max_seats' => null, 'sum_price' => 0.0, 'avg_price' => null, 'min_price' => null, 'max_price' => null],
             'groups' => [['field' => 'status', 'buckets' => [], 'other' => ['count' => 0], 'truncated' => false]],
         ], $response->json('totals'));
     }
@@ -155,6 +155,17 @@ class SqlSearchTotalsTest extends SearchTotalsTestCase
                 ['field' => 'level', 'buckets' => [['value' => 3, 'count' => 3], ['value' => 1, 'count' => 2], ['value' => 2, 'count' => 1]], 'other' => ['count' => 0], 'truncated' => false],
             ],
         ], $joined->json('totals'));
+    }
+
+    #[Test]
+    public function it_writes_a_whole_float_with_its_fraction_and_an_integer_without(): void
+    {
+        DB::table('shows')->update(['seats' => 30, 'price' => '30.00']);
+
+        $response = $this->search(['totals' => ['measures' => [['type' => 'sum', 'field' => 'seats'], ['type' => 'sum', 'field' => 'price'], ['type' => 'max', 'field' => 'price']]]]);
+
+        $response->assertOk();
+        $this->assertStringContainsString('"totals":{"exact":true,"all":{"count":5,"sum_seats":150,"sum_price":150.0,"max_price":30.0},"groups":[]},"meta":', (string) $response->getContent());
     }
 
     #[Test]
