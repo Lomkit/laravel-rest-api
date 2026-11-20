@@ -25,6 +25,8 @@ enum SearchShape
         'limit' => true,
     ];
 
+    public const string TOTALS = 'totals';
+
     private const array SET_KEYS = [
         'text' => true,
         'trashed' => true,
@@ -37,7 +39,7 @@ enum SearchShape
     public function keys(): array
     {
         return match ($this) {
-            self::Page => [...self::ROW_KEYS, 'page' => true],
+            self::Page => [...self::ROW_KEYS, 'page' => true, self::TOTALS => true],
             self::Rows => self::ROW_KEYS,
             self::Aggregate => self::SET_KEYS,
         };
@@ -48,8 +50,8 @@ enum SearchShape
     {
         return match ($this) {
             self::Page => [],
-            self::Rows => ['page'],
-            self::Aggregate => ['gates', 'sorts', 'selects', 'aggregates', 'includes', 'limit', 'page', 'source'],
+            self::Rows => ['page', self::TOTALS],
+            self::Aggregate => ['gates', 'sorts', 'selects', 'aggregates', 'includes', 'limit', 'page', 'source', self::TOTALS],
         };
     }
 

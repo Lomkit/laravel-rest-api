@@ -10,6 +10,7 @@ use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Search\Totals\MeasureType;
 
 final class DetailsEntryTypes
 {
@@ -38,7 +39,8 @@ final class DetailsEntryTypes
             'With fields.filter: accepted by search.filters on this field; empty when it is not filterable',
             'With fields.capabilities: writable on create',
             'With fields.capabilities: writable on update',
-            ['select', 'sort', 'filter', 'create', 'update', 'rules', 'meta'],
+            ['select', 'sort', 'group', 'measures', 'filter', 'create', 'update', 'rules', 'meta'],
+            true,
         );
     }
 
@@ -124,7 +126,7 @@ final class DetailsEntryTypes
      * @param  list<string>  $names
      * @param  list<string>  $parts
      */
-    private static function fieldEntry(array $names, string $select, string $sort, string $operators, string $create, string $update, array $parts = []): ObjectType
+    private static function fieldEntry(array $names, string $select, string $sort, string $operators, string $create, string $update, array $parts = [], bool $totals = false): ObjectType
     {
         $rules = Schemas::required(
             ['all' => self::strings(), 'create' => self::strings(), 'update' => self::strings()],
@@ -138,6 +140,7 @@ final class DetailsEntryTypes
             'nullable' => new BooleanType,
             'select' => (new BooleanType)->setDescription($select),
             'sort' => (new BooleanType)->setDescription($sort),
+            ...($totals ? self::totals() : []),
             'filter' => Schemas::required(['operators' => self::operators($operators)]),
             'create' => (new BooleanType)->setDescription($create),
             'update' => (new BooleanType)->setDescription($update),
@@ -146,6 +149,15 @@ final class DetailsEntryTypes
             'values' => self::values('Enum fields only: the backing values'),
             'offered' => self::values('Enum fields that offer only some cases: the backing values that writes accept'),
         ], [...$parts, 'values', 'offered']);
+    }
+
+    /** @return array<string, BooleanType|ArrayType> */
+    private static function totals(): array
+    {
+        return [
+            'group' => (new BooleanType)->setDescription('With fields.capabilities: accepted in search.totals.groups; false when the user cannot ask this resource for totals'),
+            'measures' => Schemas::list((new StringType)->enum(MeasureType::values()), 'With fields.capabilities: the measure types that search.totals.measures accepts on this field; empty when it is not measurable or the user cannot ask this resource for totals'),
+        ];
     }
 
     private static function meta(string $description): ObjectType

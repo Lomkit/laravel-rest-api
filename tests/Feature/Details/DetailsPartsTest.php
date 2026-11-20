@@ -81,14 +81,14 @@ class DetailsPartsTest extends PackageTestCase
         $base = ['name', 'label', 'type', 'nullable'];
 
         return [
-            'the capabilities' => ['fields.capabilities', ',"select":true,"sort":true,"create":true,"update":true', [...$base, 'select', 'sort', 'create', 'update', 'values']],
+            'the capabilities' => ['fields.capabilities', ',"select":true,"sort":true,"group":false,"measures":[],"create":true,"update":true', [...$base, 'select', 'sort', 'group', 'measures', 'create', 'update', 'values']],
             'the filter' => ['fields.filter', ',"filter":{"operators":'.self::TEXT_OPERATORS.'}', [...$base, 'filter', 'values']],
             'the rules' => ['fields.rules', ',"rules":{"all":["string","max:120"],"create":["required"],"update":["filled"]}', [...$base, 'rules', 'values']],
             'the meta' => ['fields.meta', ',"meta":{}', [...$base, 'meta', 'values']],
             'every part' => [
                 'fields.meta,fields.rules,fields.filter,fields.capabilities',
-                ',"select":true,"sort":true,"filter":{"operators":'.self::TEXT_OPERATORS.'},"create":true,"update":true,"rules":{"all":["string","max:120"],"create":["required"],"update":["filled"]},"meta":{}',
-                [...$base, 'select', 'sort', 'filter', 'create', 'update', 'rules', 'meta', 'values'],
+                ',"select":true,"sort":true,"group":false,"measures":[],"filter":{"operators":'.self::TEXT_OPERATORS.'},"create":true,"update":true,"rules":{"all":["string","max:120"],"create":["required"],"update":["filled"]},"meta":{}',
+                [...$base, 'select', 'sort', 'group', 'measures', 'filter', 'create', 'update', 'rules', 'meta', 'values'],
             ],
         ];
     }

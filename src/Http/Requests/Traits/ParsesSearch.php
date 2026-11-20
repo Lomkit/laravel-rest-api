@@ -8,6 +8,7 @@ use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\Search\RowLimit;
 use Lomkit\Rest\Validation\Search\SearchParser;
+use Lomkit\Rest\Validation\Search\SearchShape;
 use Lomkit\Rest\Validation\ValidationContext;
 
 trait ParsesSearch
@@ -22,7 +23,7 @@ trait ParsesSearch
         if ($this->parsedSearch === null) {
             $search = Cursor::of($this->all(), $rules->violations())->at('search');
             $context = ValidationContext::root($resource, $this->budget(), $rules);
-            $this->parsedSearch = (new SearchParser)->parse($search, $context);
+            $this->parsedSearch = (new SearchParser(SearchShape::Page, $this->rendersPage()))->parse($search, $context);
 
             if ($this->rendersPage()) {
                 RowLimit::of($context)->page($search, $this->parsedSearch, $context);

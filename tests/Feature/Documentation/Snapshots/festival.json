@@ -5338,6 +5338,23 @@
                                             "type": "boolean",
                                             "description": "With fields.capabilities: accepted in search.sorts"
                                         },
+                                        "group": {
+                                            "type": "boolean",
+                                            "description": "With fields.capabilities: accepted in search.totals.groups; false when the user cannot ask this resource for totals"
+                                        },
+                                        "measures": {
+                                            "type": "array",
+                                            "description": "With fields.capabilities: the measure types that search.totals.measures accepts on this field; empty when it is not measurable or the user cannot ask this resource for totals",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "sum",
+                                                    "avg",
+                                                    "min",
+                                                    "max"
+                                                ]
+                                            }
+                                        },
                                         "filter": {
                                             "type": "object",
                                             "properties": {
@@ -8835,6 +8852,23 @@
                                         "sort": {
                                             "type": "boolean",
                                             "description": "With fields.capabilities: accepted in search.sorts"
+                                        },
+                                        "group": {
+                                            "type": "boolean",
+                                            "description": "With fields.capabilities: accepted in search.totals.groups; false when the user cannot ask this resource for totals"
+                                        },
+                                        "measures": {
+                                            "type": "array",
+                                            "description": "With fields.capabilities: the measure types that search.totals.measures accepts on this field; empty when it is not measurable or the user cannot ask this resource for totals",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "sum",
+                                                    "avg",
+                                                    "min",
+                                                    "max"
+                                                ]
+                                            }
                                         },
                                         "filter": {
                                             "type": "object",
@@ -12580,6 +12614,9 @@
                     "total": {
                         "type": "integer"
                     },
+                    "totals": {
+                        "$ref": "#/components/schemas/ShowTotals"
+                    },
                     "meta": {
                         "type": "object",
                         "description": "Also holds the keys that searchMeta() of the resource returns for the page",
@@ -13583,9 +13620,84 @@
                         "type": "integer",
                         "minimum": 1,
                         "maximum": 184467440737095517
+                    },
+                    "totals": {
+                        "$ref": "#/components/schemas/ShowSearchTotals"
                     }
                 },
                 "title": "ShowSearch"
+            },
+            "ShowSearchTotals": {
+                "type": "object",
+                "description": "The totals of every row that the search matches, returned under totals at the root of the page: count always, the measures and the groups asked for. Send measures, groups or both.",
+                "properties": {
+                    "measures": {
+                        "type": "array",
+                        "description": "Distinct measures",
+                        "items": {
+                            "type": "object",
+                            "description": "A measure over every matched row, returned in totals.all under <type>_<field>. sum ignores null values and is 0 without rows; avg, min and max ignore null values and are null without rows.",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "sum",
+                                        "avg",
+                                        "min",
+                                        "max"
+                                    ]
+                                },
+                                "field": {
+                                    "type": "string",
+                                    "enum": [
+                                        "price",
+                                        "seats"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "type",
+                                "field"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "maxItems": 20
+                    },
+                    "groups": {
+                        "type": "array",
+                        "description": "Groups on distinct fields",
+                        "items": {
+                            "type": "object",
+                            "description": "Counts the matched rows per value of one field, independently of the other groups. The values come by count, descending, then by value; the rows outside them, other values and rows without a value, are counted in other.",
+                            "properties": {
+                                "field": {
+                                    "type": "string",
+                                    "enum": [
+                                        "title",
+                                        "summary",
+                                        "seats",
+                                        "featured",
+                                        "status",
+                                        "level"
+                                    ]
+                                },
+                                "limit": {
+                                    "type": "integer",
+                                    "description": "The most values returned, 100 by default",
+                                    "minimum": 1,
+                                    "maximum": 100
+                                }
+                            },
+                            "required": [
+                                "field"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "maxItems": 3
+                    }
+                },
+                "additionalProperties": false,
+                "title": "ShowSearchTotals"
             },
             "ShowSelect": {
                 "type": "object",
@@ -13665,6 +13777,167 @@
                 ],
                 "additionalProperties": false,
                 "title": "ShowSort"
+            },
+            "ShowTotals": {
+                "type": "object",
+                "description": "Present when the search asks for totals. The buckets of a group plus its other count add up to all.count, which equals total.",
+                "properties": {
+                    "exact": {
+                        "type": "boolean",
+                        "description": "True when every figure counts every matched row; always true, since a search that cannot count exactly answers 422"
+                    },
+                    "all": {
+                        "type": "object",
+                        "description": "count, then each measure asked for under <type>_<field>",
+                        "properties": {
+                            "count": {
+                                "type": "integer"
+                            },
+                            "sum_price": {
+                                "type": "number"
+                            },
+                            "avg_price": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ]
+                            },
+                            "min_price": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ]
+                            },
+                            "max_price": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ]
+                            },
+                            "sum_seats": {
+                                "type": "integer"
+                            },
+                            "avg_seats": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ]
+                            },
+                            "min_seats": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "max_seats": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "count"
+                        ]
+                    },
+                    "groups": {
+                        "type": "array",
+                        "description": "One entry per group asked for, in the order of the request",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowTotalsGroup"
+                        }
+                    }
+                },
+                "required": [
+                    "exact",
+                    "all",
+                    "groups"
+                ],
+                "title": "ShowTotals"
+            },
+            "ShowTotalsGroup": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "title",
+                            "summary",
+                            "seats",
+                            "featured",
+                            "status",
+                            "level"
+                        ]
+                    },
+                    "buckets": {
+                        "type": "array",
+                        "description": "By count, descending, then by value",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "integer"
+                                        },
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "type": "string",
+                                            "enum": [
+                                                "planned",
+                                                "on_sale",
+                                                "sold_out"
+                                            ]
+                                        },
+                                        {
+                                            "type": "integer",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "count": {
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "value",
+                                "count"
+                            ]
+                        }
+                    },
+                    "other": {
+                        "type": "object",
+                        "description": "The matched rows outside the buckets: other values and rows without a value",
+                        "properties": {
+                            "count": {
+                                "type": "integer"
+                            }
+                        },
+                        "required": [
+                            "count"
+                        ]
+                    },
+                    "truncated": {
+                        "type": "boolean",
+                        "description": "True when at least one other value exists outside the buckets"
+                    }
+                },
+                "required": [
+                    "field",
+                    "buckets",
+                    "other",
+                    "truncated"
+                ],
+                "title": "ShowTotalsGroup"
             },
             "ShowUpdate": {
                 "type": "object",
@@ -14425,6 +14698,23 @@
                                         "sort": {
                                             "type": "boolean",
                                             "description": "With fields.capabilities: accepted in search.sorts"
+                                        },
+                                        "group": {
+                                            "type": "boolean",
+                                            "description": "With fields.capabilities: accepted in search.totals.groups; false when the user cannot ask this resource for totals"
+                                        },
+                                        "measures": {
+                                            "type": "array",
+                                            "description": "With fields.capabilities: the measure types that search.totals.measures accepts on this field; empty when it is not measurable or the user cannot ask this resource for totals",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "sum",
+                                                    "avg",
+                                                    "min",
+                                                    "max"
+                                                ]
+                                            }
                                         },
                                         "filter": {
                                             "type": "object",

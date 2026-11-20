@@ -9,6 +9,7 @@ use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\WriteOperation;
+use Lomkit\Rest\Search\Totals\MeasureType;
 use stdClass;
 
 final readonly class FieldDetails implements JsonSerializable
@@ -21,12 +22,13 @@ final readonly class FieldDetails implements JsonSerializable
         private array $parts = self::PARTS,
         private bool $sortable = true,
         private bool $queryable = true,
+        private ?bool $totals = null,
     ) {}
 
     /** @param list<string> $parts */
-    public static function of(Field $field, array $parts = self::PARTS): self
+    public static function of(Field $field, array $parts = self::PARTS, bool $totals = false): self
     {
-        return new self($field, $parts);
+        return new self($field, $parts, totals: $totals);
     }
 
     public static function ofPivot(Field $field, bool $queryable): self
@@ -38,9 +40,9 @@ final readonly class FieldDetails implements JsonSerializable
      * @param  list<string>  $parts
      * @return list<self>
      */
-    public static function forFields(FieldSet $fields, array $parts = self::PARTS): array
+    public static function forFields(FieldSet $fields, array $parts = self::PARTS, bool $totals = false): array
     {
-        return array_map(fn (Field $field): self => self::of($field, $parts), iterator_to_array($fields, false));
+        return array_map(fn (Field $field): self => self::of($field, $parts, $totals), iterator_to_array($fields, false));
     }
 
     /** @return list<self> */
@@ -79,6 +81,10 @@ final readonly class FieldDetails implements JsonSerializable
         return [
             'select' => ['capabilities', fn (): bool => $this->queryable && $this->field->isSelectable()],
             'sort' => ['capabilities', fn (): bool => $this->sortable && $this->field->isSortable()],
+            ...($this->totals === null ? [] : [
+                'group' => ['capabilities', fn (): bool => $this->totals === true && $this->field->isGroupable()],
+                'measures' => ['capabilities', fn (): array => $this->totals === true && $this->field->isMeasurable() ? MeasureType::values() : []],
+            ]),
             'filter' => ['filter', fn (): array => ['operators' => $this->operators()]],
             'create' => ['capabilities', fn (): bool => $this->field->isWritableOn(WriteOperation::Create)],
             'update' => ['capabilities', fn (): bool => $this->field->isWritableOn(WriteOperation::Update)],

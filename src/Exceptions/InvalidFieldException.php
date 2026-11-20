@@ -100,6 +100,26 @@ final class InvalidFieldException extends LogicException
         return new self("The field [{$name}] is input-only and cannot declare {$method}(): its value is validated and handed to the hooks, never filled, returned, filtered, sorted or searched.");
     }
 
+    public static function ungroupableType(string $name, string $type): self
+    {
+        return new self("The field [{$name}] of type [{$type}] cannot be groupable(): only Enum, Boolean, Text, Integer and ID fields group the totals of a search. Remove groupable().");
+    }
+
+    public static function unmeasurableType(string $name, string $type): self
+    {
+        return new self("The field [{$name}] of type [{$type}] cannot be measurable(): only Integer and Number fields are measured in the totals of a search. Remove measurable().");
+    }
+
+    public static function totalsWithoutColumn(string $name, string $method, string $cause): self
+    {
+        return new self("The field [{$name}] is {$cause} and cannot declare {$method}(): the totals of a search read its column. Remove {$method}().");
+    }
+
+    public static function totalsConflict(string $name, string $method, string $conflict, string $reason): self
+    {
+        return new self("The field [{$name}] declares {$method}() and {$conflict}: {$reason}. Remove one of them.");
+    }
+
     public static function unknownField(string $name): self
     {
         return new self("Unknown field [{$name}].");

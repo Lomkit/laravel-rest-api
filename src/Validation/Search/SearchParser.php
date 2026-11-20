@@ -11,7 +11,10 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class SearchParser
 {
-    public function __construct(private SearchShape $shape = SearchShape::Page) {}
+    public function __construct(
+        private SearchShape $shape = SearchShape::Page,
+        private bool $paged = true,
+    ) {}
 
     public function parse(Cursor $search, ValidationContext $context): SearchNode
     {
@@ -21,7 +24,8 @@ final readonly class SearchParser
             return SearchNode::empty();
         }
 
-        $context->reader->refuse($search, $this->shape->refused());
+        $totals = $this->shape === SearchShape::Page && $this->paged;
+        $context->reader->refuse($search, [...$this->shape->refused(), ...($totals ? [] : [SearchShape::TOTALS])]);
 
         $body = $this->shape->body($search, $context);
         $text = $this->text($search->at('text'), $context);
@@ -30,7 +34,7 @@ final readonly class SearchParser
             (new SourceParser)->parse($search->at('source'), $text, $context);
         }
 
-        return $body->node($text, $this->trashed($search->at('trashed'), $context));
+        return $body->node($text, $this->trashed($search->at('trashed'), $context), $totals ? (new TotalsParser)->parse($search->at(SearchShape::TOTALS), $context) : null);
     }
 
     private function text(Cursor $text, ValidationContext $context): ?TextQuery

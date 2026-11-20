@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Search;
 
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Search\Totals\TotalsNode;
 use Lomkit\Rest\Text\TextQuery;
 
 final readonly class SearchNode
@@ -29,6 +30,7 @@ final readonly class SearchNode
         public ?array $gates,
         public ?int $limit,
         public ?int $page,
+        public ?TotalsNode $totals = null,
     ) {}
 
     public static function empty(): self

@@ -8,6 +8,7 @@ use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
+use Lomkit\Rest\Query\Totals\SqlTotalsAccess;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Rules\AllowedValues;
 use Lomkit\Rest\Rules\OneOf;
@@ -87,7 +88,6 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     public function sortFields(ValidationContext $context, int $count): SortPaths
     {
         $fields = $this->resourceSorts($context);
-
         $aggregates = array_filter($context->aggregates, static fn (AggregateNode $aggregate): bool => $aggregate->sortable);
 
         if ($aggregates === []) {
@@ -183,6 +183,12 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     public function trashed(Resource $resource): bool
     {
         return Trashed::supportedBy($resource::modelClass());
+    }
+
+    #[\Override]
+    public function totals(ValidationContext $context): TotalsVocabulary
+    {
+        return SqlTotalsAccess::vocabulary($context->resource);
     }
 
     #[\Override]

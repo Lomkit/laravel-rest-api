@@ -30,7 +30,7 @@ class SearchGrammarTest extends DocumentationTestCase
         $schemas = $document['components']['schemas'];
 
         $this->assertSame('{"type":"object","properties":{"search":{"$ref":"#\/components\/schemas\/ShowSearch"}}}', json_encode($this->operation('/shows/search', 'post')['requestBody']['content']['application/json']['schema']));
-        $this->assertSame(['text', 'trashed', 'filters', 'gates', 'scopes', 'sorts', 'selects', 'aggregates', 'includes', 'instructions', 'limit', 'page'], array_keys($schemas['ShowSearch']['properties']));
+        $this->assertSame(['text', 'trashed', 'filters', 'gates', 'scopes', 'sorts', 'selects', 'aggregates', 'includes', 'instructions', 'limit', 'page', 'totals'], array_keys($schemas['ShowSearch']['properties']));
         $this->assertSame(['text', 'trashed', 'filters', 'gates', 'sorts', 'selects', 'aggregates', 'includes', 'limit', 'page'], array_keys($schemas['StageSearch']['properties']));
         $this->assertSame(['text' => false, 'trashed' => false], array_slice($schemas['StageSearch']['properties'], 0, 2));
         $this->assertSame(['text', 'trashed', 'filters', 'gates', 'sorts', 'selects', 'includes', 'limit', 'page'], array_keys($schemas['NoteSearch']['properties']));

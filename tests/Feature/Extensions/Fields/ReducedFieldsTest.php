@@ -68,6 +68,8 @@ class ReducedFieldsTest extends PackageTestCase
             'nullable' => false,
             'select' => true,
             'sort' => false,
+            'group' => false,
+            'measures' => [],
             'filter' => ['operators' => []],
             'create' => false,
             'update' => false,

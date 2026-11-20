@@ -39,7 +39,7 @@ final readonly class SearchRun
         $strict->run(fn () => $this->resource->searched($page->rows));
         $meta = $strict->run(fn (): array => SearchMeta::of($this->resource, $this->search)->compute($context, $page->rows));
 
-        return new SearchedPage($page->plan, $page->rows, $overflow, $meta);
+        return new SearchedPage($page->plan, $page->rows, $overflow, $meta, $page->totals);
     }
 
     /** @return LazyCollection<int, array<string, mixed>> */

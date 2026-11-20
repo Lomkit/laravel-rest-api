@@ -67,5 +67,7 @@ interface SearchGrammar
     /** @return list<string> */
     public function sources(): array;
 
+    public function totals(ValidationContext $context): TotalsVocabulary;
+
     public function nested(): SearchGrammar;
 }

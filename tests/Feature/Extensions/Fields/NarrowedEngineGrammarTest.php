@@ -124,6 +124,8 @@ class NarrowedEngineGrammarTest extends EngineSearchTestCase
             'nullable' => false,
             'select' => true,
             'sort' => true,
+            'group' => false,
+            'measures' => [],
             'create' => false,
             'update' => false,
         ]);

@@ -16,6 +16,7 @@ use Lomkit\Rest\Http\Serialization\RowSerializer;
 use Lomkit\Rest\Search\Plan\Columns\StrictColumns;
 use Lomkit\Rest\Search\Plan\IncludeOverflow;
 use Lomkit\Rest\Search\Plan\QueryPlan;
+use Lomkit\Rest\Search\Totals\SearchTotals;
 
 class Response implements Responsable
 {
@@ -28,6 +29,8 @@ class Response implements Responsable
 
     /** @var array<string, mixed> */
     private array $meta = [];
+
+    private ?SearchTotals $totals = null;
 
     public function plan(QueryPlan $plan): static
     {
@@ -47,6 +50,13 @@ class Response implements Responsable
     public function meta(array $meta): static
     {
         $this->meta = $meta;
+
+        return $this;
+    }
+
+    public function totals(?SearchTotals $totals): static
+    {
+        $this->totals = $totals;
 
         return $this;
     }
@@ -72,7 +82,7 @@ class Response implements Responsable
         $reach = GateReach::of($this->plan, $models);
         $rows = RowSerializer::of($this->plan, reach: $reach, overflow: $this->overflow);
         $envelope = $this->responsable instanceof LengthAwarePaginator
-            ? new PageEnvelope($this->responsable)
+            ? new PageEnvelope($this->responsable, $this->totals)
             : new PlainEnvelope($this->responsable);
 
         return $this->authorizer()->batch(

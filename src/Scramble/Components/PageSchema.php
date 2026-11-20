@@ -48,6 +48,7 @@ final readonly class PageSchema
             ->maxTotal !== null || LimitNarrowing::appliesTo($resource);
         $engine = $resource->context()->text($resource)->backend === TextBackend::Engine;
         $optional = $engine || $resource->maxTotal === null;
+        $totals = (new TotalsResultSchema($this->components, $this->records))->reference($resource);
 
         return Schemas::required([
             'current_page' => new IntegerType,
@@ -59,8 +60,9 @@ final readonly class PageSchema
             'total' => new IntegerType,
             ...($capped || $engine ? ['total_capped' => self::capped($engine)] : []),
             ...($engine ? ['dropped' => self::dropped()] : []),
+            ...($totals === null ? [] : ['totals' => $totals]),
             'meta' => $this->meta($resource),
-        ], $optional ? ['total_capped', 'dropped'] : [], 'A page of rows');
+        ], [...($optional ? ['total_capped', 'dropped'] : []), 'totals'], 'A page of rows');
     }
 
     private static function capped(bool $engine): BooleanType

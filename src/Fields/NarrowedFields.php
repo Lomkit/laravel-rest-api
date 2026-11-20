@@ -106,7 +106,10 @@ final readonly class NarrowedFields
         }
 
         if ($unfilterable) {
-            $copy->filterable(false);
+            $copy
+                ->filterable(false)
+                ->groupable(false)
+                ->measurable(false);
         }
 
         if ($unsortable) {
