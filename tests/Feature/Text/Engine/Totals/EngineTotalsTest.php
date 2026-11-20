@@ -3,10 +3,18 @@
 namespace Lomkit\Rest\Tests\Feature\Text\Engine\Totals;
 
 use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Exceptions\TotalsComputationException;
+use Lomkit\Rest\Extensions\Contexts\FieldsContext;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
+use Lomkit\Rest\Tests\Feature\Extensions\Stubs\MaskingFields;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PlainEngineVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\ActiveRowsExtension;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\PerimeterTotalledVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherController;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherResource;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\UncapturedDatabaseEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -14,6 +22,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class EngineTotalsTest extends EngineSearchTestCase
 {
+    use ResetsExtensionStubs;
+
     private const array TOTALS = [
         'measures' => [
             ['type' => 'sum', 'field' => 'price'],
@@ -70,6 +80,57 @@ class EngineTotalsTest extends EngineSearchTestCase
             'all' => ['count' => 3, 'sum_price' => 20.75],
             'groups' => [['field' => 'team', 'buckets' => [['value' => 'red', 'count' => 2], ['value' => 'blue', 'count' => 1]], 'other' => ['count' => 0], 'truncated' => false]],
         ], $response->json('totals'));
+    }
+
+    #[Test]
+    #[DataProvider('drivers')]
+    public function it_counts_every_row_that_the_perimeter_and_the_restrictions_keep_beyond_the_page(string $driver): void
+    {
+        config(['scout.driver' => $driver, 'rest.extensions' => [ActiveRowsExtension::class]]);
+        Route::prefix('api')->group(static function (): void {
+            Rest::resource('perimeter-totalled-vouchers', PerimeterTotalledVoucherController::class)->register();
+        });
+
+        $response = $this->search('perimeter-totalled-vouchers', ['source' => 'engine', 'limit' => 2, 'page' => 2, 'totals' => ['measures' => [['type' => 'sum', 'field' => 'price']], 'groups' => [['field' => 'number']]]]);
+
+        $response->assertOk()->assertJsonPath('total', 3)->assertJsonCount(1, 'data');
+        $this->assertSame([
+            'exact' => true,
+            'all' => ['count' => 3, 'sum_price' => 38.75],
+            'groups' => [['field' => 'number', 'buckets' => [['value' => 1, 'count' => 1], ['value' => 2, 'count' => 1], ['value' => 3, 'count' => 1]], 'other' => ['count' => 0], 'truncated' => false]],
+        ], $response->json('totals'));
+    }
+
+    #[Test]
+    public function it_narrows_the_engine_totals_with_the_fields_of_the_user(): void
+    {
+        config(['rest.extensions' => [MaskingFields::class]]);
+        MaskingFields::$narrow = static function (FieldsContext $context): void {
+            if ($context->resource instanceof TotalledVoucherResource) {
+                $context->hide('team');
+                $context->unfilterable('number');
+            }
+        };
+
+        $refused = $this->search('totalled-vouchers', ['source' => 'engine', 'totals' => ['groups' => [['field' => 'team'], ['field' => 'number'], ['field' => 'active']], 'measures' => [['type' => 'sum', 'field' => 'number']]]]);
+        $details = $this->getJson('/api/totalled-vouchers?with=text')->assertOk()->json('data.text.engine.totals');
+
+        $refused->assertUnprocessable()->assertJsonPath('errors', [
+            'search.totals.measures.0.field' => ['The selected search.totals.measures.0.field is invalid.'],
+            'search.totals.groups.0.field' => ['The selected search.totals.groups.0.field is invalid.'],
+            'search.totals.groups.1.field' => ['The selected search.totals.groups.1.field is invalid.'],
+        ]);
+        $this->assertSame(['groups' => ['active'], 'measures' => ['price' => ['sum', 'avg', 'min', 'max']]], $details);
+    }
+
+    #[Test]
+    public function it_refuses_to_answer_totals_that_the_database_engine_did_not_compute(): void
+    {
+        $this->useEngine(new UncapturedDatabaseEngine);
+
+        $this->expectExceptionObject(TotalsComputationException::uncapturedQuery(TotalledVoucherResource::class, UncapturedDatabaseEngine::class));
+
+        $this->withoutExceptionHandling()->search('totalled-vouchers', ['source' => 'engine', 'totals' => ['groups' => [['field' => 'team']]]]);
     }
 
     #[Test]

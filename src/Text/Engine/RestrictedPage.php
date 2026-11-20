@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Text\Engine;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
+use Lomkit\Rest\Exceptions\TotalsComputationException;
 use Lomkit\Rest\Query\ExtensionRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\AppliesRowRestrictions;
 use Lomkit\Rest\Text\Engine\Profiles\ComputesTotals;
@@ -31,8 +32,13 @@ final readonly class RestrictedPage
     /** @param Builder<Model> $builder */
     public function read(Builder $builder, ScoutModel $model, int $perPage, int $page, ?EngineTotals $totals = null): EnginePage
     {
+        if ($totals !== null && ! $this->profile instanceof ComputesTotals) {
+            throw TotalsComputationException::untotalledProfile($this->resource, $this->profile::class);
+        }
+
         $tracked = new TrackedRows($this->rows);
-        $result = $totals !== null && $this->profile instanceof ComputesTotals
+
+        $result = $totals !== null
             ? $this->profile->totalsPage($builder, $model, $perPage, $page, $totals, $tracked)
             : $this->profile->restrictedPage($builder, $model, $perPage, $page, $tracked);
 

@@ -11,6 +11,7 @@ final readonly class EnginePage
         public array $keys,
         public int $total,
         public ?bool $capped = null,
+        /** @internal */
         public ?SearchTotals $totals = null,
     ) {}
 
