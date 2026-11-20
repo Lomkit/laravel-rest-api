@@ -77,16 +77,6 @@ class Utf8InputTest extends PackageTestCase
         ]);
     }
 
-    #[Test]
-    public function it_answers_a_value_that_is_not_valid_utf8_in_french(): void
-    {
-        $this->app->setLocale('fr');
-
-        $response = $this->send('/api/products/search', ['search' => ['filters' => [['field' => 'name', 'value' => "Desk\xFF"]]]]);
-
-        $this->assertExactErrors($response, ['search.filters.0.value' => ['Le champ search.filters.0.value doit être en UTF-8 valide.']]);
-    }
-
     /** @param array<string, mixed> $body */
     private function send(string $uri, array $body): TestResponse
     {

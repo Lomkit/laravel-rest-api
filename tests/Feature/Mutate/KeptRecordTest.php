@@ -77,18 +77,6 @@ class KeptRecordTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_tells_how_to_replace_the_record_in_french(): void
-    {
-        $this->app->setLocale('fr');
-
-        $response = $this->postJson('/kept-books/mutate', ['mutate' => [
-            ['operation' => 'update', 'key' => 102, 'relations' => ['label' => ['operation' => 'attach', 'key' => 103]]],
-        ]]);
-
-        $this->assertExactErrors($response, ['mutate.0.relations.label' => ['Le champ mutate.0.relations.label est interdit : cette relation contient déjà un élément et ne le détache pas. Modifiez plutôt cet élément, ou supprimez-le d\'abord.']]);
-    }
-
-    #[Test]
     public function it_tells_how_to_replace_the_record_of_a_relation_whose_foreign_key_does_not_accept_null(): void
     {
         Rest::resource('perimeter-books', PerimeterBookController::class)->register();

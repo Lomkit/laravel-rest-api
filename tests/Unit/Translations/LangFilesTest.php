@@ -16,62 +16,50 @@ class LangFilesTest extends TestCase
     private const string SOURCE = __DIR__.'/../../../src';
 
     #[Test]
-    public function it_ships_the_same_lines_in_english_and_in_french(): void
+    public function it_ships_the_english_lines_only(): void
     {
-        $english = self::lines('en');
-
-        $this->assertNotSame([], $english);
-        $this->assertSame(array_keys($english), array_keys(self::lines('fr')));
-    }
-
-    #[Test]
-    public function it_gives_each_french_line_the_placeholders_of_its_english_line(): void
-    {
-        $french = self::lines('fr');
-
-        foreach (self::lines('en') as $key => $english) {
-            $this->assertSame(self::placeholders($english), self::placeholders($french[$key] ?? ''), $key);
-        }
+        $this->assertSame(['en'], array_values(array_diff((array) scandir(self::LANG), ['.', '..'])));
     }
 
     #[Test]
     public function it_ships_every_line_that_the_source_names(): void
     {
-        $english = self::lines('en');
-        $named = [];
-
-        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(self::SOURCE)) as $file) {
-            if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
-                preg_match_all("/'rest::([a-z_]+\\.[a-z_]+)'/", (string) file_get_contents($file->getPathname()), $matches);
-                $named = [...$named, ...$matches[1]];
-            }
-        }
+        $named = self::named();
 
         $this->assertNotSame([], $named);
-        $this->assertSame([], array_values(array_diff(array_unique($named), array_keys($english))));
+        $this->assertSame([], array_values(array_diff($named, array_keys(self::lines()))));
+    }
+
+    #[Test]
+    public function it_ships_only_lines_that_the_source_names(): void
+    {
+        $this->assertSame([], array_values(array_diff(array_keys(self::lines()), self::named())));
     }
 
     /** @return array<string, string> */
-    private static function lines(string $locale): array
+    private static function lines(): array
     {
         $lines = [];
 
-        foreach (glob(self::LANG.'/'.$locale.'/*.php') ?: [] as $path) {
+        foreach (glob(self::LANG.'/en/*.php') ?: [] as $path) {
             $lines += Arr::dot([basename($path, '.php') => require $path]);
         }
-
-        ksort($lines);
 
         return $lines;
     }
 
     /** @return list<string> */
-    private static function placeholders(string $line): array
+    private static function named(): array
     {
-        preg_match_all('/:[A-Za-z_]+/', $line, $matches);
-        $placeholders = array_values(array_unique($matches[0]));
-        sort($placeholders);
+        $named = [];
 
-        return $placeholders;
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(self::SOURCE)) as $file) {
+            if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
+                preg_match_all("/'rest::([a-z0-9_]+\\.[a-z0-9_]+)'/", (string) file_get_contents($file->getPathname()), $matches);
+                $named = [...$named, ...$matches[1]];
+            }
+        }
+
+        return array_values(array_unique($named));
     }
 }

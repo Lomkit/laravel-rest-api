@@ -93,7 +93,7 @@ The `RestServiceProvider` and `Rest` facade are auto-registered via composer's `
 
 ### Translations
 
-Every message that the package writes for a client (its validation texts, the action caps, the default denial, the 409 conflict) is a line under the `rest` namespace: `rest::validation.*`, `rest::actions.*`, `rest::errors.*`. The package ships `en` and `fr` and follows the locale of the request. `php artisan vendor:publish --tag="rest-lang"` copies the files to `lang/vendor/rest` to reword them or add a locale. Exception messages for developers stay English, and field labels stay the request paths unless `label()` or `attributes()` names them.
+Every message that the package writes for a client (its validation texts, the action caps, the default denial, the 409 conflict) is a line under the `rest` namespace: `rest::validation.*`, `rest::actions.*`, `rest::errors.*`. The package ships `en` only and follows the locale of the request. `php artisan vendor:publish --tag="rest-lang"` copies the files to `lang/vendor/rest` to reword them; translate them in `lang/vendor/rest/<locale>`, for example `lang/vendor/rest/fr`. Exception messages for developers stay English, and field labels stay the request paths unless `label()` or `attributes()` names them.
 
 ## Core concepts
 
