@@ -153,7 +153,6 @@ final class DetailsResponseType
             'max_list_sorts' => (new IntegerType)->nullable(true)->setDescription('With lists: the most sorts in one engine list, a search without text sent with source: engine; null when unbounded, 0 when such a search does not sort, one less when the tie-breaker takes a sort of the engine'),
             'tie_breaker' => (new StringType)->setDescription('With lists, when the resource declares one: the unique attribute that orders an engine list sent without a sort, descending, and ends the sorts of an engine list when the engine has a sort left for it'),
             'groups' => (new BooleanType)->setDescription('Present and true when the engine accepts filters joined with or and nested groups of filters, within the depth and count limits of the filters'),
-        ], ['lists', 'max_list_sorts', 'tie_breaker', 'groups',
             'totals' => self::totals(),
         ], ['lists', 'max_list_sorts', 'tie_breaker', 'groups', 'totals'], 'The grammar of a search with a filled text on a search engine, which replaces the sort and filter of the field entries: filters combined with and only unless groups is true, no scopes, @relevance alone and desc only; null on the database');
 

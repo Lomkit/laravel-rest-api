@@ -9,11 +9,11 @@ use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherResource;
+use Lomkit\Rest\Text\ScoutEngine;
+use Lomkit\Rest\Text\TextQuery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Lomkit\Rest\Text\ScoutEngine;
-use Lomkit\Rest\Text\TextQuery;
 
 #[Group('scout')]
 #[Group('algolia')]

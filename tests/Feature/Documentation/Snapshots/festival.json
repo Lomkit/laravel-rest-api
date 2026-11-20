@@ -5931,6 +5931,37 @@
                                             "groups": {
                                                 "type": "boolean",
                                                 "description": "Present and true when the engine accepts filters joined with or and nested groups of filters, within the depth and count limits of the filters"
+                                            },
+                                            "totals": {
+                                                "type": "object",
+                                                "description": "Present when the resource declares totals on its search engine: the attributes that search.totals.groups accepts and the measures it computes",
+                                                "properties": {
+                                                    "groups": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "measures": {
+                                                        "type": "object",
+                                                        "description": "The measure types that search.totals.measures accepts, per measured attribute",
+                                                        "additionalProperties": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "lists_only": {
+                                                        "type": "boolean",
+                                                        "description": "True when the engine computes totals for engine lists only, a search without text sent with source: engine"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "groups",
+                                                    "measures",
+                                                    "lists_only"
+                                                ]
                                             }
                                         },
                                         "required": [
@@ -9452,6 +9483,37 @@
                                             "groups": {
                                                 "type": "boolean",
                                                 "description": "Present and true when the engine accepts filters joined with or and nested groups of filters, within the depth and count limits of the filters"
+                                            },
+                                            "totals": {
+                                                "type": "object",
+                                                "description": "Present when the resource declares totals on its search engine: the attributes that search.totals.groups accepts and the measures it computes",
+                                                "properties": {
+                                                    "groups": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "measures": {
+                                                        "type": "object",
+                                                        "description": "The measure types that search.totals.measures accepts, per measured attribute",
+                                                        "additionalProperties": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "lists_only": {
+                                                        "type": "boolean",
+                                                        "description": "True when the engine computes totals for engine lists only, a search without text sent with source: engine"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "groups",
+                                                    "measures",
+                                                    "lists_only"
+                                                ]
                                             }
                                         },
                                         "required": [
@@ -15294,6 +15356,37 @@
                                             "groups": {
                                                 "type": "boolean",
                                                 "description": "Present and true when the engine accepts filters joined with or and nested groups of filters, within the depth and count limits of the filters"
+                                            },
+                                            "totals": {
+                                                "type": "object",
+                                                "description": "Present when the resource declares totals on its search engine: the attributes that search.totals.groups accepts and the measures it computes",
+                                                "properties": {
+                                                    "groups": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "measures": {
+                                                        "type": "object",
+                                                        "description": "The measure types that search.totals.measures accepts, per measured attribute",
+                                                        "additionalProperties": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "lists_only": {
+                                                        "type": "boolean",
+                                                        "description": "True when the engine computes totals for engine lists only, a search without text sent with source: engine"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "groups",
+                                                    "measures",
+                                                    "lists_only"
+                                                ]
                                             }
                                         },
                                         "required": [

@@ -3,8 +3,8 @@
 namespace Lomkit\Rest\Tests\Feature\Text\Engine\Turbopuffer;
 
 use Illuminate\Support\Facades\Route;
-use Lomkit\Rest\Exceptions\EngineSearchException;
 use Laravel\Scout\Engines\TurbopufferEngine;
+use Lomkit\Rest\Exceptions\EngineSearchException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Totals\Stubs\TotalledVoucherResource;
