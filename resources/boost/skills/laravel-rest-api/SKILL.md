@@ -567,7 +567,7 @@ return response()->streamDownload(function () use ($rows): void {
   } catch (EngineResultsChangedException) {
       $rows = $search->lazy();
   } catch (EngineWindowException $e) {
-      // narrow the search, or lazy(max: $e->window)
+      // narrow the search, or lazy(max: $e->window ?? 1000)
   }
   ```
 
