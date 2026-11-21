@@ -64,6 +64,20 @@ class EngineInstructionValuesTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_names_the_instruction_that_passes_the_refused_value_after_a_valid_one(): void
+    {
+        $message = 'The search.instructions.1 field holds characters the search engine cannot match as they are.';
+
+        $response = $this->search('instructed-literal-vouchers', ['text' => ['value' => 'report'], 'instructions' => [
+            ['name' => 'code-equals', 'fields' => [['name' => 'code', 'value' => 'V-a']]],
+            ['name' => 'code-among', 'fields' => [['name' => 'code', 'value' => self::PHONE]]],
+        ]]);
+
+        $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => ['search.instructions.1' => [$message]]]);
+        $this->assertSame([], $this->engine->filters);
+    }
+
+    #[Test]
     public function it_answers_422_to_an_instruction_value_the_attribute_cannot_take(): void
     {
         $response = $this->search('instructed-literal-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'code-equals']]]);
