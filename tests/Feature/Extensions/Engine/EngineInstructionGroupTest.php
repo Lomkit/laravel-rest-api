@@ -295,15 +295,11 @@ class EngineInstructionGroupTest extends EngineSearchTestCase
         $this->useEngine($engine);
         config(['rest.extensions' => [ReadersExtension::class, GroupInstructionsExtension::class]]);
         $this->actingAs(new GenericUser(['id' => 'ann']));
-        $this->withoutExceptionHandling();
+        $message = 'The search.instructions.0 field holds characters the search engine cannot match as they are.';
 
-        try {
-            $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'gi.chosen-readers', 'fields' => [['name' => 'readers', 'value' => ['b` || number:=5 || readers:=[`c']]]]]]);
-            $this->fail('The backtick reached the filter.');
-        } catch (InvalidEngineQueryException $refusal) {
-            $this->assertEquals(InvalidEngineQueryException::nonLiteralValue('readers'), $refusal);
-        }
+        $response = $this->search('reader-vouchers', ['text' => ['value' => 'report'], 'instructions' => [['name' => 'gi.chosen-readers', 'fields' => [['name' => 'readers', 'value' => ['b` || number:=5 || readers:=[`c']]]]]]);
 
+        $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => ['search.instructions.0' => [$message]]]);
         $this->assertSame([], $engine->filters);
     }
 

@@ -7,7 +7,7 @@ use LogicException;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Text\Engine\RestrictingExtension;
 
-final class InvalidEngineQueryException extends LogicException
+class InvalidEngineQueryException extends LogicException
 {
     public static function closedGroup(): self
     {
@@ -57,16 +57,16 @@ final class InvalidEngineQueryException extends LogicException
         return new self("The engine query does not compare the attribute [{$attribute}] with the operator [{$operator}].");
     }
 
-    public static function invalidValue(string $attribute, mixed $value): self
+    public static function invalidValue(string $attribute, mixed $value): InvalidEngineValueException
     {
         $type = get_debug_type($value);
 
-        return new self("The engine query does not compare the attribute [{$attribute}] with this value of type [{$type}].");
+        return new InvalidEngineValueException("The engine query does not compare the attribute [{$attribute}] with this value of type [{$type}].", 'rest::validation.engine_value');
     }
 
-    public static function nonLiteralValue(string $attribute): self
+    public static function nonLiteralValue(string $attribute): InvalidEngineValueException
     {
-        return new self("The search engine cannot match this value of the attribute [{$attribute}] as it is.");
+        return new InvalidEngineValueException("The search engine cannot match this value of the attribute [{$attribute}] as it is.", 'rest::validation.engine_characters');
     }
 
     public static function notSortable(string $attribute): self

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\ConflictingListsException;
+use Lomkit\Rest\Exceptions\InvalidEngineValueException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Http\Resource;
@@ -84,8 +85,8 @@ final readonly class EngineSearch implements SearchSource
         foreach ($this->search->instructions as $index => $instruction) {
             try {
                 EngineInstruction::of($instruction)->apply($query);
-            } catch (ConflictingListsException $conflict) {
-                throw $conflict->refusal("search.instructions.{$index}");
+            } catch (ConflictingListsException|InvalidEngineValueException $refused) {
+                throw $refused->refusal("search.instructions.{$index}");
             }
         }
 
