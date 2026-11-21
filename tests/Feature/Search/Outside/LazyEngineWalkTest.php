@@ -6,11 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Actions\Rows\KeyChunks;
 use Lomkit\Rest\Authorization\ActingUser;
+use Lomkit\Rest\Exceptions\EngineResultsChangedException;
+use Lomkit\Rest\Exceptions\EngineWindowException;
 use Lomkit\Rest\Exceptions\SearchRunException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Query\SqlSearch;
 use Lomkit\Rest\Search\Plan\PlannedRows;
 use Lomkit\Rest\Search\Run\PayloadSearchRequest;
+use Lomkit\Rest\Tests\Concerns\CatchesLazyRefusals;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ListedVoucherResource;
@@ -30,6 +33,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class LazyEngineWalkTest extends EngineSearchTestCase
 {
+    use CatchesLazyRefusals;
     use ResetsExtensionStubs;
 
     private const array REPORT = ['text' => ['value' => 'report']];
@@ -84,12 +88,13 @@ class LazyEngineWalkTest extends EngineSearchTestCase
         $this->useEngine(new ShiftingCollectionEngine(repeats: false, shrinks: true));
         config(['rest.extensions' => [WalkedEngineProfiles::class]]);
 
-        $this->expectExceptionObject(SearchRunException::engineResultsChanged(VoucherResource::class));
-
-        Rest::search(VoucherResource::class)
+        $refusal = $this->lazyRefusal(fn () => Rest::search(VoucherResource::class)
             ->as(null)
             ->payload(self::REPORT)
-            ->lazy(max: 3);
+            ->lazy(max: 3));
+
+        $this->assertInstanceOf(EngineResultsChangedException::class, $refusal);
+        $this->assertSame(SearchRunException::engineResultsChanged(VoucherResource::class)->getMessage(), $refusal->getMessage());
     }
 
     /** @param list<int>|null $ids */
@@ -101,16 +106,22 @@ class LazyEngineWalkTest extends EngineSearchTestCase
         WalkedEngineProfiles::$exactTotal = false;
         WalkedEngineProfiles::$reachable = 3;
 
-        if ($ids === null) {
-            $this->expectExceptionObject(SearchRunException::engineWindow(ListedVoucherResource::class, 3));
-        }
-
-        $rows = Rest::search(ListedVoucherResource::class)
+        $lazy = fn () => Rest::search(ListedVoucherResource::class)
             ->as(null)
             ->payload(['source' => 'engine'])
             ->lazy(max: $max);
 
-        $this->assertSame($ids, $rows->pluck('id')->all());
+        if ($ids !== null) {
+            $this->assertSame($ids, $lazy()->pluck('id')->all());
+
+            return;
+        }
+
+        $refusal = $this->lazyRefusal($lazy);
+
+        $this->assertInstanceOf(EngineWindowException::class, $refusal);
+        $this->assertSame(3, $refusal->window);
+        $this->assertSame(SearchRunException::engineWindow(ListedVoucherResource::class, 3)->getMessage(), $refusal->getMessage());
     }
 
     /** @return array<string, array{?int, list<int>|null}> */

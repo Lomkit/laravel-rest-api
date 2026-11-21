@@ -6,8 +6,11 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Exceptions\EngineResultsChangedException;
+use Lomkit\Rest\Exceptions\EngineWindowException;
 use Lomkit\Rest\Exceptions\SearchRunException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Concerns\CatchesLazyRefusals;
 use Lomkit\Rest\Tests\Concerns\ResetsExtensionStubs;
 use Lomkit\Rest\Tests\Feature\Extensions\Stubs\RedRowsExtension;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
@@ -27,6 +30,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class LazyEngineSearchTest extends EngineSearchTestCase
 {
+    use CatchesLazyRefusals;
     use ResetsExtensionStubs;
 
     private const array REPORT = ['text' => ['value' => 'report']];
@@ -133,12 +137,14 @@ class LazyEngineSearchTest extends EngineSearchTestCase
         WalkedEngineProfiles::$window = $window;
         WalkedEngineProfiles::$reachable = $reachable;
 
-        $this->expectExceptionObject(SearchRunException::engineWindow(ListedVoucherResource::class, $named));
-
-        Rest::search(ListedVoucherResource::class)
+        $refusal = $this->lazyRefusal(fn () => Rest::search(ListedVoucherResource::class)
             ->as(null)
             ->payload($search)
-            ->lazy(max: $max);
+            ->lazy(max: $max));
+
+        $this->assertInstanceOf(EngineWindowException::class, $refusal);
+        $this->assertSame($named, $refusal->window);
+        $this->assertSame(SearchRunException::engineWindow(ListedVoucherResource::class, $named)->getMessage(), $refusal->getMessage());
     }
 
     /** @return array<string, array{?int, ?int, array<string, mixed>, ?int, ?int}> */
@@ -175,13 +181,13 @@ class LazyEngineSearchTest extends EngineSearchTestCase
         $this->useEngine(new ShiftingCollectionEngine($repeats));
         config(['rest.extensions' => [WalkedEngineProfiles::class]]);
 
-        $this->expectExceptionObject(SearchRunException::engineResultsChanged(VoucherResource::class));
-        $this->expectExceptionMessage('The search engine results of the resource ['.VoucherResource::class.'] changed while lazy() read their keys. Call lazy() again, and set scout.after_commit to true so that the index changes once the database transactions commit.');
-
-        Rest::search(VoucherResource::class)
+        $refusal = $this->lazyRefusal(fn () => Rest::search(VoucherResource::class)
             ->as(null)
             ->payload(self::REPORT)
-            ->lazy();
+            ->lazy());
+
+        $this->assertInstanceOf(EngineResultsChangedException::class, $refusal);
+        $this->assertSame('The search engine results of the resource ['.VoucherResource::class.'] changed while lazy() read their keys. Call lazy() again, and set scout.after_commit to true so that the index changes once the database transactions commit.', $refusal->getMessage());
     }
 
     /** @return array<string, array{bool}> */
@@ -213,13 +219,14 @@ class LazyEngineSearchTest extends EngineSearchTestCase
     {
         $this->useEngine(new PagedTurbopufferEngine(endless: true));
 
-        $this->expectExceptionObject(SearchRunException::engineWindow(UnsortedVoucherResource::class, 10000));
-        $this->expectExceptionMessage('The search of the resource ['.UnsortedVoucherResource::class.'] runs on a search engine, which returns at most its first 10000 results, and the search can match more. Give lazy() a max of at most 10000, narrow the search, or read the pages with page().');
-
-        Rest::search(UnsortedVoucherResource::class)
+        $refusal = $this->lazyRefusal(fn () => Rest::search(UnsortedVoucherResource::class)
             ->as(null)
             ->payload(self::REPORT)
-            ->lazy();
+            ->lazy());
+
+        $this->assertInstanceOf(EngineWindowException::class, $refusal);
+        $this->assertSame(10000, $refusal->window);
+        $this->assertSame('The search of the resource ['.UnsortedVoucherResource::class.'] runs on a search engine, which returns at most its first 10000 results, and the search can match more. Give lazy() a max of at most 10000, narrow the search, or read the pages with page().', $refusal->getMessage());
     }
 
     #[Test]
